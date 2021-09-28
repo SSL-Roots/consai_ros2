@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
-#define CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
+#define CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 
-#include "consai_vision_tracker/visibility_control.h"
+#include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 
-namespace consai_vision_tracker
+namespace consai_robot_controller
 {
 
-class Tracker : public rclcpp::Node
+class Controller : public rclcpp::Node
 {
 public:
-  CONSAI_VISION_TRACKER_PUBLIC
-  explicit Tracker(const rclcpp::NodeOptions & options);
+  CONSAI_ROBOT_CONTROLLER_PUBLIC
+  explicit Controller(const rclcpp::NodeOptions & options);
 
 protected:
   void on_timer();
@@ -34,6 +34,6 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
-}  // namespace consai_vision_tracker
+}  // namespace consai_robot_controller
 
-#endif  // CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_

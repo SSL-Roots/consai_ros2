@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(consai_vision_tracker)
+project(consai_robot_controller)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,17 +22,17 @@ find_package(rclcpp_components REQUIRED)
 
 include_directories(include)
 
-# Tracker Component
-add_library(tracker_component SHARED
-  src/tracker_component.cpp
+# Controller Component
+add_library(controller_component SHARED
+  src/controller_component.cpp
 )
-target_compile_definitions(tracker_component
+target_compile_definitions(controller_component
   PRIVATE "CONSAI_VISION_TRACKER_BUILDING_DLL")
-ament_target_dependencies(tracker_component
+ament_target_dependencies(controller_component
   rclcpp
   rclcpp_components
 )
-rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
+rclcpp_components_register_nodes(controller_component "consai_robot_controller::Controller")
 
 # Exports
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
@@ -41,7 +41,7 @@ ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_components)
 
 ament_export_include_directories(include)
-ament_export_libraries(tracker_component)
+ament_export_libraries(controller_component)
 
 # Install
 install(
@@ -55,7 +55,7 @@ install(DIRECTORY
 )
 
 install(TARGETS
-  tracker_component
+  controller_component
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
