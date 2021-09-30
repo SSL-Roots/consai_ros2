@@ -21,18 +21,18 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
-  "msg/BallModelChipFixedLoss.msg"
-  "msg/BallModelStraightTwoPhase.msg"
-  "msg/DetectionBall.msg"
-  "msg/DetectionFrame.msg"
-  "msg/DetectionRobot.msg"
-  "msg/FieldCircularArc.msg"
-  "msg/FieldLineSegment.msg"
-  "msg/GeometryCameraCalibration.msg"
-  "msg/GeometryData.msg"
-  "msg/GeometryFieldSize.msg"
-  "msg/GeometryModels.msg"
-  "msg/Vector2f.msg"
+  "msg/detection/DetectionBall.msg"
+  "msg/detection/DetectionFrame.msg"
+  "msg/detection/DetectionRobot.msg"
+  "msg/geometry/BallModelChipFixedLoss.msg"
+  "msg/geometry/BallModelStraightTwoPhase.msg"
+  "msg/geometry/FieldCircularArc.msg"
+  "msg/geometry/FieldLineSegment.msg"
+  "msg/geometry/GeometryCameraCalibration.msg"
+  "msg/geometry/GeometryData.msg"
+  "msg/geometry/GeometryFieldSize.msg"
+  "msg/geometry/GeometryModels.msg"
+  "msg/geometry/Vector2f.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
