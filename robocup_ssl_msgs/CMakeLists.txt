@@ -20,6 +20,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
+add_subdirectory(proto)
+
 set(msg_files
   "msg/detection/DetectionBall.msg"
   "msg/detection/DetectionFrame.msg"
