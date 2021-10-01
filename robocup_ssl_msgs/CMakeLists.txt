@@ -33,10 +33,23 @@ set(msg_files
   "msg/geometry/GeometryFieldSize.msg"
   "msg/geometry/GeometryModels.msg"
   "msg/geometry/Vector2f.msg"
+  "msg/referee/Point.msg"
+  "msg/referee/Referee.msg"
+  "msg/grsim/BallReplacement.msg"
+  "msg/grsim/Commands.msg"
+  "msg/grsim/RobotCommand.msg"
+  "msg/grsim/RobotReplacement.msg"
+  "msg/grsim/RobotStatus.msg"
+  "msg/grsim/RobotsStatus.msg"
+)
+
+set(srv_files
+  "srv/grsim/Replacement.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
+  ${srv_files}
   DEPENDENCIES std_msgs
   ADD_LINTER_TESTS
 )
