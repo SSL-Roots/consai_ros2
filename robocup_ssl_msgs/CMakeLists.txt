@@ -71,6 +71,13 @@ set(msg_files
   "msg/grsim/RobotReplacement.msg"
   "msg/grsim/RobotStatus.msg"
   "msg/grsim/RobotsStatus.msg"
+  "msg/detection_tracked/KickedBall.msg"
+  "msg/detection_tracked/RobotId.msg"
+  "msg/detection_tracked/TrackedBall.msg"
+  "msg/detection_tracked/TrackedFrame.msg"
+  "msg/detection_tracked/TrackedRobot.msg"
+  "msg/detection_tracked/Vector2.msg"
+  "msg/detection_tracked/Vector3.msg"
 )
 set(srv_files
   "srv/grsim/Replacement.srv"
