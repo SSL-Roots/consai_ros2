@@ -18,8 +18,13 @@
 #include <memory>
 
 #include "multicast.hpp"
-#include "robocup_ssl_comm/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
+#include "robocup_ssl_comm/visibility_control.h"
+#include "robocup_ssl_msgs/msg/detection_frame.hpp"
+#include "robocup_ssl_msgs/msg/geometry_data.hpp"
+#include "robocup_ssl_msgs/messages_robocup_ssl_wrapper.pb.h"
+#include "robocup_ssl_msgs/messages_robocup_ssl_detection.pb.h"
+#include "robocup_ssl_msgs/messages_robocup_ssl_geometry.pb.h"
 
 namespace robocup_ssl_comm
 {
@@ -34,8 +39,11 @@ protected:
   void on_timer();
 
 private:
+  void publish_detection(const SSL_DetectionFrame & detection_frame);
+
   rclcpp::TimerBase::SharedPtr timer_;
   std::unique_ptr<multicast::MulticastReceiver> receiver_;
+  rclcpp::Publisher<robocup_ssl_msgs::msg::DetectionFrame>::SharedPtr pub_detection_;
 };
 
 }  // namespace robocup_ssl_comm
