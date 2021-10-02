@@ -65,10 +65,10 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
   for(auto ball : detection_frame.balls()){
     robocup_ssl_msgs::msg::DetectionBall detection_ball;
     detection_ball.confidence = ball.confidence();
-    if(ball.has_area()) detection_ball.area = ball.area();
+    if(ball.has_area()) detection_ball.area.push_back(ball.area());
     detection_ball.x = ball.x();
     detection_ball.y = ball.y();
-    if(ball.has_x()) detection_ball.z = ball.z();
+    if(ball.has_z()) detection_ball.z.push_back(ball.z());
     detection_ball.pixel_x = ball.pixel_x();
     detection_ball.pixel_y = ball.pixel_y();
 
@@ -78,13 +78,13 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
   for(auto robot : detection_frame.robots_yellow()){
     robocup_ssl_msgs::msg::DetectionRobot detection_robot;
     detection_robot.confidence = robot.confidence();
-    if(robot.has_robot_id()) detection_robot.robot_id = robot.robot_id();
+    if(robot.has_robot_id()) detection_robot.robot_id.push_back(robot.robot_id());
     detection_robot.x = robot.x();
     detection_robot.y = robot.y();
-    if(robot.has_orientation()) detection_robot.orientation = robot.orientation();
+    if(robot.has_orientation()) detection_robot.orientation.push_back(robot.orientation());
     detection_robot.pixel_x = robot.pixel_x();
     detection_robot.pixel_y = robot.pixel_y();
-    if(robot.has_height()) detection_robot.height = robot.height();
+    if(robot.has_height()) detection_robot.height.push_back(robot.height());
 
     detection_msg->robots_yellow.push_back(detection_robot);
   }
@@ -92,13 +92,13 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
   for(auto robot : detection_frame.robots_blue()){
     robocup_ssl_msgs::msg::DetectionRobot detection_robot;
     detection_robot.confidence = robot.confidence();
-    if(robot.has_robot_id()) detection_robot.robot_id = robot.robot_id();
+    if(robot.has_robot_id()) detection_robot.robot_id.push_back(robot.robot_id());
     detection_robot.x = robot.x();
     detection_robot.y = robot.y();
-    if(robot.has_orientation()) detection_robot.orientation = robot.orientation();
+    if(robot.has_orientation()) detection_robot.orientation.push_back(robot.orientation());
     detection_robot.pixel_x = robot.pixel_x();
     detection_robot.pixel_y = robot.pixel_y();
-    if(robot.has_height()) detection_robot.height = robot.height();
+    if(robot.has_height()) detection_robot.height.push_back(robot.height());
 
     detection_msg->robots_blue.push_back(detection_robot);
   }
