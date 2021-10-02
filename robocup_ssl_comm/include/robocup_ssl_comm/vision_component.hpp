@@ -15,6 +15,9 @@
 #ifndef ROBOCUP_SSL_COMM__VISION_COMPONENT_HPP_
 #define ROBOCUP_SSL_COMM__VISION_COMPONENT_HPP_
 
+#include <memory>
+
+#include "multicast.hpp"
 #include "robocup_ssl_comm/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 
@@ -32,6 +35,7 @@ protected:
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
+  std::unique_ptr<multicast::MulticastReceiver> receiver_;
 };
 
 }  // namespace robocup_ssl_comm

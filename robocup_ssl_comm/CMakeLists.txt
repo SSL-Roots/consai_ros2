@@ -19,8 +19,14 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(robocup_ssl_msgs REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
 
-include_directories(include)
+include_directories(
+  include
+  ${robocup_ssl_msgs_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+)
 
 # Vision Component
 add_library(vision_component SHARED
@@ -32,6 +38,7 @@ ament_target_dependencies(vision_component
   rclcpp
   rclcpp_components
 )
+target_link_libraries(vision_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
 rclcpp_components_register_nodes(vision_component "robocup_ssl_comm::Vision")
 
 # Game Controller Component
@@ -63,6 +70,7 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_components)
+ament_export_dependencies(robocup_ssl_msgs)
 
 ament_export_include_directories(include)
 ament_export_libraries(vision_component)

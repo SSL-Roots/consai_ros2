@@ -19,9 +19,37 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(Protobuf REQUIRED)
 
-add_subdirectory(proto)
+# Build protobuf C++ lib
+set(protobuf_files
+  proto/messages_robocup_ssl_wrapper.proto
+  proto/messages_robocup_ssl_geometry.proto
+  proto/messages_robocup_ssl_detection.proto
+)
+protobuf_generate_cpp(PROTO_CPP PROTO_H
+  ${protobuf_files}
+)
+add_library(proto_cpp
+  SHARED ${PROTO_CPP} ${PROTO_H}
+)
+target_link_libraries(proto_cpp ${PROTOBUF_LIBRARIES})
 
+# Install
+install(
+  FILES ${PROTO_H}
+  DESTINATION include/${PROJECT_NAME})
+
+install(
+  TARGETS proto_cpp
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
+
+# Export
+ament_export_libraries(proto_cpp)
+ament_export_dependencies(Protobuf)
+
+# Build ROS msgs
 set(msg_files
   "msg/detection/DetectionBall.msg"
   "msg/detection/DetectionFrame.msg"
@@ -44,7 +72,6 @@ set(msg_files
   "msg/grsim/RobotStatus.msg"
   "msg/grsim/RobotsStatus.msg"
 )
-
 set(srv_files
   "srv/grsim/Replacement.srv"
 )
