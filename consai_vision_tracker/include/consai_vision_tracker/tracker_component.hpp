@@ -16,10 +16,15 @@
 #define CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
 
 #include "consai_vision_tracker/visibility_control.h"
+#include "robocup_ssl_msgs/msg/detection_frame.hpp"
+#include "robocup_ssl_msgs/msg/tracked_frame.hpp"
+#include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace consai_vision_tracker
 {
+
+using namespace robocup_ssl_msgs::msg;
 
 class Tracker : public rclcpp::Node
 {
@@ -31,7 +36,15 @@ protected:
   void on_timer();
 
 private:
+  void callback_detection(const DetectionFrame::SharedPtr msg);
+  void track_ball(const std::vector<DetectionBall> & balls);
+
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Subscription<DetectionFrame>::SharedPtr sub_detection_;
+  rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
+
+  TrackedFrame tracked_frame_;
+  TrackedBall tracked_ball_;
 };
 
 }  // namespace consai_vision_tracker

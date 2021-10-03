@@ -27,7 +27,15 @@ def generate_launch_description():
                 ComposableNode(
                     package='consai_vision_tracker',
                     plugin='consai_vision_tracker::Tracker',
-                    name='tracker'),
+                    name='tracker',
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
+                ComposableNode(
+                    package='robocup_ssl_comm',
+                    plugin='robocup_ssl_comm::Vision',
+                    name='vision',
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
             ],
             output='screen',
     )

@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(robocup_ssl_msgs REQUIRED)
 
 include_directories(include)
 
@@ -31,6 +32,7 @@ target_compile_definitions(tracker_component
 ament_target_dependencies(tracker_component
   rclcpp
   rclcpp_components
+  robocup_ssl_msgs
 )
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
@@ -39,6 +41,7 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_components)
+ament_export_dependencies(robocup_ssl_msgs)
 
 ament_export_include_directories(include)
 ament_export_libraries(tracker_component)
