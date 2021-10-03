@@ -23,6 +23,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtCore import QTimer
 from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
+from robocup_ssl_msgs.msg import GeometryData
 
 
 class Visualizer(Plugin):
@@ -31,7 +32,9 @@ class Visualizer(Plugin):
         super(Visualizer, self).__init__(context)
         self.setObjectName('Visualizer')
 
-        self._context = context
+        self._node = context.node
+        self._logger = self._node.get_logger()
+
         self._widget = QWidget()
 
         # widgetを読み込む
@@ -48,6 +51,11 @@ class Visualizer(Plugin):
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
 
+        # Subscriberの作成
+        self._sub_geometry = self._node.create_subscription(
+            GeometryData, "geometry", self._callback_geometry, 1
+        )
+
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
@@ -60,9 +68,9 @@ class Visualizer(Plugin):
 
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
-            pass
+            self._widget.field_widget.set_can_draw_geometry(True)
         else:
-            pass
+            self._widget.field_widget.set_can_draw_geometry(False)
 
     def _clicked_detection(self):
         if self._widget.check_box_detection.isChecked():
@@ -75,3 +83,6 @@ class Visualizer(Plugin):
             pass
         else:
             pass
+
+    def _callback_geometry(self, msg):
+        self._widget.field_widget.set_field(msg.field)
