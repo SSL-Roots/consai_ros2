@@ -17,7 +17,7 @@
 import math
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
-from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint
+from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
 from robocup_ssl_msgs.msg import GeometryFieldSize
 
 class FieldWidget(QWidget):
@@ -28,15 +28,22 @@ class FieldWidget(QWidget):
         self._COLOR_FIELD_CARPET = Qt.green
         self._COLOR_FIELD_LINE = Qt.white
         self._THICKNESS_FIELD_LINE = 2
+        self._MOUSE_WHEEL_ZOOM_RATE = 0.1  # マウスホイール操作による拡大縮小操作量
+        self._LIMIT_SCALE = 0.2  # 縮小率の限界値
 
         self._can_draw_geometry = False
         self._field = GeometryFieldSize()
         self._field.field_length = 12000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
 
+        self._draw_area_scale = QPointF(1.0, 1.0)  # 描画領域の拡大縮小率
+        self._draw_area_offset = QPointF(0.0, 0.0)  # 描画領域のオフセット
         self._draw_area_size = self.rect().size()  # 描画領域サイズ
         self._scale_field_to_draw = 1.0  # フィールド領域から描画領域に縮小するスケール
         self._do_rotate_draw_area = False  # 描画領域を90度回転するフラグ
+        self._mouse_clicked_pos = QPointF(0.0, 0.0)  # マウスでクリックした描画領域の座標
+        self._mouse_current_pos = QPointF(0.0, 0.0)  # マウスカーソルの現在座標
+        self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスでドラッグした距離
 
     def set_can_draw_geometry(self, enable=True):
         self._can_draw_geometry = enable
@@ -44,6 +51,49 @@ class FieldWidget(QWidget):
     def set_field(self, field):
         self._field = field
         self._resize_draw_area()
+
+    def mousePressEvent(self, event):
+        # マウスクリック時のイベント
+
+        if event.buttons() == Qt.LeftButton:
+            self._mouse_clicked_pos = event.localPos()
+
+        elif event.buttons() == Qt.RightButton:
+            self._reset_draw_area_offset_and_scale()
+
+        self.update()
+
+    def mouseMoveEvent(self, event):
+        # マウス移動時のイベント
+        self._mouse_current_pos = event.localPos()
+
+        if event.buttons() == Qt.LeftButton:
+            self._mouse_drag_offset = (
+                self._mouse_current_pos - self._mouse_clicked_pos) / self._draw_area_scale.x()
+
+        self.update()
+
+    def mouseReleaseEvent(self, event):
+        # マウスクリック解除時のイベント
+        # マウスのドラッグ操作で描画領域を移動する
+
+        self._draw_area_offset += self._mouse_drag_offset
+        self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスドラッグ距離の初期化
+
+        self.update()
+
+    def wheelEvent(self, event):
+        # マウスホイール回転時のイベント
+        scale_x = self._draw_area_scale.x()
+        if event.angleDelta().y() > 0:
+            self._draw_area_scale.setX(scale_x + self._MOUSE_WHEEL_ZOOM_RATE)
+            self._draw_area_scale.setY(scale_x + self._MOUSE_WHEEL_ZOOM_RATE)
+        else:
+            if scale_x > self._LIMIT_SCALE:
+                self._draw_area_scale.setX(scale_x - self._MOUSE_WHEEL_ZOOM_RATE)
+                self._draw_area_scale.setY(scale_x - self._MOUSE_WHEEL_ZOOM_RATE)
+        
+        self.update()
 
     def resizeEvent(self, event):
         self._resize_draw_area()
@@ -55,12 +105,22 @@ class FieldWidget(QWidget):
         cx = float(self.width()) * 0.5
         cy = float(self.height()) * 0.5
         painter.translate(cx,cy)
-
+        # 描画領域の拡大・縮小
+        painter.scale(self._draw_area_scale.x(), self._draw_area_scale.y())
+        # 描画領域の移動
+        painter.translate(self._draw_area_offset + self._mouse_drag_offset)
+        # 描画領域の回転
         if self._do_rotate_draw_area is True:
             painter.rotate(-90)
 
         if self._can_draw_geometry:
             self._draw_geometry(painter)
+
+    def _reset_draw_area_offset_and_scale(self):
+        # 描画領域の移動と拡大・縮小を初期化する
+        self._draw_area_offset = QPointF(0.0, 0.0)
+        self._draw_area_scale = QPointF(1.0, 1.0)
+        self._mouse_drag_offset = QPointF(0.0, 0.0)
 
     def _resize_draw_area(self):
         # Widgetのサイズに合わせて、描画用のフィールドサイズを変更する
