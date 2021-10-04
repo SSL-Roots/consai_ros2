@@ -23,6 +23,7 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtCore import QTimer
 from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
+from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
 
 
@@ -53,18 +54,19 @@ class Visualizer(Plugin):
 
         # Subscriberの作成
         self._sub_geometry = self._node.create_subscription(
-            GeometryData, "geometry", self._callback_geometry, 1
-        )
+            GeometryData, "geometry", self._callback_geometry, 1)
+        self._sub_detection = self._node.create_subscription(
+            DetectionFrame, "detection", self._callback_detection, 1)
 
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
         self._widget.check_box_detection_tracked.stateChanged.connect(self._clicked_detection_tracked)
 
-        # 30 msec周期で描画を更新する
+        # 16 msec周期で描画を更新する
         self._timer = QTimer()
         self._timer.timeout.connect(self._widget.field_widget.update)
-        self._timer.start(30)
+        self._timer.start(16)
 
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
@@ -74,9 +76,9 @@ class Visualizer(Plugin):
 
     def _clicked_detection(self):
         if self._widget.check_box_detection.isChecked():
-            pass
+            self._widget.field_widget.set_can_draw_detection(True)
         else:
-            pass
+            self._widget.field_widget.set_can_draw_detection(False)
 
     def _clicked_detection_tracked(self):
         if self._widget.check_box_detection_tracked.isChecked():
@@ -86,3 +88,6 @@ class Visualizer(Plugin):
 
     def _callback_geometry(self, msg):
         self._widget.field_widget.set_field(msg.field)
+
+    def _callback_detection(self, msg):
+        self._widget.field_widget.set_detection(msg)

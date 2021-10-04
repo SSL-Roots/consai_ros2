@@ -18,6 +18,7 @@ import math
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
 from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
+from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryFieldSize
 
 class FieldWidget(QWidget):
@@ -27,14 +28,22 @@ class FieldWidget(QWidget):
 
         self._COLOR_FIELD_CARPET = Qt.green
         self._COLOR_FIELD_LINE = Qt.white
+        self._COLOR_BALL = QColor("orange")
+        self._COLOR_BLUE_ROBOT = Qt.cyan
+        self._COLOR_YELLOW_ROBOT = Qt.yellow
         self._THICKNESS_FIELD_LINE = 2
-        self._MOUSE_WHEEL_ZOOM_RATE = 0.1  # マウスホイール操作による拡大縮小操作量
+        self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
+        self._RADIUS_BALL = 21.5  # diameter is 43 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
+        self._RADIUS_ROBOT = 90  # diameter is 180 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
+        self._ID_POS = QPoint(150, 150)  # IDの表示位置 mm.
 
         self._can_draw_geometry = False
+        self._can_draw_detection = False
         self._field = GeometryFieldSize()
         self._field.field_length = 12000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
+        self._detections = {}
 
         self._draw_area_scale = QPointF(1.0, 1.0)  # 描画領域の拡大縮小率
         self._draw_area_offset = QPointF(0.0, 0.0)  # 描画領域のオフセット
@@ -48,9 +57,15 @@ class FieldWidget(QWidget):
     def set_can_draw_geometry(self, enable=True):
         self._can_draw_geometry = enable
 
+    def set_can_draw_detection(self, enable=True):
+        self._can_draw_detection = enable
+
     def set_field(self, field):
         self._field = field
         self._resize_draw_area()
+
+    def set_detection(self, detection):
+        self._detections[detection.camera_id] = detection
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
@@ -115,6 +130,9 @@ class FieldWidget(QWidget):
 
         if self._can_draw_geometry:
             self._draw_geometry(painter)
+
+        if self._can_draw_detection:
+            self._draw_detection(painter)
 
     def _reset_draw_area_offset_and_scale(self):
         # 描画領域の移動と拡大・縮小を初期化する
@@ -186,6 +204,57 @@ class FieldWidget(QWidget):
             end_angle = math.degrees(arc.a2) * 16
             span_angle = end_angle - start_angle
             painter.drawArc(top_left.x(), top_left.y(), size, size, start_angle, span_angle)
+
+    def _draw_detection(self, painter):
+        # ロボット・ボールの描画
+
+        for detection in self._detections.values():
+            for ball in detection.balls:
+                self._draw_ball(painter, ball, detection.camera_id)
+            
+            for robot in detection.robots_yellow:
+                self._draw_yellow_robot(painter, robot, detection.camera_id)
+
+            for robot in detection.robots_blue:
+                self._draw_blue_robot(painter, robot, detection.camera_id)
+
+    def _draw_ball(self, painter, ball, camera_id=-1):
+        # ボールを描画する
+        point = self._convert_field_to_draw_point(ball.x, ball.y)
+        size = self._RADIUS_BALL * self._scale_field_to_draw
+
+        painter.setPen(Qt.black)
+        painter.setBrush(self._COLOR_BALL)
+        painter.drawEllipse(point, size, size)
+
+    def _draw_yellow_robot(self, painter, robot, camera_id=-1):
+        # 黄色ロボットを描画する
+        self._draw_robot(painter, robot, self._COLOR_YELLOW_ROBOT, camera_id)
+
+    def _draw_blue_robot(self, painter, robot, camera_id=-1):
+        # 青色ロボットを描画する
+        self._draw_robot(painter, robot, self._COLOR_BLUE_ROBOT, camera_id)
+
+    def _draw_robot(self, painter, robot, color, camera_id=-1):
+        # ロボットを描画する
+        point = self._convert_field_to_draw_point(robot.x, robot.y)
+        size = self._RADIUS_ROBOT * self._scale_field_to_draw
+
+        painter.setPen(Qt.black)
+        painter.setBrush(color)
+        painter.drawEllipse(point, size, size)
+
+        # ロボット角度
+        if len(robot.orientation) > 0:
+            line_x = self._RADIUS_ROBOT * math.cos(robot.orientation[0])
+            line_y = self._RADIUS_ROBOT * math.sin(robot.orientation[0])
+            line_point = point + self._convert_field_to_draw_point(line_x, line_y)
+            painter.drawLine(point, line_point)
+
+        # ロボットID
+        if len(robot.robot_id) > 0:
+            text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
+            painter.drawText(text_point, str(robot.robot_id[0]))
 
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
