@@ -20,7 +20,7 @@ import os
 from ament_index_python.resources import get_resource
 from consai_visualizer.field_widget import FieldWidget
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QTimer
+from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
@@ -62,6 +62,10 @@ class Visualizer(Plugin):
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
         self._widget.check_box_detection_tracked.stateChanged.connect(self._clicked_detection_tracked)
+
+        # チェックボックスを操作する
+        self._widget.check_box_geometry.setCheckState(Qt.Checked)
+        self._widget.check_box_detection.setCheckState(Qt.Checked)
 
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
