@@ -6,4 +6,4 @@ float64 y
 float64 dir
 uint32 id
 bool yellowteam
-bool turnon
+bool[<=1] turnon  # optional
