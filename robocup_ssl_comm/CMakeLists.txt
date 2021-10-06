@@ -37,6 +37,7 @@ target_compile_definitions(vision_component
 ament_target_dependencies(vision_component
   rclcpp
   rclcpp_components
+  robocup_ssl_msgs
 )
 target_link_libraries(vision_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
 rclcpp_components_register_nodes(vision_component "robocup_ssl_comm::Vision")
@@ -62,7 +63,9 @@ target_compile_definitions(grsim_component
 ament_target_dependencies(grsim_component
   rclcpp
   rclcpp_components
+  robocup_ssl_msgs
 )
+target_link_libraries(grsim_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
 rclcpp_components_register_nodes(grsim_component "robocup_ssl_comm::GrSim")
 
 # Exports

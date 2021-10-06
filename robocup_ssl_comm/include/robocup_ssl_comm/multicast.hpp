@@ -22,18 +22,19 @@
 #include <string>
 #include <vector>
 
-namespace asio = boost::asio;
 
 namespace multicast
 {
 
+namespace asio = boost::asio;
+
 class MulticastReceiver
 {
 public:
-  MulticastReceiver(const std::string & ip, const int port)
+  MulticastReceiver(const std::string & host, const int port)
   : socket_(io_service_, asio::ip::udp::v4())
   {
-    asio::ip::address addr = asio::ip::address::from_string(ip);
+    asio::ip::address addr = asio::ip::address::from_string(host);
     if (!addr.is_multicast()) {
       throw std::runtime_error("expected multicast address");
     }

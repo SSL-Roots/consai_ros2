@@ -23,6 +23,10 @@ find_package(Protobuf REQUIRED)
 
 # Build protobuf C++ lib
 set(protobuf_files
+  proto/grSim_Commands.proto
+  proto/grSim_Packet.proto
+  proto/grSim_Replacement.proto
+  proto/grSim_Robotstatus.proto
   proto/messages_robocup_ssl_wrapper.proto
   proto/messages_robocup_ssl_geometry.proto
   proto/messages_robocup_ssl_detection.proto
@@ -67,6 +71,7 @@ set(msg_files
   "msg/referee/Referee.msg"
   "msg/grsim/BallReplacement.msg"
   "msg/grsim/Commands.msg"
+  "msg/grsim/Replacement.msg"
   "msg/grsim/RobotCommand.msg"
   "msg/grsim/RobotReplacement.msg"
   "msg/grsim/RobotStatus.msg"

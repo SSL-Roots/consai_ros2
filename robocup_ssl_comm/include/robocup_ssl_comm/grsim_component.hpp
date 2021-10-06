@@ -15,11 +15,18 @@
 #ifndef ROBOCUP_SSL_COMM__GRSIM_COMPONENT_HPP_
 #define ROBOCUP_SSL_COMM__GRSIM_COMPONENT_HPP_
 
-#include "robocup_ssl_comm/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
+#include "robocup_ssl_comm/udp_sender.hpp"
+#include "robocup_ssl_comm/visibility_control.h"
+#include "robocup_ssl_msgs/grSim_Commands.pb.h"
+#include "robocup_ssl_msgs/msg/commands.hpp"
+#include "robocup_ssl_msgs/msg/replacement.hpp"
+#include "robocup_ssl_msgs/msg/robot_command.hpp"
 
 namespace robocup_ssl_comm
 {
+
+using namespace robocup_ssl_msgs::msg;
 
 class GrSim : public rclcpp::Node
 {
@@ -31,7 +38,17 @@ protected:
   void on_timer();
 
 private:
+  void callback_commands(const Commands::SharedPtr msg);
+  void callback_single_command(const RobotCommand::SharedPtr msg);
+  void callback_replacement(const Replacement::SharedPtr msg);
+
+  void set_command(grSim_Robot_Command * robot_command, const RobotCommand & msg_robot_command);
+
+  std::unique_ptr<udp_sender::UDPSender> sender_;
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Subscription<Commands>::SharedPtr sub_commands_;
+  rclcpp::Subscription<RobotCommand>::SharedPtr sub_single_command_;
+  rclcpp::Subscription<Replacement>::SharedPtr sub_replacement_;
 };
 
 }  // namespace robocup_ssl_comm
