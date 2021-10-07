@@ -84,13 +84,9 @@ set(msg_files
   "msg/detection_tracked/Vector2.msg"
   "msg/detection_tracked/Vector3.msg"
 )
-set(srv_files
-  "srv/grsim/Replacement.srv"
-)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
-  ${srv_files}
   DEPENDENCIES std_msgs
   ADD_LINTER_TESTS
 )

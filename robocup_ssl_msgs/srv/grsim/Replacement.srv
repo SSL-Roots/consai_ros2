@@ -1,8 +1,0 @@
-# This srv file is a copy of 'grSim_Replacement.proto'
-# https://github.com/RoboCup-SSL/grSim/blob/master/src/proto/grSim_Replacement.proto
-
-BallReplacement ball
-RobotReplacement[] robots
----
-bool success
-string message
