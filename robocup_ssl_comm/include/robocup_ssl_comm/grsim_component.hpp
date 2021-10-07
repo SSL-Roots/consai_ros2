@@ -19,9 +19,11 @@
 #include "robocup_ssl_comm/udp_sender.hpp"
 #include "robocup_ssl_comm/visibility_control.h"
 #include "robocup_ssl_msgs/grSim_Commands.pb.h"
+#include "robocup_ssl_msgs/grSim_Replacement.pb.h"
 #include "robocup_ssl_msgs/msg/commands.hpp"
 #include "robocup_ssl_msgs/msg/replacement.hpp"
 #include "robocup_ssl_msgs/msg/robot_command.hpp"
+#include "robocup_ssl_msgs/msg/robot_replacement.hpp"
 
 namespace robocup_ssl_comm
 {
@@ -43,11 +45,11 @@ private:
   void callback_replacement(const Replacement::SharedPtr msg);
 
   void set_command(grSim_Robot_Command * robot_command, const RobotCommand & msg_robot_command);
+  void set_robot_replacement(grSim_RobotReplacement * robot_replacement, const RobotReplacement & msg_robot_replacement);
 
   std::unique_ptr<udp_sender::UDPSender> sender_;
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<Commands>::SharedPtr sub_commands_;
-  rclcpp::Subscription<RobotCommand>::SharedPtr sub_single_command_;
   rclcpp::Subscription<Replacement>::SharedPtr sub_replacement_;
 };
 

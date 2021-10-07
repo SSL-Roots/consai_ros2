@@ -33,8 +33,6 @@ GrSim::GrSim(const rclcpp::NodeOptions & options)
 
   sub_commands_= create_subscription<Commands>(
     "commands", 10, std::bind(&GrSim::callback_commands, this, _1));
-  sub_single_command_ = create_subscription<RobotCommand>(
-    "single_command", 10, std::bind(&GrSim::callback_single_command, this, _1));
   sub_replacement_= create_subscription<Replacement>(
     "replacement", 10, std::bind(&GrSim::callback_replacement, this, _1));
 
@@ -64,37 +62,30 @@ void GrSim::callback_commands(const Commands::SharedPtr msg)
   sender_->send(output);
 }
 
-void GrSim::callback_single_command(const RobotCommand::SharedPtr msg)
+void GrSim::callback_replacement(const Replacement::SharedPtr msg)
 {
-  grSim_Commands * commands = new grSim_Commands();
+  grSim_Replacement * replacement = new grSim_Replacement();
 
-  if(msg->timestamp.size() <= 0){
-    RCLCPP_WARN(this->get_logger(), "The timestamp field must be set to a value.");
-    return;
-  }else{
-    commands->set_timestamp(msg->timestamp[0]);
+  if(msg->ball.size() > 0){
+    grSim_BallReplacement * ball = new grSim_BallReplacement();
+    auto msg_ball = msg->ball[0];
+    if(msg_ball.x.size() > 0) ball->set_x(msg_ball.x[0]);
+    if(msg_ball.y.size() > 0) ball->set_y(msg_ball.y[0]);
+    if(msg_ball.vx.size() > 0) ball->set_vx(msg_ball.vx[0]);
+    if(msg_ball.vy.size() > 0) ball->set_vy(msg_ball.vy[0]);
+    replacement->set_allocated_ball(ball);
   }
 
-  if(msg->isteamyellow.size() <= 0){
-    RCLCPP_WARN(this->get_logger(), "The isteamyellow field must be set to a value.");
-    return;
-  }else{
-    commands->set_isteamyellow(msg->isteamyellow[0]);
+  for(auto msg_robot: msg->robots){
+    set_robot_replacement(replacement->add_robots(), msg_robot);
   }
-
-  set_command(commands->add_robot_commands(), *msg);
 
   grSim_Packet packet;
-  packet.set_allocated_commands(commands);
+  packet.set_allocated_replacement(replacement);
 
   std::string output;
   packet.SerializeToString(&output);
   sender_->send(output);
-}
-
-void GrSim::callback_replacement(const Replacement::SharedPtr msg)
-{
-
 }
 
 void GrSim::set_command(grSim_Robot_Command * robot_command, const RobotCommand & msg_robot_command)
@@ -115,6 +106,18 @@ void GrSim::set_command(grSim_Robot_Command * robot_command, const RobotCommand 
     robot_command->set_wheel3(msg_robot_command.wheel3[0]);
   if(msg_robot_command.wheel4.size() > 0)
     robot_command->set_wheel4(msg_robot_command.wheel4[0]);
+}
+
+void GrSim::set_robot_replacement(grSim_RobotReplacement * robot_replacement,
+  const RobotReplacement & msg_robot_replacement)
+{
+  robot_replacement->set_x(msg_robot_replacement.x);
+  robot_replacement->set_y(msg_robot_replacement.y);
+  robot_replacement->set_dir(msg_robot_replacement.dir);
+  robot_replacement->set_id(msg_robot_replacement.id);
+  robot_replacement->set_yellowteam(msg_robot_replacement.yellowteam);
+  if(msg_robot_replacement.turnon.size() > 0)
+    robot_replacement->set_turnon(msg_robot_replacement.turnon[0]);
 }
 
 }  // namespace robocup_ssl_comm
