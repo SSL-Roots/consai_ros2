@@ -51,6 +51,8 @@ class FieldWidget(QWidget):
         self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 200
         self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
         self._RADIUS_REPLACEMENT_ROBOT_ANGLE = self._RADIUS_ROBOT + 200
+        self._GAIN_REPLACE_BALL_VEL = 0.001 * 3.0
+        self._MAX_VELOCITY_OF_REPLACE_BALL = 8.0
         self._ID_POS = QPoint(150, 150)  # IDの表示位置 mm.
 
         # 外部からセットするパラメータ
@@ -134,7 +136,9 @@ class FieldWidget(QWidget):
         if self._can_draw_replacement:
             # grSim用のReplacementをpublish
             if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
-                self._publish_ball_replacement()
+                self._publish_ball_pos_replacement()
+            elif self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
+                self._publish_ball_vel_replacement()
 
         self._draw_area_offset += self._mouse_drag_offset
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスドラッグ距離の初期化
@@ -182,7 +186,7 @@ class FieldWidget(QWidget):
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する
         # 近ければreplacementと判定する
-        field_clicked_pos = self._convert_draw_to_field_pos(clicked_point.x(), clicked_point.y())
+        field_clicked_pos = self._convert_draw_to_field_pos(clicked_point)
 
         clicked_object = ClickedObject.IS_NONE
         for detection in self._detections.values():
@@ -211,12 +215,37 @@ class FieldWidget(QWidget):
         else:
             return False
 
-    def _publish_ball_replacement(self):
-        # grSimのBall Replacementをpublsihする
+    def _publish_ball_pos_replacement(self):
+        # grSimのBall Replacementの位置をpublsihする
         ball_replacement = BallReplacement()
-        pos = self._convert_draw_to_field_pos(self._mouse_current_point.x(), self._mouse_current_point.y())
+        pos = self._convert_draw_to_field_pos(self._mouse_current_point)
         ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
         ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
+        replacement = Replacement()
+        replacement.ball.append(ball_replacement)
+        self._pub_replacement.publish(replacement)
+
+    def _publish_ball_vel_replacement(self):
+        # grSimのBall Replacementの速度をpublsihする
+        ball_replacement = BallReplacement()
+
+        start_pos = self._convert_draw_to_field_pos(self._mouse_clicked_point)
+        end_pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+
+        # ball_replacement.x.append(start_pos.x() * 0.001)  # mm に変換
+        # ball_replacement.y.append(start_pos.y() * 0.001)  # mm に変換
+
+        diff_pos = end_pos - start_pos
+        diff_norm = math.hypot(diff_pos.x(), diff_pos.y())
+
+        velocity_norm = diff_norm * self._GAIN_REPLACE_BALL_VEL
+        if velocity_norm > self._MAX_VELOCITY_OF_REPLACE_BALL:
+            velocity_norm = self._MAX_VELOCITY_OF_REPLACE_BALL
+
+        angle = math.atan2(diff_pos.y(), diff_pos.x())
+        ball_replacement.vx.append(velocity_norm * math.cos(angle))
+        ball_replacement.vy.append(velocity_norm * math.sin(angle))
+
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
@@ -372,6 +401,12 @@ class FieldWidget(QWidget):
             painter.setPen(self._COLOR_REPLACEMENT_POS)
             painter.drawLine(point, end_point)
 
+        # ボールのreplacement速度の描画
+        if self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
+            end_point = self._apply_transpose_to_draw_point(self._mouse_current_point)
+            painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
+            painter.drawLine(point, end_point)
+
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
         draw_x = x * self._scale_field_to_draw
@@ -379,12 +414,12 @@ class FieldWidget(QWidget):
         point = QPoint(draw_x, draw_y)
         return point
 
-    def _convert_draw_to_field_pos(self, x, y):
+    def _convert_draw_to_field_pos(self, point):
         # 描画座標系をフィールド座標系に変換する
 
         # スケールを戻す
-        field_x = x / self._draw_area_scale
-        field_y = y / self._draw_area_scale
+        field_x = point.x() / self._draw_area_scale
+        field_y = point.y() / self._draw_area_scale
 
         # 移動を戻す
         field_x -= (self._draw_area_offset.x() + self._mouse_drag_offset.x())
