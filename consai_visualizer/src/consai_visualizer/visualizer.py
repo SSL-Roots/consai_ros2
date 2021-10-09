@@ -25,6 +25,7 @@ from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
+from robocup_ssl_msgs.msg import Replacement
 
 
 class Visualizer(Plugin):
@@ -52,16 +53,21 @@ class Visualizer(Plugin):
                 self._widget.windowTitle() + (' (%d)' % context.serial_number()))
         context.add_widget(self._widget)
 
-        # Subscriberの作成
+        # loggerをセット
+        self._widget.field_widget.set_logger(self._logger)
+
+        # Subscriber、Publisherの作成
         self._sub_geometry = self._node.create_subscription(
             GeometryData, "geometry", self._callback_geometry, 1)
         self._sub_detection = self._node.create_subscription(
             DetectionFrame, "detection", self._callback_detection, 1)
+        self._widget.field_widget.set_pub_replacement(self._node.create_publisher(Replacement, 'replacement', 1))
 
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
         self._widget.check_box_detection_tracked.stateChanged.connect(self._clicked_detection_tracked)
+        self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
 
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
@@ -89,6 +95,12 @@ class Visualizer(Plugin):
             pass
         else:
             pass
+    
+    def _clicked_replacement(self):
+        if self._widget.check_box_replacement.isChecked():
+            self._widget.field_widget.set_can_draw_replacement(True)
+        else:
+            self._widget.field_widget.set_can_draw_replacement(False)
 
     def _callback_geometry(self, msg):
         self._widget.field_widget.set_field(msg.field)

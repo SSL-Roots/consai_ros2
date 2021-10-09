@@ -15,50 +15,80 @@
 # limitations under the License.
 
 import math
+from enum import Enum
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
 from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryFieldSize
+from robocup_ssl_msgs.msg import BallReplacement
+from robocup_ssl_msgs.msg import Replacement
+
+class ClickedObject(Enum):
+    IS_NONE = 0
+    IS_BALL_POS = 1
+    IS_BALL_VEL = 2
 
 class FieldWidget(QWidget):
 
     def __init__(self, parent=None):
         super(FieldWidget, self).__init__(parent)
 
+        # 定数
         self._COLOR_FIELD_CARPET = Qt.green
         self._COLOR_FIELD_LINE = Qt.white
         self._COLOR_BALL = QColor("orange")
         self._COLOR_BLUE_ROBOT = Qt.cyan
         self._COLOR_YELLOW_ROBOT = Qt.yellow
+        self._COLOR_REPLACEMENT_POS = QColor("magenta")
+        self._COLOR_REPLACEMENT_VEL_ANGLE = QColor("darkviolet")
         self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
         self._RADIUS_BALL = 21.5  # diameter is 43 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
         self._RADIUS_ROBOT = 90  # diameter is 180 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
+        self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 100
+        self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 200
+        self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
+        self._RADIUS_REPLACEMENT_ROBOT_ANGLE = self._RADIUS_ROBOT + 200
         self._ID_POS = QPoint(150, 150)  # IDの表示位置 mm.
 
+        # 外部からセットするパラメータ
+        self._logger = None
+        self._pub_replacement = None
         self._can_draw_geometry = False
         self._can_draw_detection = False
+        self._can_draw_replacement = False
         self._field = GeometryFieldSize()
         self._field.field_length = 12000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
 
-        self._draw_area_scale = QPointF(1.0, 1.0)  # 描画領域の拡大縮小率
+        # 内部で変更するパラメータ
+        self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
         self._draw_area_offset = QPointF(0.0, 0.0)  # 描画領域のオフセット
         self._draw_area_size = self.rect().size()  # 描画領域サイズ
         self._scale_field_to_draw = 1.0  # フィールド領域から描画領域に縮小するスケール
         self._do_rotate_draw_area = False  # 描画領域を90度回転するフラグ
-        self._mouse_clicked_pos = QPointF(0.0, 0.0)  # マウスでクリックした描画領域の座標
-        self._mouse_current_pos = QPointF(0.0, 0.0)  # マウスカーソルの現在座標
+        self._mouse_clicked_point = QPointF(0.0, 0.0)  # マウスでクリックした描画領域の座標
+        self._mouse_current_point = QPointF(0.0, 0.0)  # マウスカーソルの現在座標
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスでドラッグした距離
+        self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
+
+    def set_logger(self, logger):
+        self._logger = logger
+
+    def set_pub_replacement(self, pub_replacement):
+        self._pub_replacement = pub_replacement
 
     def set_can_draw_geometry(self, enable=True):
         self._can_draw_geometry = enable
 
     def set_can_draw_detection(self, enable=True):
         self._can_draw_detection = enable
+
+    def set_can_draw_replacement(self, enable=True):
+        self._can_draw_replacement = enable
 
     def set_field(self, field):
         self._field = field
@@ -71,7 +101,12 @@ class FieldWidget(QWidget):
         # マウスクリック時のイベント
 
         if event.buttons() == Qt.LeftButton:
-            self._mouse_clicked_pos = event.localPos()
+            self._mouse_clicked_point = event.localPos()
+            self._mouse_current_point = event.localPos()
+
+            # ロボット、ボールをクリックしているか
+            if self._can_draw_replacement:
+                self._clicked_replacement_object = self._get_clicked_replacement_object(self._mouse_clicked_point)
 
         elif event.buttons() == Qt.RightButton:
             self._reset_draw_area_offset_and_scale()
@@ -80,11 +115,15 @@ class FieldWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         # マウス移動時のイベント
-        self._mouse_current_pos = event.localPos()
+        self._mouse_current_point = event.localPos()
 
-        if event.buttons() == Qt.LeftButton:
+        if self._clicked_replacement_object != ClickedObject.IS_NONE:
+            # Replacement時は何もしない
+            pass
+        elif event.buttons() == Qt.LeftButton:
+            # 描画領域を移動するためのオフセットを計算
             self._mouse_drag_offset = (
-                self._mouse_current_pos - self._mouse_clicked_pos) / self._draw_area_scale.x()
+                self._mouse_current_point - self._mouse_clicked_point) / self._draw_area_scale
 
         self.update()
 
@@ -92,21 +131,24 @@ class FieldWidget(QWidget):
         # マウスクリック解除時のイベント
         # マウスのドラッグ操作で描画領域を移動する
 
+        if self._can_draw_replacement:
+            # grSim用のReplacementをpublish
+            if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
+                self._publish_ball_replacement()
+
         self._draw_area_offset += self._mouse_drag_offset
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスドラッグ距離の初期化
+        self._clicked_replacement_object = ClickedObject.IS_NONE  # Replacementの初期化
 
         self.update()
 
     def wheelEvent(self, event):
         # マウスホイール回転時のイベント
-        scale_x = self._draw_area_scale.x()
         if event.angleDelta().y() > 0:
-            self._draw_area_scale.setX(scale_x + self._MOUSE_WHEEL_ZOOM_RATE)
-            self._draw_area_scale.setY(scale_x + self._MOUSE_WHEEL_ZOOM_RATE)
+            self._draw_area_scale += self._MOUSE_WHEEL_ZOOM_RATE
         else:
-            if scale_x > self._LIMIT_SCALE:
-                self._draw_area_scale.setX(scale_x - self._MOUSE_WHEEL_ZOOM_RATE)
-                self._draw_area_scale.setY(scale_x - self._MOUSE_WHEEL_ZOOM_RATE)
+            if self._draw_area_scale > self._LIMIT_SCALE:
+                self._draw_area_scale -= self._MOUSE_WHEEL_ZOOM_RATE
         
         self.update()
 
@@ -121,7 +163,7 @@ class FieldWidget(QWidget):
         cy = float(self.height()) * 0.5
         painter.translate(cx,cy)
         # 描画領域の拡大・縮小
-        painter.scale(self._draw_area_scale.x(), self._draw_area_scale.y())
+        painter.scale(self._draw_area_scale, self._draw_area_scale)
         # 描画領域の移動
         painter.translate(self._draw_area_offset + self._mouse_drag_offset)
         # 描画領域の回転
@@ -131,13 +173,58 @@ class FieldWidget(QWidget):
         if self._can_draw_geometry:
             self._draw_geometry(painter)
 
+        if self._can_draw_replacement:
+            self._draw_replacement(painter)
+
         if self._can_draw_detection:
             self._draw_detection(painter)
+
+    def _get_clicked_replacement_object(self, clicked_point):
+        # マウスでクリックした位置がボールやロボットに近いか判定する
+        # 近ければreplacementと判定する
+        field_clicked_pos = self._convert_draw_to_field_pos(clicked_point.x(), clicked_point.y())
+
+        clicked_object = ClickedObject.IS_NONE
+        for detection in self._detections.values():
+            for ball in detection.balls:
+                clicked_object = self._get_clicked_ball_object(field_clicked_pos, ball)
+
+        return clicked_object
+
+    def _get_clicked_ball_object(self, clicked_pos, ball):
+        ball_pos = QPoint(ball.x, ball.y)
+
+        if self._is_clicked(ball_pos, clicked_pos, self._RADIUS_REPLACEMENT_BALL_POS):
+            return ClickedObject.IS_BALL_POS
+        elif self._is_clicked(ball_pos, clicked_pos, self._RADIUS_REPLACEMENT_BALL_VEL):
+            return ClickedObject.IS_BALL_VEL
+        else:
+            return ClickedObject.IS_NONE
+
+    def _is_clicked(self, pos1, pos2, threshold):
+        # フィールド上のオブジェクトをクリックしたか判定する
+        diff_pos = pos1 - pos2
+        diff_norm = math.hypot(diff_pos.x(), diff_pos.y())
+
+        if diff_norm < threshold:
+            return True
+        else:
+            return False
+
+    def _publish_ball_replacement(self):
+        # grSimのBall Replacementをpublsihする
+        ball_replacement = BallReplacement()
+        pos = self._convert_draw_to_field_pos(self._mouse_current_point.x(), self._mouse_current_point.y())
+        ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
+        ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
+        replacement = Replacement()
+        replacement.ball.append(ball_replacement)
+        self._pub_replacement.publish(replacement)
 
     def _reset_draw_area_offset_and_scale(self):
         # 描画領域の移動と拡大・縮小を初期化する
         self._draw_area_offset = QPointF(0.0, 0.0)
-        self._draw_area_scale = QPointF(1.0, 1.0)
+        self._draw_area_scale = 1.0
         self._mouse_drag_offset = QPointF(0.0, 0.0)
 
     def _resize_draw_area(self):
@@ -217,6 +304,12 @@ class FieldWidget(QWidget):
 
             for robot in detection.robots_blue:
                 self._draw_blue_robot(painter, robot, detection.camera_id)
+    
+    def _draw_replacement(self, painter):
+        # grSim Replacementの描画
+        for detection in self._detections.values():
+            for ball in detection.balls:
+                self._draw_replacement_ball(painter, ball)
 
     def _draw_ball(self, painter, ball, camera_id=-1):
         # ボールを描画する
@@ -255,6 +348,29 @@ class FieldWidget(QWidget):
         if len(robot.robot_id) > 0:
             text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
             painter.drawText(text_point, str(robot.robot_id[0]))
+        
+    def _draw_replacement_ball(self, painter, ball):
+        # ボールのreplacementを描画する
+        
+        # ボール速度replacement判定エリアの描画
+        point = self._convert_field_to_draw_point(ball.x, ball.y)
+        size = self._RADIUS_REPLACEMENT_BALL_VEL * self._scale_field_to_draw
+        painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
+        painter.setBrush(self._COLOR_REPLACEMENT_VEL_ANGLE)
+        painter.drawEllipse(point, size, size)
+
+        # ボール位置replacement判定エリアの描画
+        point = self._convert_field_to_draw_point(ball.x, ball.y)
+        size = self._RADIUS_REPLACEMENT_BALL_POS * self._scale_field_to_draw
+        painter.setPen(self._COLOR_REPLACEMENT_POS)
+        painter.setBrush(self._COLOR_REPLACEMENT_POS)
+        painter.drawEllipse(point, size, size)
+
+        # ボールのreplacement位置の描画
+        if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
+            end_point = self._apply_transpose_to_draw_point(self._mouse_current_point)
+            painter.setPen(self._COLOR_REPLACEMENT_POS)
+            painter.drawLine(point, end_point)
 
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
@@ -262,3 +378,49 @@ class FieldWidget(QWidget):
         draw_y = -y * self._scale_field_to_draw
         point = QPoint(draw_x, draw_y)
         return point
+
+    def _convert_draw_to_field_pos(self, x, y):
+        # 描画座標系をフィールド座標系に変換する
+
+        # スケールを戻す
+        field_x = x / self._draw_area_scale
+        field_y = y / self._draw_area_scale
+
+        # 移動を戻す
+        field_x -= (self._draw_area_offset.x() + self._mouse_drag_offset.x())
+        field_y -= (self._draw_area_offset.y() + self._mouse_drag_offset.y())
+
+        # センタリング
+        field_x -= self.width() * 0.5 / self._draw_area_scale
+        field_y -= self.height() * 0.5 / self._draw_area_scale
+
+        # 描画エリアの回転を反映
+        if self._do_rotate_draw_area:
+            field_x, field_y = -field_y, field_x
+
+        field_x /= self._scale_field_to_draw
+        field_y /= -self._scale_field_to_draw
+
+        return QPoint(field_x, field_y)
+        
+    def _apply_transpose_to_draw_point(self, point):
+        # Widget上のポイント（左上が0, 0となる座標系）を、
+        # translate、scale、rotate適用後のポイントに変換する
+
+        draw_point = QPoint()
+
+        # 描画中心座標変更の適用
+        draw_point.setX(point.x() - self.width() * 0.5)
+        draw_point.setY(point.y() - self.height() * 0.5)
+
+        # 描画領域の拡大・縮小の適用
+        draw_point /= self._draw_area_scale
+
+        # 描画領域の移動の適用
+        draw_point -= self._draw_area_offset
+
+        # 描画領域の回転の適用
+        if self._do_rotate_draw_area is True:
+            draw_point = QPoint(-draw_point.y(), draw_point.x())
+
+        return draw_point

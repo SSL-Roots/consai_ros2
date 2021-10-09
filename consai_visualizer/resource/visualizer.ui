@@ -42,6 +42,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QCheckBox" name="check_box_replacement">
+         <property name="text">
+          <string>replacement</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
