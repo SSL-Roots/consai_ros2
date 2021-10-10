@@ -43,8 +43,8 @@ void Estimator::set_observation(const DetectionRobot & robot, const int camera_i
     return;
   }
 
-  observation_robot_.pos.x = robot.x;
-  observation_robot_.pos.y = robot.y;
+  observation_robot_.pos.x = robot.x * 0.001;  // mm to meters
+  observation_robot_.pos.y = robot.y * 0.001;  // mm to meters
   observation_robot_.orientation = robot.orientation[0];
 }
 

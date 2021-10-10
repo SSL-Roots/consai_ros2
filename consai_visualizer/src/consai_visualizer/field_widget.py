@@ -23,6 +23,7 @@ from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
+from robocup_ssl_msgs.msg import RobotId
 
 class ClickedObject(Enum):
     IS_NONE = 0
@@ -60,11 +61,13 @@ class FieldWidget(QWidget):
         self._pub_replacement = None
         self._can_draw_geometry = False
         self._can_draw_detection = False
+        self._can_draw_detection_tracked = False
         self._can_draw_replacement = False
         self._field = GeometryFieldSize()
         self._field.field_length = 12000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
+        self._detection_tracked = None
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -89,6 +92,9 @@ class FieldWidget(QWidget):
     def set_can_draw_detection(self, enable=True):
         self._can_draw_detection = enable
 
+    def set_can_draw_detection_tracked(self, enable=True):
+        self._can_draw_detection_tracked = enable
+
     def set_can_draw_replacement(self, enable=True):
         self._can_draw_replacement = enable
 
@@ -98,6 +104,9 @@ class FieldWidget(QWidget):
 
     def set_detection(self, detection):
         self._detections[detection.camera_id] = detection
+
+    def set_detection_tracked(self, detection_tracked):
+        self._detection_tracked = detection_tracked
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
@@ -182,6 +191,9 @@ class FieldWidget(QWidget):
 
         if self._can_draw_detection:
             self._draw_detection(painter)
+        
+        if self._can_draw_detection_tracked:
+            self._draw_detection_tracked(painter)
 
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する
@@ -322,17 +334,26 @@ class FieldWidget(QWidget):
             painter.drawArc(top_left.x(), top_left.y(), size, size, start_angle, span_angle)
 
     def _draw_detection(self, painter):
-        # ロボット・ボールの描画
+        # detectionトピックのロボット・ボールの描画
 
         for detection in self._detections.values():
             for ball in detection.balls:
-                self._draw_ball(painter, ball, detection.camera_id)
+                self._draw_detection_ball(painter, ball, detection.camera_id)
             
             for robot in detection.robots_yellow:
-                self._draw_yellow_robot(painter, robot, detection.camera_id)
+                self._draw_detection_yellow_robot(painter, robot, detection.camera_id)
 
             for robot in detection.robots_blue:
-                self._draw_blue_robot(painter, robot, detection.camera_id)
+                self._draw_detection_blue_robot(painter, robot, detection.camera_id)
+
+    def _draw_detection_tracked(self, painter):
+        # detection_trackedトピックのロボット・ボールの描画
+
+        for ball in self._detection_tracked.balls:
+            self._draw_tracked_ball(painter, ball)
+
+        for robot in self._detection_tracked.robots:
+            self._draw_tracked_robot(painter, robot)
     
     def _draw_replacement(self, painter):
         # grSim Replacementの描画
@@ -340,32 +361,42 @@ class FieldWidget(QWidget):
             for ball in detection.balls:
                 self._draw_replacement_ball(painter, ball)
 
-    def _draw_ball(self, painter, ball, camera_id=-1):
-        # ボールを描画する
+    def _draw_detection_ball(self, painter, ball, camera_id=-1):
+        # detectionトピックのボールを描画する
         point = self._convert_field_to_draw_point(ball.x, ball.y)
+        size = self._RADIUS_BALL * self._scale_field_to_draw
+
+        painter.setPen(self._COLOR_BALL)
+        painter.setBrush(self._COLOR_BALL)
+        painter.drawEllipse(point, size, size)
+
+    def _draw_tracked_ball(self, painter, ball):
+        # detection_trackedトピックのボールを描画する
+        point = self._convert_field_to_draw_point(ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
         size = self._RADIUS_BALL * self._scale_field_to_draw
 
         painter.setPen(Qt.black)
         painter.setBrush(self._COLOR_BALL)
         painter.drawEllipse(point, size, size)
 
-    def _draw_yellow_robot(self, painter, robot, camera_id=-1):
-        # 黄色ロボットを描画する
-        self._draw_robot(painter, robot, self._COLOR_YELLOW_ROBOT, camera_id)
+    def _draw_detection_yellow_robot(self, painter, robot, camera_id=-1):
+        # detectionトピックの黄色ロボットを描画する
+        self._draw_detection_robot(painter, robot, self._COLOR_YELLOW_ROBOT, camera_id)
 
-    def _draw_blue_robot(self, painter, robot, camera_id=-1):
-        # 青色ロボットを描画する
-        self._draw_robot(painter, robot, self._COLOR_BLUE_ROBOT, camera_id)
+    def _draw_detection_blue_robot(self, painter, robot, camera_id=-1):
+        # detectionトピックの青色ロボットを描画する
+        self._draw_detection_robot(painter, robot, self._COLOR_BLUE_ROBOT, camera_id)
 
-    def _draw_robot(self, painter, robot, color, camera_id=-1):
+    def _draw_detection_robot(self, painter, robot, color, camera_id=-1):
         # ロボットを描画する
         point = self._convert_field_to_draw_point(robot.x, robot.y)
         size = self._RADIUS_ROBOT * self._scale_field_to_draw
 
-        painter.setPen(Qt.black)
+        painter.setPen(color)
         painter.setBrush(color)
         painter.drawEllipse(point, size, size)
 
+        painter.setPen(Qt.black)
         # ロボット角度
         if len(robot.orientation) > 0:
             line_x = self._RADIUS_ROBOT * math.cos(robot.orientation[0])
@@ -377,6 +408,28 @@ class FieldWidget(QWidget):
         if len(robot.robot_id) > 0:
             text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
             painter.drawText(text_point, str(robot.robot_id[0]))
+
+    def _draw_tracked_robot(self, painter, robot):
+        # detection_trackedトピックのロボットを描画する
+        point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
+        size = self._RADIUS_ROBOT * self._scale_field_to_draw
+
+        painter.setPen(Qt.black)
+        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+            painter.setBrush(self._COLOR_YELLOW_ROBOT)
+        else:
+            painter.setBrush(self._COLOR_BLUE_ROBOT)
+        painter.drawEllipse(point, size, size)
+
+        # ロボット角度
+        line_x = self._RADIUS_ROBOT * math.cos(robot.orientation)
+        line_y = self._RADIUS_ROBOT * math.sin(robot.orientation)
+        line_point = point + self._convert_field_to_draw_point(line_x, line_y)
+        painter.drawLine(point, line_point)
+
+        # ロボットID
+        text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
+        painter.drawText(text_point, str(robot.robot_id.id))
         
     def _draw_replacement_ball(self, painter, ball):
         # ボールのreplacementを描画する

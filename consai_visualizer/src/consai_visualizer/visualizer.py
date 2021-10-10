@@ -26,6 +26,7 @@ from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
 from robocup_ssl_msgs.msg import Replacement
+from robocup_ssl_msgs.msg import TrackedFrame
 
 
 class Visualizer(Plugin):
@@ -61,6 +62,8 @@ class Visualizer(Plugin):
             GeometryData, "geometry", self._callback_geometry, 10)
         self._sub_detection = self._node.create_subscription(
             DetectionFrame, "detection", self._callback_detection, 10)
+        self._sub_detection_tracked = self._node.create_subscription(
+            TrackedFrame, "detection_tracked", self._callback_detection_tracked, 10)
         self._widget.field_widget.set_pub_replacement(self._node.create_publisher(Replacement, 'replacement', 1))
 
         # UIのイベントと関数を接続する
@@ -92,9 +95,9 @@ class Visualizer(Plugin):
 
     def _clicked_detection_tracked(self):
         if self._widget.check_box_detection_tracked.isChecked():
-            pass
+            self._widget.field_widget.set_can_draw_detection_tracked(True)
         else:
-            pass
+            self._widget.field_widget.set_can_draw_detection_tracked(False)
     
     def _clicked_replacement(self):
         if self._widget.check_box_replacement.isChecked():
@@ -107,3 +110,6 @@ class Visualizer(Plugin):
 
     def _callback_detection(self, msg):
         self._widget.field_widget.set_detection(msg)
+
+    def _callback_detection_tracked(self, msg):
+        self._widget.field_widget.set_detection_tracked(msg)
