@@ -44,6 +44,7 @@ private:
   rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
   std::shared_ptr<Estimator> estimator_ball_;
   std::vector<std::shared_ptr<Estimator>> estimators_blue_robot_;
+  std::vector<std::shared_ptr<Estimator>> estimators_yellow_robot_;
 };
 
 }  // namespace consai_vision_tracker

@@ -372,11 +372,21 @@ class FieldWidget(QWidget):
 
     def _draw_tracked_ball(self, painter, ball):
         # detection_trackedトピックのボールを描画する
+
+        # visibilityが下がるほど、色を透明にする
+        color_pen = QColor(Qt.black)
+        color_brush = QColor(self._COLOR_BALL)
+        if len(ball.visibility) > 0:
+            color_pen.setAlpha(255 * ball.visibility[0])
+            color_brush.setAlpha(255 * ball.visibility[0])
+        else:
+            color_pen.setAlpha(0)
+            color_brush.setAlpha(0)
+
+        painter.setPen(color_pen)
+        painter.setBrush(color_brush)
         point = self._convert_field_to_draw_point(ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
         size = self._RADIUS_BALL * self._scale_field_to_draw
-
-        painter.setPen(Qt.black)
-        painter.setBrush(self._COLOR_BALL)
         painter.drawEllipse(point, size, size)
 
     def _draw_detection_yellow_robot(self, painter, robot, camera_id=-1):
@@ -411,14 +421,23 @@ class FieldWidget(QWidget):
 
     def _draw_tracked_robot(self, painter, robot):
         # detection_trackedトピックのロボットを描画する
+        color_pen = QColor(Qt.black)
+        color_brush = QColor(self._COLOR_BLUE_ROBOT)
+        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+            color_brush = QColor(self._COLOR_YELLOW_ROBOT)
+
+        # visibilityが下がるほど、色を透明にする
+        if len(robot.visibility) > 0:
+            color_pen.setAlpha(255 * robot.visibility[0])
+            color_brush.setAlpha(255 * robot.visibility[0])
+        else:
+            color_pen.setAlpha(0)
+            color_brush.setAlpha(0)
+
+        painter.setPen(color_pen)
+        painter.setBrush(color_brush)
         point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
         size = self._RADIUS_ROBOT * self._scale_field_to_draw
-
-        painter.setPen(Qt.black)
-        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
-            painter.setBrush(self._COLOR_YELLOW_ROBOT)
-        else:
-            painter.setBrush(self._COLOR_BLUE_ROBOT)
         painter.drawEllipse(point, size, size)
 
         # ロボット角度

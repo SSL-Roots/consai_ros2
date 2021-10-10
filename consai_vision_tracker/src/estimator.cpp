@@ -21,19 +21,21 @@ namespace consai_vision_tracker
 
 Estimator::Estimator()
 {
-  std::cout<<"estimator"<<std::endl;
+  observation_ball_.visibility.push_back(1.0);
 }
 
 Estimator::Estimator(const int team_color, const int id)
 {
   team_color_ = team_color;
   id_ = id;
+  observation_robot_.visibility.push_back(1.0);
 }
 
 void Estimator::set_observation(const DetectionBall & ball, const int camera_id, const double t_capture)
 {
   observation_ball_.pos.x = ball.x * 0.001;  // mm to meters
   observation_ball_.pos.y = ball.y * 0.001;  // mm to meters
+  observation_ball_.visibility[0] = 1.0;
 }
 
 void Estimator::set_observation(const DetectionRobot & robot, const int camera_id, const double t_capture)
@@ -46,6 +48,7 @@ void Estimator::set_observation(const DetectionRobot & robot, const int camera_i
   observation_robot_.pos.x = robot.x * 0.001;  // mm to meters
   observation_robot_.pos.y = robot.y * 0.001;  // mm to meters
   observation_robot_.orientation = robot.orientation[0];
+  observation_robot_.visibility[0] = 1.0;
 }
 
 TrackedBall Estimator::estimate_ball(const double dt)
@@ -53,6 +56,14 @@ TrackedBall Estimator::estimate_ball(const double dt)
   TrackedBall tracked_ball;
   tracked_ball.pos.x = observation_ball_.pos.x;
   tracked_ball.pos.y = observation_ball_.pos.y;
+  tracked_ball.visibility = observation_ball_.visibility;
+
+  // estimateするたびにvisibilityを下げる
+  // obseravationがセットされるたびに、visibilityは1.0に戻る
+  observation_ball_.visibility[0] -= 0.002;
+  if(observation_ball_.visibility[0] < 0){
+    observation_ball_.visibility[0] = 0.0;
+  }
 
   return tracked_ball;
 }
@@ -64,8 +75,16 @@ TrackedRobot Estimator::estimate_robot(const double dt)
   tracked_robot.pos.x = observation_robot_.pos.x;
   tracked_robot.pos.y = observation_robot_.pos.y;
   tracked_robot.orientation = observation_robot_.orientation;
+  tracked_robot.visibility = observation_robot_.visibility;
   tracked_robot.robot_id.team_color = team_color_;
   tracked_robot.robot_id.id= id_;
+
+  // estimateするたびにvisibilityを下げる
+  // obseravationがセットされるたびに、visibilityは1.0に戻る
+  observation_robot_.visibility[0] -= 0.002;
+  if(observation_robot_.visibility[0] < 0){
+    observation_robot_.visibility[0] = 0.0;
+  }
 
   return tracked_robot;
 }

@@ -31,6 +31,7 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   estimator_ball_ = std::make_shared<Estimator>();
   for(int i=0; i<16; i++){
     estimators_blue_robot_.push_back(std::make_shared<Estimator>(RobotId::TEAM_COLOR_BLUE, i));
+    estimators_yellow_robot_.push_back(std::make_shared<Estimator>(RobotId::TEAM_COLOR_YELLOW, i));
   }
 
   timer_ = create_wall_timer(10ms, std::bind(&Tracker::on_timer, this));
@@ -52,6 +53,10 @@ void Tracker::on_timer()
     tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
   }
 
+  for(auto estimator : estimators_yellow_robot_){
+    tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+  }
+
   pub_tracked_->publish(std::move(tracked_msg));
 }
 
@@ -67,6 +72,12 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
   for(auto blue_robot : msg->robots_blue){
     if(blue_robot.robot_id.size() > 0){
       estimators_blue_robot_[blue_robot.robot_id[0]]->set_observation(blue_robot, camera_id, t_capture);
+    }
+  }
+
+  for(auto yellow_robot: msg->robots_yellow){
+    if(yellow_robot.robot_id.size() > 0){
+      estimators_yellow_robot_[yellow_robot.robot_id[0]]->set_observation(yellow_robot, camera_id, t_capture);
     }
   }
 }
