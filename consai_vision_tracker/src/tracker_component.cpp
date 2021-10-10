@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include "rclcpp/rclcpp.hpp"
+#include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 using namespace std::chrono_literals;
 
@@ -27,38 +28,46 @@ using std::placeholders::_1;
 Tracker::Tracker(const rclcpp::NodeOptions & options)
 : Node("tracker", options)
 {
+  estimator_ball_ = std::make_shared<Estimator>();
+  for(int i=0; i<16; i++){
+    estimators_blue_robot_.push_back(std::make_shared<Estimator>(RobotId::TEAM_COLOR_BLUE, i));
+  }
+
   timer_ = create_wall_timer(10ms, std::bind(&Tracker::on_timer, this));
 
-  pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 1);
+  pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
   sub_detection_ = create_subscription<DetectionFrame>(
     "detection", 10, std::bind(&Tracker::callback_detection, this, _1));
 }
 
 void Tracker::on_timer()
 {
-  // RCLCPP_INFO(this->get_logger(), "Hello World!");
-
-  // ストックされたデータを処理する
+  const double DURATION_TIME = 0.016;
   auto tracked_msg = std::make_unique<TrackedFrame>();
-  // tracked_msg->frame_number = tracked_msg.frame_number;
-  pub_tracked_->publish(std::move(tracked_frame_));
+
+  auto ball = estimator_ball_->estimate_ball(DURATION_TIME);
+  tracked_msg->balls.push_back(ball);
+
+  for(auto estimator : estimators_blue_robot_){
+    tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+  }
+
+  pub_tracked_->publish(std::move(tracked_msg));
 }
 
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
-  tracked_frame_.frame_number = msg->frame_number;
-  // std::cout<<"id, capture, sent";
-  // std::cout<<msg->camera_id<<",";
-  // std::cout<<std::to_string(msg->t_capture)<<",";
-  // std::cout<<std::to_string(msg->t_sent)<<","<<std::endl;
+  auto camera_id = msg->camera_id;
+  auto t_capture = msg->t_capture;
 
-  track_ball(msg->balls);
-}
+  for(auto ball : msg->balls){
+    estimator_ball_->set_observation(ball, camera_id, t_capture);
+  }
 
-void Tracker::track_ball(const std::vector<DetectionBall> & balls)
-{
-  for(auto ball : balls){
-    std::cout<<"x,y"<<std::to_string(ball.x)<<","<<std::to_string(ball.y)<<std::endl;
+  for(auto blue_robot : msg->robots_blue){
+    if(blue_robot.robot_id.size() > 0){
+      estimators_blue_robot_[blue_robot.robot_id[0]]->set_observation(blue_robot, camera_id, t_capture);
+    }
   }
 }
 

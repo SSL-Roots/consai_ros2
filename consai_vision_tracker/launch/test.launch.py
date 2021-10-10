@@ -15,6 +15,7 @@
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -36,8 +37,18 @@ def generate_launch_description():
                     name='vision',
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
+                ComposableNode(
+                    package='robocup_ssl_comm',
+                    plugin='robocup_ssl_comm::GrSim',
+                    name='grsim'),
             ],
             output='screen',
     )
 
-    return launch.LaunchDescription([container])
+    visualizer = Node(
+        package='consai_visualizer',
+        executable='consai_visualizer',
+        output='screen',
+    )
+
+    return launch.LaunchDescription([container, visualizer])

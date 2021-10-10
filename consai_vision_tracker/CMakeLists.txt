@@ -26,6 +26,7 @@ include_directories(include)
 # Tracker Component
 add_library(tracker_component SHARED
   src/tracker_component.cpp
+  src/estimator.cpp
 )
 target_compile_definitions(tracker_component
   PRIVATE "CONSAI_VISION_TRACKER_BUILDING_DLL")
