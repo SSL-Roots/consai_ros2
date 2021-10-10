@@ -58,9 +58,9 @@ class Visualizer(Plugin):
 
         # Subscriber、Publisherの作成
         self._sub_geometry = self._node.create_subscription(
-            GeometryData, "geometry", self._callback_geometry, 1)
+            GeometryData, "geometry", self._callback_geometry, 10)
         self._sub_detection = self._node.create_subscription(
-            DetectionFrame, "detection", self._callback_detection, 1)
+            DetectionFrame, "detection", self._callback_detection, 10)
         self._widget.field_widget.set_pub_replacement(self._node.create_publisher(Replacement, 'replacement', 1))
 
         # UIのイベントと関数を接続する

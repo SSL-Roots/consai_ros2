@@ -27,8 +27,8 @@ Vision::Vision(const rclcpp::NodeOptions & options)
 : Node("vision", options)
 {
   receiver_ = std::make_unique<multicast::MulticastReceiver>("224.5.23.2", 10006);
-  pub_detection_ = create_publisher<robocup_ssl_msgs::msg::DetectionFrame>("detection", 1);
-  pub_geometry_ = create_publisher<robocup_ssl_msgs::msg::GeometryData>("geometry", 1);
+  pub_detection_ = create_publisher<robocup_ssl_msgs::msg::DetectionFrame>("detection", 10);
+  pub_geometry_ = create_publisher<robocup_ssl_msgs::msg::GeometryData>("geometry", 10);
 
   timer_ = create_wall_timer(10ms, std::bind(&Vision::on_timer, this));
 }
