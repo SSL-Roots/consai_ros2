@@ -20,8 +20,12 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
+pkg_check_modules(BFL REQUIRED orocos-bfl)
 
-include_directories(include)
+include_directories(
+  include
+  ${BFL_INCLUDE_DIRS}
+)
 
 # Tracker Component
 add_library(tracker_component SHARED
@@ -35,6 +39,7 @@ ament_target_dependencies(tracker_component
   rclcpp_components
   robocup_ssl_msgs
 )
+target_link_libraries(tracker_component ${BFL_LIBRARIES} )
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
 # Exports

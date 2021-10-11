@@ -46,15 +46,17 @@ void Tracker::on_timer()
   const double DURATION_TIME = 0.016;
   auto tracked_msg = std::make_unique<TrackedFrame>();
 
-  auto ball = estimator_ball_->estimate_ball(DURATION_TIME);
+  auto ball = estimator_ball_->update_ball(DURATION_TIME);
   tracked_msg->balls.push_back(ball);
 
   for(auto estimator : estimators_blue_robot_){
-    tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+    // tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+    tracked_msg->robots.push_back(estimator->update_robot(DURATION_TIME));
   }
 
   for(auto estimator : estimators_yellow_robot_){
-    tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+    // tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
+    tracked_msg->robots.push_back(estimator->update_robot(DURATION_TIME));
   }
 
   pub_tracked_->publish(std::move(tracked_msg));
@@ -66,18 +68,20 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
   auto t_capture = msg->t_capture;
 
   for(auto ball : msg->balls){
-    estimator_ball_->set_observation(ball, camera_id, t_capture);
+    estimator_ball_->push_back_observation(ball);
   }
 
   for(auto blue_robot : msg->robots_blue){
     if(blue_robot.robot_id.size() > 0){
-      estimators_blue_robot_[blue_robot.robot_id[0]]->set_observation(blue_robot, camera_id, t_capture);
+      estimators_blue_robot_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
+      // estimators_blue_robot_[blue_robot.robot_id[0]]->set_observation(blue_robot, camera_id, t_capture);
     }
   }
 
   for(auto yellow_robot: msg->robots_yellow){
     if(yellow_robot.robot_id.size() > 0){
-      estimators_yellow_robot_[yellow_robot.robot_id[0]]->set_observation(yellow_robot, camera_id, t_capture);
+      estimators_yellow_robot_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
+      // estimators_yellow_robot_[yellow_robot.robot_id[0]]->set_observation(yellow_robot, camera_id, t_capture);
     }
   }
 }

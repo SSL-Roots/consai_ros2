@@ -15,6 +15,11 @@
 #ifndef CONSAI_VISION_TRACKER__ESTIMATOR_HPP_
 #define CONSAI_VISION_TRACKER__ESTIMATOR_HPP_
 
+#include <bfl/filter/extendedkalmanfilter.h>
+#include <bfl/model/linearanalyticsystemmodel_gaussianuncertainty.h>
+#include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
+#include <bfl/pdf/analyticconditionalgaussian.h>
+#include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <vector>
 
 #include "robocup_ssl_msgs/msg/detection_ball.hpp"
@@ -33,19 +38,19 @@ public:
   Estimator();
   Estimator(const int team_color, const int id);
 
-  void set_observation(const DetectionBall & ball, const int camera_id, const double t_capture);
-  void set_observation(const DetectionRobot & robot, const int camera_id, const double t_capture);
-  TrackedBall estimate_ball(const double dt = 0.0166);
-  TrackedRobot estimate_robot(const double dt = 0.0166);
+  void push_back_observation(const DetectionBall & ball);
+  void push_back_observation(const DetectionRobot & robot);
+  TrackedBall update_ball(const double dt = 0.0166);
+  TrackedRobot update_robot(const double dt = 0.0166);
 
 private:
-  void update_ball_measurement();
+  bool is_outlier(const TrackedBall & observation);
+  bool is_outlier(const TrackedRobot & observation);
 
-  TrackedBall observation_ball_;
-  TrackedRobot observation_robot_;
-
-  int team_color_;
-  int id_;
+  std::vector<TrackedBall> ball_observations_;
+  std::vector<TrackedRobot> robot_observations_;
+  TrackedBall prev_tracked_ball_;
+  TrackedRobot prev_tracked_robot_;
 };
 
 }  // namespace consai_vision_tracker
