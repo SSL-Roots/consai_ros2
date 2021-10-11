@@ -19,6 +19,8 @@
 namespace consai_vision_tracker
 {
 
+static const double VISIBILITY_CONTROL_VALUE = 0.002;
+
 Estimator::Estimator()
 {
   prev_tracked_ball_.visibility.push_back(1.0);
@@ -68,7 +70,7 @@ TrackedBall Estimator::update_ball(const double dt)
   if(size == 0){
     // 観測値が無い場合の処理
     // visibilityを下げる
-    prev_tracked_ball_.visibility[0] -= 0.002;
+    prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
     if(prev_tracked_ball_.visibility[0] < 0){
       prev_tracked_ball_.visibility[0] = 0.0;
     }
@@ -90,7 +92,10 @@ TrackedBall Estimator::update_ball(const double dt)
 
     prev_tracked_ball_.pos.x = mean_observation.pos.x;
     prev_tracked_ball_.pos.y = mean_observation.pos.y;
-    prev_tracked_ball_.visibility[0] = 1.0;
+    prev_tracked_ball_.visibility[0] += VISIBILITY_CONTROL_VALUE;
+    if(prev_tracked_ball_.visibility[0] > 1.0){
+      prev_tracked_ball_.visibility[0] = 1.0;
+    }
   }
 
   return prev_tracked_ball_;
@@ -111,7 +116,7 @@ TrackedRobot Estimator::update_robot(const double dt)
   if(size == 0){
     // 観測値が無い場合の処理
     // visibilityを下げる
-    prev_tracked_robot_.visibility[0] -= 0.002;
+    prev_tracked_robot_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
     if(prev_tracked_robot_.visibility[0] < 0){
       prev_tracked_robot_.visibility[0] = 0.0;
     }
@@ -141,7 +146,10 @@ TrackedRobot Estimator::update_robot(const double dt)
     prev_tracked_robot_.pos.x = mean_observation.pos.x;
     prev_tracked_robot_.pos.y = mean_observation.pos.y;
     prev_tracked_robot_.orientation = mean_observation.orientation;
-    prev_tracked_robot_.visibility[0] = 1.0;
+    prev_tracked_robot_.visibility[0] += VISIBILITY_CONTROL_VALUE;
+    if(prev_tracked_robot_.visibility[0] > 1.0){
+      prev_tracked_robot_.visibility[0] = 1.0;
+    }
   }
 
   return prev_tracked_robot_;
