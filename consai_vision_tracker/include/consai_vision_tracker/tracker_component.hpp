@@ -16,7 +16,8 @@
 #define CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
 
 #include "consai_vision_tracker/visibility_control.h"
-#include "consai_vision_tracker/estimator.hpp"
+#include "consai_vision_tracker/ball_tracker.hpp"
+#include "consai_vision_tracker/robot_tracker.hpp"
 #include "robocup_ssl_msgs/msg/detection_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
@@ -42,9 +43,9 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<DetectionFrame>::SharedPtr sub_detection_;
   rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
-  std::shared_ptr<Estimator> estimator_ball_;
-  std::vector<std::shared_ptr<Estimator>> estimators_blue_robot_;
-  std::vector<std::shared_ptr<Estimator>> estimators_yellow_robot_;
+  std::shared_ptr<BallTracker> ball_tracker_;
+  std::vector<std::shared_ptr<RobotTracker>> blue_robot_tracker_;
+  std::vector<std::shared_ptr<RobotTracker>> yellow_robot_tracker_;
 };
 
 }  // namespace consai_vision_tracker

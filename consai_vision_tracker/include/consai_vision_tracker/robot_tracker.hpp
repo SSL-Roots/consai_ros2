@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_VISION_TRACKER__ESTIMATOR_HPP_
-#define CONSAI_VISION_TRACKER__ESTIMATOR_HPP_
+#ifndef CONSAI_VISION_TRACKER__ROBOT_TRACKER_HPP_
+#define CONSAI_VISION_TRACKER__ROBOT_TRACKER_HPP_
 
 #include <bfl/filter/extendedkalmanfilter.h>
 #include <bfl/model/linearanalyticsystemmodel_gaussianuncertainty.h>
@@ -22,9 +22,7 @@
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
 #include <vector>
 
-#include "robocup_ssl_msgs/msg/detection_ball.hpp"
 #include "robocup_ssl_msgs/msg/detection_robot.hpp"
-#include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 namespace consai_vision_tracker
@@ -32,27 +30,21 @@ namespace consai_vision_tracker
 
 using namespace robocup_ssl_msgs::msg;
 
-class Estimator
+class RobotTracker
 {
 public:
-  Estimator();
-  Estimator(const int team_color, const int id);
+  RobotTracker(const int team_color, const int id);
 
-  void push_back_observation(const DetectionBall & ball);
   void push_back_observation(const DetectionRobot & robot);
-  TrackedBall update_ball(const double dt = 0.0166);
-  TrackedRobot update_robot(const double dt = 0.0166);
+  TrackedRobot update(const double dt = 0.01);
 
 private:
-  bool is_outlier(const TrackedBall & observation);
   bool is_outlier(const TrackedRobot & observation);
 
-  std::vector<TrackedBall> ball_observations_;
   std::vector<TrackedRobot> robot_observations_;
-  TrackedBall prev_tracked_ball_;
   TrackedRobot prev_tracked_robot_;
 };
 
 }  // namespace consai_vision_tracker
 
-#endif  // CONSAI_VISION_TRACKER__ESTIMATOR_HPP_
+#endif  // CONSAI_VISION_TRACKER__ROBOT_TRACKER_HPP_

@@ -28,10 +28,10 @@ using std::placeholders::_1;
 Tracker::Tracker(const rclcpp::NodeOptions & options)
 : Node("tracker", options)
 {
-  estimator_ball_ = std::make_shared<Estimator>();
+  ball_tracker_ = std::make_shared<BallTracker>();
   for(int i=0; i<16; i++){
-    estimators_blue_robot_.push_back(std::make_shared<Estimator>(RobotId::TEAM_COLOR_BLUE, i));
-    estimators_yellow_robot_.push_back(std::make_shared<Estimator>(RobotId::TEAM_COLOR_YELLOW, i));
+    blue_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_BLUE, i));
+    yellow_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_YELLOW, i));
   }
 
   timer_ = create_wall_timer(10ms, std::bind(&Tracker::on_timer, this));
@@ -43,20 +43,17 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
 void Tracker::on_timer()
 {
-  const double DURATION_TIME = 0.016;
+  const double DURATION_TIME = 0.01;
   auto tracked_msg = std::make_unique<TrackedFrame>();
 
-  auto ball = estimator_ball_->update_ball(DURATION_TIME);
-  tracked_msg->balls.push_back(ball);
+  tracked_msg->balls.push_back(ball_tracker_->update(DURATION_TIME));
 
-  for(auto estimator : estimators_blue_robot_){
-    // tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
-    tracked_msg->robots.push_back(estimator->update_robot(DURATION_TIME));
+  for(auto tracker : blue_robot_tracker_){
+    tracked_msg->robots.push_back(tracker->update(DURATION_TIME));
   }
 
-  for(auto estimator : estimators_yellow_robot_){
-    // tracked_msg->robots.push_back(estimator->estimate_robot(DURATION_TIME));
-    tracked_msg->robots.push_back(estimator->update_robot(DURATION_TIME));
+  for(auto tracker : yellow_robot_tracker_){
+    tracked_msg->robots.push_back(tracker->update(DURATION_TIME));
   }
 
   pub_tracked_->publish(std::move(tracked_msg));
@@ -64,24 +61,19 @@ void Tracker::on_timer()
 
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
-  auto camera_id = msg->camera_id;
-  auto t_capture = msg->t_capture;
-
   for(auto ball : msg->balls){
-    estimator_ball_->push_back_observation(ball);
+    ball_tracker_->push_back_observation(ball);
   }
 
   for(auto blue_robot : msg->robots_blue){
     if(blue_robot.robot_id.size() > 0){
-      estimators_blue_robot_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
-      // estimators_blue_robot_[blue_robot.robot_id[0]]->set_observation(blue_robot, camera_id, t_capture);
+      blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
   for(auto yellow_robot: msg->robots_yellow){
     if(yellow_robot.robot_id.size() > 0){
-      estimators_yellow_robot_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
-      // estimators_yellow_robot_[yellow_robot.robot_id[0]]->set_observation(yellow_robot, camera_id, t_capture);
+      yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
 }
