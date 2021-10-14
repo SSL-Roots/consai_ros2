@@ -28,13 +28,15 @@ using std::placeholders::_1;
 Tracker::Tracker(const rclcpp::NodeOptions & options)
 : Node("tracker", options)
 {
-  ball_tracker_ = std::make_shared<BallTracker>();
+  const auto UPDATE_RATE = 0.01s;
+
+  ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
   for(int i=0; i<16; i++){
     blue_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_BLUE, i));
     yellow_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_YELLOW, i));
   }
 
-  timer_ = create_wall_timer(10ms, std::bind(&Tracker::on_timer, this));
+  timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
   sub_detection_ = create_subscription<DetectionFrame>(
@@ -46,7 +48,7 @@ void Tracker::on_timer()
   const double DURATION_TIME = 0.01;
   auto tracked_msg = std::make_unique<TrackedFrame>();
 
-  tracked_msg->balls.push_back(ball_tracker_->update(DURATION_TIME));
+  tracked_msg->balls.push_back(ball_tracker_->update());
 
   for(auto tracker : blue_robot_tracker_){
     tracked_msg->robots.push_back(tracker->update(DURATION_TIME));

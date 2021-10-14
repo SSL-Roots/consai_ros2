@@ -20,6 +20,7 @@
 #include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
+#include <memory>
 #include <vector>
 
 #include "robocup_ssl_msgs/msg/detection_ball.hpp"
@@ -29,20 +30,30 @@ namespace consai_vision_tracker
 {
 
 using namespace robocup_ssl_msgs::msg;
+using namespace MatrixWrapper;
+using namespace BFL;
+using namespace std;
 
 class BallTracker
 {
 public:
-  BallTracker();
+  BallTracker(const double dt = 0.01);
 
   void push_back_observation(const DetectionBall & ball);
-  TrackedBall update(const double dt = 0.01);
+  TrackedBall update();
 
 private:
   bool is_outlier(const TrackedBall & observation);
 
   std::vector<TrackedBall> ball_observations_;
   TrackedBall prev_tracked_ball_;
+
+  std::shared_ptr<LinearAnalyticConditionalGaussian> sys_pdf_;
+  std::shared_ptr<LinearAnalyticSystemModelGaussianUncertainty> sys_model_;
+  std::shared_ptr<LinearAnalyticConditionalGaussian> meas_pdf_;
+  std::shared_ptr<LinearAnalyticMeasurementModelGaussianUncertainty> meas_model_;
+  std::shared_ptr<Gaussian> prior_;
+  std::shared_ptr<ExtendedKalmanFilter> filter_;
 };
 
 }  // namespace consai_vision_tracker
