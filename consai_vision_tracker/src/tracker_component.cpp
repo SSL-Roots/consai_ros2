@@ -32,8 +32,8 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
   ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
   for(int i=0; i<16; i++){
-    blue_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_BLUE, i));
-    yellow_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_YELLOW, i));
+    blue_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_BLUE, i, UPDATE_RATE.count()));
+    yellow_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_YELLOW, i, UPDATE_RATE.count()));
   }
 
   timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
@@ -45,17 +45,16 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
 void Tracker::on_timer()
 {
-  const double DURATION_TIME = 0.01;
   auto tracked_msg = std::make_unique<TrackedFrame>();
 
   tracked_msg->balls.push_back(ball_tracker_->update());
 
   for(auto tracker : blue_robot_tracker_){
-    tracked_msg->robots.push_back(tracker->update(DURATION_TIME));
+    tracked_msg->robots.push_back(tracker->update());
   }
 
   for(auto tracker : yellow_robot_tracker_){
-    tracked_msg->robots.push_back(tracker->update(DURATION_TIME));
+    tracked_msg->robots.push_back(tracker->update());
   }
 
   pub_tracked_->publish(std::move(tracked_msg));

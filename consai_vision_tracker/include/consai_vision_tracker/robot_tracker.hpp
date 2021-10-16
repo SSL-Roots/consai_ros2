@@ -29,20 +29,33 @@ namespace consai_vision_tracker
 {
 
 using namespace robocup_ssl_msgs::msg;
+using namespace MatrixWrapper;
+using namespace BFL;
+using namespace std;
 
 class RobotTracker
 {
 public:
-  RobotTracker(const int team_color, const int id);
+  RobotTracker(const int team_color, const int id, const double dt = 0.01);
 
   void push_back_observation(const DetectionRobot & robot);
-  TrackedRobot update(const double dt = 0.01);
+  TrackedRobot update();
 
 private:
-  bool is_outlier(const TrackedRobot & observation);
+  bool is_outlier(const TrackedRobot & observation) const;
+  void correct_orientation_overflow_of_prior();
+  double normalize_orientation(double orientation) const;
+  double normalize_orientation(const double from, const double to) const;
 
   std::vector<TrackedRobot> robot_observations_;
   TrackedRobot prev_tracked_robot_;
+
+  std::shared_ptr<LinearAnalyticConditionalGaussian> sys_pdf_;
+  std::shared_ptr<LinearAnalyticSystemModelGaussianUncertainty> sys_model_;
+  std::shared_ptr<LinearAnalyticConditionalGaussian> meas_pdf_;
+  std::shared_ptr<LinearAnalyticMeasurementModelGaussianUncertainty> meas_model_;
+  std::shared_ptr<Gaussian> prior_;
+  std::shared_ptr<ExtendedKalmanFilter> filter_;
 };
 
 }  // namespace consai_vision_tracker
