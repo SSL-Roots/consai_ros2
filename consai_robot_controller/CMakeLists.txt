@@ -17,6 +17,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(consai_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 
@@ -29,6 +30,7 @@ add_library(controller_component SHARED
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_VISION_TRACKER_BUILDING_DLL")
 ament_target_dependencies(controller_component
+  consai_msgs
   rclcpp
   rclcpp_components
 )
@@ -37,6 +39,7 @@ rclcpp_components_register_nodes(controller_component "consai_robot_controller::
 # Exports
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
+ament_export_dependencies(consai_msgs)
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_components)
 

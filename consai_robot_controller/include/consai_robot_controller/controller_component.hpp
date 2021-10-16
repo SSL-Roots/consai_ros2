@@ -15,6 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 #define CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 
+#include "consai_msgs/msg/robot_command.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 
@@ -32,6 +33,9 @@ protected:
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr pub_command_; 
+  int robot_id_;
+  bool team_is_yellow_;
 };
 
 }  // namespace consai_robot_controller

@@ -15,7 +15,7 @@
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
-
+from launch_ros.actions import Node
 
 def generate_launch_description():
     container = ComposableNodeContainer(
@@ -27,9 +27,33 @@ def generate_launch_description():
                 ComposableNode(
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::Controller',
-                    name='controller'),
+                    name='controller',
+                    parameters=[{'robot_id': 0, 'team_is_yellow': False}],
+                    ),
+                ComposableNode(
+                    package='consai_vision_tracker',
+                    plugin='consai_vision_tracker::Tracker',
+                    name='tracker',
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
+                ComposableNode(
+                    package='robocup_ssl_comm',
+                    plugin='robocup_ssl_comm::Vision',
+                    name='vision',
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
+                ComposableNode(
+                    package='robocup_ssl_comm',
+                    plugin='robocup_ssl_comm::GrSim',
+                    name='grsim'),
             ],
             output='screen',
     )
 
-    return launch.LaunchDescription([container])
+    visualizer = Node(
+        package='consai_visualizer',
+        executable='consai_visualizer',
+        output='screen',
+    )
+
+    return launch.LaunchDescription([container, visualizer])
