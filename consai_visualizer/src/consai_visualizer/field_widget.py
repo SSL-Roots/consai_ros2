@@ -428,8 +428,12 @@ class FieldWidget(QWidget):
 
         # visibilityが下がるほど、色を透明にする
         if len(robot.visibility) > 0:
-            color_pen.setAlpha(255 * robot.visibility[0])
             color_brush.setAlpha(255 * robot.visibility[0])
+            # ペンの色はvisibilityが0になるまで透明度を下げない
+            if(robot.visibility[0] > 0.01):
+                color_pen.setAlpha(255)
+            else:
+                color_pen.setAlpha(0)
         else:
             color_pen.setAlpha(0)
             color_brush.setAlpha(0)
