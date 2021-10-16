@@ -74,7 +74,8 @@ class Visualizer(Plugin):
 
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
-        self._widget.check_box_detection.setCheckState(Qt.Checked)
+        self._widget.check_box_detection.setCheckState(Qt.Unchecked)
+        self._widget.check_box_detection_tracked.setCheckState(Qt.Checked)
 
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
