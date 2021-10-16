@@ -43,7 +43,7 @@ public:
   TrackedBall update();
 
 private:
-  bool is_outlier(const TrackedBall & observation);
+  bool is_outlier(const TrackedBall & observation) const;
 
   std::vector<TrackedBall> ball_observations_;
   TrackedBall prev_tracked_ball_;

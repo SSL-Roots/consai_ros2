@@ -156,8 +156,10 @@ TrackedRobot RobotTracker::update()
     // 観測値が無い場合の処理
     // visibilityを下げる
     prev_tracked_robot_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
-    if(prev_tracked_robot_.visibility[0] < 0){
+    if(prev_tracked_robot_.visibility[0] <= 0){
       prev_tracked_robot_.visibility[0] = 0.0;
+      // visibilityが0になったらカルマンフィルタの演算を実行しない
+      return prev_tracked_robot_;
     }
 
   }else{

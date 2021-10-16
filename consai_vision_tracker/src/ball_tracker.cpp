@@ -133,8 +133,10 @@ TrackedBall BallTracker::update()
     // 観測値が無い場合の処理
     // visibilityを下げる
     prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
-    if(prev_tracked_ball_.visibility[0] < 0){
+    if(prev_tracked_ball_.visibility[0] <= 0){
+      // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_ball_.visibility[0] = 0.0;
+      return prev_tracked_ball_;
     }
 
   }else{
@@ -179,7 +181,7 @@ TrackedBall BallTracker::update()
   return prev_tracked_ball_;
 }
 
-bool BallTracker::is_outlier(const TrackedBall & observation)
+bool BallTracker::is_outlier(const TrackedBall & observation) const
 {
   // 観測が外れ値かどうか判定する
   // Reference: https://myenigma.hatenablog.com/entry/20140825/1408975706
