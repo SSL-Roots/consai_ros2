@@ -42,6 +42,7 @@ public:
   TrackedRobot update();
 
 private:
+  void reset_prior();
   bool is_outlier(const TrackedRobot & observation) const;
   void correct_orientation_overflow_of_prior();
   double normalize_orientation(double orientation) const;

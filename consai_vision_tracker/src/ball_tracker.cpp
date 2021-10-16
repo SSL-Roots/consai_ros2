@@ -136,6 +136,7 @@ TrackedBall BallTracker::update()
     if(prev_tracked_ball_.visibility[0] <= 0){
       // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_ball_.visibility[0] = 0.0;
+      reset_prior();
       return prev_tracked_ball_;
     }
 
@@ -179,6 +180,24 @@ TrackedBall BallTracker::update()
   filter_->Update(sys_model_.get(), input);
 
   return prev_tracked_ball_;
+}
+
+void BallTracker::reset_prior()
+{
+  // 事前分布を初期化する
+  ColumnVector prior_mu(4);
+  prior_mu = 0.0;
+
+  SymmetricMatrix prior_cov(4);
+  prior_cov = 0.0;
+  prior_cov(1, 1) = 100.0;
+  prior_cov(2, 2) = 100.0;
+  prior_cov(3, 3) = 100.0;
+  prior_cov(4, 4) = 100.0;
+
+  prior_->ExpectedValueSet(prior_mu);
+  prior_->CovarianceSet(prior_cov);
+  filter_->Reset(prior_.get());
 }
 
 bool BallTracker::is_outlier(const TrackedBall & observation) const

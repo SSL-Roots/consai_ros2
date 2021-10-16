@@ -157,8 +157,9 @@ TrackedRobot RobotTracker::update()
     // visibilityを下げる
     prev_tracked_robot_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
     if(prev_tracked_robot_.visibility[0] <= 0){
-      prev_tracked_robot_.visibility[0] = 0.0;
       // visibilityが0になったらカルマンフィルタの演算を実行しない
+      prev_tracked_robot_.visibility[0] = 0.0;
+      reset_prior();
       return prev_tracked_robot_;
     }
 
@@ -219,6 +220,26 @@ TrackedRobot RobotTracker::update()
   correct_orientation_overflow_of_prior();
 
   return prev_tracked_robot_;
+}
+
+void RobotTracker::reset_prior()
+{
+  // 事前分布を初期化する
+  ColumnVector prior_mu(6);
+  prior_mu = 0.0;
+
+  SymmetricMatrix prior_cov(6);
+  prior_cov = 0.0;
+  prior_cov(1, 1) = 100.0;
+  prior_cov(2, 2) = 100.0;
+  prior_cov(3, 3) = 100.0;
+  prior_cov(4, 4) = 100.0;
+  prior_cov(5, 5) = 100.0;
+  prior_cov(6, 6) = 100.0;
+
+  prior_->ExpectedValueSet(prior_mu);
+  prior_->CovarianceSet(prior_cov);
+  filter_->Reset(prior_.get());
 }
 
 bool RobotTracker::is_outlier(const TrackedRobot & observation) const
