@@ -141,8 +141,8 @@ TrackedBall BallTracker::update()
     }
 
   }else{
-    // 観測値があればvisibilityを倍のレートで上げる
-    prev_tracked_ball_.visibility[0] += VISIBILITY_CONTROL_VALUE * 2;
+    // 観測値があればvisibilityをn倍のレートで上げる
+    prev_tracked_ball_.visibility[0] += VISIBILITY_CONTROL_VALUE * 5.0;
     if(prev_tracked_ball_.visibility[0] > 1.0){
       prev_tracked_ball_.visibility[0] = 1.0;
     }
