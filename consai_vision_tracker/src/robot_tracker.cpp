@@ -63,8 +63,8 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
 
   // 位置、速度の変化をのシステムノイズで表現する（つまりめちゃくちゃノイズがでかい）
   // 0 m/s から、いきなり1.0 m/sに変化しうる、ということ
-  const double MAX_LINEAR_ACC_MPS = 0.5 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
-  const double MAX_ANGULAR_ACC_RADPS = 2*M_PI / dt;  // 例：1.0[rad/s] / 0.001[s] = 100 [rad/ss]
+  const double MAX_LINEAR_ACC_MPS = 0.1 * 1.0 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
+  const double MAX_ANGULAR_ACC_RADPS = 0.05 * M_PI / dt;  // 例：1.0[rad/s] / 0.001[s] = 100 [rad/ss]
   const double MAX_LINEAR_ACCEL_IN_DT = MAX_LINEAR_ACC_MPS * dt;  // [m/s]
   const double MAX_ANGULAR_ACCEL_IN_DT = MAX_ANGULAR_ACC_RADPS * dt;  // [rad/s]
   const double MAX_LINEAR_MOVEMENT_IN_DT = MAX_LINEAR_ACC_MPS / 2 * std::pow(dt, 2);  // [m]
