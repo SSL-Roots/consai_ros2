@@ -7,7 +7,7 @@ bool team_is_yellow
 float32 velocity_x
 float32 velocity_y
 # rad/s
-float32 velocity_angular
+float32 velocity_theta
 
 # 0.0 ~ 1.0
 float32 kick_power

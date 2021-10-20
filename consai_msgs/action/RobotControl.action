@@ -1,0 +1,16 @@
+ConstraintTarget x
+ConstraintTarget y
+ConstraintTarget theta
+float32 offset_x
+float32 offset_y
+float32 offset_theta
+---
+bool success
+string message
+---
+float32 remain_x
+float32 remain_y
+float32 remain_theta
+float32 remain_vel_x
+float32 remain_vel_y
+float32 remain_vel_theta

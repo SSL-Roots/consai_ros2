@@ -21,11 +21,17 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
+  "msg/ConstraintTarget.msg"
   "msg/RobotCommand.msg"
+)
+
+set(action_files
+  "action/RobotControl.action"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
+  ${action_files}
   DEPENDENCIES std_msgs
   ADD_LINTER_TESTS
 )

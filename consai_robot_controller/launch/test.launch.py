@@ -29,6 +29,13 @@ def generate_launch_description():
                     plugin='consai_robot_controller::Controller',
                     name='controller',
                     parameters=[{'robot_id': 0, 'team_is_yellow': False}],
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
+                ComposableNode(
+                    package='consai_robot_controller',
+                    plugin='consai_robot_controller::GrSimCommandConverter',
+                    name='command_converter',
+                    extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
                     package='consai_vision_tracker',
