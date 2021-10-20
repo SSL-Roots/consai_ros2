@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <string>
@@ -109,23 +110,30 @@ void Controller::on_timer()
 
   // 目標値を取得する
   const auto goal = goal_handle_->get_goal();
+  auto goal_pose = parse_goal(goal_handle_->get_goal()); 
   double target_x = goal->x.value;
   double target_y = goal->y.value;
   double target_theta = goal->theta.value;
 
   // ワールド座標系での目標速度を算出
   auto duration = steady_clock_.now().nanoseconds() - last_update_time_.nanoseconds();
-  double world_vx = pid_vx_->computeCommand(target_x - my_robot.pos.x, duration);
-  double world_vy = pid_vy_->computeCommand(target_y - my_robot.pos.y, duration);
-  double command_vtheta = pid_vtheta_->computeCommand(normalize_theta(target_theta - my_robot.orientation), duration);
+  State world_vel;
+  world_vel.x = pid_vx_->computeCommand(target_x - my_robot.pos.x, duration);
+  world_vel.y = pid_vy_->computeCommand(target_y - my_robot.pos.y, duration);
+  world_vel.theta = pid_vtheta_->computeCommand(normalize_theta(target_theta - my_robot.orientation), duration);
+
+  // 最大速度リミットを適用
+  world_vel = limit_world_velocity(world_vel);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
-  double command_vx = std::cos(my_robot.orientation) * world_vx + std::sin(my_robot.orientation) * world_vy;
-  double command_vy = -std::sin(my_robot.orientation) * world_vx + std::cos(my_robot.orientation) * world_vy;
+  State local_vel;
+  local_vel.x = std::cos(my_robot.orientation) * world_vel.x + std::sin(my_robot.orientation) * world_vel.y;
+  local_vel.y = -std::sin(my_robot.orientation) * world_vel.x + std::cos(my_robot.orientation) * world_vel.y;
+  local_vel.theta = world_vel.theta;
 
-  command_msg->velocity_x = command_vx;
-  command_msg->velocity_y = command_vy;
-  command_msg->velocity_theta = command_vtheta;
+  command_msg->velocity_x = local_vel.x;
+  command_msg->velocity_y = local_vel.y;
+  command_msg->velocity_theta = local_vel.theta;
 
   // 制御値を出力
   last_update_time_ = steady_clock_.now();
@@ -187,6 +195,20 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
   goal_handle_ = goal_handle;
 }
 
+State Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const
+{
+  // RobotControlのgoalを解析し、目標姿勢を出力する
+
+  State goal_pose;
+
+  // デフォルトではx, y, thetaの値をそのまま目標姿勢に格納する
+  goal_pose.x = goal->x.value;
+  goal_pose.y = goal->y.value;
+  goal_pose.theta = goal->theta.value;
+
+  return goal_pose;
+}
+
 bool Controller::extract_my_robot(TrackedRobot & my_robot)
 {
   // detection_trackedから自身の情報を抽出する
@@ -211,6 +233,20 @@ bool Controller::extract_my_robot(TrackedRobot & my_robot)
     break;
   }
   return true;
+}
+
+State Controller::limit_world_velocity(const State & velocity) const
+{
+  // ワールド座標系のロボット速度に制限を掛ける
+  const double MAX_VELOCITY_XY = 2.0;  // m/s
+  const double MAX_VELOCITY_THETA = 2.0 * M_PI;  // rad/s
+
+  State modified_velocity; 
+  modified_velocity.x = std::clamp(velocity.x, -MAX_VELOCITY_XY, MAX_VELOCITY_XY);
+  modified_velocity.y = std::clamp(velocity.y, -MAX_VELOCITY_XY, MAX_VELOCITY_XY);
+  modified_velocity.theta = std::clamp(velocity.theta, -MAX_VELOCITY_THETA, MAX_VELOCITY_THETA);
+
+  return modified_velocity;
 }
 
 bool Controller::arrived(const TrackedRobot & my_robot, const double x, const double y, const double theta)

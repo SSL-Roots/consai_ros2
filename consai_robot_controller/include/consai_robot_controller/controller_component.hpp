@@ -19,6 +19,7 @@
 
 #include "control_toolbox/pid.hpp"
 #include "consai_msgs/msg/robot_command.hpp"
+#include "consai_msgs/msg/state2_d.hpp"
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
@@ -28,6 +29,7 @@
 
 namespace consai_robot_controller
 {
+using State = consai_msgs::msg::State2D;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using namespace robocup_ssl_msgs::msg;
@@ -48,7 +50,9 @@ private:
     std::shared_ptr<const RobotControl::Goal> goal);
   rclcpp_action::CancelResponse handle_cancel(const std::shared_ptr<GoalHandleRobotControl> goal_handle);
   void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle);
+  State parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const;
   bool extract_my_robot(TrackedRobot & my_robot);
+  State limit_world_velocity(const State & velocity) const;
   bool arrived(const TrackedRobot & my_robot, const double x, const double y, const double theta);
   double normalize_theta(double theta);
 

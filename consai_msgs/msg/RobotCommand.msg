@@ -4,13 +4,13 @@ uint32 robot_id
 bool team_is_yellow
 
 # m/s
-float32 velocity_x
-float32 velocity_y
+float64 velocity_x
+float64 velocity_y
 # rad/s
-float32 velocity_theta
+float64 velocity_theta
 
 # 0.0 ~ 1.0
-float32 kick_power
+float64 kick_power
 bool chip_kick
 # 0.0 ~ 1.0
-float32 dribble_power
+float64 dribble_power

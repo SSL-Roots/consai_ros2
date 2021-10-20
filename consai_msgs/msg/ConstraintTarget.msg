@@ -10,7 +10,7 @@ uint32 PARAMETER_THETA = 3
 uint32 PARAMETER_LOOK_TO = 4
 uint32 PARAMETER_LOOK_FROM = 5
 
-float32 value
+float64 value
 uint32[<=1] target  # optional
 uint32[<=1] target_id  # optional
 uint32[<=1] target_parameter  # optional

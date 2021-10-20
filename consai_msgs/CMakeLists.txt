@@ -23,6 +23,7 @@ find_package(std_msgs REQUIRED)
 set(msg_files
   "msg/ConstraintTarget.msg"
   "msg/RobotCommand.msg"
+  "msg/State2D.msg"
 )
 
 set(action_files
