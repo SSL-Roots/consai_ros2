@@ -53,7 +53,8 @@ private:
   State parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const;
   bool extract_my_robot(TrackedRobot & my_robot);
   State limit_world_velocity(const State & velocity) const;
-  bool arrived(const TrackedRobot & my_robot, const double x, const double y, const double theta);
+  State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
+  bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   double normalize_theta(double theta);
 
   rclcpp::TimerBase::SharedPtr timer_;
@@ -63,6 +64,7 @@ private:
   std::shared_ptr<control_toolbox::Pid> pid_vx_;
   std::shared_ptr<control_toolbox::Pid> pid_vy_;
   std::shared_ptr<control_toolbox::Pid> pid_vtheta_;
+  State last_world_vel_;
   rclcpp::Clock steady_clock_;
   rclcpp::Time last_update_time_;
   unsigned int robot_id_;

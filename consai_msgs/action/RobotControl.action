@@ -8,9 +8,9 @@ float64 offset_theta
 bool success
 string message
 ---
-float64 remain_x
-float64 remain_y
-float64 remain_theta
-float64 remain_vel_x
-float64 remain_vel_y
-float64 remain_vel_theta
+float64 remaining_x
+float64 remaining_y
+float64 remaining_theta
+float64 remaining_vel_x
+float64 remaining_vel_y
+float64 remaining_vel_theta

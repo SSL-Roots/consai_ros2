@@ -109,53 +109,49 @@ void Controller::on_timer()
   }
 
   // 目標値を取得する
-  const auto goal = goal_handle_->get_goal();
   auto goal_pose = parse_goal(goal_handle_->get_goal()); 
-  double target_x = goal->x.value;
-  double target_y = goal->y.value;
-  double target_theta = goal->theta.value;
 
   // ワールド座標系での目標速度を算出
-  auto duration = steady_clock_.now().nanoseconds() - last_update_time_.nanoseconds();
+  auto current_time = steady_clock_.now();
+  auto duration = current_time - last_update_time_;
   State world_vel;
-  world_vel.x = pid_vx_->computeCommand(target_x - my_robot.pos.x, duration);
-  world_vel.y = pid_vy_->computeCommand(target_y - my_robot.pos.y, duration);
-  world_vel.theta = pid_vtheta_->computeCommand(normalize_theta(target_theta - my_robot.orientation), duration);
+  world_vel.x = pid_vx_->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
+  world_vel.y = pid_vy_->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
+  world_vel.theta = pid_vtheta_->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
 
   // 最大速度リミットを適用
+  world_vel = limit_world_acceleration(world_vel, last_world_vel_, duration);
   world_vel = limit_world_velocity(world_vel);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
-  State local_vel;
-  local_vel.x = std::cos(my_robot.orientation) * world_vel.x + std::sin(my_robot.orientation) * world_vel.y;
-  local_vel.y = -std::sin(my_robot.orientation) * world_vel.x + std::cos(my_robot.orientation) * world_vel.y;
-  local_vel.theta = world_vel.theta;
+  command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(my_robot.orientation) * world_vel.y;
+  command_msg->velocity_y = -std::sin(my_robot.orientation) * world_vel.x + std::cos(my_robot.orientation) * world_vel.y;
+  command_msg->velocity_theta = world_vel.theta;
 
-  command_msg->velocity_x = local_vel.x;
-  command_msg->velocity_y = local_vel.y;
-  command_msg->velocity_theta = local_vel.theta;
-
-  // 制御値を出力
-  last_update_time_ = steady_clock_.now();
+  // 制御値を出力する
   pub_command_->publish(std::move(command_msg));
+
+  // 制御更新時間と速度を保存する
+  last_update_time_ = current_time;
+  last_world_vel_ = world_vel;
 
   // 途中経過を報告する
   if(need_response_){
     auto feedback = std::make_shared<RobotControl::Feedback>();
-    feedback->remain_x = target_x - my_robot.pos.x;
-    feedback->remain_y = target_y - my_robot.pos.y;
-    feedback->remain_theta = target_theta - my_robot.orientation;
+    feedback->remaining_x = goal_pose.x - my_robot.pos.x;
+    feedback->remaining_y = goal_pose.y - my_robot.pos.y;
+    feedback->remaining_theta = normalize_theta(goal_pose.theta - my_robot.orientation);
     if(my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0){
-      feedback->remain_vel_x = my_robot.vel[0].x;
-      feedback->remain_vel_y = my_robot.vel[0].y;
-      feedback->remain_vel_theta = my_robot.vel_angular[0];
+      feedback->remaining_vel_x = my_robot.vel[0].x;
+      feedback->remaining_vel_y = my_robot.vel[0].y;
+      feedback->remaining_vel_theta = my_robot.vel_angular[0];
     }
     
     goal_handle_->publish_feedback(feedback);
   }
 
   // 目標値に到達したら制御を完了する
-  if(arrived(my_robot, target_x, target_y, target_theta)){
+  if(arrived(my_robot, goal_pose)){
     if(need_response_){
       auto result = std::make_shared<RobotControl::Result>();
 
@@ -249,7 +245,31 @@ State Controller::limit_world_velocity(const State & velocity) const
   return modified_velocity;
 }
 
-bool Controller::arrived(const TrackedRobot & my_robot, const double x, const double y, const double theta)
+State Controller::limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const
+{
+  // ワールド座標系のロボット加速度に制限を掛ける
+  const double MAX_ACCELERATION_XY = 2.0;  // m/s^2
+  const double MAX_ACCELERATION_THETA = 2.0 * M_PI;  // rad/s^2
+
+  State modified_velocity = velocity;
+  double acc_x = (velocity.x - last_velocity.x) / dt.seconds();
+  double acc_y = (velocity.y - last_velocity.y) / dt.seconds();
+  double acc_theta = (velocity.theta - last_velocity.theta) / dt.seconds();
+
+  if(std::fabs(acc_x) > MAX_ACCELERATION_XY){
+    modified_velocity.x = last_velocity.x + std::copysign(MAX_ACCELERATION_XY * dt.seconds(), acc_x);
+  }
+  if(std::fabs(acc_y) > MAX_ACCELERATION_XY){
+    modified_velocity.y = last_velocity.y + std::copysign(MAX_ACCELERATION_XY * dt.seconds(), acc_y);
+  }
+  if(std::fabs(acc_theta) > MAX_ACCELERATION_THETA){
+    modified_velocity.theta = last_velocity.theta + std::copysign(MAX_ACCELERATION_THETA * dt.seconds(), acc_theta);
+  }
+
+  return modified_velocity;
+}
+
+bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
 {
   // 目的地に到着したかどうか判定する
   // my_robotが速度データを持っていたら、速度が一定値以下に低下していることも判定する
@@ -269,11 +289,11 @@ bool Controller::arrived(const TrackedRobot & my_robot, const double x, const do
   }
 
   // 直線距離の差分が小さくなっているか判定
-  double diff_x = x - my_robot.pos.x;
-  double diff_y = y - my_robot.pos.y;
-  double distance_theta = std::fabs(normalize_theta(theta - my_robot.orientation));
-  double distance = std::hypot(diff_x, diff_y);
-  if(distance < DISTANCE_THRESHOLD && distance_theta < THETA_THRESHOLD){
+  double diff_x = goal_pose.x - my_robot.pos.x;
+  double diff_y = goal_pose.y - my_robot.pos.y;
+  double remaining_theta = std::fabs(normalize_theta(goal_pose.theta - my_robot.orientation));
+  double remaining_distance = std::hypot(diff_x, diff_y);
+  if(remaining_distance < DISTANCE_THRESHOLD && remaining_theta < THETA_THRESHOLD){
     return true;
   }
   return false;
