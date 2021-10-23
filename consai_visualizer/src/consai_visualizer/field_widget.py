@@ -19,7 +19,7 @@ from enum import Enum
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
 from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
-from robocup_ssl_msgs.msg import DetectionFrame
+from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
@@ -67,7 +67,7 @@ class FieldWidget(QWidget):
         self._field.field_length = 12000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
-        self._detection_tracked = None
+        self._detection_tracked = TrackedFrame()
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
