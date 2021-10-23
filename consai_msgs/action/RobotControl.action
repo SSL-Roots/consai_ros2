@@ -1,3 +1,7 @@
+# 目標値に到達しても制御を続けてほしいときはtrue
+# actionは瞬時に完了する
+bool keep_control false
+
 ConstraintTarget x
 ConstraintTarget y
 ConstraintTarget theta

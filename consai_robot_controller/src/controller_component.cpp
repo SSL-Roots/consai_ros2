@@ -254,8 +254,23 @@ rclcpp_action::CancelResponse Controller::handle_cancel(const std::shared_ptr<Go
 
 void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id)
 {
+  // 目標値が承認されたときに実行するハンドラ
+
+  auto goal = goal_handle->get_goal();
+  if(goal->keep_control){
+    // 目標値に到達しても制御を続ける
+    need_response_[robot_id] = false;
+
+    // アクションを完了する
+    auto result = std::make_shared<RobotControl::Result>();
+    result->success = true;
+    result->message = "Success!";
+    goal_handle->succeed(result);
+  }else{
+    need_response_[robot_id] = true;
+  }
+
   control_enable_[robot_id] = true;
-  need_response_[robot_id] = true;
   goal_handle_[robot_id] = goal_handle;
 }
 
