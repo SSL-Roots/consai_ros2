@@ -1,6 +1,9 @@
 # 目標値に到達しても制御を続けてほしいときはtrue
 # actionは瞬時に完了する
 bool keep_control false
+# ControlTarget x, yの値をfiled sizeにあわせて-1 ~ 1に正規化する
+# オフセット値は正規化しない
+bool normalize_xy false
 
 ConstraintTarget x
 ConstraintTarget y

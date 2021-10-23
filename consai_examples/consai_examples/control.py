@@ -48,8 +48,18 @@ class ControlTest(Node):
     def all_robots_are_free(self):
         return all(self._robot_is_free)
 
-    def move_robot(self, robot_id, x, y, theta, keep=False):
+    def move_to(self, robot_id, x, y, theta, keep=False):
         goal_msg = RobotControl.Goal()
+        goal_msg.x.value.append(x)
+        goal_msg.y.value.append(y)
+        goal_msg.theta.value.append(theta)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def move_to_normalized(self, robot_id, x, y, theta, keep=False):
+        goal_msg = RobotControl.Goal()
+        goal_msg.normalize_xy = True
         goal_msg.x.value.append(x)
         goal_msg.y.value.append(y)
         goal_msg.theta.value.append(theta)
@@ -133,9 +143,19 @@ class ControlTest(Node):
 
 def main():
     robot_id = 0
-    for i in range(2):
-        for i in range(16):
-            test_node.chase_robot(i, True, i, 0.0, 0.5, False, True)
+    for i in range(10):
+        size = 1.0 / (1 + i)
+        test_node.move_to_normalized(0, 0.0, 0.0, 0.0, False)
+        test_node.move_to_normalized(1, size, 0.0, 0.0, False)
+        test_node.move_to_normalized(2, size, size, 0.0, False)
+        test_node.move_to_normalized(3, 0.0, size, 0.0, False)
+        test_node.move_to_normalized(4, -size, size, 0.0, False)
+        test_node.move_to_normalized(5, -size, 0.0, 0.0, False)
+        test_node.move_to_normalized(6, -size, -size, 0.0, False)
+        test_node.move_to_normalized(7, 0.0, -size, 0.0, False)
+        test_node.move_to_normalized(8, size, -size, 0.0, False)
+        # for i in range(16):
+            # test_node.chase_robot(i, True, i, 0.0, 0.5, False, True)
             # test_node.chase_ball(i, 0.4*(i+1), 0.4*(i+1), False, True)
 
         while test_node.all_robots_are_free() is False:

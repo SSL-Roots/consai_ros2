@@ -298,6 +298,12 @@ bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal
   if(!parse_constraint(goal->y, parsed_pose, parsed_pose.y)){
     return false;
   }
+  // 正規化、goal->x.value、goal->y.valueに-1.0 ~ 1.0が入力されている前提
+  if(goal->normalize_xy){
+    parsed_pose.x *= geometry_->field.field_length * 0.5 * 0.001;  // mm to meters
+    parsed_pose.y *= geometry_->field.field_width * 0.5 * 0.001;  // mm to meters
+  }
+
   // オフセットを加算
   parsed_pose.x += goal->offset_x;
   parsed_pose.y += goal->offset_y;
