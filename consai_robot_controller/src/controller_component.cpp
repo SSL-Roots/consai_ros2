@@ -44,104 +44,126 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("vtheta_i", 0.0);
   declare_parameter("vtheta_d", 0.0);
 
-  robot_id_ = get_parameter("robot_id").get_value<unsigned int>();
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
+  RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
 
-  RCLCPP_INFO(this->get_logger(), "robot_id is %d, is yellow:%d",robot_id_, team_is_yellow_);
-
-  std::string command_name_space = "blue";
+  std::string team_color = "blue";
   if(team_is_yellow_){
-    command_name_space = "yellow";
+    team_color = "yellow";
   }
-  command_name_space += std::to_string(robot_id_);
-  pub_command_ = create_publisher<consai_msgs::msg::RobotCommand>(command_name_space + "/command", 10);
-
-  server_control_ = rclcpp_action::create_server<RobotControl>(
-    get_node_base_interface(),
-    get_node_clock_interface(),
-    get_node_logging_interface(),
-    get_node_waitables_interface(),
-    command_name_space + "/control",
-    std::bind(&Controller::handle_goal, this, _1, _2),
-    std::bind(&Controller::handle_cancel, this, _1),
-    std::bind(&Controller::handle_accepted, this, _1));
-  
-  // PID制御器の初期化
-  pid_vx_ = std::make_shared<control_toolbox::Pid>(
-    get_parameter("vx_p").get_value<double>(),
-    get_parameter("vx_i").get_value<double>(),
-    get_parameter("vx_d").get_value<double>()
-  );
-  pid_vy_ = std::make_shared<control_toolbox::Pid>(
-    get_parameter("vy_p").get_value<double>(),
-    get_parameter("vy_i").get_value<double>(),
-    get_parameter("vy_d").get_value<double>()
-  );
-  pid_vtheta_ = std::make_shared<control_toolbox::Pid>(
-    get_parameter("vtheta_p").get_value<double>(),
-    get_parameter("vtheta_i").get_value<double>(),
-    get_parameter("vtheta_d").get_value<double>()
-  );
 
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
-  last_update_time_ = steady_clock_.now();
+
+  const int ROBOT_NUM = 16;
+  for(int i=0; i<ROBOT_NUM; i++){
+    std::string name_space = team_color + std::to_string(i);
+    pub_command_.push_back(create_publisher<consai_msgs::msg::RobotCommand>(
+      name_space + "/command", 10)
+    );
+
+    server_control_.push_back(rclcpp_action::create_server<RobotControl>(
+      get_node_base_interface(),
+      get_node_clock_interface(),
+      get_node_logging_interface(),
+      get_node_waitables_interface(),
+      name_space + "/control",
+      std::bind(&Controller::handle_goal, this, _1, _2, i),
+      std::bind(&Controller::handle_cancel, this, _1, i),
+      std::bind(&Controller::handle_accepted, this, _1, i))
+    );
+
+    last_update_time_.push_back(steady_clock_.now());
+
+    // PID制御器の初期化
+    pid_vx_.push_back(std::make_shared<control_toolbox::Pid>(
+      get_parameter("vx_p").get_value<double>(),
+      get_parameter("vx_i").get_value<double>(),
+      get_parameter("vx_d").get_value<double>())
+    );
+    pid_vy_.push_back(std::make_shared<control_toolbox::Pid>(
+      get_parameter("vy_p").get_value<double>(),
+      get_parameter("vy_i").get_value<double>(),
+      get_parameter("vy_d").get_value<double>())
+    );
+    pid_vtheta_.push_back(std::make_shared<control_toolbox::Pid>(
+      get_parameter("vtheta_p").get_value<double>(),
+      get_parameter("vtheta_i").get_value<double>(),
+      get_parameter("vtheta_d").get_value<double>())
+    );
+
+    // bindでは関数を宣言できなかったので、ラムダ式を使用する
+    // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
+    timer_pub_control_command_.push_back(
+      create_wall_timer(10ms, [this, robot_id = i] () { this->on_timer_pub_control_command(robot_id);}
+      )
+    );
+    timer_pub_control_command_[i]->cancel();  // タイマーを停止
+    timer_pub_stop_command_.push_back(
+      create_wall_timer(1s, [this, robot_id = i] () { this->on_timer_pub_stop_command(robot_id);}
+      )
+    );
+
+    last_world_vel_.push_back(State());
+    control_enable_.push_back(false);
+    need_response_.push_back(false);
+  }
+  goal_handle_.resize(ROBOT_NUM);
 
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
-
-  timer_pub_control_command_ = create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_control_command, this));
-  timer_pub_control_command_->cancel();  // タイマーを停止
-  timer_pub_stop_command_ = create_wall_timer(1s, std::bind(&Controller::on_timer_pub_stop_command, this));
 }
 
-void Controller::on_timer_pub_control_command()
+void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
   // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
 
   // 制御が許可されていない場合は、このタイマーを止めて、停止コマンドタイマーを起動する
-  if(control_enable_ == false){
-    timer_pub_control_command_->cancel();
-    timer_pub_stop_command_->reset();
+  if(control_enable_[robot_id] == false){
+    timer_pub_control_command_[robot_id]->cancel();
+    timer_pub_stop_command_[robot_id]->reset();
     return;
   }
 
   auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
-  command_msg->robot_id = robot_id_;
+  command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
+
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
-  if(!extract_my_robot(my_robot)){
-    std::string error_msg = "Failed to extract my robot from detection_tracked msg.";
+  if(!extract_my_robot(robot_id, my_robot)){
+    std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) + " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg);
 
-    control_enable_ = false;
-
-    if(need_response_){
+    if(need_response_[robot_id]){
       auto result = std::make_shared<RobotControl::Result>();
       result->success = false;
       result->message = error_msg;
-      goal_handle_->abort(result);
-      need_response_ = false;
+      goal_handle_[robot_id]->abort(result);
+      need_response_[robot_id] = false;
     }
-    pub_command_->publish(std::move(command_msg));
+
+    control_enable_[robot_id] = false;
+    timer_pub_control_command_[robot_id]->cancel();
+    timer_pub_stop_command_[robot_id]->reset();
+    pub_command_[robot_id]->publish(std::move(command_msg));
     return;
   }
 
   // 目標値を取得する
-  auto goal_pose = parse_goal(goal_handle_->get_goal()); 
+  auto goal_pose = parse_goal(goal_handle_[robot_id]->get_goal()); 
 
   // ワールド座標系での目標速度を算出
   auto current_time = steady_clock_.now();
-  auto duration = current_time - last_update_time_;
+  auto duration = current_time - last_update_time_[robot_id];
   State world_vel;
-  world_vel.x = pid_vx_->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
-  world_vel.y = pid_vy_->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
-  world_vel.theta = pid_vtheta_->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
+  world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
+  world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
+  world_vel.theta = pid_vtheta_[robot_id]->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
 
   // 最大速度リミットを適用
-  world_vel = limit_world_acceleration(world_vel, last_world_vel_, duration);
+  world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
   world_vel = limit_world_velocity(world_vel);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
@@ -150,14 +172,14 @@ void Controller::on_timer_pub_control_command()
   command_msg->velocity_theta = world_vel.theta;
 
   // 制御値を出力する
-  pub_command_->publish(std::move(command_msg));
+  pub_command_[robot_id]->publish(std::move(command_msg));
 
   // 制御更新時間と速度を保存する
-  last_update_time_ = current_time;
-  last_world_vel_ = world_vel;
+  last_update_time_[robot_id] = current_time;
+  last_world_vel_[robot_id] = world_vel;
 
   // 途中経過を報告する
-  if(need_response_){
+  if(need_response_[robot_id]){
     auto feedback = std::make_shared<RobotControl::Feedback>();
     feedback->remaining_x = goal_pose.x - my_robot.pos.x;
     feedback->remaining_y = goal_pose.y - my_robot.pos.y;
@@ -168,41 +190,43 @@ void Controller::on_timer_pub_control_command()
       feedback->remaining_vel_theta = my_robot.vel_angular[0];
     }
     
-    goal_handle_->publish_feedback(feedback);
+    goal_handle_[robot_id]->publish_feedback(feedback);
   }
 
   // 目標値に到達したら制御を完了する
   if(arrived(my_robot, goal_pose)){
-    if(need_response_){
+    if(need_response_[robot_id]){
       auto result = std::make_shared<RobotControl::Result>();
 
       result->success = true;
       result->message = "Success!";
-      goal_handle_->succeed(result);
-      control_enable_ = false;
-      need_response_ = false;
+      goal_handle_[robot_id]->succeed(result);
+      control_enable_[robot_id] = false;
+      need_response_[robot_id] = false;
+      timer_pub_control_command_[robot_id]->cancel();
+      timer_pub_stop_command_[robot_id]->reset();
     }
   }
 }
 
-void Controller::on_timer_pub_stop_command()
+void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 {
   // 停止コマンドをpublishするタイマーコールバック関数
   // 通信帯域を圧迫しないため、この関数は低周期（例:1s）で実行すること
   auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
-  command_msg->robot_id = robot_id_;
+  command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
 
-  pid_vx_->reset();
-  pid_vy_->reset();
-  pid_vtheta_->reset();
-  last_update_time_ = steady_clock_.now();
-  pub_command_->publish(std::move(command_msg));
+  pid_vx_[robot_id]->reset();
+  pid_vy_[robot_id]->reset();
+  pid_vtheta_[robot_id]->reset();
+  last_update_time_[robot_id] = steady_clock_.now();
+  pub_command_[robot_id]->publish(std::move(command_msg));
 
   // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
-  if(control_enable_ == true){
-    timer_pub_stop_command_->cancel();
-    timer_pub_control_command_->reset();
+  if(control_enable_[robot_id] == true){
+    timer_pub_stop_command_[robot_id]->cancel();
+    timer_pub_control_command_[robot_id]->reset();
   }
 }
 
@@ -212,25 +236,27 @@ void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUID & uuid,
-  std::shared_ptr<const RobotControl::Goal> goal)
+  std::shared_ptr<const RobotControl::Goal> goal, const unsigned int robot_id)
 {
   (void)uuid;
+  (void)goal;
+  (void)robot_id;
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
-rclcpp_action::CancelResponse Controller::handle_cancel(const std::shared_ptr<GoalHandleRobotControl> goal_handle)
+rclcpp_action::CancelResponse Controller::handle_cancel(const std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id)
 {
   // キャンセル信号を受け取ったら制御を停止する
   (void)goal_handle;
-  control_enable_ = false;
+  control_enable_[robot_id] = false;
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
-void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle)
+void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id)
 {
-  control_enable_ = true;
-  need_response_ = true;
-  goal_handle_ = goal_handle;
+  control_enable_[robot_id] = true;
+  need_response_[robot_id] = true;
+  goal_handle_[robot_id] = goal_handle;
 }
 
 State Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const
@@ -247,13 +273,13 @@ State Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goa
   return goal_pose;
 }
 
-bool Controller::extract_my_robot(TrackedRobot & my_robot)
+bool Controller::extract_my_robot(const unsigned int robot_id, TrackedRobot & my_robot)
 {
-  // detection_trackedから自身の情報を抽出する
+  // detection_trackedから指定されたIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
   for(auto robot : detection_tracked_->robots){
-    if(robot_id_ != robot.robot_id.id){
+    if(robot_id != robot.robot_id.id){
       continue;
     }
     if((team_is_yellow_ && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&

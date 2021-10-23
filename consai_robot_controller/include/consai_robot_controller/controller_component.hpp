@@ -42,39 +42,42 @@ public:
   explicit Controller(const rclcpp::NodeOptions & options);
 
 protected:
-  void on_timer_pub_control_command();
-  void on_timer_pub_stop_command();
+  void on_timer_pub_control_command(const unsigned int robot_id);
+  void on_timer_pub_stop_command(const unsigned int robot_id);
 
 private:
   void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID & uuid,
-    std::shared_ptr<const RobotControl::Goal> goal);
-  rclcpp_action::CancelResponse handle_cancel(const std::shared_ptr<GoalHandleRobotControl> goal_handle);
-  void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle);
+    std::shared_ptr<const RobotControl::Goal> goal,
+    const unsigned int robot_id);
+  rclcpp_action::CancelResponse handle_cancel(
+    const std::shared_ptr<GoalHandleRobotControl> goal_handle,
+    const unsigned int robot_id);
+  void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
   State parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const;
-  bool extract_my_robot(TrackedRobot & my_robot);
+  bool extract_my_robot(const unsigned int robot_id, TrackedRobot & my_robot);
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   double normalize_theta(double theta);
 
-  rclcpp::TimerBase::SharedPtr timer_pub_control_command_;
-  rclcpp::TimerBase::SharedPtr timer_pub_stop_command_;
-  rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr pub_command_; 
-  rclcpp_action::Server<RobotControl>::SharedPtr server_control_;
+  std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
+  std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
+  std::vector<rclcpp::Time> last_update_time_;
+  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;
+  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vy_;
+  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vtheta_;
+  std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
+  std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_stop_command_;
+  std::vector<bool> control_enable_;
+  std::vector<bool> need_response_;
+  std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
+  std::vector<State> last_world_vel_;
+
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  std::shared_ptr<control_toolbox::Pid> pid_vx_;
-  std::shared_ptr<control_toolbox::Pid> pid_vy_;
-  std::shared_ptr<control_toolbox::Pid> pid_vtheta_;
-  State last_world_vel_;
   rclcpp::Clock steady_clock_;
-  rclcpp::Time last_update_time_;
-  unsigned int robot_id_;
-  bool team_is_yellow_;
   std::shared_ptr<TrackedFrame> detection_tracked_;
-  bool control_enable_;
-  bool need_response_;
-  std::shared_ptr<GoalHandleRobotControl> goal_handle_;
+  bool team_is_yellow_;
 };
 
 }  // namespace consai_robot_controller

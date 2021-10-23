@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from consai_msgs.action import RobotControl
+from functools import partial
 import math
 import rclpy
 from rclpy.action import ActionClient
@@ -28,13 +29,39 @@ class ControlTest(Node):
     def __init__(self):
         super().__init__('control_test_node')
 
-        self._action_client = ActionClient(self, RobotControl, '/blue0/control')
-        self._robot_is_free = True
+        ROBOT_NUM = 16
+        self._action_clients = []
+        for i in range(ROBOT_NUM):
+            action_name = 'blue' + str(i) + '/control'
+            self._action_clients.append(ActionClient(self, RobotControl, action_name))
+        self._robot_is_free = [True] * ROBOT_NUM
+        self._send_goal_future = [None] * ROBOT_NUM
+        self._get_result_future = [None] * ROBOT_NUM
 
-    def robot_is_free(self):
-        return self._robot_is_free
+    def robot_is_free(self, robot_id):
+        return self._robot_is_free[robot_id]
 
-    def _goal_response_callback(self, future):
+    def all_robots_are_free(self):
+        return all(self._robot_is_free)
+
+    def move_robot(self, robot_id, x, y, theta):
+        self.get_logger().info("move_robot start :" + str(robot_id))
+        goal_msg = RobotControl.Goal()
+        goal_msg.x.value = x
+        goal_msg.y.value = y
+        goal_msg.theta.value = theta
+
+        if not self._action_clients[robot_id].wait_for_server(5):
+            self.get_logger().error("TIMEOUT: wait_for_server")
+            return False
+
+        self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
+            goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))
+
+        self._send_goal_future[robot_id].add_done_callback(partial(self._goal_response_callback, robot_id=robot_id))
+        self._robot_is_free[robot_id] = False
+
+    def _goal_response_callback(self, future, robot_id):
         goal_handle = future.result()
 
         if not goal_handle.accepted:
@@ -42,48 +69,31 @@ class ControlTest(Node):
             return
 
         self.get_logger().info('Goal accepted')
-        self._get_result_future = goal_handle.get_result_async()
-        self._get_result_future.add_done_callback(self._get_result_callback)
+        self._get_result_future[robot_id] = goal_handle.get_result_async()
+        self._get_result_future[robot_id].add_done_callback(partial(self._get_result_callback, robot_id=robot_id))
 
-    def _feedback_callback(self, feedback_msg):
+    def _feedback_callback(self, feedback_msg, robot_id):
         feedback = feedback_msg.feedback
-        # self.get_logger().info('remaining x:{}, y:{}, theta:{}'.format(
-        #     feedback.remaining_x,
-        #     feedback.remaining_y,
-        #     feedback.remaining_theta,
-        # ))
 
-    def _get_result_callback(self, future):
+    def _get_result_callback(self, future, robot_id):
         result = future.result().result
-        self.get_logger().info('Result: {0}, Message: {0}'.format(result.success, result.message))
-        self._robot_is_free = True
-
-    def move_robot(self, x, y, theta):
-        self.get_logger().info("move_robot start")
-        goal_msg = RobotControl.Goal()
-        goal_msg.x.value = x
-        goal_msg.y.value = y
-        goal_msg.theta.value = theta
-
-        if not self._action_client.wait_for_server(5):
-            self.get_logger().error("TIMEOUT: wait_for_server")
-            return False
-
-        self._send_goal_future = self._action_client.send_goal_async(
-            goal_msg, feedback_callback=self._feedback_callback)
-
-        self._send_goal_future.add_done_callback(self._goal_response_callback)
-        self._robot_is_free = False
-        self.get_logger().info("move_robot stop")
+        self.get_logger().info('RobotId: {0}, Result: {0}, Message: {0}'.format(robot_id, result.success, result.message))
+        self._robot_is_free[robot_id] = True
 
 def main():
-    test_node.move_robot(2.0, 1.0, math.pi * 0.5)
-    while test_node.robot_is_free() is False:
-        executor.spin_once()  # タイムアウト入れないとフリーズする
+    robot_id = 0
+    for i in range(3):
+        for i in range(16):
+            test_node.move_robot(i, -4.0 + 0.2 * i, 2.0, math.pi * 0.5)
 
-    test_node.move_robot(2.0, -1.0, math.pi * 0.5)
-    while test_node.robot_is_free() is False:
-        executor.spin_once()
+        while test_node.all_robots_are_free() is False:
+            executor.spin_once()  # タイムアウト入れないとフリーズする
+
+        for i in range(16):
+            test_node.move_robot(i, -4.0 + 0.2 * i, -2.0, math.pi * 0.5)
+
+        while test_node.all_robots_are_free() is False:
+            executor.spin_once()  # タイムアウト入れないとフリーズする
 
 if __name__ == '__main__':
     rclpy.init(args=None)
