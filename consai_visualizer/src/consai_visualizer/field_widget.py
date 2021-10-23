@@ -333,6 +333,21 @@ class FieldWidget(QWidget):
             span_angle = end_angle - start_angle
             painter.drawArc(top_left.x(), top_left.y(), size, size, start_angle, span_angle)
 
+        # ゴールを描画
+        painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
+        rect = QRect(
+            self._convert_field_to_draw_point(self._field.field_length * 0.5, self._field.goal_width*0.5),
+            QSize(self._field.goal_depth * self._scale_field_to_draw,
+                  self._field.goal_width * self._scale_field_to_draw))
+        painter.drawRect(rect)
+
+        painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
+        rect = QRect(
+            self._convert_field_to_draw_point(-self._field.field_length * 0.5 - self._field.goal_depth, self._field.goal_width*0.5),
+            QSize(self._field.goal_depth * self._scale_field_to_draw,
+                  self._field.goal_width * self._scale_field_to_draw))
+        painter.drawRect(rect)
+
     def _draw_detection(self, painter):
         # detectionトピックのロボット・ボールの描画
 
