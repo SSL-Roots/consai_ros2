@@ -286,25 +286,26 @@ bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
 
-  if(!parse_constraint(goal->x, parsed_pose.x)){
+  if(!parse_constraint(goal->x, parsed_pose, parsed_pose.x)){
     return false;
   }
-  if(!parse_constraint(goal->y, parsed_pose.y)){
+  if(!parse_constraint(goal->y, parsed_pose, parsed_pose.y)){
     return false;
   }
-  if(!parse_constraint(goal->theta, parsed_pose.theta)){
-    return false;
-  }
-
   // オフセットを加算
   parsed_pose.x += goal->offset_x;
   parsed_pose.y += goal->offset_y;
+
+  if(!parse_constraint(goal->theta, parsed_pose, parsed_pose.theta)){
+    return false;
+  }
+
   parsed_pose.theta = normalize_theta(parsed_pose.theta + goal->offset_theta);
 
   return true;
 }
 
-bool Controller::parse_constraint(const ConstraintTarget & target, double & parsed_value) const
+bool Controller::parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const
 {
   // ConstraintTargetを解析する
   // ボールやロボットが存在しない等で値が得られなければfalseを返す
@@ -320,11 +321,21 @@ bool Controller::parse_constraint(const ConstraintTarget & target, double & pars
   if(target.target.size() > 0 && target.target_parameter.size() > 0){
     TrackedBall ball;
     if(target.target[0] == ConstraintTarget::TARGET_BALL && extract_ball(ball)){
+      State ball_pose;
+      ball_pose.x = ball.pos.x;
+      ball_pose.y = ball.pos.y;
+
       if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
-        parsed_value = ball.pos.x;
+        parsed_value = ball_pose.x;
         retval = true;
       }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
-        parsed_value = ball.pos.y;
+        parsed_value = ball_pose.y;
+        retval = true;
+      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_TO){
+        parsed_value = calc_angle(current_goal_pose, ball_pose);
+        retval = true;
+      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_FROM){
+        parsed_value = calc_angle(ball_pose, current_goal_pose);
         retval = true;
       }
     }
@@ -444,6 +455,16 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
     return true;
   }
   return false;
+}
+
+double Controller::calc_angle(const State & from_pose, const State & to_pose) const
+{
+  // from_poseからto_poseへの角度を計算する
+
+  double diff_x = to_pose.x - from_pose.x;
+  double diff_y = to_pose.y - from_pose.y;
+
+  return std::atan2(diff_y, diff_x);
 }
 
 double Controller::normalize_theta(double theta)

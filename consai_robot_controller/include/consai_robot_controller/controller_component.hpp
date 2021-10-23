@@ -58,12 +58,13 @@ private:
     const unsigned int robot_id);
   void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
   bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose);
-  bool parse_constraint(const ConstraintTarget & target, double & parsed_value) const;
+  bool parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const;
   bool extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const;
   bool extract_ball(TrackedBall & my_ball) const;
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
+  double calc_angle(const State & from_pose, const State & to_pose) const;
   double normalize_theta(double theta);
 
   std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 

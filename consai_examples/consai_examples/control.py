@@ -54,13 +54,17 @@ class ControlTest(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
-    def chase_ball(self, robot_id, offset_x, offset_y, keep=False):
+    def chase_ball(self, robot_id, offset_x, offset_y, look_from=False, keep=False):
         goal_msg = RobotControl.Goal()
         goal_msg.x.target.append(ConstraintTarget.TARGET_BALL)
         goal_msg.x.target_parameter.append(ConstraintTarget.PARAMETER_X)
         goal_msg.y.target.append(ConstraintTarget.TARGET_BALL)
         goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
-        goal_msg.theta.value.append(0.0)
+        goal_msg.theta.target.append(ConstraintTarget.TARGET_BALL)
+        if look_from:
+            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_FROM)
+        else:
+            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_TO)
         goal_msg.offset_x = offset_x
         goal_msg.offset_y = offset_y
         goal_msg.keep_control = keep
@@ -100,9 +104,15 @@ class ControlTest(Node):
 
 def main():
     robot_id = 0
-    for i in range(1):
+    for i in range(2):
         for i in range(16):
-            test_node.chase_ball(i, -0.3 - 0.3 * i, 0.0, True)
+            test_node.chase_ball(i, -0.3 - 0.3 * i, -0.2 * i, False, False)
+
+        while test_node.all_robots_are_free() is False:
+            executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+        for i in range(16):
+            test_node.chase_ball(i, -0.3 - 0.3 * i, 0.2 * i, True, False)
 
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする
