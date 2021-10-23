@@ -25,6 +25,7 @@
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+#include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
@@ -56,9 +57,10 @@ private:
     const std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
   void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
-  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
+  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose);
   bool parse_constraint(const ConstraintTarget & target, double & parsed_value) const;
-  bool extract_my_robot(const unsigned int robot_id, TrackedRobot & my_robot);
+  bool extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const;
+  bool extract_ball(TrackedBall & my_ball) const;
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);

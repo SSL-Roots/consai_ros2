@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from consai_msgs.action import RobotControl
+from consai_msgs.msg import ConstraintTarget
 from functools import partial
 import math
 import rclpy
@@ -45,13 +46,28 @@ class ControlTest(Node):
         return all(self._robot_is_free)
 
     def move_robot(self, robot_id, x, y, theta, keep=False):
-        self.get_logger().info("move_robot start :" + str(robot_id))
         goal_msg = RobotControl.Goal()
         goal_msg.x.value.append(x)
         goal_msg.y.value.append(y)
         goal_msg.theta.value.append(theta)
         goal_msg.keep_control = keep
 
+        return self._set_goal(robot_id, goal_msg)
+
+    def chase_ball(self, robot_id, offset_x, offset_y, keep=False):
+        goal_msg = RobotControl.Goal()
+        goal_msg.x.target.append(ConstraintTarget.TARGET_BALL)
+        goal_msg.x.target_parameter.append(ConstraintTarget.PARAMETER_X)
+        goal_msg.y.target.append(ConstraintTarget.TARGET_BALL)
+        goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
+        goal_msg.theta.value.append(0.0)
+        goal_msg.offset_x = offset_x
+        goal_msg.offset_y = offset_y
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def _set_goal(self, robot_id, goal_msg):
         if not self._action_clients[robot_id].wait_for_server(5):
             self.get_logger().error("TIMEOUT: wait_for_server")
             return False
@@ -86,19 +102,7 @@ def main():
     robot_id = 0
     for i in range(1):
         for i in range(16):
-            test_node.move_robot(i, -4.0 + 0.2 * i, 2.0, math.pi * 0.5)
-
-        while test_node.all_robots_are_free() is False:
-            executor.spin_once(1)  # タイムアウト入れないとフリーズする
-
-        for i in range(16):
-            test_node.move_robot(i, -4.0 + 0.2 * i, -2.0, math.pi * 0.5)
-
-        while test_node.all_robots_are_free() is False:
-            executor.spin_once(1)  # タイムアウト入れないとフリーズする
-
-        for i in range(16):
-            test_node.move_robot(i, -4.0 + 0.2 * i, 0.0, math.pi * 0.5, True)
+            test_node.chase_ball(i, -0.3 - 0.3 * i, 0.0, True)
 
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする

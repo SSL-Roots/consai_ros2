@@ -132,7 +132,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
-  if(!extract_my_robot(robot_id, my_robot)){
+  if(!extract_robot(robot_id, team_is_yellow_, my_robot)){
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) + " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg);
 
@@ -281,7 +281,7 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
   goal_handle_[robot_id] = goal_handle;
 }
 
-bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const
+bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose)
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
@@ -295,6 +295,11 @@ bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal
   if(!parse_constraint(goal->theta, parsed_pose.theta)){
     return false;
   }
+
+  // オフセットを加算
+  parsed_pose.x += goal->offset_x;
+  parsed_pose.y += goal->offset_y;
+  parsed_pose.theta = normalize_theta(parsed_pose.theta + goal->offset_theta);
 
   return true;
 }
@@ -312,20 +317,33 @@ bool Controller::parse_constraint(const ConstraintTarget & target, double & pars
     retval = true;
   }
 
+  if(target.target.size() > 0 && target.target_parameter.size() > 0){
+    TrackedBall ball;
+    if(target.target[0] == ConstraintTarget::TARGET_BALL && extract_ball(ball)){
+      if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
+        parsed_value = ball.pos.x;
+        retval = true;
+      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
+        parsed_value = ball.pos.y;
+        retval = true;
+      }
+    }
+  }
+
   return retval;
 }
 
-bool Controller::extract_my_robot(const unsigned int robot_id, TrackedRobot & my_robot)
+bool Controller::extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const
 {
-  // detection_trackedから指定されたIDのロボット情報を抽出する
+  // detection_trackedから指定された色とIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
   for(auto robot : detection_tracked_->robots){
     if(robot_id != robot.robot_id.id){
       continue;
     }
-    if((team_is_yellow_ && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
-       (!team_is_yellow_ && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
+    if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
+       (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
       continue;
     }
     if(robot.visibility.size() == 0){
@@ -336,6 +354,25 @@ bool Controller::extract_my_robot(const unsigned int robot_id, TrackedRobot & my
     }
 
     my_robot = robot;
+    break;
+  }
+  return true;
+}
+
+bool Controller::extract_ball(TrackedBall & my_ball) const
+{
+  // detection_trackedからボール情報を抽出する
+  // visibilityが低いときは情報が無いと判定する
+  const double VISIBILITY_THRESHOLD = 0.01;
+  for(auto ball : detection_tracked_->balls){
+    if(ball.visibility.size() == 0){
+      return false;
+    }
+    if(ball.visibility[0] < VISIBILITY_THRESHOLD){
+      return false;
+    }
+
+    my_ball = ball;
     break;
   }
   return true;
