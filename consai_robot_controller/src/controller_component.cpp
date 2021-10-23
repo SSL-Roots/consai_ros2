@@ -111,6 +111,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
+  sub_geometry_ = create_subscription<GeometryData>(
+    "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
 }
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
@@ -234,6 +236,11 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 {
   detection_tracked_ = msg;
+}
+
+void Controller::callback_geometry(const GeometryData::SharedPtr msg)
+{
+  geometry_ = msg;
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUID & uuid,

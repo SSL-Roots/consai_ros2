@@ -25,6 +25,7 @@
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
+#include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -50,6 +51,7 @@ protected:
 
 private:
   void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
+  void callback_geometry(const GeometryData::SharedPtr msg);
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,
     const unsigned int robot_id);
@@ -81,9 +83,11 @@ private:
   std::vector<State> last_world_vel_;
 
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  rclcpp::Clock steady_clock_;
   std::shared_ptr<TrackedFrame> detection_tracked_;
+  rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
+  std::shared_ptr<GeometryData> geometry_;
   bool team_is_yellow_;
+  rclcpp::Clock steady_clock_;
 };
 
 }  // namespace consai_robot_controller
