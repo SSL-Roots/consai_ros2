@@ -32,7 +32,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 {
   using namespace std::placeholders;
 
-  declare_parameter("robot_id", 0);
   declare_parameter("team_is_yellow", false);
   declare_parameter("vx_p", 1.5);
   declare_parameter("vx_i", 0.0);
@@ -318,26 +317,46 @@ bool Controller::parse_constraint(const ConstraintTarget & target, const State &
     retval = true;
   }
 
+  State object_pose;
+  bool object_is_exist = false;
+  // ボールパラメータ
   if(target.target.size() > 0 && target.target_parameter.size() > 0){
     TrackedBall ball;
     if(target.target[0] == ConstraintTarget::TARGET_BALL && extract_ball(ball)){
-      State ball_pose;
-      ball_pose.x = ball.pos.x;
-      ball_pose.y = ball.pos.y;
+      object_pose.x = ball.pos.x;
+      object_pose.y = ball.pos.y;
+      object_is_exist = true;
+    }
+  }
 
-      if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
-        parsed_value = ball_pose.x;
-        retval = true;
-      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
-        parsed_value = ball_pose.y;
-        retval = true;
-      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_TO){
-        parsed_value = calc_angle(current_goal_pose, ball_pose);
-        retval = true;
-      }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_FROM){
-        parsed_value = calc_angle(ball_pose, current_goal_pose);
-        retval = true;
-      }
+  // ロボットパラメータ
+  if(target.target_id.size() > 0 && target.target.size() > 0 && target.target_parameter.size() > 0){
+    TrackedRobot robot;
+    if((target.target[0] == ConstraintTarget::TARGET_BLUE_ROBOT && extract_robot(target.target_id[0], false, robot)) || 
+       (target.target[0] == ConstraintTarget::TARGET_YELLOW_ROBOT && extract_robot(target.target_id[0], true, robot))){
+      object_pose.x = robot.pos.x;
+      object_pose.y = robot.pos.y;
+      object_pose.theta = robot.orientation;
+      object_is_exist = true;
+    }
+  }
+
+  if(object_is_exist){
+    if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
+      parsed_value = object_pose.x;
+      retval = true;
+    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
+      parsed_value = object_pose.y;
+      retval = true;
+    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_THETA){
+      parsed_value = object_pose.theta;
+      retval = true;
+    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_TO){
+      parsed_value = calc_angle(current_goal_pose, object_pose);
+      retval = true;
+    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_FROM){
+      parsed_value = calc_angle(object_pose, current_goal_pose);
+      retval = true;
     }
   }
 
@@ -353,10 +372,15 @@ bool Controller::extract_robot(const unsigned int robot_id, const bool team_is_y
     if(robot_id != robot.robot_id.id){
       continue;
     }
-    if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
-       (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
+    bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
+    bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
+    if(!is_yellow && !is_blue){
       continue;
     }
+    // if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
+    //    (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
+    //   continue;
+    // }
     if(robot.visibility.size() == 0){
       return false;
     }

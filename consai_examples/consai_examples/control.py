@@ -27,13 +27,16 @@ from rclpy.node import Node
 
 class ControlTest(Node):
 
-    def __init__(self):
+    def __init__(self, target_is_yellow=False):
         super().__init__('control_test_node')
 
         ROBOT_NUM = 16
         self._action_clients = []
+        team_color = 'blue'
+        if target_is_yellow:
+            team_color = 'yellow'
         for i in range(ROBOT_NUM):
-            action_name = 'blue' + str(i) + '/control'
+            action_name = team_color + str(i) + '/control'
             self._action_clients.append(ActionClient(self, RobotControl, action_name))
         self._robot_is_free = [True] * ROBOT_NUM
         self._send_goal_future = [None] * ROBOT_NUM
@@ -61,6 +64,32 @@ class ControlTest(Node):
         goal_msg.y.target.append(ConstraintTarget.TARGET_BALL)
         goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
         goal_msg.theta.target.append(ConstraintTarget.TARGET_BALL)
+        if look_from:
+            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_FROM)
+        else:
+            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_TO)
+        goal_msg.offset_x = offset_x
+        goal_msg.offset_y = offset_y
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def chase_robot(self, robot_id, target_is_yellow, target_id, offset_x, offset_y, look_from=False, keep=False):
+        goal_msg = RobotControl.Goal()
+        if target_is_yellow:
+            goal_msg.x.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
+            goal_msg.y.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
+            goal_msg.theta.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
+        else:
+            goal_msg.x.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
+            goal_msg.y.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
+            goal_msg.theta.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
+        goal_msg.x.target_id.append(target_id)
+        goal_msg.y.target_id.append(target_id)
+        goal_msg.theta.target_id.append(target_id)
+
+        goal_msg.x.target_parameter.append(ConstraintTarget.PARAMETER_X)
+        goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
         if look_from:
             goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_FROM)
         else:
@@ -106,13 +135,8 @@ def main():
     robot_id = 0
     for i in range(2):
         for i in range(16):
-            test_node.chase_ball(i, -0.3 - 0.3 * i, -0.2 * i, False, False)
-
-        while test_node.all_robots_are_free() is False:
-            executor.spin_once(1)  # タイムアウト入れないとフリーズする
-
-        for i in range(16):
-            test_node.chase_ball(i, -0.3 - 0.3 * i, 0.2 * i, True, False)
+            test_node.chase_robot(i, True, i, 0.0, 0.5, False, True)
+            # test_node.chase_ball(i, 0.4*(i+1), 0.4*(i+1), False, True)
 
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする
@@ -120,7 +144,7 @@ def main():
 if __name__ == '__main__':
     rclpy.init(args=None)
 
-    test_node = ControlTest()
+    test_node = ControlTest(False)
 
     executor = SingleThreadedExecutor()
     executor.add_node(test_node)
