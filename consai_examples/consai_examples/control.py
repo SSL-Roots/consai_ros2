@@ -47,9 +47,9 @@ class ControlTest(Node):
     def move_robot(self, robot_id, x, y, theta, keep=False):
         self.get_logger().info("move_robot start :" + str(robot_id))
         goal_msg = RobotControl.Goal()
-        goal_msg.x.value = x
-        goal_msg.y.value = y
-        goal_msg.theta.value = theta
+        goal_msg.x.value.append(x)
+        goal_msg.y.value.append(y)
+        goal_msg.theta.value.append(theta)
         goal_msg.keep_control = keep
 
         if not self._action_clients[robot_id].wait_for_server(5):
@@ -67,6 +67,7 @@ class ControlTest(Node):
 
         if not goal_handle.accepted:
             self.get_logger().info('Goal rejected')
+            self._robot_is_free[robot_id] = True
             return
 
         self.get_logger().info('Goal accepted')
@@ -85,13 +86,13 @@ def main():
     robot_id = 0
     for i in range(1):
         for i in range(16):
-            test_node.move_robot(i, -4.0 + 0.2 * i, 2.0, math.pi * 0.5, True)
+            test_node.move_robot(i, -4.0 + 0.2 * i, 2.0, math.pi * 0.5)
 
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
         for i in range(16):
-            test_node.move_robot(i, -4.0 + 0.2 * i, -2.0, math.pi * 0.5, True)
+            test_node.move_robot(i, -4.0 + 0.2 * i, -2.0, math.pi * 0.5)
 
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする

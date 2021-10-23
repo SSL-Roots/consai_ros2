@@ -152,15 +152,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   // 目標値を取得する
-  auto goal_pose = parse_goal(goal_handle_[robot_id]->get_goal()); 
-
-  // ワールド座標系での目標速度を算出
+  // 目標値を取得できなければ速度0を目標値とする
+  State goal_pose;
+  State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
-  State world_vel;
-  world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
-  world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
-  world_vel.theta = pid_vtheta_[robot_id]->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
+  if(parse_goal(goal_handle_[robot_id]->get_goal(), goal_pose)){
+    // ワールド座標系での目標速度を算出
+    world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
+    world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
+    world_vel.theta = pid_vtheta_[robot_id]->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
+  }
 
   // 最大速度リミットを適用
   world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
@@ -239,8 +241,13 @@ rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUI
   std::shared_ptr<const RobotControl::Goal> goal, const unsigned int robot_id)
 {
   (void)uuid;
-  (void)goal;
   (void)robot_id;
+
+  State goal_pose;
+  // 目標値の解析に失敗したらReject
+  if(!parse_goal(goal, goal_pose)){
+    return rclcpp_action::GoalResponse::REJECT;
+  }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -274,18 +281,38 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
   goal_handle_[robot_id] = goal_handle;
 }
 
-State Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal) const
+bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
+  // 解析に失敗したらfalseを返す
 
-  State goal_pose;
+  if(!parse_constraint(goal->x, parsed_pose.x)){
+    return false;
+  }
+  if(!parse_constraint(goal->y, parsed_pose.y)){
+    return false;
+  }
+  if(!parse_constraint(goal->theta, parsed_pose.theta)){
+    return false;
+  }
 
-  // デフォルトではx, y, thetaの値をそのまま目標姿勢に格納する
-  goal_pose.x = goal->x.value;
-  goal_pose.y = goal->y.value;
-  goal_pose.theta = goal->theta.value;
+  return true;
+}
 
-  return goal_pose;
+bool Controller::parse_constraint(const ConstraintTarget & target, double & parsed_value) const
+{
+  // ConstraintTargetを解析する
+  // ボールやロボットが存在しない等で値が得られなければfalseを返す
+
+  bool retval = false;
+  
+  // 実数値
+  if(target.value.size() > 0){
+    parsed_value = target.value[0];
+    retval = true;
+  }
+
+  return retval;
 }
 
 bool Controller::extract_my_robot(const unsigned int robot_id, TrackedRobot & my_robot)

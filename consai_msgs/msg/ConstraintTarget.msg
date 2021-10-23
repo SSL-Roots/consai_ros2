@@ -10,7 +10,9 @@ uint32 PARAMETER_THETA = 3
 uint32 PARAMETER_LOOK_TO = 4
 uint32 PARAMETER_LOOK_FROM = 5
 
-float64 value
-uint32[<=1] target  # optional
-uint32[<=1] target_id  # optional
-uint32[<=1] target_parameter  # optional
+# ロボットやボールが存在しないとき、解が得られない
+# そのため、すべての属性をoptionalにしている
+float64[<=1] value  # 実数値
+uint32[<=1] target  # ボールやロボット等の目標オブジェクト
+uint32[<=1] target_id  # ロボットのID
+uint32[<=1] target_parameter  # x, y等の目標オブジェクトから参照するパラメータ
