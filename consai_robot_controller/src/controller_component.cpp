@@ -34,9 +34,19 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("robot_id", 0);
   declare_parameter("team_is_yellow", false);
+  declare_parameter("vx_p", 1.5);
+  declare_parameter("vx_i", 0.0);
+  declare_parameter("vx_d", 0.2);
+  declare_parameter("vy_p", 1.5);
+  declare_parameter("vy_i", 0.0);
+  declare_parameter("vy_d", 0.2);
+  declare_parameter("vtheta_p", 1.0);
+  declare_parameter("vtheta_i", 0.0);
+  declare_parameter("vtheta_d", 0.0);
 
   robot_id_ = get_parameter("robot_id").get_value<unsigned int>();
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
+
 
   RCLCPP_INFO(this->get_logger(), "robot_id is %d, is yellow:%d",robot_id_, team_is_yellow_);
 
@@ -58,9 +68,21 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     std::bind(&Controller::handle_accepted, this, _1));
   
   // PID制御器の初期化
-  pid_vx_ = std::make_shared<control_toolbox::Pid>(1.5, 0.0, 0.2);
-  pid_vy_ = std::make_shared<control_toolbox::Pid>(1.5, 0.0, 0.2);
-  pid_vtheta_ = std::make_shared<control_toolbox::Pid>(1.0, 0.0, 0.0);
+  pid_vx_ = std::make_shared<control_toolbox::Pid>(
+    get_parameter("vx_p").get_value<double>(),
+    get_parameter("vx_i").get_value<double>(),
+    get_parameter("vx_d").get_value<double>()
+  );
+  pid_vy_ = std::make_shared<control_toolbox::Pid>(
+    get_parameter("vy_p").get_value<double>(),
+    get_parameter("vy_i").get_value<double>(),
+    get_parameter("vy_d").get_value<double>()
+  );
+  pid_vtheta_ = std::make_shared<control_toolbox::Pid>(
+    get_parameter("vtheta_p").get_value<double>(),
+    get_parameter("vtheta_i").get_value<double>(),
+    get_parameter("vtheta_d").get_value<double>()
+  );
 
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
   last_update_time_ = steady_clock_.now();
