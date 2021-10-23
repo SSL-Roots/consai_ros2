@@ -42,7 +42,8 @@ public:
   explicit Controller(const rclcpp::NodeOptions & options);
 
 protected:
-  void on_timer();
+  void on_timer_pub_control_command();
+  void on_timer_pub_stop_command();
 
 private:
   void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
@@ -57,7 +58,8 @@ private:
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   double normalize_theta(double theta);
 
-  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr timer_pub_control_command_;
+  rclcpp::TimerBase::SharedPtr timer_pub_stop_command_;
   rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr pub_command_; 
   rclcpp_action::Server<RobotControl>::SharedPtr server_control_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;

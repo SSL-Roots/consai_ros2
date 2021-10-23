@@ -68,26 +68,25 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
 
-  timer_ = create_wall_timer(10ms, std::bind(&Controller::on_timer, this));
+  timer_pub_control_command_ = create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_control_command, this));
+  timer_pub_control_command_->cancel();  // タイマーを停止
+  timer_pub_stop_command_ = create_wall_timer(1s, std::bind(&Controller::on_timer_pub_stop_command, this));
 }
 
-void Controller::on_timer()
+void Controller::on_timer_pub_control_command()
 {
-  // 制御器を更新し、コマンドを送信する
-  auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
-  command_msg->robot_id = robot_id_;
-  command_msg->team_is_yellow = team_is_yellow_;
+  // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
 
-  // 制御が許可されていないときは、目標速度0.0を送信する
+  // 制御が許可されていない場合は、このタイマーを止めて、停止コマンドタイマーを起動する
   if(control_enable_ == false){
-    pid_vx_->reset();
-    pid_vy_->reset();
-    pid_vtheta_->reset();
-    last_update_time_ = steady_clock_.now();
-    pub_command_->publish(std::move(command_msg));
+    timer_pub_control_command_->cancel();
+    timer_pub_stop_command_->reset();
     return;
   }
 
+  auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  command_msg->robot_id = robot_id_;
+  command_msg->team_is_yellow = team_is_yellow_;
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
@@ -161,6 +160,27 @@ void Controller::on_timer()
       control_enable_ = false;
       need_response_ = false;
     }
+  }
+}
+
+void Controller::on_timer_pub_stop_command()
+{
+  // 停止コマンドをpublishするタイマーコールバック関数
+  // 通信帯域を圧迫しないため、この関数は低周期（例:1s）で実行すること
+  auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  command_msg->robot_id = robot_id_;
+  command_msg->team_is_yellow = team_is_yellow_;
+
+  pid_vx_->reset();
+  pid_vy_->reset();
+  pid_vtheta_->reset();
+  last_update_time_ = steady_clock_.now();
+  pub_command_->publish(std::move(command_msg));
+
+  // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
+  if(control_enable_ == true){
+    timer_pub_stop_command_->cancel();
+    timer_pub_control_command_->reset();
   }
 }
 
