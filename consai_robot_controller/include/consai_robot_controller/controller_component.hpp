@@ -18,21 +18,19 @@
 #include <memory>
 
 #include "control_toolbox/pid.hpp"
-#include "consai_msgs/msg/constraint_target.hpp"
 #include "consai_msgs/msg/robot_command.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_msgs/action/robot_control.hpp"
+#include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
-#include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 namespace consai_robot_controller
 {
-using ConstraintTarget = consai_msgs::msg::ConstraintTarget;
 using State = consai_msgs::msg::State2D;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
@@ -59,15 +57,9 @@ private:
     const std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
   void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
-  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose);
-  bool parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const;
-  bool extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const;
-  bool extract_ball(TrackedBall & my_ball) const;
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
-  double calc_angle(const State & from_pose, const State & to_pose) const;
-  double normalize_theta(double theta);
 
   std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
@@ -82,10 +74,9 @@ private:
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
   std::vector<State> last_world_vel_;
 
+  consai_robot_controller::FieldInfoParser parser_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  std::shared_ptr<TrackedFrame> detection_tracked_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
-  std::shared_ptr<GeometryData> geometry_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
 };

@@ -20,7 +20,6 @@
 
 #include "consai_robot_controller/controller_component.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 using namespace std::chrono_literals;
 
@@ -133,7 +132,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
-  if(!extract_robot(robot_id, team_is_yellow_, my_robot)){
+  if(!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)){
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) + " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg);
 
@@ -158,11 +157,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
-  if(parse_goal(goal_handle_[robot_id]->get_goal(), goal_pose)){
+  if(parser_.parse_goal(goal_handle_[robot_id]->get_goal(), goal_pose)){
     // ワールド座標系での目標速度を算出
     world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
     world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
-    world_vel.theta = pid_vtheta_[robot_id]->computeCommand(normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
+    world_vel.theta = pid_vtheta_[robot_id]->computeCommand(parser_.normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
   }
 
   // 最大速度リミットを適用
@@ -186,7 +185,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     auto feedback = std::make_shared<RobotControl::Feedback>();
     feedback->remaining_x = goal_pose.x - my_robot.pos.x;
     feedback->remaining_y = goal_pose.y - my_robot.pos.y;
-    feedback->remaining_theta = normalize_theta(goal_pose.theta - my_robot.orientation);
+    feedback->remaining_theta = parser_.normalize_theta(goal_pose.theta - my_robot.orientation);
     if(my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0){
       feedback->remaining_vel_x = my_robot.vel[0].x;
       feedback->remaining_vel_y = my_robot.vel[0].y;
@@ -235,12 +234,12 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 {
-  detection_tracked_ = msg;
+  parser_.set_detection_tracked(msg);
 }
 
 void Controller::callback_geometry(const GeometryData::SharedPtr msg)
 {
-  geometry_ = msg;
+  parser_.set_geometry(msg);
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUID & uuid,
@@ -251,7 +250,7 @@ rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUI
 
   State goal_pose;
   // 目標値の解析に失敗したらReject
-  if(!parse_goal(goal, goal_pose)){
+  if(!parser_.parse_goal(goal, goal_pose)){
     return rclcpp_action::GoalResponse::REJECT;
   }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -285,145 +284,6 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
 
   control_enable_[robot_id] = true;
   goal_handle_[robot_id] = goal_handle;
-}
-
-bool Controller::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose)
-{
-  // RobotControlのgoalを解析し、目標姿勢を出力する
-  // 解析に失敗したらfalseを返す
-
-  if(!parse_constraint(goal->x, parsed_pose, parsed_pose.x)){
-    return false;
-  }
-  if(!parse_constraint(goal->y, parsed_pose, parsed_pose.y)){
-    return false;
-  }
-  // 正規化、goal->x.value、goal->y.valueに-1.0 ~ 1.0が入力されている前提
-  if(goal->normalize_xy){
-    parsed_pose.x *= geometry_->field.field_length * 0.5 * 0.001;  // mm to meters
-    parsed_pose.y *= geometry_->field.field_width * 0.5 * 0.001;  // mm to meters
-  }
-
-  // オフセットを加算
-  parsed_pose.x += goal->offset_x;
-  parsed_pose.y += goal->offset_y;
-
-  if(!parse_constraint(goal->theta, parsed_pose, parsed_pose.theta)){
-    return false;
-  }
-
-  parsed_pose.theta = normalize_theta(parsed_pose.theta + goal->offset_theta);
-
-  return true;
-}
-
-bool Controller::parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const
-{
-  // ConstraintTargetを解析する
-  // ボールやロボットが存在しない等で値が得られなければfalseを返す
-
-  bool retval = false;
-  
-  // 実数値
-  if(target.value.size() > 0){
-    parsed_value = target.value[0];
-    retval = true;
-  }
-
-  State object_pose;
-  bool object_is_exist = false;
-  // ボールパラメータ
-  if(target.target.size() > 0 && target.target_parameter.size() > 0){
-    TrackedBall ball;
-    if(target.target[0] == ConstraintTarget::TARGET_BALL && extract_ball(ball)){
-      object_pose.x = ball.pos.x;
-      object_pose.y = ball.pos.y;
-      object_is_exist = true;
-    }
-  }
-
-  // ロボットパラメータ
-  if(target.target_id.size() > 0 && target.target.size() > 0 && target.target_parameter.size() > 0){
-    TrackedRobot robot;
-    if((target.target[0] == ConstraintTarget::TARGET_BLUE_ROBOT && extract_robot(target.target_id[0], false, robot)) || 
-       (target.target[0] == ConstraintTarget::TARGET_YELLOW_ROBOT && extract_robot(target.target_id[0], true, robot))){
-      object_pose.x = robot.pos.x;
-      object_pose.y = robot.pos.y;
-      object_pose.theta = robot.orientation;
-      object_is_exist = true;
-    }
-  }
-
-  if(object_is_exist){
-    if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
-      parsed_value = object_pose.x;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
-      parsed_value = object_pose.y;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_THETA){
-      parsed_value = object_pose.theta;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_TO){
-      parsed_value = calc_angle(current_goal_pose, object_pose);
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_FROM){
-      parsed_value = calc_angle(object_pose, current_goal_pose);
-      retval = true;
-    }
-  }
-
-  return retval;
-}
-
-bool Controller::extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const
-{
-  // detection_trackedから指定された色とIDのロボット情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  const double VISIBILITY_THRESHOLD = 0.01;
-  for(auto robot : detection_tracked_->robots){
-    if(robot_id != robot.robot_id.id){
-      continue;
-    }
-    bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-    bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-    if(!is_yellow && !is_blue){
-      continue;
-    }
-    // if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
-    //    (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
-    //   continue;
-    // }
-    if(robot.visibility.size() == 0){
-      return false;
-    }
-    if(robot.visibility[0] < VISIBILITY_THRESHOLD){
-      return false;
-    }
-
-    my_robot = robot;
-    break;
-  }
-  return true;
-}
-
-bool Controller::extract_ball(TrackedBall & my_ball) const
-{
-  // detection_trackedからボール情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  const double VISIBILITY_THRESHOLD = 0.01;
-  for(auto ball : detection_tracked_->balls){
-    if(ball.visibility.size() == 0){
-      return false;
-    }
-    if(ball.visibility[0] < VISIBILITY_THRESHOLD){
-      return false;
-    }
-
-    my_ball = ball;
-    break;
-  }
-  return true;
 }
 
 State Controller::limit_world_velocity(const State & velocity) const
@@ -486,30 +346,12 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
   // 直線距離の差分が小さくなっているか判定
   double diff_x = goal_pose.x - my_robot.pos.x;
   double diff_y = goal_pose.y - my_robot.pos.y;
-  double remaining_theta = std::fabs(normalize_theta(goal_pose.theta - my_robot.orientation));
+  double remaining_theta = std::fabs(parser_.normalize_theta(goal_pose.theta - my_robot.orientation));
   double remaining_distance = std::hypot(diff_x, diff_y);
   if(remaining_distance < DISTANCE_THRESHOLD && remaining_theta < THETA_THRESHOLD){
     return true;
   }
   return false;
-}
-
-double Controller::calc_angle(const State & from_pose, const State & to_pose) const
-{
-  // from_poseからto_poseへの角度を計算する
-
-  double diff_x = to_pose.x - from_pose.x;
-  double diff_y = to_pose.y - from_pose.y;
-
-  return std::atan2(diff_y, diff_x);
-}
-
-double Controller::normalize_theta(double theta)
-{
-  // 角度を-pi ~ piに納める
-  while(theta >= M_PI) theta -= 2.0 * M_PI;
-  while(theta <= -M_PI) theta += 2.0 * M_PI;
-  return theta;
 }
 
 }  // namespace consai_robot_controller
