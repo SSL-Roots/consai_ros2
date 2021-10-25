@@ -16,7 +16,10 @@
 # limitations under the License.
 
 from consai_msgs.action import RobotControl
-from consai_msgs.msg import ConstraintTarget
+from consai_msgs.msg import ConstraintObject 
+from consai_msgs.msg import ConstraintPose
+from consai_msgs.msg import ConstraintTheta
+from consai_msgs.msg import ConstraintXY
 from functools import partial
 import math
 import rclpy
@@ -49,63 +52,75 @@ class ControlTest(Node):
         return all(self._robot_is_free)
 
     def move_to(self, robot_id, x, y, theta, keep=False):
+        pose = ConstraintPose()
+
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta.value_theta.append(theta)
+
         goal_msg = RobotControl.Goal()
-        goal_msg.x.value.append(x)
-        goal_msg.y.value.append(y)
-        goal_msg.theta.value.append(theta)
+        goal_msg.pose.append(pose)
         goal_msg.keep_control = keep
 
         return self._set_goal(robot_id, goal_msg)
 
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
+        pose = ConstraintPose()
+
+        pose.xy.normalized = True
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta.value_theta.append(theta)
+
         goal_msg = RobotControl.Goal()
-        goal_msg.normalize_xy = True
-        goal_msg.x.value.append(x)
-        goal_msg.y.value.append(y)
-        goal_msg.theta.value.append(theta)
+        goal_msg.pose.append(pose)
         goal_msg.keep_control = keep
 
         return self._set_goal(robot_id, goal_msg)
 
-    def chase_ball(self, robot_id, offset_x, offset_y, look_from=False, keep=False):
-        goal_msg = RobotControl.Goal()
-        goal_msg.x.target.append(ConstraintTarget.TARGET_BALL)
-        goal_msg.x.target_parameter.append(ConstraintTarget.PARAMETER_X)
-        goal_msg.y.target.append(ConstraintTarget.TARGET_BALL)
-        goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
-        goal_msg.theta.target.append(ConstraintTarget.TARGET_BALL)
+    def chase_ball(self, robot_id, offset_x, offset_y, offset_theta, look_from=False, keep=False):
+        constraint_obj = ConstraintObject()
+        constraint_obj.type = ConstraintObject.BALL
+
+        pose = ConstraintPose()
+
+        pose.xy.object.append(constraint_obj)
+        pose.theta.object.append(constraint_obj)
+        pose.theta.param = ConstraintTheta.PARAM_LOOK_TO
         if look_from:
-            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_FROM)
-        else:
-            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_TO)
-        goal_msg.offset_x = offset_x
-        goal_msg.offset_y = offset_y
+            pose.theta.param = ConstraintTheta.PARAM_LOOK_FROM
+
+        pose.offset.x = offset_x
+        pose.offset.y = offset_y
+        pose.offset.theta = offset_theta
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
         goal_msg.keep_control = keep
 
         return self._set_goal(robot_id, goal_msg)
 
-    def chase_robot(self, robot_id, target_is_yellow, target_id, offset_x, offset_y, look_from=False, keep=False):
-        goal_msg = RobotControl.Goal()
-        if target_is_yellow:
-            goal_msg.x.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
-            goal_msg.y.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
-            goal_msg.theta.target.append(ConstraintTarget.TARGET_YELLOW_ROBOT)
-        else:
-            goal_msg.x.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
-            goal_msg.y.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
-            goal_msg.theta.target.append(ConstraintTarget.TARGET_BLUE_ROBOT)
-        goal_msg.x.target_id.append(target_id)
-        goal_msg.y.target_id.append(target_id)
-        goal_msg.theta.target_id.append(target_id)
+    def chase_robot(self, robot_id, object_is_yellow, object_id, offset_x, offset_y, offset_theta, look_from=False, keep=False):
+        constraint_obj = ConstraintObject()
+        constraint_obj.robot_id = object_id
+        constraint_obj.type = ConstraintObject.BLUE_ROBOT
+        if object_is_yellow:
+            constraint_obj.type = ConstraintObject.YELLOW_ROBOT
 
-        goal_msg.x.target_parameter.append(ConstraintTarget.PARAMETER_X)
-        goal_msg.y.target_parameter.append(ConstraintTarget.PARAMETER_Y)
+        pose = ConstraintPose()
+
+        pose.xy.object.append(constraint_obj)
+        pose.theta.object.append(constraint_obj)
+        pose.theta.param = ConstraintTheta.PARAM_LOOK_TO
         if look_from:
-            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_FROM)
-        else:
-            goal_msg.theta.target_parameter.append(ConstraintTarget.PARAMETER_LOOK_TO)
-        goal_msg.offset_x = offset_x
-        goal_msg.offset_y = offset_y
+            pose.theta.param = ConstraintTheta.PARAM_LOOK_FROM
+
+        pose.offset.x = offset_x
+        pose.offset.y = offset_y
+        pose.offset.theta = offset_theta
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
         goal_msg.keep_control = keep
 
         return self._set_goal(robot_id, goal_msg)
@@ -141,25 +156,101 @@ class ControlTest(Node):
         self.get_logger().info('RobotId: {0}, Result: {0}, Message: {0}'.format(robot_id, result.success, result.message))
         self._robot_is_free[robot_id] = True
 
-def main():
-    robot_id = 0
-    for i in range(10):
-        size = 1.0 / (1 + i)
-        test_node.move_to_normalized(0, 0.0, 0.0, 0.0, False)
-        test_node.move_to_normalized(1, size, 0.0, 0.0, False)
-        test_node.move_to_normalized(2, size, size, 0.0, False)
-        test_node.move_to_normalized(3, 0.0, size, 0.0, False)
-        test_node.move_to_normalized(4, -size, size, 0.0, False)
-        test_node.move_to_normalized(5, -size, 0.0, 0.0, False)
-        test_node.move_to_normalized(6, -size, -size, 0.0, False)
-        test_node.move_to_normalized(7, 0.0, -size, 0.0, False)
-        test_node.move_to_normalized(8, size, -size, 0.0, False)
-        # for i in range(16):
-            # test_node.chase_robot(i, True, i, 0.0, 0.5, False, True)
-            # test_node.chase_ball(i, 0.4*(i+1), 0.4*(i+1), False, True)
+def test_move_to():
+    for i in range(16):
+        test_node.move_to(i, -5.0 + 0.5 * i, 4.0, math.pi * 0.5, False)
 
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    for i in range(16):
+        test_node.move_to(i, -5.0 + 0.5 * i, -4.0, -math.pi * 0.5, True)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+def test_move_to_normalized(divide_n=3):
+
+    # フィールド端まで広がる
+    size = 1.0
+    # 0番はセンターに配置
+    test_node.move_to_normalized(0, 0.0, 0.0, 0.0, False)
+    # 1 ~ 8は時計回りに配置
+    test_node.move_to_normalized(1, 0.0, size, 0.0, False)
+    test_node.move_to_normalized(2, size, size, 0.0, False)
+    test_node.move_to_normalized(3, size, 0.0, 0.0, False)
+    test_node.move_to_normalized(4, size, -size, 0.0, False)
+    test_node.move_to_normalized(5, 0.0, -size, 0.0, False)
+    test_node.move_to_normalized(6, -size, -size, 0.0, False)
+    test_node.move_to_normalized(7, -size, 0.0, 0.0, False)
+    test_node.move_to_normalized(8, -size, size, 0.0, False)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    for i in range(1, divide_n):
+        size = 1.0 / (i + 1)
+        # 0番はセンターに配置
+        test_node.move_to_normalized(0, 0.0, 0.0, 0.0, False)
+        # 1 ~ 8は時計回りに配置
+        test_node.move_to_normalized(1, 0.0, size, 0.0, False)
+        test_node.move_to_normalized(2, size, size, 0.0, False)
+        test_node.move_to_normalized(3, size, 0.0, 0.0, False)
+        test_node.move_to_normalized(4, size, -size, 0.0, False)
+        test_node.move_to_normalized(5, 0.0, -size, 0.0, False)
+        test_node.move_to_normalized(6, -size, -size, 0.0, False)
+        test_node.move_to_normalized(7, -size, 0.0, 0.0, False)
+        test_node.move_to_normalized(8, -size, size, 0.0, False)
         while test_node.all_robots_are_free() is False:
             executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+        # 番号をずらして回転
+        test_node.move_to_normalized(8, 0.0, size, 0.0, False)
+        test_node.move_to_normalized(1, size, size, 0.0, False)
+        test_node.move_to_normalized(2, size, 0.0, 0.0, False)
+        test_node.move_to_normalized(3, size, -size, 0.0, False)
+        test_node.move_to_normalized(4, 0.0, -size, 0.0, False)
+        test_node.move_to_normalized(5, -size, -size, 0.0, False)
+        test_node.move_to_normalized(6, -size, 0.0, 0.0, False)
+        test_node.move_to_normalized(7, -size, size, 0.0, False)
+        while test_node.all_robots_are_free() is False:
+            executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+def test_chase_ball():
+    # ボールの右側に、2次関数のように並ぶ
+    for i in range(16):
+        test_node.chase_ball(i, 0.2 + 0.2*i, 0.05 * i*i, 0.1 * math.pi * i, True, False)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    # ボールを見る
+    for i in range(16):
+        test_node.chase_ball(i, 0.2 + 0.2*i, 0.05 * i*i, 0.0, False, True)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+def test_chase_robot():
+    # 同じIDの黄色ロボットの左上に移動する
+    for i in range(16):
+        test_node.chase_robot(i, True, i, -0.2, 0.2, 0.0, True, False)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    # 左横に移動する
+    for i in range(16):
+        test_node.chase_robot(i, True, i, -0.2, 0.0, 0.0, False, True)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+def main():
+    # test_move_to()
+    # test_move_to_normalized(3)
+    # test_chase_ball()
+    test_chase_robot()
 
 if __name__ == '__main__':
     rclpy.init(args=None)

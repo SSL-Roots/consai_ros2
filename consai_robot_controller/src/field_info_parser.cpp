@@ -87,86 +87,117 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
-  if(!parse_constraint(goal->x, parsed_pose, parsed_pose.x)){
-    return false;
-  }
-  if(!parse_constraint(goal->y, parsed_pose, parsed_pose.y)){
-    return false;
-  }
-  // 正規化、goal->x.value、goal->y.valueに-1.0 ~ 1.0が入力されている前提
-  if(goal->normalize_xy){
-    parsed_pose.x *= geometry_->field.field_length * 0.5 * 0.001;  // mm to meters
-    parsed_pose.y *= geometry_->field.field_width * 0.5 * 0.001;  // mm to meters
+
+  State target_pose;
+  if(goal->pose.size() > 0){
+    if(parse_constraint_pose(goal->pose[0], target_pose)){
+      parsed_pose = target_pose;
+      return true;
+    }
   }
 
-  // オフセットを加算
-  parsed_pose.x += goal->offset_x;
-  parsed_pose.y += goal->offset_y;
+  return false;
+}
 
-  if(!parse_constraint(goal->theta, parsed_pose, parsed_pose.theta)){
+bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
+{
+  double parsed_x, parsed_y;
+  if(!parse_constraint_xy(pose.xy, parsed_x, parsed_y)){
+    return false;
+  }
+  parsed_x += pose.offset.x;
+  parsed_y += pose.offset.y;
+
+  double parsed_theta;
+  if(!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)){
     return false;
   }
 
-  parsed_pose.theta = normalize_theta(parsed_pose.theta + goal->offset_theta);
+  parsed_theta = normalize_theta(parsed_theta + pose.offset.theta);
+
+  parsed_pose.x = parsed_x;
+  parsed_pose.y = parsed_y;
+  parsed_pose.theta = parsed_theta;
+
   return true;
 }
 
-bool FieldInfoParser::parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const
+bool FieldInfoParser::parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const
 {
-  // ConstraintTargetを解析する
-  // ボールやロボットが存在しない等で値が得られなければfalseを返す
-  bool retval = false;
-  
-  // 実数値
-  if(target.value.size() > 0){
-    parsed_value = target.value[0];
-    retval = true;
-  }
-
   State object_pose;
-  bool object_is_exist = false;
-  // ボールパラメータ
-  if(target.target.size() > 0 && target.target_parameter.size() > 0){
-    TrackedBall ball;
-    if(target.target[0] == ConstraintTarget::TARGET_BALL && extract_ball(ball)){
-      object_pose.x = ball.pos.x;
-      object_pose.y = ball.pos.y;
-      object_is_exist = true;
+  if(xy.object.size() > 0){
+    if(parse_constraint_object(xy.object[0], object_pose)){
+      parsed_x = object_pose.x;
+      parsed_y = object_pose.y;
+      return true;
     }
   }
 
-  // ロボットパラメータ
-  if(target.target_id.size() > 0 && target.target.size() > 0 && target.target_parameter.size() > 0){
-    TrackedRobot robot;
-    if((target.target[0] == ConstraintTarget::TARGET_BLUE_ROBOT && extract_robot(target.target_id[0], false, robot)) || 
-       (target.target[0] == ConstraintTarget::TARGET_YELLOW_ROBOT && extract_robot(target.target_id[0], true, robot))){
-      object_pose.x = robot.pos.x;
-      object_pose.y = robot.pos.y;
-      object_pose.theta = robot.orientation;
-      object_is_exist = true;
+  if(xy.value_x.size() > 0 && xy.value_y.size() > 0){
+    parsed_x = xy.value_x[0];
+    parsed_y = xy.value_y[0];
+
+    // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
+    if(xy.normalized){
+      parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
+      parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+bool FieldInfoParser::parse_constraint_theta(const ConstraintTheta & theta, const double goal_x, const double goal_y, double & parsed_theta) const
+{
+  State object_pose;
+  if(theta.object.size() > 0){
+    if(parse_constraint_object(theta.object[0], object_pose)){
+      if(theta.param == ConstraintTheta::PARAM_THETA){
+        parsed_theta = object_pose.theta;
+        return true;
+      }else if(theta.param == ConstraintTheta::PARAM_LOOK_TO){
+        State goal_pose;
+        goal_pose.x = goal_x;
+        goal_pose.y = goal_y;
+        parsed_theta = calc_angle(goal_pose, object_pose);
+        return true;
+      }else if(theta.param == ConstraintTheta::PARAM_LOOK_FROM){
+        State goal_pose;
+        goal_pose.x = goal_x;
+        goal_pose.y = goal_y;
+        parsed_theta = calc_angle(object_pose, goal_pose);
+        return true;
+      }
     }
   }
 
-  if(object_is_exist){
-    if(target.target_parameter[0] == ConstraintTarget::PARAMETER_X){
-      parsed_value = object_pose.x;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_Y){
-      parsed_value = object_pose.y;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_THETA){
-      parsed_value = object_pose.theta;
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_TO){
-      parsed_value = calc_angle(current_goal_pose, object_pose);
-      retval = true;
-    }else if(target.target_parameter[0] == ConstraintTarget::PARAMETER_LOOK_FROM){
-      parsed_value = calc_angle(object_pose, current_goal_pose);
-      retval = true;
-    }
+  if(theta.value_theta.size() > 0){
+    parsed_theta = theta.value_theta[0];
+    return true;
   }
 
-  return retval;
+  return false;
+}
+
+bool FieldInfoParser::parse_constraint_object(const ConstraintObject & object, State & object_pose) const
+{
+  TrackedBall ball;
+  TrackedRobot robot;
+
+  if(object.type == ConstraintObject::BALL && extract_ball(ball)){
+    object_pose.x = ball.pos.x;
+    object_pose.y = ball.pos.y;
+    return true;
+  }else if((object.type == ConstraintObject::BLUE_ROBOT && extract_robot(object.robot_id, false, robot)) || 
+           (object.type == ConstraintObject::YELLOW_ROBOT && extract_robot(object.robot_id, true, robot))){
+    object_pose.x = robot.pos.x;
+    object_pose.y = robot.pos.y;
+    object_pose.theta = robot.orientation;
+    return true;
+  }
+
+  return false;
 }
 
 double FieldInfoParser::calc_angle(const State & from_pose, const State & to_pose) const

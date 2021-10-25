@@ -183,13 +183,13 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 途中経過を報告する
   if(need_response_[robot_id]){
     auto feedback = std::make_shared<RobotControl::Feedback>();
-    feedback->remaining_x = goal_pose.x - my_robot.pos.x;
-    feedback->remaining_y = goal_pose.y - my_robot.pos.y;
-    feedback->remaining_theta = parser_.normalize_theta(goal_pose.theta - my_robot.orientation);
+    feedback->remaining_pose.x = goal_pose.x - my_robot.pos.x;
+    feedback->remaining_pose.y = goal_pose.y - my_robot.pos.y;
+    feedback->remaining_pose.theta = parser_.normalize_theta(goal_pose.theta - my_robot.orientation);
     if(my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0){
-      feedback->remaining_vel_x = my_robot.vel[0].x;
-      feedback->remaining_vel_y = my_robot.vel[0].y;
-      feedback->remaining_vel_theta = my_robot.vel_angular[0];
+      feedback->present_velocity.x = my_robot.vel[0].x;
+      feedback->present_velocity.y = my_robot.vel[0].y;
+      feedback->present_velocity.theta = my_robot.vel_angular[0];
     }
     
     goal_handle_[robot_id]->publish_feedback(feedback);

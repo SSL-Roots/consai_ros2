@@ -28,14 +28,14 @@ def generate_launch_description():
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::Controller',
                     name='controller',
-                    parameters=[{'team_is_yellow': True}],
+                    parameters=[{'team_is_yellow': False}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::GrSimCommandConverter',
                     name='command_converter',
-                    parameters=[{'team_is_yellow': True}],
+                    parameters=[{'team_is_yellow': False}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(

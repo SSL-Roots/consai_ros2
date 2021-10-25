@@ -18,7 +18,10 @@
 #include <memory>
 #include <vector>
 
-#include "consai_msgs/msg/constraint_target.hpp"
+#include "consai_msgs/msg/constraint_object.hpp"
+#include "consai_msgs/msg/constraint_pose.hpp"
+#include "consai_msgs/msg/constraint_theta.hpp"
+#include "consai_msgs/msg/constraint_xy.hpp"
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -31,7 +34,7 @@ namespace consai_robot_controller
 {
 
 using namespace robocup_ssl_msgs::msg;
-using ConstraintTarget = consai_msgs::msg::ConstraintTarget;
+using namespace consai_msgs::msg;
 using RobotControl = consai_msgs::action::RobotControl;
 using State = consai_msgs::msg::State2D;
 
@@ -44,7 +47,11 @@ public:
   bool extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const;
   bool extract_ball(TrackedBall & my_ball) const;
   bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
-  bool parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const;
+  // bool parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const;
+  bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
+  bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
+  bool parse_constraint_theta(const ConstraintTheta & theta, const double goal_x, const double goal_y, double & parsed_theta) const;
+  bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
   double calc_angle(const State & from_pose, const State & to_pose) const;
   double normalize_theta(const double theta) const;
 

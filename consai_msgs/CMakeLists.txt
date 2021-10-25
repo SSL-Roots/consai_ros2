@@ -21,7 +21,10 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
-  "msg/ConstraintTarget.msg"
+  "msg/ConstraintObject.msg"
+  "msg/ConstraintPose.msg"
+  "msg/ConstraintTheta.msg"
+  "msg/ConstraintXY.msg"
   "msg/RobotCommand.msg"
   "msg/State2D.msg"
 )

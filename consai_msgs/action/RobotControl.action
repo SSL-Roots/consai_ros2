@@ -1,23 +1,11 @@
 # 目標値に到達しても制御を続けてほしいときはtrue
 # actionは瞬時に完了する
 bool keep_control false
-# ControlTarget x, yの値をfiled sizeにあわせて-1 ~ 1に正規化する
-# オフセット値は正規化しない
-bool normalize_xy false
 
-ConstraintTarget x
-ConstraintTarget y
-ConstraintTarget theta
-float64 offset_x
-float64 offset_y
-float64 offset_theta
+ConstraintPose[<=1] pose
 ---
 bool success
 string message
 ---
-float64 remaining_x
-float64 remaining_y
-float64 remaining_theta
-float64 remaining_vel_x
-float64 remaining_vel_y
-float64 remaining_vel_theta
+State2D remaining_pose
+State2D present_velocity 
