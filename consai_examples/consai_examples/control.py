@@ -246,11 +246,45 @@ def test_chase_robot():
     while test_node.all_robots_are_free() is False:
         executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
+def test_for_config_pid(times=10, test_x=False, test_y=False):
+    # PID調整用
+    # この関数を実行すると、ロボットが繰り返し動作するので、その裏でPIDゲインを調整すること
+
+    for n in range(times):
+        # 左右
+        if test_x:
+            for i in range(16):
+                test_node.move_to_normalized(i, -0.9, 1.0 - 2.0 * i / 16.0, 0.0, False)
+
+            while test_node.all_robots_are_free() is False:
+                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+            for i in range(16):
+                test_node.move_to_normalized(i, 0.9, 1.0 - 2.0 * i / 16.0, 0.0, False)
+
+            while test_node.all_robots_are_free() is False:
+                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+        # 上下
+        if test_y:
+            for i in range(16):
+                test_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, 1.0, math.pi * 0.5, False)
+
+            while test_node.all_robots_are_free() is False:
+                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+            for i in range(16):
+                test_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, -1.0, math.pi * 0.5, False)
+
+            while test_node.all_robots_are_free() is False:
+                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
 def main():
     # test_move_to()
     # test_move_to_normalized(3)
     # test_chase_ball()
-    test_chase_robot()
+    # test_chase_robot()
+    test_for_config_pid(3, test_x=True)
 
 if __name__ == '__main__':
     rclpy.init(args=None)
