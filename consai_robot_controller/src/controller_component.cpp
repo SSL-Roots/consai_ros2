@@ -26,10 +26,16 @@ using namespace std::chrono_literals;
 namespace consai_robot_controller
 {
 
-const std::string prefix_vx = "vx_";
-const std::string prefix_vy = "vy_";
-const std::string prefix_vtheta = "vtheta_";
-const std::vector<std::string> prefix_list = { prefix_vx, prefix_vy, prefix_vtheta };
+const std::string PREFIX_VX = "vx_";
+const std::string PREFIX_VY = "vy_";
+const std::string PREFIX_VTHETA = "vtheta_";
+const std::vector<std::string> prefix_list = { PREFIX_VX, PREFIX_VY, PREFIX_VTHETA };
+const std::string PARAM_P = "p";
+const std::string PARAM_I = "i";
+const std::string PARAM_D = "d";
+const std::string PARAM_I_MAX = "i_max";
+const std::string PARAM_I_MIN = "i_min";
+const std::string PARAM_ANTI = "antiwindup";
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
@@ -38,9 +44,12 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("team_is_yellow", false);
   for(auto prefix : prefix_list){
-    declare_parameter(prefix + "p", 1.5);
-    declare_parameter(prefix + "i", 0.0);
-    declare_parameter(prefix + "d", 0.2);
+    declare_parameter(prefix + PARAM_P, 1.5);
+    declare_parameter(prefix + PARAM_I, 0.0);
+    declare_parameter(prefix + PARAM_D, 0.2);
+    declare_parameter(prefix + PARAM_I_MAX, 0.0);
+    declare_parameter(prefix + PARAM_I_MIN, 0.0);
+    declare_parameter(prefix + PARAM_ANTI, true);
   }
 
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
@@ -76,19 +85,31 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     // PID制御器の初期化
     pid_vx_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter(prefix_vx + "p").get_value<double>(),
-      get_parameter(prefix_vx + "i").get_value<double>(),
-      get_parameter(prefix_vx + "d").get_value<double>())
+      get_parameter(PREFIX_VX + PARAM_P).get_value<double>(),
+      get_parameter(PREFIX_VX + PARAM_I).get_value<double>(),
+      get_parameter(PREFIX_VX + PARAM_D).get_value<double>(),
+      get_parameter(PREFIX_VX + PARAM_I_MAX).get_value<double>(),
+      get_parameter(PREFIX_VX + PARAM_I_MIN).get_value<double>(),
+      get_parameter(PREFIX_VX + PARAM_ANTI).get_value<bool>()
+      )
     );
     pid_vy_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter(prefix_vy + "p").get_value<double>(),
-      get_parameter(prefix_vy + "i").get_value<double>(),
-      get_parameter(prefix_vy + "d").get_value<double>())
+      get_parameter(PREFIX_VY + PARAM_P).get_value<double>(),
+      get_parameter(PREFIX_VY + PARAM_I).get_value<double>(),
+      get_parameter(PREFIX_VY + PARAM_D).get_value<double>(),
+      get_parameter(PREFIX_VY + PARAM_I_MAX).get_value<double>(),
+      get_parameter(PREFIX_VY + PARAM_I_MIN).get_value<double>(),
+      get_parameter(PREFIX_VY + PARAM_ANTI).get_value<bool>()
+      )
     );
     pid_vtheta_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter(prefix_vtheta + "p").get_value<double>(),
-      get_parameter(prefix_vtheta + "i").get_value<double>(),
-      get_parameter(prefix_vtheta + "d").get_value<double>())
+      get_parameter(PREFIX_VTHETA + PARAM_P).get_value<double>(),
+      get_parameter(PREFIX_VTHETA + PARAM_I).get_value<double>(),
+      get_parameter(PREFIX_VTHETA + PARAM_D).get_value<double>(),
+      get_parameter(PREFIX_VTHETA + PARAM_I_MAX).get_value<double>(),
+      get_parameter(PREFIX_VTHETA + PARAM_I_MIN).get_value<double>(),
+      get_parameter(PREFIX_VTHETA + PARAM_ANTI).get_value<bool>()
+      )
     );
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
@@ -120,12 +141,12 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       auto result = rcl_interfaces::msg::SetParametersResult();
       result.successful = true;
       for (auto parameter : parameters) {
-        if(update_pid_gain_from_param(parameter, prefix_vx, pid_vx_)){
-          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vx + "pid gains.");
-        }else if(update_pid_gain_from_param(parameter, prefix_vy, pid_vy_)){
-          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vy + "pid gains.");
-        }else if(update_pid_gain_from_param(parameter, prefix_vtheta, pid_vtheta_)){
-          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vtheta + "pid gains.");
+        if(update_pid_gain_from_param(parameter, PREFIX_VX, pid_vx_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + PREFIX_VX + "pid gains.");
+        }else if(update_pid_gain_from_param(parameter, PREFIX_VY, pid_vy_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + PREFIX_VY + "pid gains.");
+        }else if(update_pid_gain_from_param(parameter, PREFIX_VTHETA, pid_vtheta_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + PREFIX_VTHETA + "pid gains.");
         }
       }
 
@@ -269,15 +290,21 @@ bool Controller::update_pid_gain_from_param(
 {
   // ROSパラメータ変更のcallback内で呼び出される関数
   // PIDコントローラのゲインを更新する
-  if(param.get_name() == prefix + "p" ||
-      param.get_name() == prefix + "i" ||
-      param.get_name() == prefix + "d"){
+  if(param.get_name() == prefix + PARAM_P ||
+     param.get_name() == prefix + PARAM_I ||
+     param.get_name() == prefix + PARAM_D ||
+     param.get_name() == prefix + PARAM_I_MAX ||
+     param.get_name() == prefix + PARAM_I_MIN ||
+     param.get_name() == prefix + PARAM_ANTI){
     for(auto pid : pid_controller){
       pid->setGains(
-        get_parameter(prefix + "p").get_value<double>(),
-        get_parameter(prefix + "i").get_value<double>(),
-        get_parameter(prefix + "d").get_value<double>(),
-        0,0,false);  // i_min, i_max, antiwindupもここで設定
+        get_parameter(prefix + PARAM_P).get_value<double>(),
+        get_parameter(prefix + PARAM_I).get_value<double>(),
+        get_parameter(prefix + PARAM_D).get_value<double>(),
+        get_parameter(prefix + PARAM_I_MAX).get_value<double>(),
+        get_parameter(prefix + PARAM_I_MIN).get_value<double>(),
+        get_parameter(prefix + PARAM_ANTI).get_value<bool>()
+        );
     }
     return true;
   }
