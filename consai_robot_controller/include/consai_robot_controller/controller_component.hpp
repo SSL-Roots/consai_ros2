@@ -50,6 +50,10 @@ protected:
 private:
   void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
   void callback_geometry(const GeometryData::SharedPtr msg);
+  bool update_pid_gain_from_param(
+    const rclcpp::Parameter & param,
+    const std::string & prefix,
+    std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller);
   rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,
     const unsigned int robot_id);
@@ -79,6 +83,7 @@ private:
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
+  OnSetParametersCallbackHandle::SharedPtr handler_change_param_;
 };
 
 }  // namespace consai_robot_controller

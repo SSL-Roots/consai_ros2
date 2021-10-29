@@ -26,21 +26,22 @@ using namespace std::chrono_literals;
 namespace consai_robot_controller
 {
 
+const std::string prefix_vx = "vx_";
+const std::string prefix_vy = "vy_";
+const std::string prefix_vtheta = "vtheta_";
+const std::vector<std::string> prefix_list = { prefix_vx, prefix_vy, prefix_vtheta };
+
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
 {
   using namespace std::placeholders;
 
   declare_parameter("team_is_yellow", false);
-  declare_parameter("vx_p", 1.5);
-  declare_parameter("vx_i", 0.0);
-  declare_parameter("vx_d", 0.2);
-  declare_parameter("vy_p", 1.5);
-  declare_parameter("vy_i", 0.0);
-  declare_parameter("vy_d", 0.2);
-  declare_parameter("vtheta_p", 1.0);
-  declare_parameter("vtheta_i", 0.0);
-  declare_parameter("vtheta_d", 0.0);
+  for(auto prefix : prefix_list){
+    declare_parameter(prefix + "p", 1.5);
+    declare_parameter(prefix + "i", 0.0);
+    declare_parameter(prefix + "d", 0.2);
+  }
 
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
@@ -75,19 +76,19 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     // PID制御器の初期化
     pid_vx_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter("vx_p").get_value<double>(),
-      get_parameter("vx_i").get_value<double>(),
-      get_parameter("vx_d").get_value<double>())
+      get_parameter(prefix_vx + "p").get_value<double>(),
+      get_parameter(prefix_vx + "i").get_value<double>(),
+      get_parameter(prefix_vx + "d").get_value<double>())
     );
     pid_vy_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter("vy_p").get_value<double>(),
-      get_parameter("vy_i").get_value<double>(),
-      get_parameter("vy_d").get_value<double>())
+      get_parameter(prefix_vy + "p").get_value<double>(),
+      get_parameter(prefix_vy + "i").get_value<double>(),
+      get_parameter(prefix_vy + "d").get_value<double>())
     );
     pid_vtheta_.push_back(std::make_shared<control_toolbox::Pid>(
-      get_parameter("vtheta_p").get_value<double>(),
-      get_parameter("vtheta_i").get_value<double>(),
-      get_parameter("vtheta_d").get_value<double>())
+      get_parameter(prefix_vtheta + "p").get_value<double>(),
+      get_parameter(prefix_vtheta + "i").get_value<double>(),
+      get_parameter(prefix_vtheta + "d").get_value<double>())
     );
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
@@ -112,6 +113,25 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
+
+  auto param_change_callback = 
+    [this](std::vector<rclcpp::Parameter> parameters){
+      // ROSパラメータの更新
+      auto result = rcl_interfaces::msg::SetParametersResult();
+      result.successful = true;
+      for (auto parameter : parameters) {
+        if(update_pid_gain_from_param(parameter, prefix_vx, pid_vx_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vx + "pid gains.");
+        }else if(update_pid_gain_from_param(parameter, prefix_vy, pid_vy_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vy + "pid gains.");
+        }else if(update_pid_gain_from_param(parameter, prefix_vtheta, pid_vtheta_)){
+          RCLCPP_INFO(this->get_logger(), "Update " + prefix_vtheta + "pid gains.");
+        }
+      }
+
+      return result;
+    };
+  handler_change_param_ = add_on_set_parameters_callback(param_change_callback);
 }
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
@@ -240,6 +260,28 @@ void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 void Controller::callback_geometry(const GeometryData::SharedPtr msg)
 {
   parser_.set_geometry(msg);
+}
+
+bool Controller::update_pid_gain_from_param(
+    const rclcpp::Parameter & param,
+    const std::string & prefix,
+    std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller)
+{
+  // ROSパラメータ変更のcallback内で呼び出される関数
+  // PIDコントローラのゲインを更新する
+  if(param.get_name() == prefix + "p" ||
+      param.get_name() == prefix + "i" ||
+      param.get_name() == prefix + "d"){
+    for(auto pid : pid_controller){
+      pid->setGains(
+        get_parameter(prefix + "p").get_value<double>(),
+        get_parameter(prefix + "i").get_value<double>(),
+        get_parameter(prefix + "d").get_value<double>(),
+        0,0,false);  // i_min, i_max, antiwindupもここで設定
+    }
+    return true;
+  }
+  return false;
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(const rclcpp_action::GoalUUID & uuid,
