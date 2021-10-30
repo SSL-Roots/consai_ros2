@@ -12,12 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ament_index_python.packages import get_package_share_directory
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 from launch_ros.actions import Node
+import os
 
 def generate_launch_description():
+    pid_gains = os.path.join(
+        get_package_share_directory('consai_robot_controller'),
+        'config',
+        'pid_gains.yaml'
+        )
+
+    team = os.path.join(
+        get_package_share_directory('consai_robot_controller'),
+        'config',
+        'team.yaml'
+        )
+
+
     container = ComposableNodeContainer(
             name='test_container',
             namespace='',
@@ -28,14 +43,14 @@ def generate_launch_description():
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::Controller',
                     name='controller',
-                    parameters=[{'team_is_yellow': False}],
+                    parameters=[pid_gains, team],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::GrSimCommandConverter',
                     name='command_converter',
-                    parameters=[{'team_is_yellow': False}],
+                    parameters=[team],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
