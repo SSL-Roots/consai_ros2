@@ -63,7 +63,7 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
   detection_msg->t_sent = detection_frame.t_sent();
   detection_msg->camera_id = detection_frame.camera_id();
 
-  for(auto ball : detection_frame.balls()){
+  for(const auto& ball : detection_frame.balls()){
     robocup_ssl_msgs::msg::DetectionBall detection_ball;
     detection_ball.confidence = ball.confidence();
     if(ball.has_area()) detection_ball.area.push_back(ball.area());
@@ -76,7 +76,7 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
     detection_msg->balls.push_back(detection_ball);
   }
 
-  for(auto robot : detection_frame.robots_yellow()){
+  for(const auto& robot : detection_frame.robots_yellow()){
     robocup_ssl_msgs::msg::DetectionRobot msg_robot;
     msg_robot.confidence = robot.confidence();
     if(robot.has_robot_id()) msg_robot.robot_id.push_back(robot.robot_id());
@@ -90,7 +90,7 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
     detection_msg->robots_yellow.push_back(msg_robot);
   }
 
-  for(auto robot : detection_frame.robots_blue()){
+  for(const auto& robot : detection_frame.robots_blue()){
     robocup_ssl_msgs::msg::DetectionRobot msg_robot;
     msg_robot.confidence = robot.confidence();
     if(robot.has_robot_id()) msg_robot.robot_id.push_back(robot.robot_id());
@@ -110,7 +110,7 @@ void Vision::publish_geometry(const SSL_GeometryData & geometry_data)
 {
   auto geometry_msg = std::make_unique<robocup_ssl_msgs::msg::GeometryData>();
   set_geometry_field_size(geometry_msg->field, geometry_data.field());
-  for(auto data_calib : geometry_data.calib()){
+  for(const auto& data_calib : geometry_data.calib()){
     geometry_msg->calib.push_back(parse_calib(data_calib));
   }
 
@@ -126,7 +126,7 @@ void Vision::set_geometry_field_size(
   msg_field.goal_width = data_field.goal_width();
   msg_field.goal_depth = data_field.goal_depth();
   msg_field.boundary_width = data_field.boundary_width();
-  for(auto line : data_field.field_lines()){
+  for(const auto& line : data_field.field_lines()){
     robocup_ssl_msgs::msg::FieldLineSegment msg_line;
     msg_line.name = line.name();
     msg_line.p1.x = line.p1().x();
@@ -138,7 +138,7 @@ void Vision::set_geometry_field_size(
 
     msg_field.field_lines.push_back(msg_line);
   }
-  for(auto arc : data_field.field_arcs()){
+  for(const auto& arc : data_field.field_arcs()){
     robocup_ssl_msgs::msg::FieldCircularArc msg_arc;
     msg_arc.name = arc.name();
     msg_arc.center.x = arc.center().x();

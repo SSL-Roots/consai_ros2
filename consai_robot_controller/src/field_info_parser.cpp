@@ -38,7 +38,7 @@ bool FieldInfoParser::extract_robot(const unsigned int robot_id, const bool team
   // detection_trackedから指定された色とIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
-  for(auto robot : detection_tracked_->robots){
+  for(const auto& robot : detection_tracked_->robots){
     if(robot_id != robot.robot_id.id){
       continue;
     }
@@ -69,7 +69,7 @@ bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
   // detection_trackedからボール情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
-  for(auto ball : detection_tracked_->balls){
+  for(const auto& ball : detection_tracked_->balls){
     if(ball.visibility.size() == 0){
       return false;
     }

@@ -50,7 +50,7 @@ void GrSim::callback_commands(const Commands::SharedPtr msg)
 
   commands->set_timestamp(msg->timestamp);
   commands->set_isteamyellow(msg->isteamyellow);
-  for(auto msg_robot_command : msg->robot_commands){
+  for(const auto& msg_robot_command : msg->robot_commands){
     set_command(commands->add_robot_commands(), msg_robot_command);
   }
 
@@ -76,7 +76,7 @@ void GrSim::callback_replacement(const Replacement::SharedPtr msg)
     replacement->set_allocated_ball(ball);
   }
 
-  for(auto msg_robot: msg->robots){
+  for(const auto& msg_robot: msg->robots){
     set_robot_replacement(replacement->add_robots(), msg_robot);
   }
 

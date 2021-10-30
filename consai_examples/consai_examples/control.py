@@ -296,9 +296,9 @@ def test_for_config_pid(test_x=False, test_y=False, test_theta=False):
 def main():
     # test_move_to()
     # test_move_to_normalized(3)
-    # test_chase_ball()
-    # test_chase_robot()
-    test_for_config_pid(test_theta=True)
+    test_chase_ball()
+    test_chase_robot()
+    # test_for_config_pid(test_x=True)
 
 if __name__ == '__main__':
     rclpy.init(args=None)

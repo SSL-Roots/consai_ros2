@@ -49,11 +49,11 @@ void Tracker::on_timer()
 
   tracked_msg->balls.push_back(ball_tracker_->update());
 
-  for(auto tracker : blue_robot_tracker_){
+  for(auto&& tracker : blue_robot_tracker_){
     tracked_msg->robots.push_back(tracker->update());
   }
 
-  for(auto tracker : yellow_robot_tracker_){
+  for(auto&& tracker : yellow_robot_tracker_){
     tracked_msg->robots.push_back(tracker->update());
   }
 
@@ -62,17 +62,17 @@ void Tracker::on_timer()
 
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
-  for(auto ball : msg->balls){
+  for(const auto& ball : msg->balls){
     ball_tracker_->push_back_observation(ball);
   }
 
-  for(auto blue_robot : msg->robots_blue){
+  for(const auto& blue_robot : msg->robots_blue){
     if(blue_robot.robot_id.size() > 0){
       blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
-  for(auto yellow_robot: msg->robots_yellow){
+  for(const auto& yellow_robot: msg->robots_yellow){
     if(yellow_robot.robot_id.size() > 0){
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }

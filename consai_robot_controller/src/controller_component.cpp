@@ -43,7 +43,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   using namespace std::placeholders;
 
   declare_parameter("team_is_yellow", false);
-  for(auto prefix : prefix_list){
+  for(const auto& prefix : prefix_list){
     declare_parameter(prefix + PARAM_P, 1.5);
     declare_parameter(prefix + PARAM_I, 0.0);
     declare_parameter(prefix + PARAM_D, 0.2);
@@ -140,7 +140,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       // ROSパラメータの更新
       auto result = rcl_interfaces::msg::SetParametersResult();
       result.successful = true;
-      for (auto parameter : parameters) {
+      for (const auto& parameter : parameters) {
         if(update_pid_gain_from_param(parameter, PREFIX_VX, pid_vx_)){
           RCLCPP_INFO(this->get_logger(), "Update " + PREFIX_VX + "pid gains.");
         }else if(update_pid_gain_from_param(parameter, PREFIX_VY, pid_vy_)){
@@ -296,7 +296,7 @@ bool Controller::update_pid_gain_from_param(
      param.get_name() == prefix + PARAM_I_MAX ||
      param.get_name() == prefix + PARAM_I_MIN ||
      param.get_name() == prefix + PARAM_ANTI){
-    for(auto pid : pid_controller){
+    for(auto&& pid : pid_controller){
       pid->setGains(
         get_parameter(prefix + PARAM_P).get_value<double>(),
         get_parameter(prefix + PARAM_I).get_value<double>(),
