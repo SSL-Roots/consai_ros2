@@ -1,3 +1,1 @@
-/**:  # ノード名を指定しない
-  ros__parameters:
-    team_is_yellow: false
+team_is_yellow: false
