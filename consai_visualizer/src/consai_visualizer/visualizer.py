@@ -82,6 +82,11 @@ class Visualizer(Plugin):
         self._timer.timeout.connect(self._widget.field_widget.update)
         self._timer.start(16)
 
+        # 5000 msec周期で描画情報をリセットする
+        self._reset_timer = QTimer()
+        self._reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
+        self._reset_timer.start(5000)
+
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
             self._widget.field_widget.set_can_draw_geometry(True)

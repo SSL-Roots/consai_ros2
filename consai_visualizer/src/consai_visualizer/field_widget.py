@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_msgs.msg import State2D
 import math
 from enum import Enum
 from python_qt_binding.QtWidgets import QWidget
@@ -107,6 +108,10 @@ class FieldWidget(QWidget):
 
     def set_detection_tracked(self, detection_tracked):
         self._detection_tracked = detection_tracked
+
+    def reset_topics(self):
+        # 取得したトピックをリセットする
+        self._detections = {}
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
