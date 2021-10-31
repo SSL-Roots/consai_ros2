@@ -66,6 +66,7 @@ private:
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
 
   std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_; 
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;

@@ -69,6 +69,9 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     pub_command_.push_back(create_publisher<consai_msgs::msg::RobotCommand>(
       name_space + "/command", 10)
     );
+    pub_goal_pose_.push_back(create_publisher<State>(
+      name_space + "/goal_pose", 10)
+    );
 
     server_control_.push_back(rclcpp_action::create_server<RobotControl>(
       get_node_base_interface(),
@@ -222,6 +225,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 制御更新時間と速度を保存する
   last_update_time_[robot_id] = current_time;
   last_world_vel_[robot_id] = world_vel;
+
+  // ビジュアライズ用に、目標姿勢を出力する
+  pub_goal_pose_[robot_id]->publish(std::move(goal_pose));
 
   // 途中経過を報告する
   if(need_response_[robot_id]){

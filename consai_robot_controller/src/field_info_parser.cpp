@@ -126,9 +126,9 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
 
     auto distance = std::hypot(diff_x, diff_y);
     
-    if(distance < 0.7){
-      std::cout<<"can kick"<<std::endl;
-    }
+    // if(distance < 0.7){
+    //   std::cout<<"can kick"<<std::endl;
+    // }
 
   }
 

@@ -15,8 +15,8 @@
 # limitations under the License.
 
 from consai_msgs.msg import State2D
-import math
 from enum import Enum
+import math
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
 from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
@@ -37,6 +37,7 @@ class FieldWidget(QWidget):
         super(FieldWidget, self).__init__(parent)
 
         # 定数
+        # Ref: named color  https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self._COLOR_FIELD_CARPET = Qt.green
         self._COLOR_FIELD_LINE = Qt.white
         self._COLOR_BALL = QColor("orange")
@@ -44,6 +45,7 @@ class FieldWidget(QWidget):
         self._COLOR_YELLOW_ROBOT = Qt.yellow
         self._COLOR_REPLACEMENT_POS = QColor("magenta")
         self._COLOR_REPLACEMENT_VEL_ANGLE = QColor("darkviolet")
+        self._COLOR_GOAL_POSE = QColor("silver")
         self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
@@ -69,6 +71,8 @@ class FieldWidget(QWidget):
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
         self._detection_tracked = TrackedFrame()
+        self._blue_goal_poses = {}
+        self._yellow_goal_poses = {}
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -109,9 +113,17 @@ class FieldWidget(QWidget):
     def set_detection_tracked(self, detection_tracked):
         self._detection_tracked = detection_tracked
 
+    def set_blue_goal_pose(self, pose, robot_id):
+        self._blue_goal_poses[robot_id] = pose
+
+    def set_yellow_goal_pose(self, pose, robot_id):
+        self._yellow_goal_poses[robot_id] = pose
+
     def reset_topics(self):
         # 取得したトピックをリセットする
         self._detections = {}
+        self._blue_goal_poses = {}
+        self._yellow_goal_poses = {}
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
@@ -458,6 +470,8 @@ class FieldWidget(QWidget):
             color_pen.setAlpha(0)
             color_brush.setAlpha(0)
 
+        self._draw_goal_pose(painter, robot)
+
         painter.setPen(color_pen)
         painter.setBrush(color_brush)
         point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
@@ -473,6 +487,44 @@ class FieldWidget(QWidget):
         # ロボットID
         text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
         painter.drawText(text_point, str(robot.robot_id.id))
+
+    def _draw_goal_pose(self, painter, robot):
+        # goal_poseトピックを描画する
+        # ロボットの情報も参照するため、draw_tracked_robot()から呼び出すこと
+
+        robot_id = robot.robot_id.id
+
+        # goal_poseが存在しなければ終了
+        goal_pose = None
+        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+            goal_pose = self._yellow_goal_poses.get(robot_id)
+        else:
+            goal_pose = self._blue_goal_poses.get(robot_id)
+
+        if goal_pose is None:
+            return
+
+        painter.setPen(Qt.black)
+        painter.setBrush(self._COLOR_GOAL_POSE)
+        # x,y座標
+        point = self._convert_field_to_draw_point(goal_pose.x * 1000, goal_pose.y * 1000)  # meters to mm
+        size = self._RADIUS_ROBOT * self._scale_field_to_draw
+        painter.drawEllipse(point, size, size)
+
+        # 角度
+        line_x = self._RADIUS_ROBOT * math.cos(goal_pose.theta)
+        line_y = self._RADIUS_ROBOT * math.sin(goal_pose.theta)
+        line_point = point + self._convert_field_to_draw_point(line_x, line_y)
+        painter.drawLine(point, line_point)
+
+        # ロボットID
+        text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
+        painter.drawText(text_point, str(robot_id))
+
+        # goal_poseとロボットを結ぶ直線を引く
+        painter.setPen(QPen(Qt.red, 2))
+        robot_point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
+        painter.drawLine(point, robot_point)
         
     def _draw_replacement_ball(self, painter, ball):
         # ボールのreplacementを描画する

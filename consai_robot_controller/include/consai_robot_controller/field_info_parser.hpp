@@ -38,6 +38,20 @@ using namespace consai_msgs::msg;
 using RobotControl = consai_msgs::action::RobotControl;
 using State = consai_msgs::msg::State2D;
 
+// consai_msgs::msg::State2Dを用いた
+// 座標系移動変換するクラス
+class Trans
+{
+public:
+  Trans(const State & center, const double theta);
+  State transform(const State & pose) const ;
+  State inverted_transform(const State & pose) const ;
+  double transform_theta(const double theta) const ;
+  double inverted_transform_theta(const double theta) const ;
+private:
+  State center;
+};
+
 class FieldInfoParser
 {
 public:
