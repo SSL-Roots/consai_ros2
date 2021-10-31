@@ -30,6 +30,7 @@ include_directories(include)
 add_library(controller_component SHARED
   src/controller_component.cpp
   src/field_info_parser.cpp
+  src/geometry_tools.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")

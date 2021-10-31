@@ -324,10 +324,10 @@ def test_shoot(x, y):
 def main():
     # test_move_to()
     # test_move_to_normalized(3)
-    test_chase_ball()
-    test_chase_robot()
+    # test_chase_ball()
+    # test_chase_robot()
     # test_for_config_pid(test_x=True)
-    # test_shoot(5.0, 0.0)
+    test_shoot(5.0, 0.0)
 
 if __name__ == '__main__':
     rclpy.init(args=None)

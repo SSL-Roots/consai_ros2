@@ -14,10 +14,13 @@
 
 
 #include "consai_robot_controller/field_info_parser.hpp"
+#include "consai_robot_controller/geometry_tools.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 namespace consai_robot_controller
 {
+
+namespace tools = geometry_tools;
 
 FieldInfoParser::FieldInfoParser()
 {
@@ -149,7 +152,7 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
     return false;
   }
 
-  parsed_theta = normalize_theta(parsed_theta + pose.offset.theta);
+  parsed_theta = tools::normalize_theta(parsed_theta + pose.offset.theta);
 
   parsed_pose.x = parsed_x;
   parsed_pose.y = parsed_y;
@@ -196,13 +199,13 @@ bool FieldInfoParser::parse_constraint_theta(const ConstraintTheta & theta, cons
         State goal_pose;
         goal_pose.x = goal_x;
         goal_pose.y = goal_y;
-        parsed_theta = calc_angle(goal_pose, object_pose);
+        parsed_theta = tools::calc_angle(goal_pose, object_pose);
         return true;
       }else if(theta.param == ConstraintTheta::PARAM_LOOK_FROM){
         State goal_pose;
         goal_pose.x = goal_x;
         goal_pose.y = goal_y;
-        parsed_theta = calc_angle(object_pose, goal_pose);
+        parsed_theta = tools::calc_angle(object_pose, goal_pose);
         return true;
       }
     }
@@ -234,24 +237,6 @@ bool FieldInfoParser::parse_constraint_object(const ConstraintObject & object, S
   }
 
   return false;
-}
-
-double FieldInfoParser::calc_angle(const State & from_pose, const State & to_pose) const
-{
-  // from_poseからto_poseへの角度を計算する
-  double diff_x = to_pose.x - from_pose.x;
-  double diff_y = to_pose.y - from_pose.y;
-
-  return std::atan2(diff_y, diff_x);
-}
-
-double FieldInfoParser::normalize_theta(const double theta) const
-{
-  // 角度を-pi ~ piに納める
-  double retval = theta;
-  while(retval >= M_PI) retval -= 2.0 * M_PI;
-  while(retval <= -M_PI) retval += 2.0 * M_PI;
-  return retval;
 }
 
 }  // namespace consai_robot_controller

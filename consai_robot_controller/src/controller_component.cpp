@@ -19,12 +19,14 @@
 #include <string>
 
 #include "consai_robot_controller/controller_component.hpp"
+#include "consai_robot_controller/geometry_tools.hpp"
 #include "rclcpp/rclcpp.hpp"
-
-using namespace std::chrono_literals;
 
 namespace consai_robot_controller
 {
+
+using namespace std::chrono_literals;
+namespace tools = geometry_tools;
 
 const std::string PREFIX_VX = "vx_";
 const std::string PREFIX_VY = "vy_";
@@ -207,7 +209,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // ワールド座標系での目標速度を算出
     world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
     world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());
-    world_vel.theta = pid_vtheta_[robot_id]->computeCommand(parser_.normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
+    world_vel.theta = pid_vtheta_[robot_id]->computeCommand(tools::normalize_theta(goal_pose.theta - my_robot.orientation), duration.nanoseconds());
   }
 
   // 最大速度リミットを適用
@@ -234,7 +236,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     auto feedback = std::make_shared<RobotControl::Feedback>();
     feedback->remaining_pose.x = goal_pose.x - my_robot.pos.x;
     feedback->remaining_pose.y = goal_pose.y - my_robot.pos.y;
-    feedback->remaining_pose.theta = parser_.normalize_theta(goal_pose.theta - my_robot.orientation);
+    feedback->remaining_pose.theta = tools::normalize_theta(goal_pose.theta - my_robot.orientation);
     if(my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0){
       feedback->present_velocity.x = my_robot.vel[0].x;
       feedback->present_velocity.y = my_robot.vel[0].y;
@@ -423,7 +425,7 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
   // 直線距離の差分が小さくなっているか判定
   double diff_x = goal_pose.x - my_robot.pos.x;
   double diff_y = goal_pose.y - my_robot.pos.y;
-  double remaining_theta = std::fabs(parser_.normalize_theta(goal_pose.theta - my_robot.orientation));
+  double remaining_theta = std::fabs(tools::normalize_theta(goal_pose.theta - my_robot.orientation));
   double remaining_distance = std::hypot(diff_x, diff_y);
   if(remaining_distance < DISTANCE_THRESHOLD && remaining_theta < THETA_THRESHOLD){
     return true;
