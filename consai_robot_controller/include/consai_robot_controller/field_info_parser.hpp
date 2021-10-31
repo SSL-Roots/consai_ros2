@@ -47,7 +47,9 @@ public:
   bool extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const;
   bool extract_ball(TrackedBall & my_ball) const;
   bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
-  // bool parse_constraint(const ConstraintTarget & target, const State & current_goal_pose, double & parsed_value) const;
+  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal,
+                  const TrackedRobot & my_robot, State & parsed_pose,
+                  double & kick_power, double & dribble_power) const;
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
   bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
   bool parse_constraint_theta(const ConstraintTheta & theta, const double goal_x, const double goal_y, double & parsed_theta) const;

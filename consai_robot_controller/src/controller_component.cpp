@@ -195,10 +195,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 目標値を取得する
   // 目標値を取得できなければ速度0を目標値とする
   State goal_pose;
+  double kick_power = 0.0;
+  double dribble_power = 0.0;
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
-  if(parser_.parse_goal(goal_handle_[robot_id]->get_goal(), goal_pose)){
+  if(parser_.parse_goal(goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, kick_power, dribble_power)){
     // ワールド座標系での目標速度を算出
     world_vel.x = pid_vx_[robot_id]->computeCommand(goal_pose.x - my_robot.pos.x, duration.nanoseconds());
     world_vel.y = pid_vy_[robot_id]->computeCommand(goal_pose.y - my_robot.pos.y, duration.nanoseconds());

@@ -125,6 +125,28 @@ class ControlTest(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def shoot(self, robot_id, target_x, target_y):
+        pose = ConstraintPose()
+
+        pose.xy.value_x.append(0.0)
+        pose.xy.value_y.append(0.0)
+
+        constraint_obj = ConstraintObject()
+        constraint_obj.type = ConstraintObject.BALL
+        pose.theta.object.append(constraint_obj)
+        pose.theta.param = ConstraintTheta.PARAM_LOOK_TO
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = True
+
+        goal_msg.kick_shoot = True
+        goal_msg.kick_target.xy.value_x.append(target_x)
+        goal_msg.kick_target.xy.value_y.append(target_y)
+
+        return self._set_goal(robot_id, goal_msg)
+
+
     def _set_goal(self, robot_id, goal_msg):
         if not self._action_clients[robot_id].wait_for_server(5):
             self.get_logger().error("TIMEOUT: wait_for_server")
@@ -293,12 +315,19 @@ def test_for_config_pid(test_x=False, test_y=False, test_theta=False):
             while test_node.all_robots_are_free() is False:
                 executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
+def test_shoot(x, y):
+    test_node.shoot(0, x, y)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
 def main():
     # test_move_to()
     # test_move_to_normalized(3)
-    test_chase_ball()
-    test_chase_robot()
+    # test_chase_ball()
+    # test_chase_robot()
     # test_for_config_pid(test_x=True)
+    test_shoot(5.0, 0.0)
 
 if __name__ == '__main__':
     rclpy.init(args=None)

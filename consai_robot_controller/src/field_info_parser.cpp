@@ -99,6 +99,42 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
   return false;
 }
 
+bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal,
+                  const TrackedRobot & my_robot, State & parsed_pose,
+                  double & kick_power, double & dribble_power) const
+{
+  // RobotControlのgoalを解析し、目標姿勢を出力する
+  // 解析に失敗したらfalseを返す
+
+  State target_pose;
+  if(goal->pose.size() == 0){
+    return false;
+  }
+
+  // 目標姿勢を算出
+  if(!parse_constraint_pose(goal->pose[0], target_pose)){
+    return false;
+  }else{
+    parsed_pose = target_pose;
+  }
+
+  // ボール蹴る
+  TrackedBall ball;
+  if(goal->kick_shoot && extract_ball(ball)){
+    auto diff_x = my_robot.pos.x - ball.pos.x;
+    auto diff_y = my_robot.pos.y - ball.pos.y;
+
+    auto distance = std::hypot(diff_x, diff_y);
+    
+    if(distance < 0.7){
+      std::cout<<"can kick"<<std::endl;
+    }
+
+  }
+
+  return true;
+}
+
 bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
 {
   double parsed_x, parsed_y;

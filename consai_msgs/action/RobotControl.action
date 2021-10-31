@@ -2,7 +2,17 @@
 # actionは瞬時に完了する
 bool keep_control false
 
+# 移動の目標値
 ConstraintPose[<=1] pose
+
+# ボール操作関連のフラグ
+# シュートは最大速度でボールを蹴る
+bool kick_shoot false
+# パスはkick_targetとの距離に合わせて蹴る速度変える
+bool kick_pass false
+# キックの目標地点
+ConstraintPose kick_target
+
 ---
 bool success
 string message
