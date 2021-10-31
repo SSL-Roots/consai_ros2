@@ -61,20 +61,25 @@ class Visualizer(Plugin):
 
         # Subscriber、Publisherの作成
         self._sub_geometry = self._node.create_subscription(
-            GeometryData, "geometry", self._callback_geometry, 10)
+            GeometryData, "geometry",
+            self._widget.field_widget.set_field, 10)
         self._sub_detection = self._node.create_subscription(
-            DetectionFrame, "detection", self._callback_detection, 10)
+            DetectionFrame, "detection",
+            self._widget.field_widget.set_detection, 10)
         self._sub_detection_tracked = self._node.create_subscription(
-            TrackedFrame, "detection_tracked", self._callback_detection_tracked, 10)
+            TrackedFrame, "detection_tracked",
+            self._widget.field_widget.set_detection_tracked, 10)
 
         self._sub_goal_pose = []
         for i in range(16):
             topic_name = "blue" + str(i) + "/goal_pose"
             self._sub_goal_pose.append(self._node.create_subscription(
-                State2D, topic_name, partial(self._callback_blue_goal_pose, robot_id=i), 10))
+                State2D, topic_name,
+                partial(self._widget.field_widget.set_blue_goal_pose, robot_id=i), 10))
             topic_name = "yellow" + str(i) + "/goal_pose"
             self._sub_goal_pose.append(self._node.create_subscription(
-                State2D, topic_name, partial(self._callback_yellow_goal_pose, robot_id=i), 10))
+                State2D, topic_name,
+                partial(self._widget.field_widget.set_yellow_goal_pose, robot_id=i), 10))
 
         self._widget.field_widget.set_pub_replacement(self._node.create_publisher(Replacement, 'replacement', 1))
 
@@ -122,18 +127,3 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(True)
         else:
             self._widget.field_widget.set_can_draw_replacement(False)
-
-    def _callback_geometry(self, msg):
-        self._widget.field_widget.set_field(msg.field)
-
-    def _callback_detection(self, msg):
-        self._widget.field_widget.set_detection(msg)
-
-    def _callback_detection_tracked(self, msg):
-        self._widget.field_widget.set_detection_tracked(msg)
-
-    def _callback_blue_goal_pose(self, msg, robot_id):
-        self._widget.field_widget.set_blue_goal_pose(msg, robot_id)
-
-    def _callback_yellow_goal_pose(self, msg, robot_id):
-        self._widget.field_widget.set_yellow_goal_pose(msg, robot_id)

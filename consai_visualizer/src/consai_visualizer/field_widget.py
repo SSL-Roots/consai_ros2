@@ -103,21 +103,21 @@ class FieldWidget(QWidget):
     def set_can_draw_replacement(self, enable=True):
         self._can_draw_replacement = enable
 
-    def set_field(self, field):
-        self._field = field
+    def set_field(self, msg):
+        self._field = msg.field
         self._resize_draw_area()
 
-    def set_detection(self, detection):
-        self._detections[detection.camera_id] = detection
+    def set_detection(self, msg):
+        self._detections[msg.camera_id] = msg
 
-    def set_detection_tracked(self, detection_tracked):
-        self._detection_tracked = detection_tracked
+    def set_detection_tracked(self, msg):
+        self._detection_tracked = msg
 
-    def set_blue_goal_pose(self, pose, robot_id):
-        self._blue_goal_poses[robot_id] = pose
+    def set_blue_goal_pose(self, msg, robot_id):
+        self._blue_goal_poses[robot_id] = msg
 
-    def set_yellow_goal_pose(self, pose, robot_id):
-        self._yellow_goal_poses[robot_id] = pose
+    def set_yellow_goal_pose(self, msg, robot_id):
+        self._yellow_goal_poses[robot_id] = msg
 
     def reset_topics(self):
         # 取得したトピックをリセットする
