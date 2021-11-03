@@ -13,6 +13,9 @@ bool kick_pass false
 # キックの目標地点
 ConstraintXY kick_target
 
+# 転がっているボールを受け取るときはtrue
+bool receive_ball false
+
 ---
 bool success
 string message

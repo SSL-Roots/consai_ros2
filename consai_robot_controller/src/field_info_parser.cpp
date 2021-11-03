@@ -121,10 +121,23 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
     parsed_pose = target_pose;
   }
 
-  // ボール蹴る
+  // 以下、ボールが関わる処理のためボール情報を取得する
   TrackedBall ball;
+  if (!extract_ball(ball)) {
+    // ボール情報を取得できなくても正常終了
+    return true;
+  }
+
+  // 転がっているボールを受け取る
+  if (goal->receive_ball) {
+    if (receive_ball(my_robot, ball, parsed_pose, dribble_power)) {
+      return true;
+    }
+  }
+
+  // ボール蹴る
   State kick_target;
-  if (goal->kick_shoot && extract_ball(ball) &&
+  if (goal->kick_shoot && 
       parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y)) {
     // 目標姿勢とボールが近ければ、キック処理を行う
     if (tools::distance(tools::pose_state(ball), target_pose) < 0.7) {
@@ -297,6 +310,46 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
     if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
     if (can_kick) parsed_kick_power = KICK_POWER;
   }
+
+  return true;
+}
+
+bool FieldInfoParser::receive_ball(const TrackedRobot & my_robot, const TrackedBall & ball,
+                                   State & parsed_pose, double & parsed_dribble_power) const
+{
+  // 転がっているボールを受け取る
+  const double DRIBBLE_POWER = 0.6;
+
+  // ボール情報に速度情報がなければ終了
+  if (ball.vel.size() == 0) {
+    return false;
+  }
+
+  State velocity;
+  velocity.x = ball.vel[0].x;
+  velocity.y = ball.vel[0].y;
+  // ボール速度が一定値以下であれば終了
+  if (std::hypot(velocity.x, velocity.y) <= 0.3) {
+    return false;
+  }
+
+  auto ball_pose = tools::pose_state(ball);
+  auto robot_pose = tools::pose_state(my_robot);
+  auto angle_velocity = std::atan2(velocity.y, velocity.x);
+  tools::Trans trans_BtoV(ball_pose, angle_velocity);
+
+  auto robot_pose_BtoV = trans_BtoV.transform(robot_pose);
+
+  // ボールの軌道から離れていたら終了
+  if (std::fabs(robot_pose_BtoV.y) > 1.0 || robot_pose_BtoV.x < 0.0) {
+    return false;
+  }
+
+  // ボールの軌道上に移動する
+  robot_pose_BtoV.y = 0.0;
+  robot_pose_BtoV.theta = M_PI;
+  parsed_pose = trans_BtoV.inverted_transform(robot_pose_BtoV);
+  parsed_dribble_power = DRIBBLE_POWER;
 
   return true;
 }

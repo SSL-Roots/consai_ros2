@@ -44,6 +44,7 @@ class ControlTest(Node):
         self._robot_is_free = [True] * ROBOT_NUM
         self._send_goal_future = [None] * ROBOT_NUM
         self._get_result_future = [None] * ROBOT_NUM
+        self._target_is_yellow = target_is_yellow
 
     def robot_is_free(self, robot_id):
         return self._robot_is_free[robot_id]
@@ -148,6 +149,32 @@ class ControlTest(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def kick_pass(self, robot_id, target_id, x, y):
+        # x, y座標で待機して、targetロボットに対してパスキックをする
+        constraint_obj = ConstraintObject()
+        constraint_obj.type = ConstraintObject.BALL
+
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta.object.append(constraint_obj)  # ボールを見る
+        pose.theta.param = ConstraintTheta.PARAM_LOOK_TO
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = True
+
+        goal_msg.receive_ball = True
+
+        # targetロボットを狙ってキックする
+        goal_msg.kick_shoot = True
+        constraint_obj.robot_id = target_id
+        constraint_obj.type = ConstraintObject.BLUE_ROBOT
+        if self._target_is_yellow:
+            constraint_obj.type = ConstraintObject.YELLOW_ROBOT
+        goal_msg.kick_target.object.append(constraint_obj)
+
+        return self._set_goal(robot_id, goal_msg)
 
     def _set_goal(self, robot_id, goal_msg):
         if not self._action_clients[robot_id].wait_for_server(5):
@@ -323,24 +350,35 @@ def test_shoot(x, y):
     while test_node.all_robots_are_free() is False:
         executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
-def main():
+def test_pass_two_robots():
+    # 2台のロボットでパスし合う
+
+    test_node.kick_pass(0, 1, -3.0, 0.0)
+    test_node.kick_pass(1, 0, 3.0, 0.0)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+def main(target_is_yellow=False):
     # test_move_to()
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
     # test_for_config_pid(test_x=True)
-    test_shoot(1.0, 0.0)
+    # test_shoot(1.0, 0.0)
+    test_pass_two_robots()
 
 if __name__ == '__main__':
     rclpy.init(args=None)
 
-    test_node = ControlTest(False)
+    target_is_yellow = False
+    test_node = ControlTest(target_is_yellow)
 
     executor = SingleThreadedExecutor()
     executor.add_node(test_node)
 
     try:
-        main()
+        main(target_is_yellow)
     except KeyboardInterrupt:
         pass
 
