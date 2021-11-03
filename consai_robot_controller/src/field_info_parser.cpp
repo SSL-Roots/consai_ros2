@@ -259,10 +259,10 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
   const double LOOKING_TARGET_THETA = tools::to_radians(30);
   const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(5);
-  const double CAN_SHOOT_OMEGA = 0.01;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = 0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(80);  // meters
-  const double DISTANCE_TO_KICK_BALL = 0.01;  // meters
+  const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
+  const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(30);  // meters
+  const double DISTANCE_TO_KICK_BALL = -0.005;  // meters
 
   // ボールを向きながらボールに近づく
   auto ball_pose = tools::pose_state(ball);
@@ -293,7 +293,7 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
-    parsed_pose = trans_BtoR.inverted_transform(-DISTANCE_TO_LOOK_BALL, 0, M_PI);
+    parsed_pose = trans_BtoR.inverted_transform(DISTANCE_TO_LOOK_BALL, 0, M_PI);
     if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
   } else if (!is_looking_target) {
     // キックターゲットを見るまで、ドリブラをボールに付けながら回転する
@@ -329,7 +329,7 @@ bool FieldInfoParser::receive_ball(const TrackedRobot & my_robot, const TrackedB
   velocity.x = ball.vel[0].x;
   velocity.y = ball.vel[0].y;
   // ボール速度が一定値以下であれば終了
-  if (std::hypot(velocity.x, velocity.y) <= 0.3) {
+  if (std::hypot(velocity.x, velocity.y) <= 0.5) {
     return false;
   }
 

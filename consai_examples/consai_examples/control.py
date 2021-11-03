@@ -151,13 +151,13 @@ class ControlTest(Node):
 
     def kick_pass(self, robot_id, target_id, x, y):
         # x, y座標で待機して、targetロボットに対してパスキックをする
-        constraint_obj = ConstraintObject()
-        constraint_obj.type = ConstraintObject.BALL
+        constraint_ball = ConstraintObject()
+        constraint_ball.type = ConstraintObject.BALL
 
         pose = ConstraintPose()
         pose.xy.value_x.append(x)
         pose.xy.value_y.append(y)
-        pose.theta.object.append(constraint_obj)  # ボールを見る
+        pose.theta.object.append(constraint_ball)  # ボールを見る
         pose.theta.param = ConstraintTheta.PARAM_LOOK_TO
 
         goal_msg = RobotControl.Goal()
@@ -168,11 +168,12 @@ class ControlTest(Node):
 
         # targetロボットを狙ってキックする
         goal_msg.kick_shoot = True
-        constraint_obj.robot_id = target_id
-        constraint_obj.type = ConstraintObject.BLUE_ROBOT
+        constraint_robot = ConstraintObject()
+        constraint_robot.robot_id = target_id
+        constraint_robot.type = ConstraintObject.BLUE_ROBOT
         if self._target_is_yellow:
-            constraint_obj.type = ConstraintObject.YELLOW_ROBOT
-        goal_msg.kick_target.object.append(constraint_obj)
+            constraint_robot.type = ConstraintObject.YELLOW_ROBOT
+        goal_msg.kick_target.object.append(constraint_robot)
 
         return self._set_goal(robot_id, goal_msg)
 
@@ -359,6 +360,17 @@ def test_pass_two_robots():
     while test_node.all_robots_are_free() is False:
         executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
+def test_pass_four_robots():
+    # 4台のロボットでパスし合う
+
+    test_node.kick_pass(0, 1, 3.0, 3.0)
+    test_node.kick_pass(1, 2, 3.0, -3.0)
+    test_node.kick_pass(2, 3, -3.0, 3.0)
+    test_node.kick_pass(3, 0, -3.0, -3.0)
+
+    while test_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
 def main(target_is_yellow=False):
     # test_move_to()
     # test_move_to_normalized(3)
@@ -366,7 +378,8 @@ def main(target_is_yellow=False):
     # test_chase_robot()
     # test_for_config_pid(test_theta=True)
     # test_shoot(1.0, 0.0)
-    test_pass_two_robots()
+    # test_pass_two_robots()
+    test_pass_four_robots()
 
 if __name__ == '__main__':
     rclpy.init(args=None)
