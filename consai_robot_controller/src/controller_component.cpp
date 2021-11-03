@@ -38,6 +38,10 @@ const std::string PARAM_D = "d";
 const std::string PARAM_I_MAX = "i_max";
 const std::string PARAM_I_MIN = "i_min";
 const std::string PARAM_ANTI = "antiwindup";
+const std::string PARAM_MAX_ACC_XY = "max_acceleration_xy";
+const std::string PARAM_MAX_ACC_THETA = "max_acceleration_theta";
+const std::string PARAM_MAX_VEL_XY = "max_velocity_xy";
+const std::string PARAM_MAX_VEL_THETA = "max_velocity_theta";
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
@@ -53,6 +57,14 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     declare_parameter(prefix + PARAM_I_MIN, 0.0);
     declare_parameter(prefix + PARAM_ANTI, true);
   }
+  declare_parameter(PARAM_MAX_ACC_XY, 2.0);
+  declare_parameter(PARAM_MAX_ACC_THETA, 2.0 * M_PI);
+  declare_parameter(PARAM_MAX_VEL_XY, 2.0);
+  declare_parameter(PARAM_MAX_VEL_THETA, 2.0 * M_PI);
+  max_acceleration_xy_ = get_parameter(PARAM_MAX_ACC_XY).get_value<double>();
+  max_acceleration_theta_ = get_parameter(PARAM_MAX_ACC_THETA).get_value<double>();
+  max_velocity_xy_ = get_parameter(PARAM_MAX_VEL_XY).get_value<double>();
+  max_velocity_theta_ = get_parameter(PARAM_MAX_VEL_THETA).get_value<double>();
 
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
@@ -153,8 +165,20 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         }else if(update_pid_gain_from_param(parameter, PREFIX_VTHETA, pid_vtheta_)){
           RCLCPP_INFO(this->get_logger(), "Update " + PREFIX_VTHETA + "pid gains.");
         }
-      }
 
+        if(parameter.get_name() == PARAM_MAX_ACC_XY){
+          max_acceleration_xy_ = get_parameter(PARAM_MAX_ACC_XY).get_value<double>();
+        }
+        if(parameter.get_name() == PARAM_MAX_ACC_THETA){
+          max_acceleration_theta_ = get_parameter(PARAM_MAX_ACC_THETA).get_value<double>();
+        }
+        if(parameter.get_name() == PARAM_MAX_VEL_XY){
+          max_velocity_xy_ = get_parameter(PARAM_MAX_VEL_XY).get_value<double>();
+        }
+        if(parameter.get_name() == PARAM_MAX_VEL_THETA){
+          max_velocity_theta_ = get_parameter(PARAM_MAX_VEL_THETA).get_value<double>();
+        }
+      }
       return result;
     };
   handler_change_param_ = add_on_set_parameters_callback(param_change_callback);
@@ -372,13 +396,10 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
 State Controller::limit_world_velocity(const State & velocity) const
 {
   // ワールド座標系のロボット速度に制限を掛ける
-  const double MAX_VELOCITY_XY = 2.0;  // m/s
-  const double MAX_VELOCITY_THETA = 2.0 * M_PI;  // rad/s
-
   State modified_velocity; 
-  modified_velocity.x = std::clamp(velocity.x, -MAX_VELOCITY_XY, MAX_VELOCITY_XY);
-  modified_velocity.y = std::clamp(velocity.y, -MAX_VELOCITY_XY, MAX_VELOCITY_XY);
-  modified_velocity.theta = std::clamp(velocity.theta, -MAX_VELOCITY_THETA, MAX_VELOCITY_THETA);
+  modified_velocity.x = std::clamp(velocity.x, -max_velocity_xy_, max_velocity_xy_);
+  modified_velocity.y = std::clamp(velocity.y, -max_velocity_xy_, max_velocity_xy_);
+  modified_velocity.theta = std::clamp(velocity.theta, -max_velocity_theta_, max_velocity_theta_);
 
   return modified_velocity;
 }
@@ -386,22 +407,22 @@ State Controller::limit_world_velocity(const State & velocity) const
 State Controller::limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const
 {
   // ワールド座標系のロボット加速度に制限を掛ける
-  const double MAX_ACCELERATION_XY = 2.0;  // m/s^2
-  const double MAX_ACCELERATION_THETA = 2.0 * M_PI;  // rad/s^2
-
   State modified_velocity = velocity;
   double acc_x = (velocity.x - last_velocity.x) / dt.seconds();
   double acc_y = (velocity.y - last_velocity.y) / dt.seconds();
   double acc_theta = (velocity.theta - last_velocity.theta) / dt.seconds();
 
-  if(std::fabs(acc_x) > MAX_ACCELERATION_XY){
-    modified_velocity.x = last_velocity.x + std::copysign(MAX_ACCELERATION_XY * dt.seconds(), acc_x);
+  if (std::fabs(acc_x) > max_acceleration_xy_) {
+    modified_velocity.x = last_velocity.x + std::copysign(
+      max_acceleration_xy_ * dt.seconds(), acc_x);
   }
-  if(std::fabs(acc_y) > MAX_ACCELERATION_XY){
-    modified_velocity.y = last_velocity.y + std::copysign(MAX_ACCELERATION_XY * dt.seconds(), acc_y);
+  if (std::fabs(acc_y) > max_acceleration_xy_) {
+    modified_velocity.y = last_velocity.y + std::copysign(
+      max_acceleration_xy_ * dt.seconds(), acc_y);
   }
-  if(std::fabs(acc_theta) > MAX_ACCELERATION_THETA){
-    modified_velocity.theta = last_velocity.theta + std::copysign(MAX_ACCELERATION_THETA * dt.seconds(), acc_theta);
+  if (std::fabs(acc_theta) > max_acceleration_theta_) {
+    modified_velocity.theta = last_velocity.theta + std::copysign(
+      max_acceleration_theta_ * dt.seconds(), acc_theta);
   }
 
   return modified_velocity;
