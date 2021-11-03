@@ -403,6 +403,9 @@ class FieldWidget(QWidget):
         painter.drawEllipse(point, size, size)
 
     def _draw_tracked_ball(self, painter, ball):
+        VELOCITY_THRESH = 0.3  # m/s
+        PAINT_LENGTH = 10.0 # meters
+
         # detection_trackedトピックのボールを描画する
 
         # visibilityが下がるほど、色を透明にする
@@ -417,9 +420,25 @@ class FieldWidget(QWidget):
 
         painter.setPen(color_pen)
         painter.setBrush(color_brush)
-        point = self._convert_field_to_draw_point(ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
+        point_pos = self._convert_field_to_draw_point(ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
         size = self._RADIUS_BALL * self._scale_field_to_draw
-        painter.drawEllipse(point, size, size)
+        painter.drawEllipse(point_pos, size, size)
+
+        # ボール速度を描画する
+        if len(ball.vel) == 0:
+            return
+        velocity = ball.vel[0]
+        
+        # 速度が小さければ描画しない
+        if math.hypot(velocity.x, velocity.y) < VELOCITY_THRESH:
+            return
+        direction = math.atan2(velocity.y, velocity.x)
+        vel_end_x = PAINT_LENGTH * math.cos(direction) + ball.pos.x
+        vel_end_y = PAINT_LENGTH * math.sin(direction) + ball.pos.y
+        point_vel = self._convert_field_to_draw_point(vel_end_x * 1000, vel_end_y * 1000)  # meters to mm
+
+        painter.setPen(QPen(QColor(102, 0, 255), 2))
+        painter.drawLine(point_pos, point_vel)
 
     def _draw_detection_yellow_robot(self, painter, robot, camera_id=-1):
         # detectionトピックの黄色ロボットを描画する
