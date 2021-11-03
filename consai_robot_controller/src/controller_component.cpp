@@ -221,6 +221,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   command_msg->velocity_y = -std::sin(my_robot.orientation) * world_vel.x + std::cos(my_robot.orientation) * world_vel.y;
   command_msg->velocity_theta = world_vel.theta;
 
+  // キックパワー、ドリブルパワーをセット
+  command_msg->kick_power = kick_power;
+  command_msg->dribble_power = dribble_power;
+
   // 制御値を出力する
   pub_command_[robot_id]->publish(std::move(command_msg));
 

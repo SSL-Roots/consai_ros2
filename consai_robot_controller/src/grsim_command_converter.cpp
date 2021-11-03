@@ -61,6 +61,13 @@ void GrSimCommandConverter::on_timer()
     robot_command.veltangent = (*it)->velocity_x;
     robot_command.velnormal = (*it)->velocity_y;
     robot_command.velangular = (*it)->velocity_theta;
+
+    if((*it)->dribble_power > 0.0001){
+      robot_command.spinner = true;
+    }
+
+    robot_command.kickspeedx = (*it)->kick_power;
+
     commands_msg->robot_commands.push_back(robot_command);
     it = consai_commands_.erase(it);
   }

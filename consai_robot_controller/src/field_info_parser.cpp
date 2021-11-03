@@ -110,29 +110,26 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
   // 解析に失敗したらfalseを返す
 
   State target_pose;
-  if(goal->pose.size() == 0){
+  if (goal->pose.size() == 0) {
     return false;
   }
 
   // 目標姿勢を算出
-  if(!parse_constraint_pose(goal->pose[0], target_pose)){
+  if (!parse_constraint_pose(goal->pose[0], target_pose)) {
     return false;
-  }else{
+  } else {
     parsed_pose = target_pose;
   }
 
   // ボール蹴る
   TrackedBall ball;
-  if(goal->kick_shoot && extract_ball(ball)){
-    auto diff_x = my_robot.pos.x - ball.pos.x;
-    auto diff_y = my_robot.pos.y - ball.pos.y;
-
-    auto distance = std::hypot(diff_x, diff_y);
-    
-    // if(distance < 0.7){
-    //   std::cout<<"can kick"<<std::endl;
-    // }
-
+  State kick_target;
+  if (goal->kick_shoot && extract_ball(ball) &&
+      parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y)) {
+    // 目標姿勢とボールが近ければ、キック処理を行う
+    if (tools::distance(tools::pose_state(ball), target_pose) < 0.7) {
+      return parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
+    }
   }
 
   return true;
@@ -237,6 +234,71 @@ bool FieldInfoParser::parse_constraint_object(const ConstraintObject & object, S
   }
 
   return false;
+}
+
+bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+                  State &parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
+{
+  const double DRIBBLE_POWER = 0.6;
+  const double KICK_POWER = 8.0;
+  const double LOOKING_BALL_DISTANCE = 0.2;  // meters
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - 15);
+  const double LOOKING_TARGET_THETA = tools::to_radians(30);
+  const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
+  const double CAN_SHOOT_THETA = tools::to_radians(5);
+  const double CAN_SHOOT_OMEGA = 0.01;  // rad/s
+  const double DISTANCE_TO_LOOK_BALL = 0.1;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(80);  // meters
+  const double DISTANCE_TO_KICK_BALL = 0.01;  // meters
+
+  // ボールを向きながらボールに近づく
+  auto ball_pose = tools::pose_state(ball);
+  auto robot_pose = tools::pose_state(my_robot);
+
+  // ボールからロボットを見た座標系を生成
+  auto angle_ball_to_robot = tools::calc_angle(ball_pose, robot_pose);
+  tools::Trans trans_BtoR(ball_pose, angle_ball_to_robot);
+  auto robot_pose_BtoR = trans_BtoR.transform(robot_pose);
+
+  // ボールからターゲットを見た座標系を生成
+  auto angle_ball_to_target = tools::calc_angle(ball_pose, kick_target);
+  tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
+  auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
+
+  bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
+                         std::fabs(robot_pose_BtoR.theta) > LOOKING_BALL_THETA;
+
+  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA;
+
+  double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
+
+  // ロボットがボールに近ければドリブルをON
+  bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
+  // ロボットがキックターゲットに焦点を当てたらキックをON
+  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
+    std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+
+  if (!is_looking_ball) {
+    // ドリブラーがボールに付くまで移動する
+    parsed_pose = trans_BtoR.inverted_transform(-DISTANCE_TO_LOOK_BALL, 0, M_PI);
+    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
+  } else if (!is_looking_target) {
+    // キックターゲットを見るまで、ドリブラをボールに付けながら回転する
+    double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
+
+    parsed_pose = trans_BtoR.inverted_transform(
+      distance_robot_to_ball * std::cos(add_angle),
+      distance_robot_to_ball * std::sin(add_angle), 0.0);
+    parsed_pose.theta = tools::calc_angle(parsed_pose, ball_pose);
+    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
+  } else {
+    // キックターゲットに向かって前進する
+    parsed_pose = trans_BtoT.inverted_transform(DISTANCE_TO_KICK_BALL, 0.0, 0.0);
+    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
+    if (can_kick) parsed_kick_power = KICK_POWER;
+  }
+
+  return true;
 }
 
 }  // namespace consai_robot_controller

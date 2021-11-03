@@ -141,8 +141,10 @@ class ControlTest(Node):
         goal_msg.keep_control = True
 
         goal_msg.kick_shoot = True
-        goal_msg.kick_target.xy.value_x.append(target_x)
-        goal_msg.kick_target.xy.value_y.append(target_y)
+
+        goal_msg.kick_target.normalized = True
+        goal_msg.kick_target.value_x.append(target_x)
+        goal_msg.kick_target.value_y.append(target_y)
 
         return self._set_goal(robot_id, goal_msg)
 
@@ -327,7 +329,7 @@ def main():
     # test_chase_ball()
     # test_chase_robot()
     # test_for_config_pid(test_x=True)
-    test_shoot(5.0, 0.0)
+    test_shoot(1.0, 0.0)
 
 if __name__ == '__main__':
     rclpy.init(args=None)

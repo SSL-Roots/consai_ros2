@@ -11,7 +11,7 @@ bool kick_shoot false
 # パスはkick_targetとの距離に合わせて蹴る速度変える
 bool kick_pass false
 # キックの目標地点
-ConstraintPose kick_target
+ConstraintXY kick_target
 
 ---
 bool success

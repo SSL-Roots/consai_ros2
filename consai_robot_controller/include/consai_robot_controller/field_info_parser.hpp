@@ -54,6 +54,8 @@ public:
   bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
   bool parse_constraint_theta(const ConstraintTheta & theta, const double goal_x, const double goal_y, double & parsed_theta) const;
   bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
+  bool parse_kick(const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+                  State &parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
 
 private:
   std::shared_ptr<TrackedFrame> detection_tracked_;
