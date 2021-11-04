@@ -34,3 +34,22 @@ def main(target_is_yellow=False):
     test_pass_four_robots()
 ```
 
+## ロボット、ボール情報を上下左右反転する
+
+`consai_visition_tracker`の`invert`パラメータを`True`にすると、
+ロボットとボールの情報を上下左右反転できます。
+
+これは、試合プログラムを変更しなくてもコートチェンジできるため便利です。
+
+`consai_vision_tracker`の`test.launch.py`を次のように書き換えます。
+
+```diff
+ComposableNode(
+    package='consai_vision_tracker',
+    plugin='consai_vision_tracker::Tracker',
+    name='tracker',
+-   parameters=[{'invert': False}],
++   parameters=[{'invert': True}],
+    extra_arguments=[{'use_intra_process_comms': True}],
+    ),
+```

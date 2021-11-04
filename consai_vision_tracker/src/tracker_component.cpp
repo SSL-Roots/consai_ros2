@@ -15,6 +15,7 @@
 #include "consai_vision_tracker/tracker_component.hpp"
 
 #include <chrono>
+#include <cmath>
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -39,8 +40,17 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
-  sub_detection_ = create_subscription<DetectionFrame>(
-    "detection", 10, std::bind(&Tracker::callback_detection, this, _1));
+
+  declare_parameter("invert", false);
+
+  if (get_parameter("invert").get_value<bool>()) {
+    sub_detection_ = create_subscription<DetectionFrame>(
+      "detection", 10, std::bind(&Tracker::callback_detection_invert, this, _1));
+  } else {
+    sub_detection_ = create_subscription<DetectionFrame>(
+      "detection", 10, std::bind(&Tracker::callback_detection, this, _1));
+  }
+
 }
 
 void Tracker::on_timer()
@@ -76,6 +86,48 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
     if(yellow_robot.robot_id.size() > 0){
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
+  }
+}
+
+void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg) {
+  // detectionトピックの情報を上下左右反転するcallback関数
+
+  for(auto&& ball : msg->balls){
+    invert_ball(ball);
+    ball_tracker_->push_back_observation(ball);
+  }
+
+  for(auto&& blue_robot : msg->robots_blue){
+    if(blue_robot.robot_id.size() > 0){
+      invert_robot(blue_robot);
+      blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
+    }
+  }
+
+  for(auto&& yellow_robot: msg->robots_yellow){
+    if(yellow_robot.robot_id.size() > 0){
+      invert_robot(yellow_robot);
+      yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
+    }
+  }
+}
+
+void Tracker::invert_ball(DetectionBall & ball) {
+  // detection ballを上下左右反転する
+  ball.x = -ball.x;
+  ball.y = -ball.y;
+  ball.pixel_x = -ball.pixel_x;
+  ball.pixel_y = -ball.pixel_y;
+}
+
+void Tracker::invert_robot(DetectionRobot & robot) {
+  // detection robotを上下左右反転する
+  robot.x = -robot.x;
+  robot.y = -robot.y;
+  robot.pixel_x = -robot.pixel_x;
+  robot.pixel_y = -robot.pixel_y;
+  if (robot.orientation.size() > 0) {
+    robot.orientation[0] -= std::copysign(M_PI, robot.orientation[0]);
   }
 }
 

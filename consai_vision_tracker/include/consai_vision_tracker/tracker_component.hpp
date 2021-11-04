@@ -18,7 +18,9 @@
 #include "consai_vision_tracker/visibility_control.h"
 #include "consai_vision_tracker/ball_tracker.hpp"
 #include "consai_vision_tracker/robot_tracker.hpp"
+#include "robocup_ssl_msgs/msg/detection_ball.hpp"
 #include "robocup_ssl_msgs/msg/detection_frame.hpp"
+#include "robocup_ssl_msgs/msg/detection_robot.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -39,6 +41,9 @@ protected:
 
 private:
   void callback_detection(const DetectionFrame::SharedPtr msg);
+  void callback_detection_invert(const DetectionFrame::SharedPtr msg);
+  void invert_ball(DetectionBall & ball);
+  void invert_robot(DetectionRobot & robot);
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<DetectionFrame>::SharedPtr sub_detection_;
