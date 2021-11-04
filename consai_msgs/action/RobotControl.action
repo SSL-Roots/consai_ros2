@@ -16,6 +16,9 @@ ConstraintXY kick_target
 # 転がっているボールを受け取るときはtrue
 bool receive_ball false
 
+# 衝突回避は安全のためデフォルトでtrue
+bool avoid_obstacles true
+
 ---
 bool success
 string message
