@@ -57,6 +57,7 @@ def generate_launch_description():
                     package='consai_vision_tracker',
                     plugin='consai_vision_tracker::Tracker',
                     name='tracker',
+                    parameters=[{'invert': False}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
