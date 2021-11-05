@@ -366,10 +366,17 @@ bool FieldInfoParser::receive_ball(const TrackedRobot & my_robot, const TrackedB
 bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
   const State & goal_pose, State & avoidance_pose) const {
   // 障害物を回避するposeを生成する
-  // 全ロボット、ボール情報を検索し、
+  // 全ロボット情報を検索し、
   // 自己位置(my_robot)と目標位置(goal_pose)間に存在する、
   // 自己位置に最も近い障害物付近に回避点を生成し、その回避点を新しい目標位置とする
-  const double VISIBILITY_THRESHOLD = 0.01;
+
+  const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
+  // 自身から直進方向に何m離れたロボットを障害物と判定するか
+  const double OBSTACLE_DETECTION_X = 0.2;
+  // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
+  const double OBSTACLE_DETECTION_Y = 0.5;
+  const double AVOIDANCE_POS_X = 0.2;
+  const double AVOIDANCE_POS_Y = 0.5;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
@@ -396,8 +403,9 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
     auto robot_pose = tools::pose_state(robot);
     auto robot_pose_MtoG = trans_MtoG.transform(robot_pose);
 
-    if (robot_pose_MtoG.x > 0.2 && robot_pose_MtoG.x < goal_pose_MtoG.x &&
-        std::fabs(robot_pose_MtoG.y) < 0.5){
+    if (robot_pose_MtoG.x > OBSTACLE_DETECTION_X &&
+        robot_pose_MtoG.x < goal_pose_MtoG.x &&
+        std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y){
       
       // 最も自身に近いロボットを障害物とする
       double distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
@@ -411,8 +419,8 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
   // 障害物が存在すれば、回避位置を生成する
   if(obstacle_pose_MtoG){
     avoidance_pose = trans_MtoG.inverted_transform(
-      obstacle_pose_MtoG->x + 0.2,
-      obstacle_pose_MtoG->y - std::copysign(0.5, obstacle_pose_MtoG->y),
+      obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
+      obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
       goal_pose_MtoG.theta
       );
   }
