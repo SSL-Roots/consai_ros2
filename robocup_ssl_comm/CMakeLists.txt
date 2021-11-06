@@ -51,7 +51,9 @@ target_compile_definitions(game_controller_component
 ament_target_dependencies(game_controller_component
   rclcpp
   rclcpp_components
+  robocup_ssl_msgs
 )
+target_link_libraries(game_controller_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
 rclcpp_components_register_nodes(game_controller_component "robocup_ssl_comm::GameController")
 
 # GrSim Component

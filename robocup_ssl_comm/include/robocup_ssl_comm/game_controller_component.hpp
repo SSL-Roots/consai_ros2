@@ -15,8 +15,15 @@
 #ifndef ROBOCUP_SSL_COMM__GAME_CONTROLLER_COMPONENT_HPP_
 #define ROBOCUP_SSL_COMM__GAME_CONTROLLER_COMPONENT_HPP_
 
+#include <memory>
+
 #include "robocup_ssl_comm/visibility_control.h"
+#include "robocup_ssl_msgs/ssl_gc_referee_message.pb.h"
+
+#include "multicast.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "robocup_ssl_msgs/msg/referee.hpp"
+#include "robocup_ssl_msgs/msg/team_info.hpp"
 
 namespace robocup_ssl_comm
 {
@@ -31,7 +38,11 @@ protected:
   void on_timer();
 
 private:
+  robocup_ssl_msgs::msg::TeamInfo parse_team_info(const Referee_TeamInfo &team_info);
+
   rclcpp::TimerBase::SharedPtr timer_;
+  std::unique_ptr<multicast::MulticastReceiver> receiver_;
+  rclcpp::Publisher<robocup_ssl_msgs::msg::Referee>::SharedPtr pub_referee_;
 };
 
 }  // namespace robocup_ssl_comm

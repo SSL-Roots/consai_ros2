@@ -82,15 +82,15 @@ uint32 COMMAND_BALL_PLACEMENT_BLUE = 17
 
 uint64 packet_timestamp
 uint32 stage
-int32 stage_time_left
+int32[<=1] stage_time_left  # optional
 uint32 command
 uint32 command_counter
 uint64 command_timestamp
-uint32 yellow
-uint32 blue
-Point designated_position
-bool blue_team_on_positive_half
-uint32 next_command
+TeamInfo yellow
+TeamInfo blue
+Point[<=1] designated_position  # optional
+bool[<=1] blue_team_on_positive_half  # optional
+uint32[<=1] next_command  # optional
 # GameEvent[] game_events
 # GameEventProposalGroup[] game_event_proposals
-int32 current_action_time_remaining
+int32[<=1] current_action_time_remaining  # optional

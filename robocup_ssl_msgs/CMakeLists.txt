@@ -30,6 +30,10 @@ set(protobuf_files
   proto/messages_robocup_ssl_wrapper.proto
   proto/messages_robocup_ssl_geometry.proto
   proto/messages_robocup_ssl_detection.proto
+  proto/ssl_gc_common.proto
+  proto/ssl_gc_game_event.proto
+  proto/ssl_gc_geometry.proto
+  proto/ssl_gc_referee_message.proto
 )
 protobuf_generate_cpp(PROTO_CPP PROTO_H
   ${protobuf_files}
@@ -69,6 +73,7 @@ set(msg_files
   "msg/geometry/Vector2f.msg"
   "msg/referee/Point.msg"
   "msg/referee/Referee.msg"
+  "msg/referee/TeamInfo.msg"
   "msg/grsim/BallReplacement.msg"
   "msg/grsim/Commands.msg"
   "msg/grsim/Replacement.msg"
