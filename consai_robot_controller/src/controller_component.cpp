@@ -274,11 +274,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     goal_handle_[robot_id]->publish_feedback(feedback);
   }
 
-  // 目標値に到達したら制御を完了する
   if(arrived(my_robot, goal_pose)){
+    // アクションクライアントへの応答が必要な場合は、
+    // 目標値に到達した後に制御完了応答を返し、
+    // 速度指令値を0にする
     if(need_response_[robot_id]){
       auto result = std::make_shared<RobotControl::Result>();
-
       result->success = true;
       result->message = "Success!";
       goal_handle_[robot_id]->succeed(result);
@@ -286,6 +287,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       need_response_[robot_id] = false;
       timer_pub_control_command_[robot_id]->cancel();
       timer_pub_stop_command_[robot_id]->reset();
+      // 停止コマンドを送信する
+      auto stop_command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+      stop_command_msg->robot_id = robot_id;
+      stop_command_msg->team_is_yellow = team_is_yellow_;
+      pub_command_[robot_id]->publish(std::move(stop_command_msg));
     }
   }
 }
