@@ -20,7 +20,12 @@
 namespace consai_vision_tracker
 {
 
-static const double VISIBILITY_CONTROL_VALUE = 0.002;
+// visibilityの操作量
+// 追跡対象の情報が来ないとき、この操作量だけvisibilityを小さくする
+// 操作量 = 1.0 / (trackerの更新周波数 * 消失判定までに掛ける時間)
+// 例：trackerが100Hzで更新されるとき、操作量が0.002であれば、
+// 追跡対象が消失してから5秒かけてvisibilityが1.0から0.0になる
+static const double VISIBILITY_CONTROL_VALUE = 0.005;
 
 BallTracker::BallTracker(const double dt)
 {
