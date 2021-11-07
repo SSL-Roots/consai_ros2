@@ -130,18 +130,7 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
 
   // 転がっているボールを受け取る
   if (goal->receive_ball) {
-    if (receive_ball(my_robot, ball, parsed_pose, dribble_power)) {
-      // 目標値を生成して終了
-      return true;
-    }
-  }
-
-  // 衝突を回避する
-  if (goal->avoid_obstacles) {
-    if (avoid_obstacles(my_robot, parsed_pose, parsed_pose)) {
-      // 目標値を生成して終了
-      return true;
-    }
+    receive_ball(my_robot, ball, parsed_pose, dribble_power);
   }
 
   // ボール蹴る
@@ -150,8 +139,13 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
       parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y)) {
     // 目標姿勢とボールが近ければ、キック処理を行う
     if (tools::distance(tools::pose_state(ball), target_pose) < 0.7) {
-      return parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
+      parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
     }
+  }
+
+  // 衝突を回避する
+  if (goal->avoid_obstacles) {
+    avoid_obstacles(my_robot, parsed_pose, parsed_pose);
   }
 
   return true;
