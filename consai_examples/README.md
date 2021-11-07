@@ -2,7 +2,25 @@
 
 CON-SAIの使い方がわかるチュートリアルパッケージです。
 
-## ロボットを動かす
+## consai_vision_trackerでビジョンの情報を取得する
+
+次のコマンドを実行します。
+
+```sh
+$ ros2 launch consai_vision_tracker test.launch.py
+```
+
+ビジュアライザが起動し、ビジョンの情報が表示されます。
+
+!['visualizer'](./resources/visualizer.png)
+
+`/geometry`トピックがフィールド形状データです。
+
+`/detection`トピックがビジョンの未加工データです。
+
+`/detection_tracked`トピックが、フィルタリング加工されたビジョンデータです。
+
+## consai_robot_controllerでロボットを動かす
 
 次のコマンドを実行して、コントローラを起動します。
 
@@ -18,7 +36,7 @@ $ ros2 run consai_examples control.py
 
 ### 解説
 
-`control.py`は`consai_robot_controlelr`の使い方を知るためのスクリプトです。
+`control.py`は`consai_robot_controller`の使い方を知るためのスクリプトです。
 
 `main()`内のコメントをON/OFFすることで、様々な動きを試せます。
 
