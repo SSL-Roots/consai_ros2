@@ -21,8 +21,15 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/control.py
+    ${PROJECT_NAME}/control_by_referee.py
+    ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/robot_operator.py
     DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

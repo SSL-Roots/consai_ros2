@@ -7,7 +7,7 @@ CON-SAIの使い方がわかるチュートリアルパッケージです。
 次のコマンドを実行します。
 
 ```sh
-$ ros2 launch consai_vision_tracker test.launch.py
+$ ros2 launch consai_examples start.launch.py
 ```
 
 ビジュアライザが起動し、ビジョンの情報が表示されます。
@@ -25,7 +25,7 @@ $ ros2 launch consai_vision_tracker test.launch.py
 次のコマンドを実行して、コントローラを起動します。
 
 ```sh
-$ ros2 launch consai_robot_controller test.launch.py
+$ ros2 launch consai_examples start.launch.py
 ```
 
 別のターミナルで、pythonスクリプトを実行します。
@@ -59,15 +59,12 @@ def main(target_is_yellow=False):
 
 これは、試合プログラムを変更しなくてもコートチェンジできるため便利です。
 
-`consai_vision_tracker`の`test.launch.py`を次のように書き換えます。
+次のようにコマンドを実行すると、'invert'パラメータを'True'にできます。
 
-```diff
-ComposableNode(
-    package='consai_vision_tracker',
-    plugin='consai_vision_tracker::Tracker',
-    name='tracker',
--   parameters=[{'invert': False}],
-+   parameters=[{'invert': True}],
-    extra_arguments=[{'use_intra_process_comms': True}],
-    ),
+```sh
+# 引数invertを追加
+$ ros2 launch consai_examples start.launch.py invert:=true
+
+# ロボットを動かす
+$ ros2 run consai_examples control.py
 ```
