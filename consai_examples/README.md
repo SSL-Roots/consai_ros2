@@ -62,9 +62,21 @@ def main(target_is_yellow=False):
 次のようにコマンドを実行すると、'invert'パラメータを'True'にできます。
 
 ```sh
-# 引数invertを追加
+# 引数invert:=trueを追加
 $ ros2 launch consai_examples start.launch.py invert:=true
 
 # ロボットを動かす
 $ ros2 run consai_examples control.py
+```
+
+## 黄色チームのロボットを動かす
+
+黄色チームのロボットを動かす場合は次のようにコマンドを実行します。
+
+```sh
+# 引数yellow:=trueを追加
+$ ros2 launch consai_examples start.launch.py yellow:=true
+
+# pythonの引数--yellowを追加
+$ ros2 run consai_examples control.py --yellow
 ```

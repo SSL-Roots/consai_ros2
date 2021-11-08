@@ -42,6 +42,11 @@ class RobotOperator(Node):
         self._get_result_future = [None] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
 
+        if self._target_is_yellow:
+            self.get_logger().info('yellowロボットを動かします')
+        else:
+            self.get_logger().info('blueロボットを動かします')
+
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
         return self._target_is_yellow

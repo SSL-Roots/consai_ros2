@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from robot_operator import RobotOperator
 import math
 import rclpy
@@ -207,9 +208,16 @@ def main():
     # test_pass_four_robots()
 
 if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--yellow',
+        default=False,
+        action='store_true',
+        help='yellowロボットを動かす場合にセットする')
+    args = arg_parser.parse_args()
+
     rclpy.init(args=None)
 
-    operator_node = RobotOperator(target_is_yellow=False)
+    operator_node = RobotOperator(target_is_yellow=args.yellow)
 
     executor = SingleThreadedExecutor()
     executor.add_node(operator_node)
