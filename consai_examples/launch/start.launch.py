@@ -18,7 +18,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-import os
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 
 def generate_launch_description():
     declare_arg_invert = DeclareLaunchArgument(
@@ -39,8 +40,21 @@ def generate_launch_description():
                               'yellow': LaunchConfiguration('yellow')}.items(),
         )
 
+    container = ComposableNodeContainer(
+            name='referee_container',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container_mt',
+            composable_node_descriptions=[
+                ComposableNode(
+                    package='robocup_ssl_comm',
+                    plugin='robocup_ssl_comm::GameController',
+                    name='game_controller')
+            ])
+
     return launch.LaunchDescription([
         declare_arg_invert,
         declare_arg_yellow,
-        controller
+        controller,
+        container
     ])

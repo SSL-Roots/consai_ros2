@@ -21,12 +21,132 @@ from robocup_ssl_msgs.msg import Referee
 
 # refereeトピックを解読するノード
 class RefereeParser(Node):
+    STAGE_STR_DICT = {
+        Referee.STAGE_NORMAL_FIRST_HALF_PRE : "NORMAL_FIRST_HALF_PRE",
+        Referee.STAGE_NORMAL_FIRST_HALF : "NORMAL_FIRST_HALF",
+        Referee.STAGE_NORMAL_HALF_TIME : "NORMAL_HALF_TIME",
+        Referee.STAGE_NORMAL_SECOND_HALF_PRE : "NORMAL_SECOND_HALF_PRE",
+        Referee.STAGE_NORMAL_SECOND_HALF : "NORMAL_SECOND_HALF",
+        Referee.STAGE_EXTRA_TIME_BREAK : "EXTRA_TIME_BREAK",
+        Referee.STAGE_EXTRA_FIRST_HALF_PRE : "EXTRA_FIRST_HALF_PRE",
+        Referee.STAGE_EXTRA_FIRST_HALF : "EXTRA_FIRST_HALF",
+        Referee.STAGE_EXTRA_HALF_TIME : "EXTRA_HALF_TIME",
+        Referee.STAGE_EXTRA_SECOND_HALF_PRE : "EXTRA_SECOND_HALF_PRE",
+        Referee.STAGE_EXTRA_SECOND_HALF : "EXTRA_SECOND_HALF",
+        Referee.STAGE_PENALTY_SHOOTOUT_BREAK : "PENALTY_SHOOTOUT_BREAK",
+        Referee.STAGE_PENALTY_SHOOTOUT : "PENALTY_SHOOTOUT",
+        Referee.STAGE_POST_GAME : "POST_GAME"
+    }
+
     def __init__(self, our_team_is_yellow=False):
-        super().__init__('operator')
+        super().__init__('referee_parser')
 
         self._our_team_is_yellow = our_team_is_yellow
         self._sub_referee = self.create_subscription(
             Referee, 'referee', self._referee_callback, 10)
 
+        self._COMMAND_OUR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_BLUE
+        self._COMMAND_THEIR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+        self._COMMAND_OUR_PREPARE_PENALTY = Referee.COMMAND_PREPARE_PENALTY_BLUE
+        self._COMMAND_THEIR_PREPARE_PENALTY = Referee.COMMAND_PREPARE_PENALTY_YELLOW
+        self._COMMAND_OUR_DIRECT_FREE = Referee.COMMAND_DIRECT_FREE_BLUE
+        self._COMMAND_THEIR_DIRECT_FREE = Referee.COMMAND_DIRECT_FREE_YELLOW
+        self._COMMAND_OUR_INDIRECT_FREE = Referee.COMMAND_INDIRECT_FREE_BLUE
+        self._COMMAND_THEIR_INDIRECT_FREE = Referee.COMMAND_INDIRECT_FREE_YELLOW
+        self._COMMAND_OUR_TIMEOUT = Referee.COMMAND_TIMEOUT_BLUE
+        self._COMMAND_THEIR_TIMEOUT = Referee.COMMAND_TIMEOUT_YELLOW
+        self._COMMAND_OUR_BALL_PLACEMENT = Referee.COMMAND_BALL_PLACEMENT_BLUE
+        self._COMMAND_THEIR_BALL_PLACEMENT = Referee.COMMAND_BALL_PLACEMENT_YELLOW
+
+        if self._our_team_is_yellow:
+            self.get_logger().info('ourteamはyellowです')
+            self._COMMAND_OUR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+            self._COMMAND_THEIR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_BLUE
+            self._COMMAND_OUR_PREPARE_PENALTY = Referee.COMMAND_PREPARE_PENALTY_YELLOW
+            self._COMMAND_THEIR_PREPARE_PENALTY = Referee.COMMAND_PREPARE_PENALTY_BLUE
+            self._COMMAND_OUR_DIRECT_FREE = Referee.COMMAND_DIRECT_FREE_YELLOW
+            self._COMMAND_THEIR_DIRECT_FREE = Referee.COMMAND_DIRECT_FREE_BLUE
+            self._COMMAND_OUR_INDIRECT_FREE = Referee.COMMAND_INDIRECT_FREE_YELLOW
+            self._COMMAND_THEIR_INDIRECT_FREE = Referee.COMMAND_INDIRECT_FREE_BLUE
+            self._COMMAND_OUR_TIMEOUT = Referee.COMMAND_TIMEOUT_YELLOW
+            self._COMMAND_THEIR_TIMEOUT = Referee.COMMAND_TIMEOUT_BLUE
+            self._COMMAND_OUR_BALL_PLACEMENT = Referee.COMMAND_BALL_PLACEMENT_YELLOW
+            self._COMMAND_THEIR_BALL_PLACEMENT = Referee.COMMAND_BALL_PLACEMENT_BLUE
+        else:
+            self.get_logger().info('ourteamはblueです')
+
+        self._stage = -1
+        self._command_counter = 0
+        self._current_command = 0
+        self._prev_command = 0
+
     def _referee_callback(self, msg):
-        self.get_logger().info("received!")
+        # コマンドのカウント値が変化したら、コマンドを更新する
+        if msg.command_counter != self._command_counter:
+            self._prev_command = self._current_command
+            self._current_command = msg.command
+            self._command_counter = msg.command_counter
+
+        self._stage = msg.stage
+
+    def present_stage(self):
+        # ステージのテキストを返す
+        return self.STAGE_STR_DICT.get(self._referee.stage, 'NONE')
+
+    def halt(self):
+        return self._current_command == Referee.COMMAND_HALT
+
+    def stop(self):
+        return self._current_command == Referee.COMMAND_STOP
+
+    def our_pre_kickoff(self):
+        return self._current_command == self._COMMAND_OUR_PREPARE_KICKOFF
+
+    def our_kickoff(self):
+        return self._prev_command == self._COMMAND_OUR_PREPARE_KICKOFF and \
+               self._current_command == Referee.COMMAND_NORMAL_START
+
+    def their_pre_kickoff(self):
+        return self._current_command == self._COMMAND_THEIR_PREPARE_KICKOFF
+
+    def their_kickoff(self):
+        return self._prev_command == self._COMMAND_THEIR_PREPARE_KICKOFF and \
+               self._current_command == Referee.COMMAND_NORMAL_START
+
+    def our_pre_penalty(self):
+        return self._current_command == self._COMMAND_OUR_PREPARE_PENALTY
+
+    def our_penalty(self):
+        return self._prev_command == self._COMMAND_OUR_PREPARE_PENALTY and \
+               self._current_command == Referee.COMMAND_NORMAL_START
+
+    def their_pre_penalty(self):
+        return self._current_command == self._COMMAND_THEIR_PREPARE_PENALTY
+
+    def their_penalty(self):
+        return self._prev_command == self._COMMAND_THEIR_PREPARE_PENALTY and \
+               self._current_command == Referee.COMMAND_NORMAL_START
+
+    def our_direct(self):
+        return self._current_command == self._COMMAND_OUR_DIRECT_FREE
+
+    def their_direct(self):
+        return self._current_command == self._COMMAND_THEIR_DIRECT_FREE
+
+    def our_indirect(self):
+        return self._current_command == self._COMMAND_OUR_INDIRECT_FREE
+
+    def their_indirect(self):
+        return self._current_command == self._COMMAND_THEIR_INDIRECT_FREE
+
+    def our_timeout(self):
+        return self._current_command == self._COMMAND_OUR_TIMEOUT
+
+    def their_timeout(self):
+        return self._current_command == self._COMMAND_THEIR_TIMEOUT
+
+    def our_ball_placement(self):
+        return self._current_command == self._COMMAND_OUR_BALL_PLACEMENT
+
+    def their_ball_placement(self):
+        return self._current_command == self._COMMAND_THEIR_BALL_PLACEMENT
