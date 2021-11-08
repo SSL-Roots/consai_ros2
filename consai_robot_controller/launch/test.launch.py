@@ -14,9 +14,12 @@
 
 from ament_index_python.packages import get_package_share_directory
 import launch
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
 from launch_ros.actions import Node
+from launch_ros.descriptions import ComposableNode
 import os
 
 def generate_launch_description():
@@ -26,12 +29,20 @@ def generate_launch_description():
         'pid_gains.yaml'
         )
 
-    team = os.path.join(
-        get_package_share_directory('consai_robot_controller'),
-        'config',
-        'team.yaml'
-        )
+    declare_arg_gui = DeclareLaunchArgument(
+        'gui', default_value='true',
+        description=('Set "true" to run consai_visualizer.')
+    )
 
+    declare_arg_invert = DeclareLaunchArgument(
+        'invert', default_value='false',
+        description=('Set "true" to invert detection_tracked data.')
+    )
+
+    declare_arg_yellow = DeclareLaunchArgument(
+        'yellow', default_value='false',
+        description=('Set "true" to control yellow team robots.')
+    )
 
     container = ComposableNodeContainer(
             name='test_container',
@@ -43,21 +54,21 @@ def generate_launch_description():
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::Controller',
                     name='controller',
-                    parameters=[pid_gains, team],
+                    parameters=[pid_gains, {'team_is_yellow': LaunchConfiguration('yellow')}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::GrSimCommandConverter',
                     name='command_converter',
-                    parameters=[team],
+                    parameters=[{'team_is_yellow': LaunchConfiguration('yellow')}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
                     package='consai_vision_tracker',
                     plugin='consai_vision_tracker::Tracker',
                     name='tracker',
-                    parameters=[{'invert': False}],
+                    parameters=[{'invert': LaunchConfiguration('invert')}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
@@ -78,6 +89,13 @@ def generate_launch_description():
         package='consai_visualizer',
         executable='consai_visualizer',
         output='screen',
+        condition=IfCondition(LaunchConfiguration('gui'))
     )
 
-    return launch.LaunchDescription([container, visualizer])
+    return launch.LaunchDescription([
+        declare_arg_gui,
+        declare_arg_invert,
+        declare_arg_yellow,
+        container,
+        visualizer
+    ])
