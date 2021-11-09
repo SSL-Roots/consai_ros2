@@ -23,47 +23,56 @@ import rclpy
 from rclpy.executors import SingleThreadedExecutor
 
 
+def print_command():
+    # refereeのcommandを表示する
+    if referee_parser.halt():
+        print("halt")
+    elif referee_parser.stop():
+        print("stop")
+    elif referee_parser.inplay():
+        print("inplay")
+    elif referee_parser.our_pre_kickoff():
+        print("our pre kickoff")
+    elif referee_parser.our_kickoff():
+        print("our kickoff")
+    elif referee_parser.their_pre_kickoff():
+        print("their pre kickoff")
+    elif referee_parser.their_kickoff():
+        print("their kickoff")
+    elif referee_parser.our_pre_penalty():
+        print("our pre penalty")
+    elif referee_parser.our_penalty():
+        print("our penalty kick")
+    elif referee_parser.their_pre_penalty():
+        print("their pre penalty")
+    elif referee_parser.their_penalty():
+        print("their penalty kick")
+    elif referee_parser.our_direct():
+        print("our direct free kick")
+    elif referee_parser.their_direct():
+        print("their direct free kick")
+    elif referee_parser.our_indirect():
+        print("our indirect free kick")
+    elif referee_parser.their_indirect():
+        print("their indirect free kick")
+    elif referee_parser.our_timeout():
+        print("our timeout")
+    elif referee_parser.their_timeout():
+        print("their timeout")
+    elif referee_parser.our_ball_placement():
+        print("our ball placement x:{}, y:{}".format(
+            referee_parser.placement_position().x,
+            referee_parser.placement_position().y))
+    elif referee_parser.their_ball_placement():
+        print("their ball placement x:{}, y:{}".format(
+            referee_parser.placement_position().x,
+            referee_parser.placement_position().y))
+    else:
+        print("none")
+
 def main():
-    # 実行したい関数のコメントを外してください
     while rclpy.ok():
-        if referee_parser.halt():
-            print("halt")
-        elif referee_parser.stop():
-            print("stop")
-        elif referee_parser.our_pre_kickoff():
-            print("our pre kickoff")
-        elif referee_parser.our_kickoff():
-            print("our kickoff")
-        elif referee_parser.their_pre_kickoff():
-            print("their pre kickoff")
-        elif referee_parser.their_kickoff():
-            print("their kickoff")
-        elif referee_parser.our_pre_penalty():
-            print("our pre penalty")
-        elif referee_parser.our_penalty():
-            print("our penalty kick")
-        elif referee_parser.their_pre_penalty():
-            print("their pre penalty")
-        elif referee_parser.their_penalty():
-            print("their penalty kick")
-        elif referee_parser.our_direct():
-            print("our direct free kick")
-        elif referee_parser.their_direct():
-            print("their direct free kick")
-        elif referee_parser.our_indirect():
-            print("our indirect free kick")
-        elif referee_parser.their_indirect():
-            print("their indirect free kick")
-        elif referee_parser.our_timeout():
-            print("our timeout")
-        elif referee_parser.their_timeout():
-            print("their timeout")
-        elif referee_parser.our_ball_placement():
-            print("our ball placement")
-        elif referee_parser.their_ball_placement():
-            print("their ball placement")
-        else:
-            print("none")
+        print_command()
         executor.spin_once(1)
 
 if __name__ == '__main__':
@@ -72,6 +81,10 @@ if __name__ == '__main__':
         default=False,
         action='store_true',
         help='yellowロボットを動かす場合にセットする')
+    arg_parser.add_argument('--invert',
+        default=False,
+        action='store_true',
+        help='ball placementの目標座標を反転する場合にセットする')
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
@@ -79,7 +92,7 @@ if __name__ == '__main__':
     our_team_is_yellow = False
 
     operator_node = RobotOperator(args.yellow)
-    referee_parser = RefereeParser(args.yellow)
+    referee_parser = RefereeParser(args.yellow, args.invert)
 
     executor = SingleThreadedExecutor()
     executor.add_node(operator_node)
