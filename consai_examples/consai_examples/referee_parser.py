@@ -22,7 +22,6 @@ from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import Vector3
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
-import time
 
 
 # refereeトピックを解読するノード
@@ -92,7 +91,6 @@ class RefereeParser(Node):
         self._ball_pos_at_command_changing = Vector3()
         self._stage = -1
         self._command_counter = 0
-        self._command_timestamp  = 0  # seconds
         self._current_command = 0
         self._prev_command = 0
         self._placement_pos = Point()
@@ -114,40 +112,10 @@ class RefereeParser(Node):
             self._prev_command = self._current_command
             self._current_command = msg.command
             self._command_counter = msg.command_counter
-            self._command_timestamp = msg.command_timestamp * 1E-6  # microseconds to seconds
             self._ball_pos_at_command_changing = self._ball.pos
 
         # in playの判定
-        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball_in_and_out_of_play
-        # force start has been issued.
-        if self._current_command == Referee.COMMAND_FORCE_START:
-            self.get_logger().info('force startによりinplayに変わります')
-            self._current_command = self._COMMAND_INPLAY
-        # the ball moved at least 0.05 meters following a kick-off, free kick or penalty kick.
-        if self.our_kickoff() or self.their_kickoff() or \
-           self.our_direct() or self.their_direct() or \
-           self.our_indirect() or self.their_indirect() or \
-           self.our_penalty() or self.their_penalty():
-
-            diff_x = self._ball.pos.x - self._ball_pos_at_command_changing.x
-            diff_y = self._ball.pos.y - self._ball_pos_at_command_changing.y
-            if math.hypot(diff_x, diff_y) > 0.05:
-                self.get_logger().info('ボールが0.05 meter動いたためinplayに変わります')
-                self._current_command = self._COMMAND_INPLAY
-        # 10 seconds passed following a kick-off.
-        if self.our_kickoff() or self.their_kickoff():
-            if time.time() - self._command_timestamp > 10.0:
-                self.get_logger().info('kickoffから10秒経過したのでinplayに変わります')
-                self._current_command = self._COMMAND_INPLAY
-        # 5 seconds (Division A) or 10 seconds (Division B) passed following a free kick.
-        if self.our_direct() or self.our_indirect() or self.their_direct() or self.their_indirect():
-            elapsed_time = time.time() - self._command_timestamp
-            if self._division_a and elapsed_time > 5.0:
-                self.get_logger().info('free kickから5秒経過したのでinplayに変わります')
-                self._current_command = self._COMMAND_INPLAY
-            elif not self._division_a and elapsed_time > 10.0:
-                self.get_logger().info('free kickから10秒経過したのでinplayに変わります')
-                self._current_command = self._COMMAND_INPLAY
+        self._check_inplay(msg)
 
         # ボールプレースメントの目標座標
         if len(msg.designated_position) > 0:
@@ -158,6 +126,45 @@ class RefereeParser(Node):
             if self._invert_placement_pos:
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
+
+    def _check_inplay(self, msg):
+        # referee情報とフィールド情報をもとに、インプレイ状態を判定する
+        # インプレイ状態であれば、self._current_commandを上書きする
+
+        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball_in_and_out_of_play
+        # force start has been issued.
+        if self._current_command == Referee.COMMAND_FORCE_START:
+            self.get_logger().info('force startによりinplayに変わります')
+            self._current_command = self._COMMAND_INPLAY
+
+        # the ball moved at least 0.05 meters following a kick-off, free kick or penalty kick.
+        if self.our_kickoff() or self.their_kickoff() or \
+            self.our_direct() or self.their_direct() or \
+            self.our_indirect() or self.their_indirect() or \
+            self.our_penalty() or self.their_penalty():
+
+            diff_x = self._ball.pos.x - self._ball_pos_at_command_changing.x
+            diff_y = self._ball.pos.y - self._ball_pos_at_command_changing.y
+
+            if math.hypot(diff_x, diff_y) > 0.05:
+                self.get_logger().info('ボールが0.05 meter動いたためinplayに変わります')
+                self._current_command = self._COMMAND_INPLAY
+
+        # 10 seconds passed following a kick-off.
+        elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * 1E-6  # microseconds to seconds
+        if self.our_kickoff() or self.their_kickoff():
+            if elapsed_time > 10.0:
+                self.get_logger().info('kickoffから10秒経過したのでinplayに変わります')
+                self._current_command = self._COMMAND_INPLAY
+
+        # 5 seconds (Division A) or 10 seconds (Division B) passed following a free kick.
+        if self.our_direct() or self.our_indirect() or self.their_direct() or self.their_indirect():
+            if self._division_a and elapsed_time > 5.0:
+                self.get_logger().info('free kickから5秒経過したのでinplayに変わります')
+                self._current_command = self._COMMAND_INPLAY
+            elif not self._division_a and elapsed_time > 10.0:
+                self.get_logger().info('free kickから10秒経過したのでinplayに変わります')
+                self._current_command = self._COMMAND_INPLAY
 
     def present_stage(self):
         # ステージのテキストを返す
