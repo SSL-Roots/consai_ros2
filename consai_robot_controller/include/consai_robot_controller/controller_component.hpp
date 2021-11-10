@@ -68,7 +68,8 @@ private:
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
-  bool switch_to_stop_control_mode(const unsigned int robot_id);
+  bool switch_to_stop_control_mode(
+    const unsigned int robot_id, const bool success, const std::string & error_msg);
 
   std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_; 

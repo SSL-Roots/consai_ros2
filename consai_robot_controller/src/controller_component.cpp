@@ -209,18 +209,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) + " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg);
 
-    if(need_response_[robot_id]){
-      auto result = std::make_shared<RobotControl::Result>();
-      result->success = false;
-      result->message = error_msg;
-      goal_handle_[robot_id]->abort(result);
-      need_response_[robot_id] = false;
-    }
-
-    control_enable_[robot_id] = false;
-    timer_pub_control_command_[robot_id]->cancel();
-    timer_pub_stop_command_[robot_id]->reset();
-    pub_command_[robot_id]->publish(std::move(command_msg));
+    switch_to_stop_control_mode(robot_id, false, error_msg);
     return;
   }
 
@@ -282,19 +271,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // 目標値に到達した後に制御完了応答を返し、
     // 速度指令値を0にする
     if(need_response_[robot_id]){
-      auto result = std::make_shared<RobotControl::Result>();
-      result->success = true;
-      result->message = "Success!";
-      goal_handle_[robot_id]->succeed(result);
-      control_enable_[robot_id] = false;
-      need_response_[robot_id] = false;
-      timer_pub_control_command_[robot_id]->cancel();
-      timer_pub_stop_command_[robot_id]->reset();
-      // 停止コマンドを送信する
-      auto stop_command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
-      stop_command_msg->robot_id = robot_id;
-      stop_command_msg->team_is_yellow = team_is_yellow_;
-      pub_command_[robot_id]->publish(std::move(stop_command_msg));
+      switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
     }
   }
 }
@@ -406,7 +383,7 @@ void Controller::handle_stop_control(const std::shared_ptr<StopControl::Request>
     std::shared_ptr<StopControl::Response> response) {
   // stop_controlサービスのハンドラ
   auto robot_id = request->robot_id;
-  if(switch_to_stop_control_mode(robot_id)){
+  if(switch_to_stop_control_mode(robot_id, false, "StopControlサービスがコールされました")){
     response->success = true;
     response->message = "ID:" + std::to_string(robot_id) + " のロボットを停止しました。";
   } else {
@@ -480,7 +457,9 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
   return false;
 }
 
-bool Controller::switch_to_stop_control_mode(const unsigned int robot_id) {
+
+bool Controller::switch_to_stop_control_mode(
+  const unsigned int robot_id, const bool success, const std::string & error_msg) {
   // 指定されたIDのロボットの制御を終了し、停止制御モードに切り替える
 
   if (robot_id >= ROBOT_NUM) {
@@ -491,8 +470,8 @@ bool Controller::switch_to_stop_control_mode(const unsigned int robot_id) {
   // アクションサーバが動いているときは、応答を返す
   if(need_response_[robot_id]){
     auto result = std::make_shared<RobotControl::Result>();
-    result->success = false;
-    result->message = "StopControlサービスがコールされました";
+    result->success = success;
+    result->message = error_msg;
     goal_handle_[robot_id]->abort(result);
   }
 
