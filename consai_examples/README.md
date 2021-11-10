@@ -80,3 +80,21 @@ $ ros2 launch consai_examples start.launch.py yellow:=true
 # pythonの引数--yellowを追加
 $ ros2 run consai_examples control.py --yellow
 ```
+
+## refereeコマンドに合わせてロボットを動かす
+
+次のコマンドを実行して、コントローラを起動します。
+
+```sh
+$ ros2 launch consai_examples start.launch.py
+```
+
+別のターミナルで、pythonスクリプトを実行します。
+
+```sh
+$ ros2 run consai_examples control_by_referee.py
+```
+
+### 解説
+
+`control_by_referee.py`は`referee`トピックの使い方を知るためのスクリプトです。
