@@ -28,6 +28,7 @@ namespace consai_robot_controller
 using namespace std::chrono_literals;
 namespace tools = geometry_tools;
 
+const int ROBOT_NUM = 16;
 const std::string PREFIX_VX = "vx_";
 const std::string PREFIX_VY = "vy_";
 const std::string PREFIX_VTHETA = "vtheta_";
@@ -77,7 +78,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
 
-  const int ROBOT_NUM = 16;
   for(int i=0; i<ROBOT_NUM; i++){
     std::string name_space = team_color + std::to_string(i);
     pub_command_.push_back(create_publisher<consai_msgs::msg::RobotCommand>(
@@ -137,7 +137,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     );
     timer_pub_control_command_[i]->cancel();  // タイマーを停止
     timer_pub_stop_command_.push_back(
-      create_wall_timer(1s, [this, robot_id = i] () { this->on_timer_pub_stop_command(robot_id);}
+      create_wall_timer(100ms, [this, robot_id = i] () { this->on_timer_pub_stop_command(robot_id);}
       )
     );
 
@@ -151,6 +151,9 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
+
+  server_stop_control_ = create_service<StopControl>(
+    "stop_control", std::bind(&Controller::handle_stop_control, this, _1, _2));
 
   auto param_change_callback = 
     [this](std::vector<rclcpp::Parameter> parameters){
@@ -399,6 +402,19 @@ void Controller::handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_ha
   goal_handle_[robot_id] = goal_handle;
 }
 
+void Controller::handle_stop_control(const std::shared_ptr<StopControl::Request> request,
+    std::shared_ptr<StopControl::Response> response) {
+  // stop_controlサービスのハンドラ
+  auto robot_id = request->robot_id;
+  if(switch_to_stop_control_mode(robot_id)){
+    response->success = true;
+    response->message = "ID:" + std::to_string(robot_id) + " のロボットを停止しました。";
+  } else {
+    response->success = false;
+    response->message = "ID:" + std::to_string(robot_id) + " のロボットを停止に失敗しました。";
+  }
+}
+
 State Controller::limit_world_velocity(const State & velocity) const
 {
   // ワールド座標系のロボット速度に制限を掛ける
@@ -462,6 +478,39 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
     return true;
   }
   return false;
+}
+
+bool Controller::switch_to_stop_control_mode(const unsigned int robot_id) {
+  // 指定されたIDのロボットの制御を終了し、停止制御モードに切り替える
+
+  if (robot_id >= ROBOT_NUM) {
+    RCLCPP_WARN(this->get_logger(), "無効なロボットID: %d(>=%d)です", robot_id, ROBOT_NUM);
+    return false;
+  }
+
+  // アクションサーバが動いているときは、応答を返す
+  if(need_response_[robot_id]){
+    auto result = std::make_shared<RobotControl::Result>();
+    result->success = false;
+    result->message = "StopControlサービスがコールされました";
+    goal_handle_[robot_id]->abort(result);
+  }
+
+  // 制御を禁止
+  control_enable_[robot_id] = false;
+  // アクションの応答フラグを無効化
+  need_response_[robot_id] = false;
+  // 制御タイマーを停止
+  timer_pub_control_command_[robot_id]->cancel();
+  // ストップ信号タイマーを最下位
+  timer_pub_stop_command_[robot_id]->reset();
+  // 停止コマンドを送信する
+  auto stop_command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  stop_command_msg->robot_id = robot_id;
+  stop_command_msg->team_is_yellow = team_is_yellow_;
+  pub_command_[robot_id]->publish(std::move(stop_command_msg));
+
+  return true;
 }
 
 }  // namespace consai_robot_controller

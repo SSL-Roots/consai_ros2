@@ -18,9 +18,10 @@
 #include <memory>
 
 #include "control_toolbox/pid.hpp"
+#include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/robot_command.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
-#include "consai_msgs/action/robot_control.hpp"
+#include "consai_msgs/srv/stop_control.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
@@ -35,6 +36,7 @@ using State = consai_msgs::msg::State2D;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using namespace robocup_ssl_msgs::msg;
+using StopControl = consai_msgs::srv::StopControl;
 
 
 class Controller : public rclcpp::Node
@@ -61,9 +63,12 @@ private:
     const std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
   void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
+  void handle_stop_control(const std::shared_ptr<StopControl::Request> request,
+    std::shared_ptr<StopControl::Response> response);
   State limit_world_velocity(const State & velocity) const;
   State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
+  bool switch_to_stop_control_mode(const unsigned int robot_id);
 
   std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_; 
@@ -82,6 +87,7 @@ private:
   consai_robot_controller::FieldInfoParser parser_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
+  rclcpp::Service<StopControl>::SharedPtr server_stop_control_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
   OnSetParametersCallbackHandle::SharedPtr handler_change_param_;
