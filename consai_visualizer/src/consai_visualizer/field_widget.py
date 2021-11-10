@@ -14,22 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import State2D
 from enum import Enum
 import math
+
+from python_qt_binding.QtCore import QPoint
+from python_qt_binding.QtCore import QPointF
+from python_qt_binding.QtCore import QRect
+from python_qt_binding.QtCore import QSize
+from python_qt_binding.QtCore import Qt
+from python_qt_binding.QtGui import QColor
+from python_qt_binding.QtGui import QPainter
+from python_qt_binding.QtGui import QPen
 from python_qt_binding.QtWidgets import QWidget
-from python_qt_binding.QtGui import QPainter, QPen, QFont, QColor
-from python_qt_binding.QtCore import Qt, QSize, QRect, QPoint, QPointF
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import BallReplacement
+from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotId
+from robocup_ssl_msgs.msg import TrackedFrame
+
 
 class ClickedObject(Enum):
     IS_NONE = 0
     IS_BALL_POS = 1
     IS_BALL_VEL = 2
+
 
 class FieldWidget(QWidget):
 
@@ -40,17 +48,19 @@ class FieldWidget(QWidget):
         # Ref: named color  https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self._COLOR_FIELD_CARPET = Qt.green
         self._COLOR_FIELD_LINE = Qt.white
-        self._COLOR_BALL = QColor("orange")
+        self._COLOR_BALL = QColor('orange')
         self._COLOR_BLUE_ROBOT = Qt.cyan
         self._COLOR_YELLOW_ROBOT = Qt.yellow
-        self._COLOR_REPLACEMENT_POS = QColor("magenta")
-        self._COLOR_REPLACEMENT_VEL_ANGLE = QColor("darkviolet")
-        self._COLOR_GOAL_POSE = QColor("silver")
+        self._COLOR_REPLACEMENT_POS = QColor('magenta')
+        self._COLOR_REPLACEMENT_VEL_ANGLE = QColor('darkviolet')
+        self._COLOR_GOAL_POSE = QColor('silver')
         self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
-        self._RADIUS_BALL = 21.5  # diameter is 43 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
-        self._RADIUS_ROBOT = 90  # diameter is 180 mm. Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
+        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
+        self._RADIUS_BALL = 21.5  # diameter is 43 mm.
+        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
+        self._RADIUS_ROBOT = 90  # diameter is 180 mm.
         self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 100
         self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 200
         self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
@@ -134,7 +144,8 @@ class FieldWidget(QWidget):
 
             # ロボット、ボールをクリックしているか
             if self._can_draw_replacement:
-                self._clicked_replacement_object = self._get_clicked_replacement_object(self._mouse_clicked_point)
+                self._clicked_replacement_object = self._get_clicked_replacement_object(
+                    self._mouse_clicked_point)
 
         elif event.buttons() == Qt.RightButton:
             self._reset_draw_area_offset_and_scale()
@@ -179,7 +190,7 @@ class FieldWidget(QWidget):
         else:
             if self._draw_area_scale > self._LIMIT_SCALE:
                 self._draw_area_scale -= self._MOUSE_WHEEL_ZOOM_RATE
-        
+
         self.update()
 
     def resizeEvent(self, event):
@@ -191,7 +202,7 @@ class FieldWidget(QWidget):
         # 描画領域の中心をWidgetの中心に持ってくる
         cx = float(self.width()) * 0.5
         cy = float(self.height()) * 0.5
-        painter.translate(cx,cy)
+        painter.translate(cx, cy)
         # 描画領域の拡大・縮小
         painter.scale(self._draw_area_scale, self._draw_area_scale)
         # 描画領域の移動
@@ -208,7 +219,7 @@ class FieldWidget(QWidget):
 
         if self._can_draw_detection:
             self._draw_detection(painter)
-        
+
         if self._can_draw_detection_tracked:
             self._draw_detection_tracked(painter)
 
@@ -353,14 +364,17 @@ class FieldWidget(QWidget):
         # ゴールを描画
         painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
         rect = QRect(
-            self._convert_field_to_draw_point(self._field.field_length * 0.5, self._field.goal_width*0.5),
+            self._convert_field_to_draw_point(
+                self._field.field_length * 0.5, self._field.goal_width*0.5),
             QSize(self._field.goal_depth * self._scale_field_to_draw,
                   self._field.goal_width * self._scale_field_to_draw))
         painter.drawRect(rect)
 
         painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
         rect = QRect(
-            self._convert_field_to_draw_point(-self._field.field_length * 0.5 - self._field.goal_depth, self._field.goal_width*0.5),
+            self._convert_field_to_draw_point(
+                -self._field.field_length * 0.5 - self._field.goal_depth,
+                self._field.goal_width*0.5),
             QSize(self._field.goal_depth * self._scale_field_to_draw,
                   self._field.goal_width * self._scale_field_to_draw))
         painter.drawRect(rect)
@@ -371,7 +385,7 @@ class FieldWidget(QWidget):
         for detection in self._detections.values():
             for ball in detection.balls:
                 self._draw_detection_ball(painter, ball, detection.camera_id)
-            
+
             for robot in detection.robots_yellow:
                 self._draw_detection_yellow_robot(painter, robot, detection.camera_id)
 
@@ -386,7 +400,7 @@ class FieldWidget(QWidget):
 
         for robot in self._detection_tracked.robots:
             self._draw_tracked_robot(painter, robot)
-    
+
     def _draw_replacement(self, painter):
         # grSim Replacementの描画
         for detection in self._detections.values():
@@ -404,7 +418,7 @@ class FieldWidget(QWidget):
 
     def _draw_tracked_ball(self, painter, ball):
         VELOCITY_THRESH = 0.3  # m/s
-        PAINT_LENGTH = 10.0 # meters
+        PAINT_LENGTH = 10.0  # meters
 
         # detection_trackedトピックのボールを描画する
 
@@ -420,7 +434,8 @@ class FieldWidget(QWidget):
 
         painter.setPen(color_pen)
         painter.setBrush(color_brush)
-        point_pos = self._convert_field_to_draw_point(ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
+        point_pos = self._convert_field_to_draw_point(
+            ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
         size = self._RADIUS_BALL * self._scale_field_to_draw
         painter.drawEllipse(point_pos, size, size)
 
@@ -428,14 +443,15 @@ class FieldWidget(QWidget):
         if len(ball.vel) == 0:
             return
         velocity = ball.vel[0]
-        
+
         # 速度が小さければ描画しない
         if math.hypot(velocity.x, velocity.y) < VELOCITY_THRESH:
             return
         direction = math.atan2(velocity.y, velocity.x)
         vel_end_x = PAINT_LENGTH * math.cos(direction) + ball.pos.x
         vel_end_y = PAINT_LENGTH * math.sin(direction) + ball.pos.y
-        point_vel = self._convert_field_to_draw_point(vel_end_x * 1000, vel_end_y * 1000)  # meters to mm
+        point_vel = self._convert_field_to_draw_point(
+            vel_end_x * 1000, vel_end_y * 1000)  # meters to mm
 
         painter.setPen(QPen(QColor(102, 0, 255), 2))
         painter.drawLine(point_pos, point_vel)
@@ -467,7 +483,8 @@ class FieldWidget(QWidget):
 
         # ロボットID
         if len(robot.robot_id) > 0:
-            text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
+            text_point = point + \
+                self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
             painter.drawText(text_point, str(robot.robot_id[0]))
 
     def _draw_tracked_robot(self, painter, robot):
@@ -493,7 +510,8 @@ class FieldWidget(QWidget):
 
         painter.setPen(color_pen)
         painter.setBrush(color_brush)
-        point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
+        point = self._convert_field_to_draw_point(
+            robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
         size = self._RADIUS_ROBOT * self._scale_field_to_draw
         painter.drawEllipse(point, size, size)
 
@@ -526,7 +544,8 @@ class FieldWidget(QWidget):
         painter.setPen(Qt.black)
         painter.setBrush(self._COLOR_GOAL_POSE)
         # x,y座標
-        point = self._convert_field_to_draw_point(goal_pose.x * 1000, goal_pose.y * 1000)  # meters to mm
+        point = self._convert_field_to_draw_point(
+            goal_pose.x * 1000, goal_pose.y * 1000)  # meters to mm
         size = self._RADIUS_ROBOT * self._scale_field_to_draw
         painter.drawEllipse(point, size, size)
 
@@ -542,12 +561,13 @@ class FieldWidget(QWidget):
 
         # goal_poseとロボットを結ぶ直線を引く
         painter.setPen(QPen(Qt.red, 2))
-        robot_point = self._convert_field_to_draw_point(robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
+        robot_point = self._convert_field_to_draw_point(
+            robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
         painter.drawLine(point, robot_point)
-        
+
     def _draw_replacement_ball(self, painter, ball):
         # ボールのreplacementを描画する
-        
+
         # ボール速度replacement判定エリアの描画
         point = self._convert_field_to_draw_point(ball.x, ball.y)
         size = self._RADIUS_REPLACEMENT_BALL_VEL * self._scale_field_to_draw
@@ -604,7 +624,7 @@ class FieldWidget(QWidget):
         field_y /= -self._scale_field_to_draw
 
         return QPoint(field_x, field_y)
-        
+
     def _apply_transpose_to_draw_point(self, point):
         # Widget上のポイント（左上が0, 0となる座標系）を、
         # translate、scale、rotate適用後のポイントに変換する

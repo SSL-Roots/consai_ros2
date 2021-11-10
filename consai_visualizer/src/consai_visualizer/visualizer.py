@@ -15,12 +15,12 @@
 # limitations under the License.
 
 
+from functools import partial
 import os
 
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import State2D
 from consai_visualizer.field_widget import FieldWidget
-from functools import partial
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
@@ -61,32 +61,34 @@ class Visualizer(Plugin):
 
         # Subscriber、Publisherの作成
         self._sub_geometry = self._node.create_subscription(
-            GeometryData, "geometry",
+            GeometryData, 'geometry',
             self._widget.field_widget.set_field, 10)
         self._sub_detection = self._node.create_subscription(
-            DetectionFrame, "detection",
+            DetectionFrame, 'detection',
             self._widget.field_widget.set_detection, 10)
         self._sub_detection_tracked = self._node.create_subscription(
-            TrackedFrame, "detection_tracked",
+            TrackedFrame, 'detection_tracked',
             self._widget.field_widget.set_detection_tracked, 10)
 
         self._sub_goal_pose = []
         for i in range(16):
-            topic_name = "blue" + str(i) + "/goal_pose"
+            topic_name = 'blue' + str(i) + '/goal_pose'
             self._sub_goal_pose.append(self._node.create_subscription(
                 State2D, topic_name,
                 partial(self._widget.field_widget.set_blue_goal_pose, robot_id=i), 10))
-            topic_name = "yellow" + str(i) + "/goal_pose"
+            topic_name = 'yellow' + str(i) + '/goal_pose'
             self._sub_goal_pose.append(self._node.create_subscription(
                 State2D, topic_name,
                 partial(self._widget.field_widget.set_yellow_goal_pose, robot_id=i), 10))
 
-        self._widget.field_widget.set_pub_replacement(self._node.create_publisher(Replacement, 'replacement', 1))
+        self._widget.field_widget.set_pub_replacement(
+            self._node.create_publisher(Replacement, 'replacement', 1))
 
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
-        self._widget.check_box_detection_tracked.stateChanged.connect(self._clicked_detection_tracked)
+        self._widget.check_box_detection_tracked.stateChanged.connect(
+            self._clicked_detection_tracked)
         self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
 
         # チェックボックスを操作する
@@ -121,7 +123,7 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_detection_tracked(True)
         else:
             self._widget.field_widget.set_can_draw_detection_tracked(False)
-    
+
     def _clicked_replacement(self):
         if self._widget.check_box_replacement.isChecked():
             self._widget.field_widget.set_can_draw_replacement(True)
