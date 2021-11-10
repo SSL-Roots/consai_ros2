@@ -20,6 +20,7 @@ from robot_operator import RobotOperator
 import math
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
+import time
 
 def test_move_to():
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
@@ -196,9 +197,47 @@ def test_pass_four_robots():
     while operator_node.all_robots_are_free() is False:
         executor.spin_once(1)  # タイムアウト入れないとフリーズする
 
+def test_stop_robots():
+    # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
+    # 動作の途中でロボットを停止させる
+
+    # y軸上方向へ移動
+    for i in range(16):
+        operator_node.move_to(i, -5.0 + 0.5 * i, 4.0, math.pi * 0.5, False)
+    start_time = time.time()
+
+    # 数秒間待機
+    while time.time() - start_time < 2.0:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    # 5台のロボットを停止
+    print("ロボットの動作停止！")
+    for i in range(5):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    # y軸下方向へ移動
+    for i in range(16):
+        operator_node.move_to(i, -5.0 + 0.5 * i, -4.0, math.pi * 0.5, False)
+    start_time = time.time()
+
+    # 数秒間待機
+    while time.time() - start_time < 2.0:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
+    # 5台のロボットを停止
+    print("ロボットの動作停止！")
+    for i in range(5):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+
 def main():
     # 実行したい関数のコメントを外してください
-    test_move_to()
+    # test_move_to()
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
@@ -206,6 +245,7 @@ def main():
     # test_shoot(1.0, 0.0)
     # test_pass_two_robots()
     # test_pass_four_robots()
+    test_stop_robots()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
