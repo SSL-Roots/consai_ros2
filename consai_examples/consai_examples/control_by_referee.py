@@ -21,6 +21,8 @@ from referee_parser import RefereeParser
 import math
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
+import threading
+import time
 
 
 def print_command():
@@ -70,10 +72,49 @@ def print_command():
     else:
         print("none")
 
+def stop_operation():
+    # RefereeコマンドがSTOPのときの動作
+    # 0番のロボットをボール近くへ動かす
+
+    # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_stop
+
+    print("STOPでは、全てのロボットは1.5 m/s未満に減速しなければなりません")
+    print("全てのロボットはボールから0.5メートルの距離を取らなければなりません")
+    print("ボールを蹴ったりドリブルしたりしてはいけません")
+    operator_node.chase_ball(0, -0.6, 0.0, 0.0, False, True)
+
+    while referee_parser.stop():
+        time.sleep(1) # コマンドが変わるまで待機
+
+def halt_operation():
+    # RefereeコマンドがHALTのときの動作
+    # 全てのロボットを停止させる
+
+    # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_halt
+    print("HALTではロボットを動かしてはいけません")
+    print("ロボットが止まるまでに2秒の猶予があります")
+    for i in range(16):
+        operator_node.stop(i)
+
+    while referee_parser.halt():
+        time.sleep(1) # コマンドが変わるまで待機
+
+def default_operation():
+    # 全てのロボットを停止させて1秒待機する
+
+    for i in range(16):
+        operator_node.stop(i)
+    time.sleep(1)
+
 def main():
     while rclpy.ok():
         print_command()
-        executor.spin_once(1)
+        if referee_parser.halt():
+            halt_operation()
+        elif referee_parser.stop():
+            stop_operation()
+        else:
+            default_operation()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -98,10 +139,14 @@ if __name__ == '__main__':
     executor.add_node(operator_node)
     executor.add_node(referee_parser)
 
+    # エグゼキュータは別スレッドでspinさせ続ける
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
+
     try:
         main()
     except KeyboardInterrupt:
         pass
 
-    executor.shutdown()
     rclpy.shutdown()
+    executor.shutdown()
