@@ -13,6 +13,9 @@
 // limitations under the License.
 
 #include <chrono>
+#include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
@@ -35,19 +38,19 @@ Vision::Vision(const rclcpp::NodeOptions & options)
 
 void Vision::on_timer()
 {
-  while(receiver_->available()){
+  while (receiver_->available()) {
     std::vector<char> buf(2048);
     const size_t size = receiver_->receive(buf);
 
-    if(size > 0){
+    if (size > 0) {
       SSL_WrapperPacket packet;
       packet.ParseFromString(std::string(buf.begin(), buf.end()));
 
-      if(packet.has_detection()){
+      if (packet.has_detection()) {
         publish_detection(packet.detection());
       }
-        
-      if(packet.has_geometry()){
+
+      if (packet.has_geometry()) {
         publish_geometry(packet.geometry());
       }
     }
@@ -63,43 +66,43 @@ void Vision::publish_detection(const SSL_DetectionFrame & detection_frame)
   detection_msg->t_sent = detection_frame.t_sent();
   detection_msg->camera_id = detection_frame.camera_id();
 
-  for(const auto& ball : detection_frame.balls()){
+  for (const auto & ball : detection_frame.balls()) {
     robocup_ssl_msgs::msg::DetectionBall detection_ball;
     detection_ball.confidence = ball.confidence();
-    if(ball.has_area()) detection_ball.area.push_back(ball.area());
+    if (ball.has_area()) {detection_ball.area.push_back(ball.area());}
     detection_ball.x = ball.x();
     detection_ball.y = ball.y();
-    if(ball.has_z()) detection_ball.z.push_back(ball.z());
+    if (ball.has_z()) {detection_ball.z.push_back(ball.z());}
     detection_ball.pixel_x = ball.pixel_x();
     detection_ball.pixel_y = ball.pixel_y();
 
     detection_msg->balls.push_back(detection_ball);
   }
 
-  for(const auto& robot : detection_frame.robots_yellow()){
+  for (const auto & robot : detection_frame.robots_yellow()) {
     robocup_ssl_msgs::msg::DetectionRobot msg_robot;
     msg_robot.confidence = robot.confidence();
-    if(robot.has_robot_id()) msg_robot.robot_id.push_back(robot.robot_id());
+    if (robot.has_robot_id()) {msg_robot.robot_id.push_back(robot.robot_id());}
     msg_robot.x = robot.x();
     msg_robot.y = robot.y();
-    if(robot.has_orientation()) msg_robot.orientation.push_back(robot.orientation());
+    if (robot.has_orientation()) {msg_robot.orientation.push_back(robot.orientation());}
     msg_robot.pixel_x = robot.pixel_x();
     msg_robot.pixel_y = robot.pixel_y();
-    if(robot.has_height()) msg_robot.height.push_back(robot.height());
+    if (robot.has_height()) {msg_robot.height.push_back(robot.height());}
 
     detection_msg->robots_yellow.push_back(msg_robot);
   }
 
-  for(const auto& robot : detection_frame.robots_blue()){
+  for (const auto & robot : detection_frame.robots_blue()) {
     robocup_ssl_msgs::msg::DetectionRobot msg_robot;
     msg_robot.confidence = robot.confidence();
-    if(robot.has_robot_id()) msg_robot.robot_id.push_back(robot.robot_id());
+    if (robot.has_robot_id()) {msg_robot.robot_id.push_back(robot.robot_id());}
     msg_robot.x = robot.x();
     msg_robot.y = robot.y();
-    if(robot.has_orientation()) msg_robot.orientation.push_back(robot.orientation());
+    if (robot.has_orientation()) {msg_robot.orientation.push_back(robot.orientation());}
     msg_robot.pixel_x = robot.pixel_x();
     msg_robot.pixel_y = robot.pixel_y();
-    if(robot.has_height()) msg_robot.height.push_back(robot.height());
+    if (robot.has_height()) {msg_robot.height.push_back(robot.height());}
 
     detection_msg->robots_blue.push_back(msg_robot);
   }
@@ -110,7 +113,7 @@ void Vision::publish_geometry(const SSL_GeometryData & geometry_data)
 {
   auto geometry_msg = std::make_unique<robocup_ssl_msgs::msg::GeometryData>();
   set_geometry_field_size(geometry_msg->field, geometry_data.field());
-  for(const auto& data_calib : geometry_data.calib()){
+  for (const auto & data_calib : geometry_data.calib()) {
     geometry_msg->calib.push_back(parse_calib(data_calib));
   }
 
@@ -126,7 +129,7 @@ void Vision::set_geometry_field_size(
   msg_field.goal_width = data_field.goal_width();
   msg_field.goal_depth = data_field.goal_depth();
   msg_field.boundary_width = data_field.boundary_width();
-  for(const auto& line : data_field.field_lines()){
+  for (const auto & line : data_field.field_lines()) {
     robocup_ssl_msgs::msg::FieldLineSegment msg_line;
     msg_line.name = line.name();
     msg_line.p1.x = line.p1().x();
@@ -134,11 +137,11 @@ void Vision::set_geometry_field_size(
     msg_line.p2.x = line.p2().x();
     msg_line.p2.y = line.p2().y();
     msg_line.thickness = line.thickness();
-    if(line.has_type()) msg_line.type.push_back(line.type());
+    if (line.has_type()) {msg_line.type.push_back(line.type());}
 
     msg_field.field_lines.push_back(msg_line);
   }
-  for(const auto& arc : data_field.field_arcs()){
+  for (const auto & arc : data_field.field_arcs()) {
     robocup_ssl_msgs::msg::FieldCircularArc msg_arc;
     msg_arc.name = arc.name();
     msg_arc.center.x = arc.center().x();
@@ -147,14 +150,16 @@ void Vision::set_geometry_field_size(
     msg_arc.a1 = arc.a1();
     msg_arc.a2 = arc.a2();
     msg_arc.thickness = arc.thickness();
-    if(arc.has_type()) msg_arc.type.push_back(arc.type());
+    if (arc.has_type()) {msg_arc.type.push_back(arc.type());}
 
     msg_field.field_arcs.push_back(msg_arc);
   }
-  if(data_field.has_penalty_area_depth())
+  if (data_field.has_penalty_area_depth()) {
     msg_field.penalty_area_depth.push_back(data_field.penalty_area_depth());
-  if(data_field.has_penalty_area_width())
+  }
+  if (data_field.has_penalty_area_width()) {
     msg_field.penalty_area_width.push_back(data_field.penalty_area_width());
+  }
 }
 
 robocup_ssl_msgs::msg::GeometryCameraCalibration Vision::parse_calib(
@@ -173,16 +178,21 @@ robocup_ssl_msgs::msg::GeometryCameraCalibration Vision::parse_calib(
   msg_calib.tx = data_calib.tx();
   msg_calib.ty = data_calib.ty();
   msg_calib.tz = data_calib.tz();
-  if(data_calib.has_derived_camera_world_tx())
+  if (data_calib.has_derived_camera_world_tx()) {
     msg_calib.derived_camera_world_tx.push_back(data_calib.derived_camera_world_tx());
-  if(data_calib.has_derived_camera_world_ty())
+  }
+  if (data_calib.has_derived_camera_world_ty()) {
     msg_calib.derived_camera_world_ty.push_back(data_calib.derived_camera_world_ty());
-  if(data_calib.has_derived_camera_world_tz())
+  }
+  if (data_calib.has_derived_camera_world_tz()) {
     msg_calib.derived_camera_world_tz.push_back(data_calib.derived_camera_world_tz());
-  if(data_calib.has_pixel_image_width())
+  }
+  if (data_calib.has_pixel_image_width()) {
     msg_calib.pixel_image_width.push_back(data_calib.pixel_image_width());
-  if(data_calib.has_pixel_image_height())
+  }
+  if (data_calib.has_pixel_image_height()) {
     msg_calib.pixel_image_height.push_back(data_calib.pixel_image_height());
+  }
 
   return msg_calib;
 }

@@ -15,6 +15,11 @@
 #include "robocup_ssl_comm/game_controller_component.hpp"
 
 #include <chrono>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/point.hpp"
 
@@ -76,13 +81,14 @@ void GameController::on_timer()
   }
 }
 
-robocup_ssl_msgs::msg::TeamInfo GameController::parse_team_info(const Referee_TeamInfo &team_info) {
+robocup_ssl_msgs::msg::TeamInfo GameController::parse_team_info(const Referee_TeamInfo & team_info)
+{
   robocup_ssl_msgs::msg::TeamInfo parsed_team_info;
 
   parsed_team_info.name = team_info.name();
   parsed_team_info.score = team_info.score();
   parsed_team_info.red_cards = team_info.red_cards();
-  for(auto time : team_info.yellow_card_times()){
+  for (auto time : team_info.yellow_card_times()) {
     parsed_team_info.yellow_card_times.push_back(time);
   }
   parsed_team_info.yellow_cards = team_info.yellow_cards();
@@ -105,7 +111,8 @@ robocup_ssl_msgs::msg::TeamInfo GameController::parse_team_info(const Referee_Te
     parsed_team_info.bot_substitution_intent.push_back(team_info.bot_substitution_intent());
   }
   if (team_info.has_ball_placement_failures_reached()) {
-    parsed_team_info.ball_placement_failures_reached.push_back(team_info.ball_placement_failures_reached());
+    parsed_team_info.ball_placement_failures_reached.push_back(
+      team_info.ball_placement_failures_reached());
   }
 
   return parsed_team_info;

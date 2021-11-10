@@ -39,7 +39,9 @@ ament_target_dependencies(vision_component
   rclcpp_components
   robocup_ssl_msgs
 )
-target_link_libraries(vision_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(vision_component
+  ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES}
+)
 rclcpp_components_register_nodes(vision_component "robocup_ssl_comm::Vision")
 
 # Game Controller Component
@@ -53,7 +55,9 @@ ament_target_dependencies(game_controller_component
   rclcpp_components
   robocup_ssl_msgs
 )
-target_link_libraries(game_controller_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(game_controller_component
+  ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES}
+)
 rclcpp_components_register_nodes(game_controller_component "robocup_ssl_comm::GameController")
 
 # GrSim Component
@@ -67,7 +71,9 @@ ament_target_dependencies(grsim_component
   rclcpp_components
   robocup_ssl_msgs
 )
-target_link_libraries(grsim_component ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(grsim_component
+  ${robocup_ssl_msgs_LIBRARIES} ${Boost_LIBRARIES}
+)
 rclcpp_components_register_nodes(grsim_component "robocup_ssl_comm::GrSim")
 
 # Exports
