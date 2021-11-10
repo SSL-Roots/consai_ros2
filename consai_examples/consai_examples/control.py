@@ -20,6 +20,7 @@ from robot_operator import RobotOperator
 import math
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
+import threading
 import time
 
 def test_move_to():
@@ -27,14 +28,16 @@ def test_move_to():
     for i in range(16):
         operator_node.move_to(i, -5.0 + 0.5 * i, 4.0, math.pi * 0.5, False)
 
+    # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
+    # 制御継続フラグがTrueなので、ロボットはすぐにフリー状態になる
     for i in range(16):
         operator_node.move_to(i, -5.0 + 0.5 * i, -4.0, -math.pi * 0.5, True)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_move_to_normalized(divide_n=3):
     # ID0のロボットはフィールド中央に、
@@ -56,7 +59,7 @@ def test_move_to_normalized(divide_n=3):
     operator_node.move_to_normalized(8, -size, size, 0.0, False)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     for i in range(1, divide_n):
         size = 1.0 / (i + 1)
@@ -72,7 +75,7 @@ def test_move_to_normalized(divide_n=3):
         operator_node.move_to_normalized(7, -size, 0.0, 0.0, False)
         operator_node.move_to_normalized(8, -size, size, 0.0, False)
         while operator_node.all_robots_are_free() is False:
-            executor.spin_once(1)  # タイムアウト入れないとフリーズする
+            pass
 
         # 番号をずらして回転
         operator_node.move_to_normalized(8, 0.0, size, 0.0, False)
@@ -84,7 +87,7 @@ def test_move_to_normalized(divide_n=3):
         operator_node.move_to_normalized(6, -size, 0.0, 0.0, False)
         operator_node.move_to_normalized(7, -size, size, 0.0, False)
         while operator_node.all_robots_are_free() is False:
-            executor.spin_once(1)  # タイムアウト入れないとフリーズする
+            pass
 
 def test_chase_ball():
     # ボールの右側に、2次関数のように並ぶ
@@ -92,14 +95,14 @@ def test_chase_ball():
         operator_node.chase_ball(i, 0.2 + 0.2*i, 0.05 * i*i, 0.1 * math.pi * i, True, False)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     # ボールを見る
     for i in range(16):
         operator_node.chase_ball(i, 0.2 + 0.2*i, 0.05 * i*i, 0.0, False, True)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_chase_robot():
     # 全ロボットが、別のチームカラーの同じIDのロボットの左上に移動する
@@ -108,7 +111,7 @@ def test_chase_robot():
             i, not operator_node.target_is_yellow(), i, -0.2, 0.2, 0.0, True, False)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     # 左横に移動する
     for i in range(16):
@@ -116,7 +119,7 @@ def test_chase_robot():
             i, not operator_node.target_is_yellow(), i, -0.2, 0.0, 0.0, False, True)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=False, test_theta=False):
     # PID調整用の関数
@@ -132,13 +135,13 @@ def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=
                 operator_node.move_to_normalized(i, -x, 1.0 - 2.0 * i / 16.0, 0.0, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
             for i in range(16):
                 operator_node.move_to_normalized(i, x, 1.0 - 2.0 * i / 16.0, 0.0, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
     # 上下
     if test_y:
@@ -147,13 +150,13 @@ def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=
                 operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, y, math.pi * 0.5, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
             for i in range(16):
                 operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, -y, math.pi * 0.5, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
     if test_theta:
         for theta in pattern:
@@ -161,13 +164,13 @@ def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=
                 operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, 0.5, math.pi * theta, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
             for i in range(16):
                 operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, 0.5, -math.pi * theta, False)
 
             while operator_node.all_robots_are_free() is False:
-                executor.spin_once(1)  # タイムアウト入れないとフリーズする
+                pass
 
 def test_shoot(target_x, target_y):
     # ID0ロボットがフィールド中央に移動して、ターゲット座標に向かってボールを蹴る
@@ -176,7 +179,7 @@ def test_shoot(target_x, target_y):
     operator_node.shoot(0, pos_x, pos_y, target_x, target_y)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_pass_two_robots():
     # 2台のロボットでパスし合う
@@ -184,7 +187,7 @@ def test_pass_two_robots():
     operator_node.kick_pass(1, 0, 3.0, 0.0)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_pass_four_robots():
     # 4台のロボットでパスし合う
@@ -195,7 +198,7 @@ def test_pass_four_robots():
     operator_node.kick_pass(3, 0, -3.0, -3.0)
 
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def test_stop_robots():
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
@@ -208,7 +211,7 @@ def test_stop_robots():
 
     # 数秒間待機
     while time.time() - start_time < 2.0:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     # 5台のロボットを停止
     print("ロボットの動作停止！")
@@ -216,7 +219,7 @@ def test_stop_robots():
         operator_node.stop(i)
     # 動作完了まで待機
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     # y軸下方向へ移動
     for i in range(16):
@@ -225,7 +228,7 @@ def test_stop_robots():
 
     # 数秒間待機
     while time.time() - start_time < 2.0:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
     # 5台のロボットを停止
     print("ロボットの動作停止！")
@@ -233,11 +236,11 @@ def test_stop_robots():
         operator_node.stop(i)
     # 動作完了まで待機
     while operator_node.all_robots_are_free() is False:
-        executor.spin_once(1)  # タイムアウト入れないとフリーズする
+        pass
 
 def main():
     # 実行したい関数のコメントを外してください
-    # test_move_to()
+    test_move_to()
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
@@ -245,7 +248,7 @@ def main():
     # test_shoot(1.0, 0.0)
     # test_pass_two_robots()
     # test_pass_four_robots()
-    test_stop_robots()
+    # test_stop_robots()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -261,6 +264,10 @@ if __name__ == '__main__':
 
     executor = SingleThreadedExecutor()
     executor.add_node(operator_node)
+
+    # エグゼキュータは別スレッドでspinさせ続ける
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
 
     try:
         main()
