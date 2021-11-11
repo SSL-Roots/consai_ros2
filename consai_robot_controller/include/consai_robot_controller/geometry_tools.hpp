@@ -16,6 +16,8 @@
 #define CONSAI_ROBOT_CONTROLLER__GEOMETRY_TOOLS_HPP_
 
 #include <complex>
+#include <algorithm>
+
 #include "consai_msgs/msg/state2_d.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -24,7 +26,8 @@ namespace geometry_tools
 {
 
 using State = consai_msgs::msg::State2D;
-using namespace robocup_ssl_msgs::msg;
+using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
+using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 double calc_angle(const State & from_pose, const State & to_pose);
 double normalize_theta(const double theta);
@@ -38,17 +41,18 @@ class Trans
 {
 public:
   Trans(const State & center, const double theta);
-  State transform(const State & pose) const ;
-  State inverted_transform(const State & pose) const ;
-  State inverted_transform(const double x, const double y, const double theta) const ;
-  double transform_theta(const double theta) const ;
-  double inverted_transform_theta(const double theta) const ;
+  State transform(const State & pose) const;
+  State inverted_transform(const State & pose) const;
+  State inverted_transform(const double x, const double y, const double theta) const;
+  double transform_theta(const double theta) const;
+  double inverted_transform_theta(const double theta) const;
+
 private:
   std::complex<double> center_;
   std::complex<double> rotation_;
   double theta_;
 };
 
-}
+}  // namespace geometry_tools
 
 #endif  // CONSAI_ROBOT_CONTROLLER__GEOMETRY_TOOLS_HPP_

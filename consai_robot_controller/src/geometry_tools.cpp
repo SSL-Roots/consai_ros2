@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
+#include <algorithm>
 #include <cmath>
+
 #include "consai_robot_controller/geometry_tools.hpp"
 
 namespace geometry_tools
@@ -32,8 +33,8 @@ double normalize_theta(const double theta)
 {
   // 角度を-pi ~ piに納める
   double retval = theta;
-  while(retval >= M_PI) retval -= 2.0 * M_PI;
-  while(retval <= -M_PI) retval += 2.0 * M_PI;
+  while (retval >= M_PI) {retval -= 2.0 * M_PI;}
+  while (retval <= -M_PI) {retval += 2.0 * M_PI;}
   return retval;
 }
 
@@ -45,7 +46,8 @@ double distance(const State & pose1, const State & pose2)
   return std::hypot(diff_x, diff_y);
 }
 
-State pose_state(const TrackedRobot & robot) {
+State pose_state(const TrackedRobot & robot)
+{
   State state;
   state.x = robot.pos.x;
   state.y = robot.pos.y;
@@ -53,7 +55,8 @@ State pose_state(const TrackedRobot & robot) {
   return state;
 }
 
-State pose_state(const TrackedBall & ball) {
+State pose_state(const TrackedBall & ball)
+{
   State state;
   state.x = ball.pos.x;
   state.y = ball.pos.y;
@@ -61,12 +64,14 @@ State pose_state(const TrackedBall & ball) {
   return state;
 }
 
-double to_radians(const double degrees) {
+double to_radians(const double degrees)
+{
   constexpr double TO_RADIANS = M_PI / 180.0;
   return degrees * TO_RADIANS;
 }
 
-double to_degrees(const double radians) {
+double to_degrees(const double radians)
+{
   constexpr double TO_DEGREES = 180.0 / M_PI;
   return radians * TO_DEGREES;
 }
@@ -78,7 +83,7 @@ Trans::Trans(const State & center, const double theta)
   rotation_ = std::polar(1.0, theta_);
 }
 
-State Trans::transform(const State & pose) const 
+State Trans::transform(const State & pose) const
 {
   std::complex<double> point(pose.x, pose.y);
   auto transformed_point = (point - center_) * std::conj(rotation_);
@@ -90,7 +95,7 @@ State Trans::transform(const State & pose) const
   return transformed_pose;
 }
 
-State Trans::inverted_transform(const State & pose) const 
+State Trans::inverted_transform(const State & pose) const
 {
   std::complex<double> point(pose.x, pose.y);
   auto inverted_point = point * rotation_ + center_;
@@ -102,7 +107,8 @@ State Trans::inverted_transform(const State & pose) const
   return inverted_pose;
 }
 
-State Trans::inverted_transform(const double x, const double y, const double theta) const {
+State Trans::inverted_transform(const double x, const double y, const double theta) const
+{
   std::complex<double> point(x, y);
   auto inverted_point = point * rotation_ + center_;
 
@@ -113,14 +119,14 @@ State Trans::inverted_transform(const double x, const double y, const double the
   return inverted_pose;
 }
 
-double Trans::transform_theta(const double theta) const 
+double Trans::transform_theta(const double theta) const
 {
   return normalize_theta(theta - theta_);
 }
 
-double Trans::inverted_transform_theta(const double theta) const 
+double Trans::inverted_transform_theta(const double theta) const
 {
   return normalize_theta(theta + theta_);
 }
 
-}
+}  // namespace geometry_tools

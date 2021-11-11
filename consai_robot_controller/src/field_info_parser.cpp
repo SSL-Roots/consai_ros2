@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/geometry_tools.hpp"
@@ -20,6 +21,7 @@
 namespace consai_robot_controller
 {
 
+using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 
 FieldInfoParser::FieldInfoParser()
@@ -36,28 +38,30 @@ void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
   geometry_ = geometry;
 }
 
-bool FieldInfoParser::extract_robot(const unsigned int robot_id, const bool team_is_yellow, TrackedRobot & my_robot) const
+bool FieldInfoParser::extract_robot(
+  const unsigned int robot_id, const bool team_is_yellow,
+  TrackedRobot & my_robot) const
 {
   // detection_trackedから指定された色とIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
-  for(const auto& robot : detection_tracked_->robots){
-    if(robot_id != robot.robot_id.id){
+  for (const auto & robot : detection_tracked_->robots) {
+    if (robot_id != robot.robot_id.id) {
       continue;
     }
     bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
     bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-    if(!is_yellow && !is_blue){
+    if (!is_yellow && !is_blue) {
       continue;
     }
     // if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
     //    (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
     //   continue;
     // }
-    if(robot.visibility.size() == 0){
+    if (robot.visibility.size() == 0) {
       return false;
     }
-    if(robot.visibility[0] < VISIBILITY_THRESHOLD){
+    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
       return false;
     }
 
@@ -72,11 +76,11 @@ bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
   // detection_trackedからボール情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   const double VISIBILITY_THRESHOLD = 0.01;
-  for(const auto& ball : detection_tracked_->balls){
-    if(ball.visibility.size() == 0){
+  for (const auto & ball : detection_tracked_->balls) {
+    if (ball.visibility.size() == 0) {
       return false;
     }
-    if(ball.visibility[0] < VISIBILITY_THRESHOLD){
+    if (ball.visibility[0] < VISIBILITY_THRESHOLD) {
       return false;
     }
 
@@ -86,14 +90,16 @@ bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
   return true;
 }
 
-bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const
+bool FieldInfoParser::parse_goal(
+  const std::shared_ptr<const RobotControl::Goal> goal,
+  State & parsed_pose) const
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
 
   State target_pose;
-  if(goal->pose.size() > 0){
-    if(parse_constraint_pose(goal->pose[0], target_pose)){
+  if (goal->pose.size() > 0) {
+    if (parse_constraint_pose(goal->pose[0], target_pose)) {
       parsed_pose = target_pose;
       return true;
     }
@@ -102,9 +108,10 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
   return false;
 }
 
-bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal> goal,
-                  const TrackedRobot & my_robot, State & parsed_pose,
-                  double & kick_power, double & dribble_power) const
+bool FieldInfoParser::parse_goal(
+  const std::shared_ptr<const RobotControl::Goal> goal,
+  const TrackedRobot & my_robot, State & parsed_pose,
+  double & kick_power, double & dribble_power) const
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
@@ -135,8 +142,9 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
 
   // ボール蹴る
   State kick_target;
-  if (goal->kick_shoot && 
-      parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y)) {
+  if (goal->kick_shoot &&
+    parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y))
+  {
     // 目標姿勢とボールが近ければ、キック処理を行う
     if (tools::distance(tools::pose_state(ball), target_pose) < 0.7) {
       parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
@@ -154,14 +162,14 @@ bool FieldInfoParser::parse_goal(const std::shared_ptr<const RobotControl::Goal>
 bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
 {
   double parsed_x, parsed_y;
-  if(!parse_constraint_xy(pose.xy, parsed_x, parsed_y)){
+  if (!parse_constraint_xy(pose.xy, parsed_x, parsed_y)) {
     return false;
   }
   parsed_x += pose.offset.x;
   parsed_y += pose.offset.y;
 
   double parsed_theta;
-  if(!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)){
+  if (!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)) {
     return false;
   }
 
@@ -174,23 +182,25 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
   return true;
 }
 
-bool FieldInfoParser::parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const
+bool FieldInfoParser::parse_constraint_xy(
+  const ConstraintXY & xy, double & parsed_x,
+  double & parsed_y) const
 {
   State object_pose;
-  if(xy.object.size() > 0){
-    if(parse_constraint_object(xy.object[0], object_pose)){
+  if (xy.object.size() > 0) {
+    if (parse_constraint_object(xy.object[0], object_pose)) {
       parsed_x = object_pose.x;
       parsed_y = object_pose.y;
       return true;
     }
   }
 
-  if(xy.value_x.size() > 0 && xy.value_y.size() > 0){
+  if (xy.value_x.size() > 0 && xy.value_y.size() > 0) {
     parsed_x = xy.value_x[0];
     parsed_y = xy.value_y[0];
 
     // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
-    if(xy.normalized){
+    if (xy.normalized) {
       parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
       parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
     }
@@ -200,21 +210,23 @@ bool FieldInfoParser::parse_constraint_xy(const ConstraintXY & xy, double & pars
   return false;
 }
 
-bool FieldInfoParser::parse_constraint_theta(const ConstraintTheta & theta, const double goal_x, const double goal_y, double & parsed_theta) const
+bool FieldInfoParser::parse_constraint_theta(
+  const ConstraintTheta & theta, const double goal_x,
+  const double goal_y, double & parsed_theta) const
 {
   State object_pose;
-  if(theta.object.size() > 0){
-    if(parse_constraint_object(theta.object[0], object_pose)){
-      if(theta.param == ConstraintTheta::PARAM_THETA){
+  if (theta.object.size() > 0) {
+    if (parse_constraint_object(theta.object[0], object_pose)) {
+      if (theta.param == ConstraintTheta::PARAM_THETA) {
         parsed_theta = object_pose.theta;
         return true;
-      }else if(theta.param == ConstraintTheta::PARAM_LOOK_TO){
+      } else if (theta.param == ConstraintTheta::PARAM_LOOK_TO) {
         State goal_pose;
         goal_pose.x = goal_x;
         goal_pose.y = goal_y;
         parsed_theta = tools::calc_angle(goal_pose, object_pose);
         return true;
-      }else if(theta.param == ConstraintTheta::PARAM_LOOK_FROM){
+      } else if (theta.param == ConstraintTheta::PARAM_LOOK_FROM) {
         State goal_pose;
         goal_pose.x = goal_x;
         goal_pose.y = goal_y;
@@ -224,7 +236,7 @@ bool FieldInfoParser::parse_constraint_theta(const ConstraintTheta & theta, cons
     }
   }
 
-  if(theta.value_theta.size() > 0){
+  if (theta.value_theta.size() > 0) {
     parsed_theta = theta.value_theta[0];
     return true;
   }
@@ -232,17 +244,24 @@ bool FieldInfoParser::parse_constraint_theta(const ConstraintTheta & theta, cons
   return false;
 }
 
-bool FieldInfoParser::parse_constraint_object(const ConstraintObject & object, State & object_pose) const
+bool FieldInfoParser::parse_constraint_object(
+  const ConstraintObject & object,
+  State & object_pose) const
 {
   TrackedBall ball;
   TrackedRobot robot;
 
-  if(object.type == ConstraintObject::BALL && extract_ball(ball)){
+  // NOLINTについて
+  // ament_uncrustifyとament_cpplintが競合するので、lintのチェックをスキップする
+  // Ref: https://github.com/ament/ament_lint/issues/158
+  if (object.type == ConstraintObject::BALL && extract_ball(ball)) {
     object_pose.x = ball.pos.x;
     object_pose.y = ball.pos.y;
     return true;
-  }else if((object.type == ConstraintObject::BLUE_ROBOT && extract_robot(object.robot_id, false, robot)) || 
-           (object.type == ConstraintObject::YELLOW_ROBOT && extract_robot(object.robot_id, true, robot))){
+  } else if ((object.type == ConstraintObject::BLUE_ROBOT &&  // NOLINT
+    extract_robot(object.robot_id, false, robot)) ||
+    (object.type == ConstraintObject::YELLOW_ROBOT && extract_robot(object.robot_id, true, robot)))
+  {
     object_pose.x = robot.pos.x;
     object_pose.y = robot.pos.y;
     object_pose.theta = robot.orientation;
@@ -252,8 +271,9 @@ bool FieldInfoParser::parse_constraint_object(const ConstraintObject & object, S
   return false;
 }
 
-bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-                  State &parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
+bool FieldInfoParser::parse_kick(
+  const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
   const double DRIBBLE_POWER = 0.6;
   const double KICK_POWER = 8.0;
@@ -281,8 +301,8 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
 
-  bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
-                         std::fabs(robot_pose_BtoR.theta) > LOOKING_BALL_THETA;
+  bool is_looking_ball = robot_pose_BtoR.x<LOOKING_BALL_DISTANCE &&
+      std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
 
   bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA;
 
@@ -297,7 +317,7 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
     parsed_pose = trans_BtoR.inverted_transform(DISTANCE_TO_LOOK_BALL, 0, M_PI);
-    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
+    if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
   } else if (!is_looking_target) {
     // キックターゲットを見るまで、ドリブラをボールに付けながら回転する
     double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
@@ -306,19 +326,20 @@ bool FieldInfoParser::parse_kick(const State & kick_target, const TrackedRobot &
       distance_robot_to_ball * std::cos(add_angle),
       distance_robot_to_ball * std::sin(add_angle), 0.0);
     parsed_pose.theta = tools::calc_angle(parsed_pose, ball_pose);
-    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
+    if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
   } else {
     // キックターゲットに向かって前進する
     parsed_pose = trans_BtoT.inverted_transform(DISTANCE_TO_KICK_BALL, 0.0, 0.0);
-    if (can_dribble) parsed_dribble_power = DRIBBLE_POWER;
-    if (can_kick) parsed_kick_power = KICK_POWER;
+    if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
+    if (can_kick) {parsed_kick_power = KICK_POWER;}
   }
 
   return true;
 }
 
-bool FieldInfoParser::receive_ball(const TrackedRobot & my_robot, const TrackedBall & ball,
-                                   State & parsed_pose, double & parsed_dribble_power) const
+bool FieldInfoParser::receive_ball(
+  const TrackedRobot & my_robot, const TrackedBall & ball,
+  State & parsed_pose, double & parsed_dribble_power) const
 {
   // 転がっているボールを受け取る
   const double DRIBBLE_POWER = 0.6;
@@ -357,8 +378,10 @@ bool FieldInfoParser::receive_ball(const TrackedRobot & my_robot, const TrackedB
   return true;
 }
 
-bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
-  const State & goal_pose, State & avoidance_pose) const {
+bool FieldInfoParser::avoid_obstacles(
+  const TrackedRobot & my_robot,
+  const State & goal_pose, State & avoidance_pose) const
+{
   // 障害物を回避するposeを生成する
   // 全ロボット情報を検索し、
   // 自己位置(my_robot)と目標位置(goal_pose)間に存在する、
@@ -379,7 +402,7 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
   double distance_to_obstacle = 10000;  // 適当な大きい数字を設定
   std::shared_ptr<State> obstacle_pose_MtoG;
 
-  for (const auto& robot : detection_tracked_->robots) {
+  for (const auto & robot : detection_tracked_->robots) {
     if (robot.visibility.size() == 0) {
       continue;
     }
@@ -389,7 +412,8 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
 
     // 自身の情報は除外する
     if (robot.robot_id.id == my_robot.robot_id.id &&
-       robot.robot_id.team_color == my_robot.robot_id.team_color) {
+      robot.robot_id.team_color == my_robot.robot_id.team_color)
+    {
       continue;
     }
 
@@ -398,12 +422,12 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
     auto robot_pose_MtoG = trans_MtoG.transform(robot_pose);
 
     if (robot_pose_MtoG.x > OBSTACLE_DETECTION_X &&
-        robot_pose_MtoG.x < goal_pose_MtoG.x &&
-        std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y){
-      
+      robot_pose_MtoG.x < goal_pose_MtoG.x &&
+      std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
+    {
       // 最も自身に近いロボットを障害物とする
       double distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
-      if(distance < distance_to_obstacle){
+      if (distance < distance_to_obstacle) {
         obstacle_pose_MtoG = std::make_shared<State>(robot_pose_MtoG);
         distance_to_obstacle = distance;
       }
@@ -411,12 +435,12 @@ bool FieldInfoParser::avoid_obstacles(const TrackedRobot & my_robot,
   }
 
   // 障害物が存在すれば、回避位置を生成する
-  if(obstacle_pose_MtoG){
+  if (obstacle_pose_MtoG) {
     avoidance_pose = trans_MtoG.inverted_transform(
       obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
       obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
       goal_pose_MtoG.theta
-      );
+    );
   }
 
   return true;

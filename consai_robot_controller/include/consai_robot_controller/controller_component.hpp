@@ -16,6 +16,8 @@
 #define CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "control_toolbox/pid.hpp"
 #include "consai_msgs/action/robot_control.hpp"
@@ -35,7 +37,9 @@ namespace consai_robot_controller
 using State = consai_msgs::msg::State2D;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
-using namespace robocup_ssl_msgs::msg;
+using GeometryData = robocup_ssl_msgs::msg::GeometryData;
+using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
+using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using StopControl = consai_msgs::srv::StopControl;
 
 
@@ -56,23 +60,29 @@ private:
     const rclcpp::Parameter & param,
     const std::string & prefix,
     std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller);
-  rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID & uuid,
+  rclcpp_action::GoalResponse handle_goal(
+    const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,
     const unsigned int robot_id);
   rclcpp_action::CancelResponse handle_cancel(
     const std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
-  void handle_accepted(std::shared_ptr<GoalHandleRobotControl> goal_handle, const unsigned int robot_id);
-  void handle_stop_control(const std::shared_ptr<StopControl::Request> request,
+  void handle_accepted(
+    std::shared_ptr<GoalHandleRobotControl> goal_handle,
+    const unsigned int robot_id);
+  void handle_stop_control(
+    const std::shared_ptr<StopControl::Request> request,
     std::shared_ptr<StopControl::Response> response);
   State limit_world_velocity(const State & velocity) const;
-  State limit_world_acceleration(const State & velocity, const State & last_velocity, const rclcpp::Duration & dt) const;
+  State limit_world_acceleration(
+    const State & velocity, const State & last_velocity,
+    const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   bool switch_to_stop_control_mode(
     const unsigned int robot_id, const bool success, const std::string & error_msg);
 
-  std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_; 
-  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_; 
+  std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;

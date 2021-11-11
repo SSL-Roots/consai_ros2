@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "consai_robot_controller/grsim_command_converter.hpp"
 
@@ -30,11 +33,11 @@ GrSimCommandConverter::GrSimCommandConverter(const rclcpp::NodeOptions & options
   declare_parameter("team_is_yellow", false);
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
   std::string command_name_space = "blue";
-  if(team_is_yellow_){
+  if (team_is_yellow_) {
     command_name_space = "yellow";
   }
 
-  for(int i=0; i<16; i++){
+  for (int i = 0; i < 16; i++) {
     auto sub_command = create_subscription<ConsaiCommand>(
       command_name_space + std::to_string(i) + "/command",
       10, std::bind(&GrSimCommandConverter::callback_consai_command_, this, _1));
@@ -48,21 +51,21 @@ void GrSimCommandConverter::on_timer()
 {
   // consai用のロボットコマンドをgrSim用のコマンドに変換してpublishする
 
-  if(consai_commands_.size() == 0){
+  if (consai_commands_.size() == 0) {
     return;
   }
 
   auto commands_msg = std::make_unique<GrSimCommands>();
   commands_msg->isteamyellow = team_is_yellow_;
 
-  for (auto it = consai_commands_.begin(); it != consai_commands_.end();){
+  for (auto it = consai_commands_.begin(); it != consai_commands_.end(); ) {
     GrSimRobotCommand robot_command;
     robot_command.id = (*it)->robot_id;
     robot_command.veltangent = (*it)->velocity_x;
     robot_command.velnormal = (*it)->velocity_y;
     robot_command.velangular = (*it)->velocity_theta;
 
-    if((*it)->dribble_power > 0.0001){
+    if ((*it)->dribble_power > 0.0001) {
       robot_command.spinner = true;
     }
 
@@ -79,7 +82,7 @@ void GrSimCommandConverter::callback_consai_command_(const ConsaiCommand::Shared
 {
   consai_commands_.push_back(msg);
   // バッファの肥大化を防ぐ
-  if(consai_commands_.size() > 200){
+  if (consai_commands_.size() > 200) {
     consai_commands_.clear();
   }
 }
