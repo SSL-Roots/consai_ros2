@@ -14,12 +14,20 @@
 
 #include <cmath>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 #include "consai_vision_tracker/robot_tracker.hpp"
 #include "robocup_ssl_msgs/msg/vector2.hpp"
 
 namespace consai_vision_tracker
 {
+
+using ColumnVector = BFL::ColumnVector;
+using Matrix = BFL::Matrix;
+using MatrixWrapper = BFL::Matrix_Wrapper;
+using SymmetricMatrix = BFL::SymmetricMatrix;
+using Vector2 = robocup_ssl_msgs::msg::Vector2;
 
 // visibilityの操作量
 // 追跡対象の情報が来ないとき、この操作量だけvisibilityを小さくする
@@ -58,7 +66,7 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
   B(5, 1) = 0.0; B(5, 2) = 0.0; B(5, 3) = 0.0;
   B(6, 1) = 0.0; B(6, 2) = 0.0; B(6, 3) = 0.0;
 
-  vector<Matrix> AB(2);
+  std::vector<Matrix> AB(2);
   AB[0] = A;
   AB[1] = B;
 
@@ -68,8 +76,10 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
 
   // 位置、速度の変化をのシステムノイズで表現する（つまりめちゃくちゃノイズがでかい）
   // 0 m/s から、いきなり1.0 m/sに変化しうる、ということ
-  const double MAX_LINEAR_ACC_MPS = 0.1 * 1.0 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
-  const double MAX_ANGULAR_ACC_RADPS = 0.05 * M_PI / dt;  // 例：1.0[rad/s] / 0.001[s] = 100 [rad/ss]
+  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
+  const double MAX_LINEAR_ACC_MPS = 0.1 * 1.0 / dt;
+  // 例：1.0[rad/s] / 0.001[s] = 100 [rad/ss]
+  const double MAX_ANGULAR_ACC_RADPS = 0.05 * M_PI / dt;
   const double MAX_LINEAR_ACCEL_IN_DT = MAX_LINEAR_ACC_MPS * dt;  // [m/s]
   const double MAX_ANGULAR_ACCEL_IN_DT = MAX_ANGULAR_ACC_RADPS * dt;  // [rad/s]
   const double MAX_LINEAR_MOVEMENT_IN_DT = MAX_LINEAR_ACC_MPS / 2 * std::pow(dt, 2);  // [m]
@@ -78,16 +88,16 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
   // システムノイズの分散
   SymmetricMatrix sys_noise_cov(6);
   sys_noise_cov = 0.0;
-  sys_noise_cov(1,1) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(2,2) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(3,3) = std::pow(MAX_ANGULAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(4,4) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
-  sys_noise_cov(5,5) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
-  sys_noise_cov(6,6) = std::pow(MAX_ANGULAR_ACCEL_IN_DT, 2);
+  sys_noise_cov(1, 1) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
+  sys_noise_cov(2, 2) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
+  sys_noise_cov(3, 3) = std::pow(MAX_ANGULAR_MOVEMENT_IN_DT, 2);
+  sys_noise_cov(4, 4) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
+  sys_noise_cov(5, 5) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
+  sys_noise_cov(6, 6) = std::pow(MAX_ANGULAR_ACCEL_IN_DT, 2);
 
   Gaussian system_uncertainty(sys_noise_mu, sys_noise_cov);
-  sys_pdf_ = std::make_shared<LinearAnalyticConditionalGaussian>(AB, system_uncertainty);
-  sys_model_ = std::make_shared<LinearAnalyticSystemModelGaussianUncertainty>(sys_pdf_.get());
+  sys_pdf_ = std::make_shared<ConditionalGaussian>(AB, system_uncertainty);
+  sys_model_ = std::make_shared<SystemModelGaussianUncertainty>(sys_pdf_.get());
 
   // 観測モデル
   // ~pos(t) = pos(t) + noise
@@ -109,8 +119,9 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
   meas_noise_cov(3, 3) = std::pow(0.02 * M_PI, 2);
   Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
 
-  meas_pdf_ = std::make_shared<LinearAnalyticConditionalGaussian>(H, measurement_uncertainty);
-  meas_model_ = std::make_shared<LinearAnalyticMeasurementModelGaussianUncertainty>(meas_pdf_.get());
+  meas_pdf_ = std::make_shared<ConditionalGaussian>(H, measurement_uncertainty);
+  meas_model_ =
+    std::make_shared<MeasurementModelGaussianUncertainty>(meas_pdf_.get());
 
   // 事前分布
   ColumnVector prior_mu(6);
@@ -134,7 +145,7 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
 void RobotTracker::push_back_observation(const DetectionRobot & robot)
 {
   // 角度データを含まない場合は、そのデータを参照しない
-  if(robot.orientation.size() == 0){
+  if (robot.orientation.size() == 0) {
     return;
   }
 
@@ -148,30 +159,30 @@ void RobotTracker::push_back_observation(const DetectionRobot & robot)
 TrackedRobot RobotTracker::update()
 {
   // 観測値から外れ値を取り除く
-  for (auto it = robot_observations_.begin(); it != robot_observations_.end();){
-    if(is_outlier(*it)){
+  for (auto it = robot_observations_.begin(); it != robot_observations_.end(); ) {
+    if (is_outlier(*it)) {
       it = robot_observations_.erase(it);
-    }else{
+    } else {
       ++it;
     }
   }
 
   auto size = robot_observations_.size();
-  if(size == 0){
+  if (size == 0) {
     // 観測値が無い場合の処理
     // visibilityを下げる
     prev_tracked_robot_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
-    if(prev_tracked_robot_.visibility[0] <= 0){
+    if (prev_tracked_robot_.visibility[0] <= 0) {
       // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_robot_.visibility[0] = 0.0;
       reset_prior();
       return prev_tracked_robot_;
     }
 
-  }else{
+  } else {
     // 観測値があればvisibilityをn倍のレートで上げる
     prev_tracked_robot_.visibility[0] += VISIBILITY_CONTROL_VALUE * 5.0;
-    if(prev_tracked_robot_.visibility[0] > 1.0){
+    if (prev_tracked_robot_.visibility[0] > 1.0) {
       prev_tracked_robot_.visibility[0] = 1.0;
     }
 
@@ -182,8 +193,8 @@ TrackedRobot RobotTracker::update()
     mean_observation(2) = 0.0;
     double sum_x = 0.0;
     double sum_y = 0.0;
-    
-    for (auto it = robot_observations_.begin(); it != robot_observations_.end();){
+
+    for (auto it = robot_observations_.begin(); it != robot_observations_.end(); ) {
       mean_observation(1) += it->pos.x;
       mean_observation(2) += it->pos.y;
       // 角度は-pi ~ piの範囲なので、2次元ベクトルに変換してから平均値を求める
@@ -263,12 +274,15 @@ bool RobotTracker::is_outlier(const TrackedRobot & observation) const
   double covariance_y = covariance(2, 2);
 
   // 0 除算を避ける
-  if(std::fabs(covariance_x) < 1E-15 || std::fabs(covariance_y) < 1E-15){
+  if (std::fabs(covariance_x) < 1E-15 || std::fabs(covariance_y) < 1E-15) {
     return false;
   }
 
-  double mahalanobis = std::sqrt(std::pow(diff_x, 2) / covariance_x + std::pow(diff_y, 2) / covariance_y);
-  if(mahalanobis > THRESHOLD){
+  double mahalanobis = std::sqrt(
+    std::pow(diff_x, 2) / covariance_x + std::pow(
+      diff_y,
+      2) / covariance_y);
+  if (mahalanobis > THRESHOLD) {
     return true;
   }
 
@@ -280,8 +294,8 @@ void RobotTracker::correct_orientation_overflow_of_prior()
   // 事後分布の角度を取得し、-pi ~ piの範囲に収め、事前分布にセットする
   auto expected_value = filter_->PostGet()->ExpectedValueGet();
   auto covariance = filter_->PostGet()->CovarianceGet();
-  
-  if(expected_value(3) < -M_PI || expected_value(3) > M_PI){
+
+  if (expected_value(3) < -M_PI || expected_value(3) > M_PI) {
     expected_value(3) = normalize_orientation(expected_value(3));
 
     prior_->ExpectedValueSet(expected_value);
@@ -294,14 +308,14 @@ void RobotTracker::correct_orientation_overflow_of_prior()
 double RobotTracker::normalize_orientation(double orientation) const
 {
   // 角度を-pi ~ piの範囲に収める
-  while(orientation >= M_PI) orientation -= 2.0 * M_PI;
-  while(orientation <= -M_PI) orientation += 2.0 * M_PI;
+  while (orientation >= M_PI) {orientation -= 2.0 * M_PI;}
+  while (orientation <= -M_PI) {orientation += 2.0 * M_PI;}
   return orientation;
 }
 
 double RobotTracker::normalize_orientation(const double from, const double to) const
 {
-  // fromからtoへ連続に角度が変化するようにtoの符号と大きさを変更する 
+  // fromからtoへ連続に角度が変化するようにtoの符号と大きさを変更する
   // from(150 deg) -> to(-150 deg) => from(150 deg) -> to(210 deg)
   return from + normalize_orientation(to - from);
 }

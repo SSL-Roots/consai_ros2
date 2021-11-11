@@ -40,7 +40,9 @@ ament_target_dependencies(tracker_component
   rclcpp_components
   robocup_ssl_msgs
 )
-target_link_libraries(tracker_component ${BFL_LIBRARIES} )
+target_link_libraries(tracker_component
+  ${BFL_LIBRARIES}
+)
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
 # Exports

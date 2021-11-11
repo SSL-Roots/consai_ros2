@@ -16,6 +16,9 @@
 
 #include <chrono>
 #include <cmath>
+#include <memory>
+#include <utility>
+
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -24,6 +27,7 @@ using namespace std::chrono_literals;
 namespace consai_vision_tracker
 {
 
+using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
 
 Tracker::Tracker(const rclcpp::NodeOptions & options)
@@ -32,9 +36,15 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   const auto UPDATE_RATE = 0.01s;
 
   ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
-  for(int i=0; i<16; i++){
-    blue_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_BLUE, i, UPDATE_RATE.count()));
-    yellow_robot_tracker_.push_back(std::make_shared<RobotTracker>(RobotId::TEAM_COLOR_YELLOW, i, UPDATE_RATE.count()));
+  for (int i = 0; i < 16; i++) {
+    blue_robot_tracker_.push_back(
+      std::make_shared<RobotTracker>(
+        RobotId::TEAM_COLOR_BLUE, i,
+        UPDATE_RATE.count()));
+    yellow_robot_tracker_.push_back(
+      std::make_shared<RobotTracker>(
+        RobotId::TEAM_COLOR_YELLOW, i,
+        UPDATE_RATE.count()));
   }
 
   timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
@@ -50,7 +60,6 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
     sub_detection_ = create_subscription<DetectionFrame>(
       "detection", 10, std::bind(&Tracker::callback_detection, this, _1));
   }
-
 }
 
 void Tracker::on_timer()
@@ -59,11 +68,11 @@ void Tracker::on_timer()
 
   tracked_msg->balls.push_back(ball_tracker_->update());
 
-  for(auto&& tracker : blue_robot_tracker_){
+  for (auto && tracker : blue_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
   }
 
-  for(auto&& tracker : yellow_robot_tracker_){
+  for (auto && tracker : yellow_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
   }
 
@@ -72,47 +81,49 @@ void Tracker::on_timer()
 
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
-  for(const auto& ball : msg->balls){
+  for (const auto & ball : msg->balls) {
     ball_tracker_->push_back_observation(ball);
   }
 
-  for(const auto& blue_robot : msg->robots_blue){
-    if(blue_robot.robot_id.size() > 0){
+  for (const auto & blue_robot : msg->robots_blue) {
+    if (blue_robot.robot_id.size() > 0) {
       blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
-  for(const auto& yellow_robot: msg->robots_yellow){
-    if(yellow_robot.robot_id.size() > 0){
+  for (const auto & yellow_robot : msg->robots_yellow) {
+    if (yellow_robot.robot_id.size() > 0) {
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
 }
 
-void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg) {
+void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
+{
   // detectionトピックの情報を上下左右反転するcallback関数
 
-  for(auto&& ball : msg->balls){
+  for (auto && ball : msg->balls) {
     invert_ball(ball);
     ball_tracker_->push_back_observation(ball);
   }
 
-  for(auto&& blue_robot : msg->robots_blue){
-    if(blue_robot.robot_id.size() > 0){
+  for (auto && blue_robot : msg->robots_blue) {
+    if (blue_robot.robot_id.size() > 0) {
       invert_robot(blue_robot);
       blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
-  for(auto&& yellow_robot: msg->robots_yellow){
-    if(yellow_robot.robot_id.size() > 0){
+  for (auto && yellow_robot : msg->robots_yellow) {
+    if (yellow_robot.robot_id.size() > 0) {
       invert_robot(yellow_robot);
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
 }
 
-void Tracker::invert_ball(DetectionBall & ball) {
+void Tracker::invert_ball(DetectionBall & ball)
+{
   // detection ballを上下左右反転する
   ball.x = -ball.x;
   ball.y = -ball.y;
@@ -120,7 +131,8 @@ void Tracker::invert_ball(DetectionBall & ball) {
   ball.pixel_y = -ball.pixel_y;
 }
 
-void Tracker::invert_robot(DetectionRobot & robot) {
+void Tracker::invert_robot(DetectionRobot & robot)
+{
   // detection robotを上下左右反転する
   robot.x = -robot.x;
   robot.y = -robot.y;

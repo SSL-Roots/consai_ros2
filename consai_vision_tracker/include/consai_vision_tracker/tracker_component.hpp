@@ -15,6 +15,9 @@
 #ifndef CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
 #define CONSAI_VISION_TRACKER__TRACKER_COMPONENT_HPP_
 
+#include <memory>
+#include <vector>
+
 #include "consai_vision_tracker/visibility_control.h"
 #include "consai_vision_tracker/ball_tracker.hpp"
 #include "consai_vision_tracker/robot_tracker.hpp"
@@ -28,7 +31,10 @@
 namespace consai_vision_tracker
 {
 
-using namespace robocup_ssl_msgs::msg;
+using DetectionBall = robocup_ssl_msgs::msg::DetectionBall;
+using DetectionFrame = robocup_ssl_msgs::msg::DetectionFrame;
+using DetectionRobot = robocup_ssl_msgs::msg::DetectionRobot;
+using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 
 class Tracker : public rclcpp::Node
 {

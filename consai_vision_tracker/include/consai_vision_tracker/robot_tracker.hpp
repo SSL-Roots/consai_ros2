@@ -20,6 +20,7 @@
 #include <bfl/model/linearanalyticmeasurementmodel_gaussianuncertainty.h>
 #include <bfl/pdf/analyticconditionalgaussian.h>
 #include <bfl/pdf/linearanalyticconditionalgaussian.h>
+#include <memory>
 #include <vector>
 
 #include "robocup_ssl_msgs/msg/detection_robot.hpp"
@@ -28,10 +29,13 @@
 namespace consai_vision_tracker
 {
 
-using namespace robocup_ssl_msgs::msg;
-using namespace MatrixWrapper;
-using namespace BFL;
-using namespace std;
+using DetectionRobot = robocup_ssl_msgs::msg::DetectionRobot;
+using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
+using ConditionalGaussian = BFL::LinearAnalyticConditionalGaussian;
+using SystemModelGaussianUncertainty = BFL::LinearAnalyticSystemModelGaussianUncertainty;
+using MeasurementModelGaussianUncertainty = BFL::LinearAnalyticMeasurementModelGaussianUncertainty;
+using Gaussian = BFL::Gaussian;
+using ExtendedKalmanFilter = BFL::ExtendedKalmanFilter;
 
 class RobotTracker
 {
@@ -51,10 +55,10 @@ private:
   std::vector<TrackedRobot> robot_observations_;
   TrackedRobot prev_tracked_robot_;
 
-  std::shared_ptr<LinearAnalyticConditionalGaussian> sys_pdf_;
-  std::shared_ptr<LinearAnalyticSystemModelGaussianUncertainty> sys_model_;
-  std::shared_ptr<LinearAnalyticConditionalGaussian> meas_pdf_;
-  std::shared_ptr<LinearAnalyticMeasurementModelGaussianUncertainty> meas_model_;
+  std::shared_ptr<ConditionalGaussian> sys_pdf_;
+  std::shared_ptr<SystemModelGaussianUncertainty> sys_model_;
+  std::shared_ptr<ConditionalGaussian> meas_pdf_;
+  std::shared_ptr<MeasurementModelGaussianUncertainty> meas_model_;
   std::shared_ptr<Gaussian> prior_;
   std::shared_ptr<ExtendedKalmanFilter> filter_;
 };

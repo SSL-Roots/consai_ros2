@@ -13,12 +13,20 @@
 // limitations under the License.
 
 #include <iostream>
+#include <memory>
+#include <vector>
 
 #include "consai_vision_tracker/ball_tracker.hpp"
 #include "robocup_ssl_msgs/msg/vector3.hpp"
 
 namespace consai_vision_tracker
 {
+
+using ColumnVector = BFL::ColumnVector;
+using Matrix = BFL::Matrix;
+using MatrixWrapper = BFL::Matrix_Wrapper;
+using SymmetricMatrix = BFL::SymmetricMatrix;
+using Vector3 = robocup_ssl_msgs::msg::Vector3;
 
 // visibilityの操作量
 // 追跡対象の情報が来ないとき、この操作量だけvisibilityを小さくする
@@ -50,7 +58,7 @@ BallTracker::BallTracker(const double dt)
   B(3, 1) = 0.0; B(3, 2) = 0.0;
   B(4, 1) = 0.0; B(4, 2) = 0.0;
 
-  vector<Matrix> AB(2);
+  std::vector<Matrix> AB(2);
   AB[0] = A;
   AB[1] = B;
 
@@ -67,14 +75,14 @@ BallTracker::BallTracker(const double dt)
   // システムノイズの分散
   SymmetricMatrix sys_noise_cov(4);
   sys_noise_cov = 0.0;
-  sys_noise_cov(1,1) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(2,2) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(3,3) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
-  sys_noise_cov(4,4) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
+  sys_noise_cov(1, 1) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
+  sys_noise_cov(2, 2) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
+  sys_noise_cov(3, 3) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
+  sys_noise_cov(4, 4) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
 
   Gaussian system_uncertainty(sys_noise_mu, sys_noise_cov);
-  sys_pdf_ = std::make_shared<LinearAnalyticConditionalGaussian>(AB, system_uncertainty);
-  sys_model_ = std::make_shared<LinearAnalyticSystemModelGaussianUncertainty>(sys_pdf_.get());
+  sys_pdf_ = std::make_shared<ConditionalGaussian>(AB, system_uncertainty);
+  sys_model_ = std::make_shared<SystemModelGaussianUncertainty>(sys_pdf_.get());
 
   // 観測モデル
   // ~pos(t) = pos(t) + noise
@@ -94,8 +102,9 @@ BallTracker::BallTracker(const double dt)
   meas_noise_cov(2, 2) = std::pow(0.05, 2);
   Gaussian measurement_uncertainty(meas_noise_mu, meas_noise_cov);
 
-  meas_pdf_ = std::make_shared<LinearAnalyticConditionalGaussian>(H, measurement_uncertainty);
-  meas_model_ = std::make_shared<LinearAnalyticMeasurementModelGaussianUncertainty>(meas_pdf_.get());
+  meas_pdf_ = std::make_shared<ConditionalGaussian>(H, measurement_uncertainty);
+  meas_model_ =
+    std::make_shared<MeasurementModelGaussianUncertainty>(meas_pdf_.get());
 
   // 事前分布
   ColumnVector prior_mu(4);
@@ -125,30 +134,30 @@ void BallTracker::push_back_observation(const DetectionBall & ball)
 TrackedBall BallTracker::update()
 {
   // 観測値から外れ値を取り除く
-  for (auto it = ball_observations_.begin(); it != ball_observations_.end();){
-    if(is_outlier(*it)){
+  for (auto it = ball_observations_.begin(); it != ball_observations_.end(); ) {
+    if (is_outlier(*it)) {
       it = ball_observations_.erase(it);
-    }else{
+    } else {
       ++it;
     }
   }
 
   auto size = ball_observations_.size();
-  if(size == 0){
+  if (size == 0) {
     // 観測値が無い場合の処理
     // visibilityを下げる
     prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
-    if(prev_tracked_ball_.visibility[0] <= 0){
+    if (prev_tracked_ball_.visibility[0] <= 0) {
       // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_ball_.visibility[0] = 0.0;
       reset_prior();
       return prev_tracked_ball_;
     }
 
-  }else{
+  } else {
     // 観測値があればvisibilityをn倍のレートで上げる
     prev_tracked_ball_.visibility[0] += VISIBILITY_CONTROL_VALUE * 5.0;
-    if(prev_tracked_ball_.visibility[0] > 1.0){
+    if (prev_tracked_ball_.visibility[0] > 1.0) {
       prev_tracked_ball_.visibility[0] = 1.0;
     }
 
@@ -157,8 +166,8 @@ TrackedBall BallTracker::update()
     ColumnVector mean_observation(2);
     mean_observation(1) = 0.0;
     mean_observation(2) = 0.0;
-    
-    for (auto it = ball_observations_.begin(); it != ball_observations_.end();){
+
+    for (auto it = ball_observations_.begin(); it != ball_observations_.end(); ) {
       mean_observation(1) += it->pos.x;
       mean_observation(2) += it->pos.y;
       it = ball_observations_.erase(it);
@@ -221,12 +230,15 @@ bool BallTracker::is_outlier(const TrackedBall & observation) const
   double covariance_y = covariance(2, 2);
 
   // 0 除算を避ける
-  if(std::fabs(covariance_x) < 1E-15 || std::fabs(covariance_y) < 1E-15){
+  if (std::fabs(covariance_x) < 1E-15 || std::fabs(covariance_y) < 1E-15) {
     return false;
   }
 
-  double mahalanobis = std::sqrt(std::pow(diff_x, 2) / covariance_x + std::pow(diff_y, 2) / covariance_y);
-  if(mahalanobis > THRESHOLD){
+  double mahalanobis = std::sqrt(
+    std::pow(diff_x, 2) / covariance_x + std::pow(
+      diff_y,
+      2) / covariance_y);
+  if (mahalanobis > THRESHOLD) {
     return true;
   }
 
