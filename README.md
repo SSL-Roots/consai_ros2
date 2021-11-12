@@ -5,9 +5,96 @@ ROS 2で構成されています。
 
 **CON-SAI** stands for **CON**tribution to *S*occer **AI**.
 
+## Requirements
+
+- Linux OS
+    - Ubuntu 20.04 tested and is recommended
+- ROS 2
+    - [Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation.html)
+    - [colcon build tool](https://docs.ros.org/en/foxy/Tutorials/Colcon-Tutorial.html)
+- RoboCup SSL Official Softwares
+    - [grSim](https://github.com/RoboCup-SSL/grSim)
+    - [ssl-game-controller](https://github.com/RoboCup-SSL/ssl-game-controller)
+
+## Installation
+
+### Binary installation
+
+TBD
+
+### Source build
+
+```sh
+# Setup ROS environment
+$ source /opt/ros/foxy/setup.bash
+
+# Create working directory
+$ mkdir -p ~/ros2_ws/src
+# Download consai_ros2
+$ cd ~/ros2_ws/src
+$ git clone https://github.com/SSL-Roots/consai_ros2.git
+
+# Install dependencies
+$ rosdep install -r -y -i --from-paths .
+
+# Build & Install
+$ cd ~/ros2_ws
+$ colcon build --symlink-install
+# Setup working directory's environment
+$ source ~/ros2_ws/install/setup.bash
+```
+
+## Quick start
+
+```sh
+# Start grSim and ssl-game-controller, then
+$ source ~/ros2_ws/install/setup.bash
+$ ros2 launch consai_examples start.launch.py
+
+# anothor terminal
+$ source ~/ros2_ws/install/setup.bash
+$ ros2 run consai_examples control_by_referee.py
+```
+
+CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を参照してください。
+
+## Packages
+
+- consai
+    - メタパッケージ
+- consai_examples
+    - CON-SAIの各種パッケージを使ったサンプル集です
+- consai_msgs
+    - CON-SAIで使用するデータ型を定義するパッケージです
+- consai_observer
+    - フィールド情報を解析するパッケージです
+- consai_robot_controller
+    - ロボットの走行、キック、ドリブル制御を担うパッケージです
+- consai_vision_tracker
+    - ビジョン情報をフィルタリングするパッケージです
+- consai_visualizer
+    - ビジョン情報やロボットの走行情報を描画するパッケージです
+- robocup_ssl_comm
+    - SSL-Vision、SSL-Game-Controller、grSimのデータパケットをROS 2のトピックに変換するパッケージです
+- robocup_ssl_msgs
+    - SSL-Vision、SSL-Game-Controller、grSimのデータプロトコルをROS 2のデータ型に再定義するパッケージです
+
+## License
+
+(C) 2021 Roots
+
+各ファイルはファイル内に明記されているライセンスに従います。
+ライセンスが明記されていない場合は、Apache License, Version 2.0に従います。
+ライセンスの全文は[LICENSE](./LICENSE)から確認できます。
+
 ## Development
 
 CON-SAIを開発する際にこの項目を読んでください。
+
+### 開発方針について
+
+- 本ソフトウェアはオープンソースですが、開発はオープンではありません
+- Issue、Pull Requestは常に受け付けていますが、チームの開発方針を優先するため、提案が受け入れられない場合があります
 
 ### Lint
 
