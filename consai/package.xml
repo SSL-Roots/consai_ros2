@@ -13,8 +13,14 @@
   <url type="repository">https://github.com/SSL-Roots/consai_ros2</url>
   <url type="bugtracker">https://github.com/SSL-Roots/consai_ros2/issues</url>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <exec_depend>consai_examples</exec_depend>
+  <exec_depend>consai_msgs</exec_depend>
+  <exec_depend>consai_observer</exec_depend>
+  <exec_depend>consai_robot_controller</exec_depend>
+  <exec_depend>consai_vision_tracker</exec_depend>
+  <exec_depend>consai_visualizer</exec_depend>
+  <exec_depend>robocup_ssl_comm</exec_depend>
+  <exec_depend>robocup_ssl_msgs</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

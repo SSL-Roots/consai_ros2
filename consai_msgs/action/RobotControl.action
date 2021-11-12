@@ -1,0 +1,27 @@
+# 目標値に到達しても制御を続けてほしいときはtrue
+# actionは瞬時に完了する
+bool keep_control false
+
+# 移動の目標値
+ConstraintPose[<=1] pose
+
+# ボール操作関連のフラグ
+# シュートは最大速度でボールを蹴る
+bool kick_shoot false
+# パスはkick_targetとの距離に合わせて蹴る速度変える
+bool kick_pass false
+# キックの目標地点
+ConstraintXY kick_target
+
+# 転がっているボールを受け取るときはtrue
+bool receive_ball false
+
+# 衝突回避は安全のためデフォルトでtrue
+bool avoid_obstacles true
+
+---
+bool success
+string message
+---
+State2D remaining_pose
+State2D present_velocity 
