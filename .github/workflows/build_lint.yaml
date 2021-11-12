@@ -1,0 +1,15 @@
+name: build_and_lint
+
+on: workflow_dispatch # 手動トリガー
+
+jobs:
+  industrial_ci:
+    strategy:
+      matrix:
+        env:
+          - { ROS_DISTRO: foxy, ROS_REPO: ros }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: "ros-industrial/industrial_ci@master"
+        env: ${{ matrix.env }}
