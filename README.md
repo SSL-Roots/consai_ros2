@@ -1,7 +1,8 @@
 # CON-SAI 
 
+[![build_and_lint](https://github.com/SSL-Roots/consai_ros2/actions/workflows/build_lint.yaml/badge.svg?branch=main)](https://github.com/SSL-Roots/consai_ros2/actions/workflows/build_lint.yaml)
+
 CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカーAIです。
-ROS 2で構成されています。
 
 **CON-SAI** stands for **CON**tribution to *S*occer **AI**.
 
