@@ -1,0 +1,5 @@
+# ロボットの制御を停止させるサービス
+uint32 robot_id
+---
+bool success  # 成功したらTrue
+string message  # エラーメッセージ
