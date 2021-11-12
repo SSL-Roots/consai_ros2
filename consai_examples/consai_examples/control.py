@@ -16,12 +16,14 @@
 # limitations under the License.
 
 import argparse
-from robot_operator import RobotOperator
 import math
-import rclpy
-from rclpy.executors import SingleThreadedExecutor
 import threading
 import time
+
+import rclpy
+from rclpy.executors import SingleThreadedExecutor
+from robot_operator import RobotOperator
+
 
 def test_move_to():
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
@@ -38,6 +40,7 @@ def test_move_to():
 
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def test_move_to_normalized(divide_n=3):
     # ID0のロボットはフィールド中央に、
@@ -89,6 +92,7 @@ def test_move_to_normalized(divide_n=3):
         while operator_node.all_robots_are_free() is False:
             pass
 
+
 def test_chase_ball():
     # ボールの右側に、2次関数のように並ぶ
     for i in range(16):
@@ -103,6 +107,7 @@ def test_chase_ball():
 
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def test_chase_robot():
     # 全ロボットが、別のチームカラーの同じIDのロボットの左上に移動する
@@ -121,7 +126,9 @@ def test_chase_robot():
     while operator_node.all_robots_are_free() is False:
         pass
 
-def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=False, test_theta=False):
+
+def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=False,
+                        test_theta=False):
     # PID調整用の関数
     # この関数を実行している裏で、consai_robot_controllerのPIDゲインを調整することを推奨する
     # X, Y, thetaの目標値が往復するように変化する
@@ -153,7 +160,8 @@ def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=
                 pass
 
             for i in range(16):
-                operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, -y, math.pi * 0.5, False)
+                operator_node.move_to_normalized(
+                    i, -0.9 + 2.0 * i / 16.0, -y, math.pi * 0.5, False)
 
             while operator_node.all_robots_are_free() is False:
                 pass
@@ -161,16 +169,19 @@ def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=
     if test_theta:
         for theta in pattern:
             for i in range(16):
-                operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, 0.5, math.pi * theta, False)
+                operator_node.move_to_normalized(
+                    i, -0.9 + 2.0 * i / 16.0, 0.5, math.pi * theta, False)
 
             while operator_node.all_robots_are_free() is False:
                 pass
 
             for i in range(16):
-                operator_node.move_to_normalized(i, -0.9 + 2.0 * i / 16.0, 0.5, -math.pi * theta, False)
+                operator_node.move_to_normalized(
+                    i, -0.9 + 2.0 * i / 16.0, 0.5, -math.pi * theta, False)
 
             while operator_node.all_robots_are_free() is False:
                 pass
+
 
 def test_shoot(target_x, target_y):
     # ID0ロボットがフィールド中央に移動して、ターゲット座標に向かってボールを蹴る
@@ -181,6 +192,7 @@ def test_shoot(target_x, target_y):
     while operator_node.all_robots_are_free() is False:
         pass
 
+
 def test_pass_two_robots():
     # 2台のロボットでパスし合う
     operator_node.kick_pass(0, 1, -3.0, 0.0)
@@ -188,6 +200,7 @@ def test_pass_two_robots():
 
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def test_pass_four_robots():
     # 4台のロボットでパスし合う
@@ -199,6 +212,7 @@ def test_pass_four_robots():
 
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def test_stop_robots():
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
@@ -214,7 +228,7 @@ def test_stop_robots():
         pass
 
     # 5台のロボットを停止
-    print("ロボットの動作停止！")
+    print('ロボットの動作停止！')
     for i in range(5):
         operator_node.stop(i)
     # 動作完了まで待機
@@ -231,12 +245,13 @@ def test_stop_robots():
         pass
 
     # 5台のロボットを停止
-    print("ロボットの動作停止！")
+    print('ロボットの動作停止！')
     for i in range(5):
         operator_node.stop(i)
     # 動作完了まで待機
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def main():
     # 実行したい関数のコメントを外してください
@@ -250,12 +265,13 @@ def main():
     # test_pass_four_robots()
     # test_stop_robots()
 
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--yellow',
-        default=False,
-        action='store_true',
-        help='yellowロボットを動かす場合にセットする')
+                            default=False,
+                            action='store_true',
+                            help='yellowロボットを動かす場合にセットする')
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)

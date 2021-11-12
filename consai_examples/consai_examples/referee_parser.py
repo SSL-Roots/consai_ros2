@@ -16,31 +16,32 @@
 # limitations under the License.
 
 import math
+
 from rclpy.node import Node
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedBall
-from robocup_ssl_msgs.msg import Vector3
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
+from robocup_ssl_msgs.msg import TrackedBall
+from robocup_ssl_msgs.msg import TrackedFrame
+from robocup_ssl_msgs.msg import Vector3
 
 
 # refereeトピックを解読するノード
 class RefereeParser(Node):
     _STAGE_STR_DICT = {
-        Referee.STAGE_NORMAL_FIRST_HALF_PRE : "NORMAL_FIRST_HALF_PRE",
-        Referee.STAGE_NORMAL_FIRST_HALF : "NORMAL_FIRST_HALF",
-        Referee.STAGE_NORMAL_HALF_TIME : "NORMAL_HALF_TIME",
-        Referee.STAGE_NORMAL_SECOND_HALF_PRE : "NORMAL_SECOND_HALF_PRE",
-        Referee.STAGE_NORMAL_SECOND_HALF : "NORMAL_SECOND_HALF",
-        Referee.STAGE_EXTRA_TIME_BREAK : "EXTRA_TIME_BREAK",
-        Referee.STAGE_EXTRA_FIRST_HALF_PRE : "EXTRA_FIRST_HALF_PRE",
-        Referee.STAGE_EXTRA_FIRST_HALF : "EXTRA_FIRST_HALF",
-        Referee.STAGE_EXTRA_HALF_TIME : "EXTRA_HALF_TIME",
-        Referee.STAGE_EXTRA_SECOND_HALF_PRE : "EXTRA_SECOND_HALF_PRE",
-        Referee.STAGE_EXTRA_SECOND_HALF : "EXTRA_SECOND_HALF",
-        Referee.STAGE_PENALTY_SHOOTOUT_BREAK : "PENALTY_SHOOTOUT_BREAK",
-        Referee.STAGE_PENALTY_SHOOTOUT : "PENALTY_SHOOTOUT",
-        Referee.STAGE_POST_GAME : "POST_GAME"
+        Referee.STAGE_NORMAL_FIRST_HALF_PRE: 'NORMAL_FIRST_HALF_PRE',
+        Referee.STAGE_NORMAL_FIRST_HALF: 'NORMAL_FIRST_HALF',
+        Referee.STAGE_NORMAL_HALF_TIME: 'NORMAL_HALF_TIME',
+        Referee.STAGE_NORMAL_SECOND_HALF_PRE: 'NORMAL_SECOND_HALF_PRE',
+        Referee.STAGE_NORMAL_SECOND_HALF: 'NORMAL_SECOND_HALF',
+        Referee.STAGE_EXTRA_TIME_BREAK: 'EXTRA_TIME_BREAK',
+        Referee.STAGE_EXTRA_FIRST_HALF_PRE: 'EXTRA_FIRST_HALF_PRE',
+        Referee.STAGE_EXTRA_FIRST_HALF: 'EXTRA_FIRST_HALF',
+        Referee.STAGE_EXTRA_HALF_TIME: 'EXTRA_HALF_TIME',
+        Referee.STAGE_EXTRA_SECOND_HALF_PRE: 'EXTRA_SECOND_HALF_PRE',
+        Referee.STAGE_EXTRA_SECOND_HALF: 'EXTRA_SECOND_HALF',
+        Referee.STAGE_PENALTY_SHOOTOUT_BREAK: 'PENALTY_SHOOTOUT_BREAK',
+        Referee.STAGE_PENALTY_SHOOTOUT: 'PENALTY_SHOOTOUT',
+        Referee.STAGE_POST_GAME: 'POST_GAME'
     }
 
     _COMMAND_INPLAY = 99
@@ -139,9 +140,9 @@ class RefereeParser(Node):
 
         # the ball moved at least 0.05 meters following a kick-off, free kick or penalty kick.
         if self.our_kickoff() or self.their_kickoff() or \
-            self.our_direct() or self.their_direct() or \
-            self.our_indirect() or self.their_indirect() or \
-            self.our_penalty() or self.their_penalty():
+                self.our_direct() or self.their_direct() or \
+                self.our_indirect() or self.their_indirect() or \
+                self.our_penalty() or self.their_penalty():
 
             diff_x = self._ball.pos.x - self._ball_pos_at_command_changing.x
             diff_y = self._ball.pos.y - self._ball_pos_at_command_changing.y
@@ -151,14 +152,16 @@ class RefereeParser(Node):
                 self._current_command = self._COMMAND_INPLAY
 
         # 10 seconds passed following a kick-off.
-        elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * 1E-6  # microseconds to seconds
+        elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * \
+            1E-6  # microseconds to seconds
         if self.our_kickoff() or self.their_kickoff():
             if elapsed_time > 10.0:
                 self.get_logger().info('kickoffから10秒経過したのでinplayに変わります')
                 self._current_command = self._COMMAND_INPLAY
 
         # 5 seconds (Division A) or 10 seconds (Division B) passed following a free kick.
-        if self.our_direct() or self.our_indirect() or self.their_direct() or self.their_indirect():
+        if self.our_direct() or self.our_indirect() or \
+           self.their_direct() or self.their_indirect():
             if self._division_a and elapsed_time > 5.0:
                 self.get_logger().info('free kickから5秒経過したのでinplayに変わります')
                 self._current_command = self._COMMAND_INPLAY
@@ -184,28 +187,28 @@ class RefereeParser(Node):
 
     def our_kickoff(self):
         return self._prev_command == self._COMMAND_OUR_PREPARE_KICKOFF and \
-               self._current_command == Referee.COMMAND_NORMAL_START
+            self._current_command == Referee.COMMAND_NORMAL_START
 
     def their_pre_kickoff(self):
         return self._current_command == self._COMMAND_THEIR_PREPARE_KICKOFF
 
     def their_kickoff(self):
         return self._prev_command == self._COMMAND_THEIR_PREPARE_KICKOFF and \
-               self._current_command == Referee.COMMAND_NORMAL_START
+            self._current_command == Referee.COMMAND_NORMAL_START
 
     def our_pre_penalty(self):
         return self._current_command == self._COMMAND_OUR_PREPARE_PENALTY
 
     def our_penalty(self):
         return self._prev_command == self._COMMAND_OUR_PREPARE_PENALTY and \
-               self._current_command == Referee.COMMAND_NORMAL_START
+            self._current_command == Referee.COMMAND_NORMAL_START
 
     def their_pre_penalty(self):
         return self._current_command == self._COMMAND_THEIR_PREPARE_PENALTY
 
     def their_penalty(self):
         return self._prev_command == self._COMMAND_THEIR_PREPARE_PENALTY and \
-               self._current_command == Referee.COMMAND_NORMAL_START
+            self._current_command == Referee.COMMAND_NORMAL_START
 
     def our_direct(self):
         return self._current_command == self._COMMAND_OUR_DIRECT_FREE

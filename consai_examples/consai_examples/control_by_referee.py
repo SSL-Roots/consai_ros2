@@ -16,61 +16,62 @@
 # limitations under the License.
 
 import argparse
-from robot_operator import RobotOperator
-from referee_parser import RefereeParser
-import math
-import rclpy
-from rclpy.executors import SingleThreadedExecutor
 import threading
 import time
+
+import rclpy
+from rclpy.executors import SingleThreadedExecutor
+from referee_parser import RefereeParser
+from robot_operator import RobotOperator
 
 
 def print_command():
     # refereeのcommandを表示する
     if referee_parser.halt():
-        print("halt")
+        print('halt')
     elif referee_parser.stop():
-        print("stop")
+        print('stop')
     elif referee_parser.inplay():
-        print("inplay")
+        print('inplay')
     elif referee_parser.our_pre_kickoff():
-        print("our pre kickoff")
+        print('our pre kickoff')
     elif referee_parser.our_kickoff():
-        print("our kickoff")
+        print('our kickoff')
     elif referee_parser.their_pre_kickoff():
-        print("their pre kickoff")
+        print('their pre kickoff')
     elif referee_parser.their_kickoff():
-        print("their kickoff")
+        print('their kickoff')
     elif referee_parser.our_pre_penalty():
-        print("our pre penalty")
+        print('our pre penalty')
     elif referee_parser.our_penalty():
-        print("our penalty kick")
+        print('our penalty kick')
     elif referee_parser.their_pre_penalty():
-        print("their pre penalty")
+        print('their pre penalty')
     elif referee_parser.their_penalty():
-        print("their penalty kick")
+        print('their penalty kick')
     elif referee_parser.our_direct():
-        print("our direct free kick")
+        print('our direct free kick')
     elif referee_parser.their_direct():
-        print("their direct free kick")
+        print('their direct free kick')
     elif referee_parser.our_indirect():
-        print("our indirect free kick")
+        print('our indirect free kick')
     elif referee_parser.their_indirect():
-        print("their indirect free kick")
+        print('their indirect free kick')
     elif referee_parser.our_timeout():
-        print("our timeout")
+        print('our timeout')
     elif referee_parser.their_timeout():
-        print("their timeout")
+        print('their timeout')
     elif referee_parser.our_ball_placement():
-        print("our ball placement x:{}, y:{}".format(
+        print('our ball placement x:{}, y:{}'.format(
             referee_parser.placement_position().x,
             referee_parser.placement_position().y))
     elif referee_parser.their_ball_placement():
-        print("their ball placement x:{}, y:{}".format(
+        print('their ball placement x:{}, y:{}'.format(
             referee_parser.placement_position().x,
             referee_parser.placement_position().y))
     else:
-        print("none")
+        print('none')
+
 
 def stop_operation():
     # RefereeコマンドがSTOPのときの動作
@@ -78,26 +79,28 @@ def stop_operation():
 
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_stop
 
-    print("STOPでは、全てのロボットは1.5 m/s未満に減速しなければなりません")
-    print("全てのロボットはボールから0.5メートルの距離を取らなければなりません")
-    print("ボールを蹴ったりドリブルしたりしてはいけません")
+    print('STOPでは、全てのロボットは1.5 m/s未満に減速しなければなりません')
+    print('全てのロボットはボールから0.5メートルの距離を取らなければなりません')
+    print('ボールを蹴ったりドリブルしたりしてはいけません')
     operator_node.chase_ball(0, -0.6, 0.0, 0.0, False, True)
 
     while referee_parser.stop():
-        time.sleep(1) # コマンドが変わるまで待機
+        time.sleep(1)  # コマンドが変わるまで待機
+
 
 def halt_operation():
     # RefereeコマンドがHALTのときの動作
     # 全てのロボットを停止させる
 
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_halt
-    print("HALTではロボットを動かしてはいけません")
-    print("ロボットが止まるまでに2秒の猶予があります")
+    print('HALTではロボットを動かしてはいけません')
+    print('ロボットが止まるまでに2秒の猶予があります')
     for i in range(16):
         operator_node.stop(i)
 
     while referee_parser.halt():
-        time.sleep(1) # コマンドが変わるまで待機
+        time.sleep(1)  # コマンドが変わるまで待機
+
 
 def default_operation():
     # 全てのロボットを停止させて1秒待機する
@@ -105,6 +108,7 @@ def default_operation():
     for i in range(16):
         operator_node.stop(i)
     time.sleep(1)
+
 
 def main():
     while rclpy.ok():
@@ -116,16 +120,17 @@ def main():
         else:
             default_operation()
 
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--yellow',
-        default=False,
-        action='store_true',
-        help='yellowロボットを動かす場合にセットする')
+                            default=False,
+                            action='store_true',
+                            help='yellowロボットを動かす場合にセットする')
     arg_parser.add_argument('--invert',
-        default=False,
-        action='store_true',
-        help='ball placementの目標座標を反転する場合にセットする')
+                            default=False,
+                            action='store_true',
+                            help='ball placementの目標座標を反転する場合にセットする')
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)

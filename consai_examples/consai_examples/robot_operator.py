@@ -15,18 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import partial
+
 from consai_msgs.action import RobotControl
-from consai_msgs.srv import StopControl
-from consai_msgs.msg import ConstraintObject 
+from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
-from functools import partial
+from consai_msgs.srv import StopControl
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
 
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
+
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -131,7 +133,8 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
-    def chase_robot(self, robot_id, object_is_yellow, object_id, offset_x, offset_y, offset_theta, look_from=False, keep=False):
+    def chase_robot(self, robot_id, object_is_yellow, object_id, offset_x, offset_y,
+                    offset_theta, look_from=False, keep=False):
         # 指定したIDのロボットをロボット直近へ移動させる
         # 追跡対象のロボットはobject_is_yellowでチームカラーが、object_idでIDが指定される
         constraint_obj = ConstraintObject()
@@ -219,13 +222,14 @@ class RobotOperator(Node):
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
         if not self._action_clients[robot_id].wait_for_server(5):
-            self.get_logger().error("TIMEOUT: wait_for_server")
+            self.get_logger().error('TIMEOUT: wait_for_server')
             return False
 
         self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
             goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))
 
-        self._send_goal_future[robot_id].add_done_callback(partial(self._goal_response_callback, robot_id=robot_id))
+        self._send_goal_future[robot_id].add_done_callback(
+            partial(self._goal_response_callback, robot_id=robot_id))
         self._robot_is_free[robot_id] = False
 
     def _goal_response_callback(self, future, robot_id):
@@ -239,14 +243,17 @@ class RobotOperator(Node):
 
         self.get_logger().info('Goal accepted')
         self._get_result_future[robot_id] = goal_handle.get_result_async()
-        self._get_result_future[robot_id].add_done_callback(partial(self._get_result_callback, robot_id=robot_id))
+        self._get_result_future[robot_id].add_done_callback(
+            partial(self._get_result_callback, robot_id=robot_id))
 
     def _feedback_callback(self, feedback_msg, robot_id):
         # アクションサーバからのフィードバックを受信したら実行される関数
         feedback = feedback_msg.feedback
+        (feedback)
 
     def _get_result_callback(self, future, robot_id):
         # アクションサーバからの行動完了通知を受信したら実行される関数
         result = future.result().result
-        self.get_logger().info('RobotId: {}, Result: {}, Message: {}'.format(robot_id, result.success, result.message))
+        self.get_logger().info('RobotId: {}, Result: {}, Message: {}'.format(
+            robot_id, result.success, result.message))
         self._robot_is_free[robot_id] = True

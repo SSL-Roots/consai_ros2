@@ -21,6 +21,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
+
 def generate_launch_description():
     declare_arg_invert = DeclareLaunchArgument(
         'invert', default_value='false',
