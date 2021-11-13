@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include "consai_msgs/msg/robot_command.hpp"
+#include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/commands.hpp"
@@ -27,7 +27,7 @@
 namespace consai_robot_controller
 {
 
-using ConsaiCommand = consai_msgs::msg::RobotCommand;
+using ConsaiCommand = consai_frootspi_msgs::msg::RobotCommand;
 using GrSimCommands = robocup_ssl_msgs::msg::Commands;
 using GrSimRobotCommand = robocup_ssl_msgs::msg::RobotCommand;
 

@@ -71,7 +71,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   for (int i = 0; i < ROBOT_NUM; i++) {
     std::string name_space = team_color + std::to_string(i);
     pub_command_.push_back(
-      create_publisher<consai_msgs::msg::RobotCommand>(
+      create_publisher<RobotCommand>(
         name_space + "/command", 10)
     );
     pub_goal_pose_.push_back(
@@ -200,7 +200,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     return;
   }
 
-  auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
 
@@ -296,7 +296,7 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 {
   // 停止コマンドをpublishするタイマーコールバック関数
   // 通信帯域を圧迫しないため、この関数は低周期（例:1s）で実行すること
-  auto command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
 
@@ -512,7 +512,7 @@ bool Controller::switch_to_stop_control_mode(
   // ストップ信号タイマーを最下位
   timer_pub_stop_command_[robot_id]->reset();
   // 停止コマンドを送信する
-  auto stop_command_msg = std::make_unique<consai_msgs::msg::RobotCommand>();
+  auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
   stop_command_msg->team_is_yellow = team_is_yellow_;
   pub_command_[robot_id]->publish(std::move(stop_command_msg));
