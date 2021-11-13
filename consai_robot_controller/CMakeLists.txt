@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(control_toolbox REQUIRED)
+find_package(consai_frootspi_msgs REQUIRED)
 find_package(consai_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -36,6 +37,7 @@ target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
 ament_target_dependencies(controller_component
   control_toolbox
+  consai_frootspi_msgs
   consai_msgs
   rclcpp
   rclcpp_action
@@ -51,6 +53,7 @@ add_library(grsim_command_converter SHARED
 target_compile_definitions(grsim_command_converter
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
 ament_target_dependencies(grsim_command_converter
+  consai_frootspi_msgs
   consai_msgs
   rclcpp
   rclcpp_components
@@ -62,6 +65,7 @@ rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controlle
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(control_toolbox)
+ament_export_dependencies(consai_frootspi_msgs)
 ament_export_dependencies(consai_msgs)
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_action)

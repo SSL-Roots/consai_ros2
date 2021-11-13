@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "control_toolbox/pid.hpp"
+#include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/action/robot_control.hpp"
-#include "consai_msgs/msg/robot_command.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_msgs/srv/stop_control.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
@@ -35,6 +35,7 @@
 namespace consai_robot_controller
 {
 using State = consai_msgs::msg::State2D;
+using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
@@ -81,7 +82,7 @@ private:
   bool switch_to_stop_control_mode(
     const unsigned int robot_id, const bool success, const std::string & error_msg);
 
-  std::vector<rclcpp::Publisher<consai_msgs::msg::RobotCommand>::SharedPtr> pub_command_;
+  std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
