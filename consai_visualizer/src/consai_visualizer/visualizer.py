@@ -19,7 +19,7 @@ from functools import partial
 import os
 
 from ament_index_python.resources import get_resource
-from consai_msgs.msg import State2D
+from consai_msgs.msg import GoalPose
 from consai_visualizer.field_widget import FieldWidget
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
@@ -72,14 +72,10 @@ class Visualizer(Plugin):
 
         self._sub_goal_pose = []
         for i in range(16):
-            topic_name = 'blue' + str(i) + '/goal_pose'
+            topic_name = 'robot' + str(i) + '/goal_pose'
             self._sub_goal_pose.append(self._node.create_subscription(
-                State2D, topic_name,
-                partial(self._widget.field_widget.set_blue_goal_pose, robot_id=i), 10))
-            topic_name = 'yellow' + str(i) + '/goal_pose'
-            self._sub_goal_pose.append(self._node.create_subscription(
-                State2D, topic_name,
-                partial(self._widget.field_widget.set_yellow_goal_pose, robot_id=i), 10))
+                GoalPose, topic_name,
+                partial(self._widget.field_widget.set_goal_pose, robot_id=i), 10))
 
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))

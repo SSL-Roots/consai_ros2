@@ -25,6 +25,7 @@ set(msg_files
   "msg/ConstraintPose.msg"
   "msg/ConstraintTheta.msg"
   "msg/ConstraintXY.msg"
+  "msg/GoalPose.msg"
   "msg/State2D.msg"
 )
 
