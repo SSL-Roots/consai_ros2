@@ -30,16 +30,9 @@ GrSimCommandConverter::GrSimCommandConverter(const rclcpp::NodeOptions & options
 
   pub_grsim_commands_ = create_publisher<GrSimCommands>("/commands", 10);
 
-  declare_parameter("team_is_yellow", false);
-  team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
-  std::string command_name_space = "blue";
-  if (team_is_yellow_) {
-    command_name_space = "yellow";
-  }
-
   for (int i = 0; i < 16; i++) {
     auto sub_command = create_subscription<ConsaiCommand>(
-      command_name_space + std::to_string(i) + "/command",
+      "robot" + std::to_string(i) + "/command",
       10, std::bind(&GrSimCommandConverter::callback_consai_command_, this, _1));
     subs_consai_command_.push_back(sub_command);
   }
@@ -56,10 +49,11 @@ void GrSimCommandConverter::on_timer()
   }
 
   auto commands_msg = std::make_unique<GrSimCommands>();
-  commands_msg->isteamyellow = team_is_yellow_;
 
+  bool team_is_yellow;
   for (auto it = consai_commands_.begin(); it != consai_commands_.end(); ) {
     GrSimRobotCommand robot_command;
+    team_is_yellow = (*it)->team_is_yellow;
     robot_command.id = (*it)->robot_id;
     robot_command.veltangent = (*it)->velocity_x;
     robot_command.velnormal = (*it)->velocity_y;
@@ -75,6 +69,7 @@ void GrSimCommandConverter::on_timer()
     it = consai_commands_.erase(it);
   }
 
+  commands_msg->isteamyellow = team_is_yellow;
   pub_grsim_commands_->publish(std::move(commands_msg));
 }
 

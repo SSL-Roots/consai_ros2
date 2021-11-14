@@ -69,11 +69,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
 
   for (int i = 0; i < ROBOT_NUM; i++) {
-    std::string name_space = team_color + std::to_string(i);
     pub_command_.push_back(
       create_publisher<RobotCommand>(
-        name_space + "/command", 10)
+        "robot" + std::to_string(i) + "/command", 10)
     );
+    std::string name_space = team_color + std::to_string(i);
     pub_goal_pose_.push_back(
       create_publisher<State>(
         name_space + "/goal_pose", 10)
