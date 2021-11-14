@@ -22,6 +22,7 @@
 #include "control_toolbox/pid.hpp"
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/action/robot_control.hpp"
+#include "consai_msgs/msg/goal_pose.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_msgs/srv/stop_control.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
@@ -34,6 +35,7 @@
 
 namespace consai_robot_controller
 {
+using GoalPose = consai_msgs::msg::GoalPose;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControl = consai_msgs::action::RobotControl;
@@ -83,7 +85,7 @@ private:
     const unsigned int robot_id, const bool success, const std::string & error_msg);
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
-  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
+  std::vector<rclcpp::Publisher<GoalPose>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;

@@ -69,16 +69,16 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
 
   for (int i = 0; i < ROBOT_NUM; i++) {
-    std::string name_space = team_color + std::to_string(i);
     pub_command_.push_back(
       create_publisher<RobotCommand>(
-        name_space + "/command", 10)
+        "robot" + std::to_string(i) + "/command", 10)
     );
     pub_goal_pose_.push_back(
-      create_publisher<State>(
-        name_space + "/goal_pose", 10)
+      create_publisher<GoalPose>(
+        "robot" + std::to_string(i) + "/goal_pose", 10)
     );
 
+    std::string name_space = team_color + std::to_string(i);
     server_control_.push_back(
       rclcpp_action::create_server<RobotControl>(
         get_node_base_interface(),
@@ -265,7 +265,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   last_world_vel_[robot_id] = world_vel;
 
   // ビジュアライズ用に、目標姿勢を出力する
-  pub_goal_pose_[robot_id]->publish(std::move(goal_pose));
+  auto goal_pose_msg = std::make_unique<GoalPose>();
+  goal_pose_msg->robot_id = robot_id;
+  goal_pose_msg->team_is_yellow = team_is_yellow_;
+  goal_pose_msg->pose = goal_pose;
+  pub_goal_pose_[robot_id]->publish(std::move(goal_pose_msg));
 
   // 途中経過を報告する
   if (need_response_[robot_id]) {
