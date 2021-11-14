@@ -81,8 +81,7 @@ class FieldWidget(QWidget):
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
         self._detection_tracked = TrackedFrame()
-        self._blue_goal_poses = {}
-        self._yellow_goal_poses = {}
+        self._goal_poses = {}
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -123,17 +122,13 @@ class FieldWidget(QWidget):
     def set_detection_tracked(self, msg):
         self._detection_tracked = msg
 
-    def set_blue_goal_pose(self, msg, robot_id):
-        self._blue_goal_poses[robot_id] = msg
-
-    def set_yellow_goal_pose(self, msg, robot_id):
-        self._yellow_goal_poses[robot_id] = msg
+    def set_goal_pose(self, msg, robot_id):
+        self._goal_poses[robot_id] = msg
 
     def reset_topics(self):
         # 取得したトピックをリセットする
         self._detections = {}
-        self._blue_goal_poses = {}
-        self._yellow_goal_poses = {}
+        self._goal_poses = {}
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
@@ -532,26 +527,26 @@ class FieldWidget(QWidget):
         robot_id = robot.robot_id.id
 
         # goal_poseが存在しなければ終了
-        goal_pose = None
-        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
-            goal_pose = self._yellow_goal_poses.get(robot_id)
-        else:
-            goal_pose = self._blue_goal_poses.get(robot_id)
-
+        goal_pose = self._goal_poses.get(robot_id)
         if goal_pose is None:
+            return
+
+        # team_colorが一致しなければ終了
+        robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
+        if robot_is_yellow is not goal_pose.team_is_yellow:
             return
 
         painter.setPen(Qt.black)
         painter.setBrush(self._COLOR_GOAL_POSE)
         # x,y座標
         point = self._convert_field_to_draw_point(
-            goal_pose.x * 1000, goal_pose.y * 1000)  # meters to mm
+            goal_pose.pose.x * 1000, goal_pose.pose.y * 1000)  # meters to mm
         size = self._RADIUS_ROBOT * self._scale_field_to_draw
         painter.drawEllipse(point, size, size)
 
         # 角度
-        line_x = self._RADIUS_ROBOT * math.cos(goal_pose.theta)
-        line_y = self._RADIUS_ROBOT * math.sin(goal_pose.theta)
+        line_x = self._RADIUS_ROBOT * math.cos(goal_pose.pose.theta)
+        line_y = self._RADIUS_ROBOT * math.sin(goal_pose.pose.theta)
         line_point = point + self._convert_field_to_draw_point(line_x, line_y)
         painter.drawLine(point, line_point)
 

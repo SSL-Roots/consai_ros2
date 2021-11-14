@@ -46,7 +46,6 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   std::vector<rclcpp::Subscription<ConsaiCommand>::SharedPtr> subs_consai_command_;
   rclcpp::Publisher<GrSimCommands>::SharedPtr pub_grsim_commands_;
-  bool team_is_yellow_;
   std::vector<ConsaiCommand::SharedPtr> consai_commands_;
 };
 

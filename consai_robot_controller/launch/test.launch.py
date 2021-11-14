@@ -63,7 +63,6 @@ def generate_launch_description():
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::GrSimCommandConverter',
                     name='command_converter',
-                    parameters=[{'team_is_yellow': LaunchConfiguration('yellow')}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
