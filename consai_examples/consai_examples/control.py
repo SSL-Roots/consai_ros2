@@ -21,7 +21,7 @@ import threading
 import time
 
 import rclpy
-from rclpy.executors import SingleThreadedExecutor
+from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 
 
@@ -278,7 +278,7 @@ if __name__ == '__main__':
 
     operator_node = RobotOperator(target_is_yellow=args.yellow)
 
-    executor = SingleThreadedExecutor()
+    executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
 
     # エグゼキュータは別スレッドでspinさせ続ける
