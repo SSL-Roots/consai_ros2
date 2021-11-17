@@ -24,14 +24,84 @@ from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 from role_assignment import RoleAssignment
 
+ROLE_GOALIE = 0
+ROLE_ATTACKER = 1
+ROLE_DEFENSE1 = 2
+ROLE_DEFENSE2 = 3
+ROLE_DEFENSE3 = 4
+ROLE_DEFENSE4 = 5
+ROLE_OFFENSE1 = 6
+ROLE_OFFENSE2 = 7
+ROLE_OFFENSE3 = 8
+ROLE_OFFENSE4 = 9
+ROLE_CENTOR = 10
+
+def action_goalie(robot_id):
+    # goalieの行動
+    print("goalie is {}".format(robot_id))
+
+def action_attacker(robot_id):
+    # attackerの行動
+    print("attacker is {}".format(robot_id))
+
+def action_defense1(robot_id):
+    # defense1の行動
+    print("defense1 is {}".format(robot_id))
+
+def action_defense2(robot_id):
+    # defense2の行動
+    print("defense2 is {}".format(robot_id))
+
+def action_defense3(robot_id):
+    # defense3の行動
+    print("defense3 is {}".format(robot_id))
+
+def action_defense4(robot_id):
+    # defense4の行動
+    print("defense4 is {}".format(robot_id))
+
+def action_offense1(robot_id):
+    # offense1の行動
+    print("offense1 is {}".format(robot_id))
+
+def action_offense2(robot_id):
+    # offense2の行動
+    print("offense2 is {}".format(robot_id))
+
+def action_offense3(robot_id):
+    # offense3の行動
+    print("offense3 is {}".format(robot_id))
+
+def action_offense4(robot_id):
+    # offense4の行動
+    print("offense4 is {}".format(robot_id))
+
+def action_centor(robot_id):
+    # centorの行動
+    print("centor is {}".format(robot_id))
+
+actions = {
+    ROLE_GOALIE: action_goalie,
+    ROLE_ATTACKER: action_attacker,
+    ROLE_DEFENSE1: action_defense1,
+    ROLE_DEFENSE2: action_defense2,
+    ROLE_DEFENSE3: action_defense3,
+    ROLE_DEFENSE4: action_defense4,
+    ROLE_OFFENSE1: action_offense1,
+    ROLE_OFFENSE2: action_offense2,
+    ROLE_OFFENSE3: action_offense3,
+    ROLE_OFFENSE4: action_offense4,
+    ROLE_CENTOR: action_centor,
+}
+
 def main():
     while rclpy.ok():
-        time.sleep(3)
-        print("STOP")
-        print("goalie id is {:}".format(assignment_node.goalie()))
-        for i in range(16):
-            operator_node.stop(i)
+        updated_roles = assignment_node.update_role()
+        for role in updated_roles:
+            robot_id = assignment_node.get_robot_id(role)
+            actions[role](robot_id)
 
+        time.sleep(0.1)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
