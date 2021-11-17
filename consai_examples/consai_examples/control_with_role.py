@@ -144,5 +144,12 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
 
+    print("ロボットを停止します")
+
+    # ロボットを停止
+    for i in range(16):
+        operator_node.stop(i)
+    time.sleep(5.0)
+
     rclpy.shutdown()
     executor.shutdown()

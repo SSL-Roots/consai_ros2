@@ -57,10 +57,6 @@ class RoleAssignment(Node):
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
-    def goalie(self):
-        # goalieのIDを返す
-        return self._role[self.ROLE_INDEX_GOALIE]
-
     def get_robot_id(self, role_index):
         # 指定された役割を担当するロボットIDを返す
         if role_index < len(self._role):
