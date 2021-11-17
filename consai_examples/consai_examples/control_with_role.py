@@ -34,51 +34,62 @@ ROLE_OFFENSE1 = 6
 ROLE_OFFENSE2 = 7
 ROLE_OFFENSE3 = 8
 ROLE_OFFENSE4 = 9
-ROLE_CENTOR = 10
+ROLE_CENTER = 10
 
 def action_goalie(robot_id):
     # goalieの行動
-    print("goalie is {}".format(robot_id))
+    print("goalie {} はゴール前に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, -0.9, 0.0, 0.0, False)
 
 def action_attacker(robot_id):
     # attackerの行動
-    print("attacker is {}".format(robot_id))
+    print("attacker {} はボールを追いかけます".format(robot_id))
+    operator_node.chase_ball(robot_id, -0.6, 0.0, 0.0, False, True)
 
 def action_defense1(robot_id):
     # defense1の行動
-    print("defense1 is {}".format(robot_id))
+    print("defense1 {} は自チームサイドの左上に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, -0.8, 0.8, 0.0, True)
 
 def action_defense2(robot_id):
     # defense2の行動
-    print("defense2 is {}".format(robot_id))
+    print("defense2 {} は自チームサイドの右上に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, -0.2, 0.8, 0.0, True)
 
 def action_defense3(robot_id):
     # defense3の行動
-    print("defense3 is {}".format(robot_id))
+    print("defense3 {} は自チームサイドの右下に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, -0.2, -0.8, 0.0, True)
 
 def action_defense4(robot_id):
     # defense4の行動
-    print("defense4 is {}".format(robot_id))
+    print("defense4 {} は自チームサイドの左下に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, -0.8, -0.8, 0.0, True)
 
 def action_offense1(robot_id):
     # offense1の行動
-    print("offense1 is {}".format(robot_id))
+    print("offense1 {} は相手チームサイドの左上に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, 0.2, 0.8, 0.0, True)
 
 def action_offense2(robot_id):
     # offense2の行動
-    print("offense2 is {}".format(robot_id))
+    print("offense1 {} は相手チームサイドの右上に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, 0.8, 0.8, 0.0, True)
 
 def action_offense3(robot_id):
     # offense3の行動
-    print("offense3 is {}".format(robot_id))
+    print("offense3 {} は相手チームサイドの右下に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, 0.8, -0.8, 0.0, True)
 
 def action_offense4(robot_id):
     # offense4の行動
-    print("offense4 is {}".format(robot_id))
+    print("offense4 {} は相手チームサイドの左下に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, 0.2, -0.8, 0.0, True)
 
-def action_centor(robot_id):
-    # centorの行動
-    print("centor is {}".format(robot_id))
+def action_center(robot_id):
+    # centerの行動
+    print("center {} はフィールド中央に移動します".format(robot_id))
+    operator_node.move_to_normalized(robot_id, 0.0, 0.0, 0.0, True)
 
 actions = {
     ROLE_GOALIE: action_goalie,
@@ -91,7 +102,7 @@ actions = {
     ROLE_OFFENSE2: action_offense2,
     ROLE_OFFENSE3: action_offense3,
     ROLE_OFFENSE4: action_offense4,
-    ROLE_CENTOR: action_centor,
+    ROLE_CENTER: action_center,
 }
 
 def main():
