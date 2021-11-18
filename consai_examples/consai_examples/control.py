@@ -252,10 +252,26 @@ def test_stop_robots():
     while operator_node.all_robots_are_free() is False:
         pass
 
+def test_move_to_line():
+    # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
+    p1_x = 0.0
+    p1_y = 0.0
+    STEP = 6
+    LENGTH = 5.0
+    for i in range(STEP):
+        angle = 2.0 * math.pi * i / float(STEP)
+        p2_x = LENGTH * math.cos(angle)
+        p2_y = LENGTH * math.sin(angle)
+        for i in range(16):
+            operator_node.move_to_line(i, p1_x, p1_y, p2_x, p2_y, i*0.4, 0, False)
+
+        # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+        while operator_node.all_robots_are_free() is False:
+            pass
 
 def main():
     # 実行したい関数のコメントを外してください
-    test_move_to()
+    # test_move_to()
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
@@ -264,6 +280,7 @@ def main():
     # test_pass_two_robots()
     # test_pass_four_robots()
     # test_stop_robots()
+    test_move_to_line()
 
 
 if __name__ == '__main__':

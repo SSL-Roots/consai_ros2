@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "consai_msgs/action/robot_control.hpp"
+#include "consai_msgs/msg/constraint_line.hpp"
 #include "consai_msgs/msg/constraint_object.hpp"
 #include "consai_msgs/msg/constraint_pose.hpp"
 #include "consai_msgs/msg/constraint_theta.hpp"
@@ -34,6 +35,7 @@ namespace consai_robot_controller
 {
 
 using RobotControl = consai_msgs::action::RobotControl;
+using ConstraintLine = consai_msgs::msg::ConstraintLine;
 using ConstraintObject = consai_msgs::msg::ConstraintObject;
 using ConstraintPose = consai_msgs::msg::ConstraintPose;
 using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
@@ -60,6 +62,7 @@ public:
     const TrackedRobot & my_robot, State & parsed_pose,
     double & kick_power, double & dribble_power) const;
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
+  bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
   bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
   bool parse_constraint_theta(
     const ConstraintTheta & theta, const double goal_x,
