@@ -98,3 +98,35 @@ $ ros2 run consai_examples control_by_referee.py
 ### 解説
 
 `control_by_referee.py`は`referee`トピックの使い方を知るためのスクリプトです。
+
+## ロボットに役割を与える
+
+次のコマンドを実行して、コントローラを起動します。
+
+```sh
+$ ros2 launch consai_examples start.launch.py
+```
+
+別のターミナルで、pythonスクリプトを実行します。
+
+```sh
+$ ros2 run consai_examples control_with_role.py
+```
+
+### 解説
+
+`control_with_role.py`はロボットへのゴールキーパーやアタッカー、
+ディフェンス等の役割を与え方を知るためのスクリプトです。
+
+ゴールキーパはスクリプトのオプション`--goalie`で変更できます。
+
+ロボカップSSLのルールでは、ゴールキーパを自由に変更できないため、
+スクリプト内でもIDを固定しています。
+
+```sh
+# 逆サイドの黄色ロボットを動かす場合
+$ ros2 launch consai_examples start.launch.py yellow:=true invert:=true
+
+# ゴールキーパのIDを2とする
+$ ros2 run consai_examples control_with_role.py --goalie 2 --yellow
+```

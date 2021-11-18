@@ -20,7 +20,7 @@ import threading
 import time
 
 import rclpy
-from rclpy.executors import SingleThreadedExecutor
+from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
 from robot_operator import RobotOperator
 
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     operator_node = RobotOperator(args.yellow)
     referee_parser = RefereeParser(args.yellow, args.invert)
 
-    executor = SingleThreadedExecutor()
+    executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
     executor.add_node(referee_parser)
 
