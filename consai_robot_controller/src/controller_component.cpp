@@ -150,9 +150,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
 
-  server_stop_control_ = create_service<StopControl>(
-    "stop_control", std::bind(&Controller::handle_stop_control, this, _1, _2));
-
   auto param_change_callback =
     [this](std::vector<rclcpp::Parameter> parameters) {
       // ROSパラメータの更新
@@ -416,21 +413,6 @@ void Controller::handle_accepted(
 
   control_enable_[robot_id] = true;
   goal_handle_[robot_id] = goal_handle;
-}
-
-void Controller::handle_stop_control(
-  const std::shared_ptr<StopControl::Request> request,
-  std::shared_ptr<StopControl::Response> response)
-{
-  // stop_controlサービスのハンドラ
-  auto robot_id = request->robot_id;
-  if (switch_to_stop_control_mode(robot_id, false, "StopControlサービスがコールされました")) {
-    response->success = true;
-    response->message = "ID:" + std::to_string(robot_id) + " のロボットを停止しました。";
-  } else {
-    response->success = false;
-    response->message = "ID:" + std::to_string(robot_id) + " のロボットを停止に失敗しました。";
-  }
 }
 
 State Controller::limit_world_velocity(const State & velocity) const

@@ -22,7 +22,6 @@ from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
-from consai_msgs.srv import StopControl
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -41,11 +40,6 @@ class RobotOperator(Node):
         for i in range(ROBOT_NUM):
             action_name = team_color + str(i) + '/control'
             self._action_clients.append(ActionClient(self, RobotControl, action_name))
-
-        self._stop_client = self.create_client(StopControl, 'stop_control')
-        while not self._stop_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('stop_control service not available, waiting again...')
-        self._future = None
 
         self._robot_is_free = [True] * ROBOT_NUM
         self._send_goal_future = [None] * ROBOT_NUM
