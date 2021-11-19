@@ -1,3 +1,6 @@
+# 制御を停止する場合はstopをtrue
+# actionは瞬時に完了する
+bool stop false
 # 目標値に到達しても制御を続けてほしいときはtrue
 # actionは瞬時に完了する
 bool keep_control false

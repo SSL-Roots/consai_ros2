@@ -363,9 +363,13 @@ rclcpp_action::GoalResponse Controller::handle_goal(
   (void)uuid;
   (void)robot_id;
 
-  State goal_pose;
-  // 目標値の解析に失敗したらReject
+  // 制御を停止する場合は無条件でaccept
+  if (goal->stop) {
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
 
+  // 目標値の解析に失敗したらReject
+  State goal_pose;
   if (!parser_.parse_goal(goal, goal_pose)) {
     return rclcpp_action::GoalResponse::REJECT;
   }
@@ -386,8 +390,17 @@ void Controller::handle_accepted(
   const unsigned int robot_id)
 {
   // 目標値が承認されたときに実行するハンドラ
-
   auto goal = goal_handle->get_goal();
+  if (goal->stop) {
+    // 制御を停止する
+    auto result = std::make_shared<RobotControl::Result>();
+    result->success = true;
+    result->message = "制御を停止します";
+    goal_handle->succeed(result);
+    switch_to_stop_control_mode(robot_id, true, "RobotControl.stopがセットされました");
+    return;
+  }
+
   if (goal->keep_control) {
     // 目標値に到達しても制御を続ける
     need_response_[robot_id] = false;

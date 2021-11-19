@@ -71,9 +71,9 @@ class RobotOperator(Node):
 
     def stop(self, robot_id):
         # 指定されたIDの制御を停止する
-        request = StopControl.Request()
-        request.robot_id = robot_id
-        self._future = self._stop_client.call_async(request)
+        goal_msg = RobotControl.Goal()
+        goal_msg.stop = True
+        return self._set_goal(robot_id, goal_msg)
 
     def move_to(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる

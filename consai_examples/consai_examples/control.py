@@ -279,8 +279,8 @@ def main():
     # test_shoot(1.0, 0.0)
     # test_pass_two_robots()
     # test_pass_four_robots()
-    # test_stop_robots()
-    test_move_to_line()
+    test_stop_robots()
+    # test_move_to_line()
 
 
 if __name__ == '__main__':
