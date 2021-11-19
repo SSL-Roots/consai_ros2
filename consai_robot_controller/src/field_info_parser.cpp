@@ -96,16 +96,27 @@ bool FieldInfoParser::parse_goal(
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
+  // ここではキック処理や、レシーブ処理をしない
 
+  // 目標姿勢を算出
   State target_pose;
+  bool parse_succeeded = false;
   if (goal->pose.size() > 0) {
     if (parse_constraint_pose(goal->pose[0], target_pose)) {
-      parsed_pose = target_pose;
-      return true;
+      parse_succeeded = true;
+    }
+  }
+  if (goal->line.size() > 0) {
+    if (parse_constraint_line(goal->line[0], target_pose)) {
+      parse_succeeded = true;
     }
   }
 
-  return false;
+  if (parse_succeeded == false) {
+    return false;
+  }
+  parsed_pose = target_pose;
+  return true;
 }
 
 bool FieldInfoParser::parse_goal(
@@ -115,17 +126,11 @@ bool FieldInfoParser::parse_goal(
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
-
-  State target_pose;
-  if (goal->pose.size() == 0) {
-    return false;
-  }
+  // 衝突回避やキック、レシーブの処理も実施する
 
   // 目標姿勢を算出
-  if (!parse_constraint_pose(goal->pose[0], target_pose)) {
+  if (!parse_goal(goal, parsed_pose)) {
     return false;
-  } else {
-    parsed_pose = target_pose;
   }
 
   // 以下、ボールが関わる処理のためボール情報を取得する
@@ -146,7 +151,7 @@ bool FieldInfoParser::parse_goal(
     parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y))
   {
     // 目標姿勢とボールが近ければ、キック処理を行う
-    if (tools::distance(tools::pose_state(ball), target_pose) < 0.7) {
+    if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7) {
       parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
     }
   }
@@ -178,6 +183,30 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
   parsed_pose.x = parsed_x;
   parsed_pose.y = parsed_y;
   parsed_pose.theta = parsed_theta;
+
+  return true;
+}
+
+bool FieldInfoParser::parse_constraint_line(
+  const ConstraintLine & line, State & parsed_pose) const {
+  State p1, p2;
+  if (!parse_constraint_xy(line.p1, p1.x, p1.y)) {
+    return false;
+  }
+  if (!parse_constraint_xy(line.p2, p2.x, p2.y)) {
+    return false;
+  }
+
+  // p1からp2を見た座標系を生成
+  auto angle_p1_to_p2 = tools::calc_angle(p1, p2);
+  tools::Trans trans_1to2(p1, angle_p1_to_p2);
+  // 直線p1 -> p2上で、p1からdistanceだけ離れた位置を目標位置する
+  parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);
+
+  if (!parse_constraint_theta(line.theta, parsed_pose.x, parsed_pose.y,
+                              parsed_pose.theta)) {
+    return false;
+  }
 
   return true;
 }

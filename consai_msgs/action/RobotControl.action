@@ -4,6 +4,7 @@ bool keep_control false
 
 # 移動の目標値
 ConstraintPose[<=1] pose
+ConstraintLine[<=1] line
 
 # ボール操作関連のフラグ
 # シュートは最大速度でボールを蹴る

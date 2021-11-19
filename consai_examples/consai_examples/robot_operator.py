@@ -18,6 +18,7 @@
 from functools import partial
 
 from consai_msgs.action import RobotControl
+from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
@@ -85,6 +86,23 @@ class RobotOperator(Node):
 
         goal_msg = RobotControl.Goal()
         goal_msg.pose.append(pose)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def move_to_line(self, robot_id, p1_x, p1_y, p2_x, p2_y, distance, theta, keep=False):
+        # 指定したIDのロボットを直線上へ移動させる
+        line = ConstraintLine()
+
+        line.p1.value_x.append(p1_x)
+        line.p1.value_y.append(p1_y)
+        line.p2.value_x.append(p2_x)
+        line.p2.value_y.append(p2_y)
+        line.distance = distance
+        line.theta.value_theta.append(theta)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.line.append(line)
         goal_msg.keep_control = keep
 
         return self._set_goal(robot_id, goal_msg)
