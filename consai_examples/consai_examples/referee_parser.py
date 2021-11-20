@@ -173,10 +173,10 @@ class RefereeParser(Node):
         # ステージのテキストを返す
         return self._STAGE_STR_DICT.get(self._referee.stage, 'NONE')
 
-    def get_command_count(self):
-        # command_counterをそのまま返す
-        # コマンドの更新を判定するために使用する
-        return self._command_counter
+    def get_command(self):
+        # レフェリーコマンドを返す
+        # コマンドの更新を判定するために使用できる
+        return self._current_command
 
     def halt(self):
         return self._current_command == Referee.COMMAND_HALT

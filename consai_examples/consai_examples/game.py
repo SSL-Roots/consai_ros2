@@ -40,15 +40,15 @@ ROLE_OFFENSE4 = 9
 ROLE_CENTER = 10
 
 def main():
-    prev_command_count = -1  # レフェリーコマンド更新判定用の変数
+    prev_referee_command = -1  # レフェリーコマンド更新判定用の変数
     while rclpy.ok():
         # ロボットの役割の更新し、
         # 役割が変わったロボットのみ、行動を更新する
         updated_roles = assignment_node.update_role()
 
         # レフェリーコマンドが変化した場合は、全てのロボットの行動を更新する
-        if prev_command_count != referee_parser.get_command_count():
-            prev_command_count = referee_parser.get_command_count()
+        if prev_referee_command != referee_parser.get_command():
+            prev_referee_command = referee_parser.get_command()
             updated_roles = assignment_node.get_active_roles()
 
         for role in updated_roles:
@@ -58,8 +58,44 @@ def main():
                 decisions[role].halt(robot_id)
             elif referee_parser.stop():
                 decisions[role].stop(robot_id)
+            elif referee_parser.inplay():
+                decisions[role].inplay(robot_id)
+            elif referee_parser.our_pre_kickoff():
+                decisions[role].our_pre_kickoff(robot_id)
+            elif referee_parser.our_kickoff():
+                decisions[role].our_kickoff(robot_id)
+            elif referee_parser.their_pre_kickoff():
+                decisions[role].their_pre_kickoff(robot_id)
+            elif referee_parser.their_kickoff():
+                decisions[role].their_kickoff(robot_id)
+            elif referee_parser.our_pre_penalty():
+                decisions[role].our_pre_penalty(robot_id)
+            elif referee_parser.our_penalty():
+                decisions[role].our_penalty(robot_id)
+            elif referee_parser.their_pre_penalty():
+                decisions[role].their_pre_penalty(robot_id)
+            elif referee_parser.their_penalty():
+                decisions[role].their_penalty(robot_id)
+            elif referee_parser.our_direct():
+                decisions[role].our_direct(robot_id)
+            elif referee_parser.their_direct():
+                decisions[role].their_direct(robot_id)
+            elif referee_parser.our_indirect():
+                decisions[role].our_indirect(robot_id)
+            elif referee_parser.their_indirect():
+                decisions[role].their_indirect(robot_id)
+            elif referee_parser.our_timeout():
+                decisions[role].our_timeout(robot_id)
+            elif referee_parser.their_timeout():
+                decisions[role].their_timeout(robot_id)
+            elif referee_parser.our_ball_placement():
+                decisions[role].our_ball_placement(
+                    robot_id, referee_parser.placement_position())
+            elif referee_parser.their_ball_placement():
+                decisions[role].their_ball_placement(
+                    robot_id, referee_parser.placement_position())
             else:
-                pass
+                print("UNDEFINED REFEREE COMMAND!!!")
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

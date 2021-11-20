@@ -21,9 +21,9 @@ class GoaleDecition(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
-    # def halt(self, robot_id):
-    #     print("HALT:{}".format(robot_id))
+    def halt(self, robot_id):
+        print("goalie HALT:{}".format(robot_id))
 
-    # def stop(self, robot_id):
-    #     print("STOP:{}".format(robot_id))
+    def stop(self, robot_id):
+        print("goalie STOP:{}".format(robot_id))
 

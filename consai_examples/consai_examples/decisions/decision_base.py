@@ -27,3 +27,55 @@ class DecisionBase(object):
     def stop(self, robot_id):
         print("STOP:{}".format(robot_id))
 
+    def inplay(self, robot_id):
+        print("INPLAY:{}".format(robot_id))
+
+    def our_pre_kickoff(self, robot_id):
+        print("OUR PRE KICKOFF:{}".format(robot_id))
+
+    def our_kickoff(self, robot_id):
+        print("OUR KICKOFF:{}".format(robot_id))
+
+    def their_pre_kickoff(self, robot_id):
+        print("THEIR PRE KICKOFF:{}".format(robot_id))
+
+    def their_kickoff(self, robot_id):
+        print("THEIR KICKOFF:{}".format(robot_id))
+
+    def our_pre_penalty(self, robot_id):
+        print("OUR PRE PENALTY:{}".format(robot_id))
+
+    def our_penalty(self, robot_id):
+        print("OUR PENALTY:{}".format(robot_id))
+
+    def their_pre_penalty(self, robot_id):
+        print("THEIR PRE PENALTY:{}".format(robot_id))
+
+    def their_penalty(self, robot_id):
+        print("THEIR penalty:{}".format(robot_id))
+
+    def our_direct(self, robot_id):
+        print("OUR DIRECT FREE KICK:{}".format(robot_id))
+
+    def their_direct(self, robot_id):
+        print("THEIR DIRECT FREE KICK:{}".format(robot_id))
+
+    def our_indirect(self, robot_id):
+        print("OUR INDIRECT FREE KICK:{}".format(robot_id))
+
+    def their_indirect(self, robot_id):
+        print("THEIR INDIRECT FREE KICK:{}".format(robot_id))
+
+    def our_timeout(self, robot_id):
+        print("OUR TIMEOUT:{}".format(robot_id))
+
+    def their_timeout(self, robot_id):
+        print("THEIR TIMEOUT:{}".format(robot_id))
+
+    def our_ball_placement(self, robot_id, placement_pos):
+        print("OUR BALL PLACEMENT:{} to x:{}, y:{}".format(
+            robot_id, placement_pos.x, placement_pos.y))
+
+    def their_ball_placement(self, robot_id, placement_pos):
+        print("THEIR BALL PLACEMENT:{} to x:{}, y:{}".format(
+            robot_id, placement_pos.x, placement_pos.y))
