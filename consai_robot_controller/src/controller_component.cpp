@@ -239,9 +239,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot.orientation), duration.nanoseconds());
   }
 
-  // 最大速度リミットを適用
+  // 最大加速度リミットを適用
   world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-  world_vel = limit_world_velocity(world_vel);
+  // 最大速度リミットを適用
+  auto max_velocity_xy = max_velocity_xy_;
+  // 最大速度リミットを上書きできる
+  if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+    max_velocity_xy = std::min(
+      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+  }
+  world_vel = limit_world_velocity(world_vel, max_velocity_xy);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
@@ -415,12 +422,18 @@ void Controller::handle_accepted(
   goal_handle_[robot_id] = goal_handle;
 }
 
-State Controller::limit_world_velocity(const State & velocity) const
+State Controller::limit_world_velocity(
+  const State & velocity, const double & max_velocity_xy) const
 {
   // ワールド座標系のロボット速度に制限を掛ける
-  State modified_velocity;
-  modified_velocity.x = std::clamp(velocity.x, -max_velocity_xy_, max_velocity_xy_);
-  modified_velocity.y = std::clamp(velocity.y, -max_velocity_xy_, max_velocity_xy_);
+  auto velocity_norm = std::hypot(velocity.x, velocity.y);
+  auto velocity_ratio = velocity_norm / max_velocity_xy;
+
+  State modified_velocity = velocity;
+  if (velocity_ratio > 1.0) {
+    modified_velocity.x /= velocity_ratio;
+    modified_velocity.y /= velocity_ratio;
+  }
   modified_velocity.theta = std::clamp(velocity.theta, -max_velocity_theta_, max_velocity_theta_);
 
   return modified_velocity;
@@ -431,24 +444,24 @@ State Controller::limit_world_acceleration(
   const rclcpp::Duration & dt) const
 {
   // ワールド座標系のロボット加速度に制限を掛ける
+  State acc;
+  acc.x = (velocity.x - last_velocity.x) / dt.seconds();
+  acc.y = (velocity.y - last_velocity.y) / dt.seconds();
+  acc.theta = (velocity.theta - last_velocity.theta) / dt.seconds();
+
+  auto acc_norm = std::hypot(acc.x, acc.y);
+  auto acc_ratio = acc_norm / max_acceleration_xy_;
+
+  if (acc_ratio > 1.0) {
+    acc.x /= acc_ratio;
+    acc.y /= acc_ratio;
+  }
+  acc.theta = std::clamp(acc.theta, -max_acceleration_theta_, max_acceleration_theta_);
+
   State modified_velocity = velocity;
-  double acc_x = (velocity.x - last_velocity.x) / dt.seconds();
-  double acc_y = (velocity.y - last_velocity.y) / dt.seconds();
-  double acc_theta = (velocity.theta - last_velocity.theta) / dt.seconds();
-
-  if (std::fabs(acc_x) > max_acceleration_xy_) {
-    modified_velocity.x = last_velocity.x + std::copysign(
-      max_acceleration_xy_ * dt.seconds(), acc_x);
-  }
-  if (std::fabs(acc_y) > max_acceleration_xy_) {
-    modified_velocity.y = last_velocity.y + std::copysign(
-      max_acceleration_xy_ * dt.seconds(), acc_y);
-  }
-  if (std::fabs(acc_theta) > max_acceleration_theta_) {
-    modified_velocity.theta = last_velocity.theta + std::copysign(
-      max_acceleration_theta_ * dt.seconds(), acc_theta);
-  }
-
+  modified_velocity.x = last_velocity.x + acc.x * dt.seconds();
+  modified_velocity.y = last_velocity.y + acc.y * dt.seconds();
+  modified_velocity.theta = last_velocity.theta + acc.theta * dt.seconds();
   return modified_velocity;
 }
 

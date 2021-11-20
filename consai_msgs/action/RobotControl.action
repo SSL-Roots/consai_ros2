@@ -5,6 +5,10 @@ bool stop false
 # actionは瞬時に完了する
 bool keep_control false
 
+# XY方向の最大速度m/s を制限する
+# STOPゲーム中は走行速度を抑えなくてはならない
+float64[<=1] max_velocity_xy
+
 # 移動の目標値
 ConstraintPose[<=1] pose
 ConstraintLine[<=1] line
