@@ -42,13 +42,15 @@ ROLE_CENTER = 10
 def main():
     prev_command_count = -1  # レフェリーコマンド更新判定用の変数
     while rclpy.ok():
-        # ロボットの役割の更新
+        # ロボットの役割の更新し、
+        # 役割が変わったロボットのみ、行動を更新する
         updated_roles = assignment_node.update_role()
+
+        # レフェリーコマンドが変化した場合は、全てのロボットの行動を更新する
         if prev_command_count != referee_parser.get_command_count():
             prev_command_count = referee_parser.get_command_count()
-            print(decisions.keys())
+            updated_roles = assignment_node.get_active_roles()
 
-        # 役割が変わったロボットのみ、行動をアップデートする
         for role in updated_roles:
             robot_id = assignment_node.get_robot_id(role)
             # レフェリーコマンドに合わせて行動を決定する
@@ -110,11 +112,10 @@ if __name__ == '__main__':
         pass
 
     print("ロボットを停止します")
-
     # ロボットを停止
     for i in range(16):
         operator_node.stop(i)
-    time.sleep(5.0)
+    time.sleep(1.0)
 
     rclpy.shutdown()
     executor.shutdown()

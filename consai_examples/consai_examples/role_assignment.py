@@ -77,6 +77,14 @@ class RoleAssignment(Node):
 
         return changed_index
 
+    def get_active_roles(self):
+        # IDが割り当てられているroleのリストを返す
+        active_index = []
+        for i in range(len(self._role)):
+            if self._role[i] is not None:
+                active_index.append(i)
+        return active_index
+
     def _detection_tracked_callback(self, msg):
         self._detection = msg
 
