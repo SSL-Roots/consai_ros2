@@ -25,10 +25,10 @@ from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 
 
-def test_move_to():
+def test_move_to(max_velocity_xy=None):
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
     for i in range(16):
-        operator_node.move_to(i, -5.0 + 0.5 * i, 4.0, math.pi * 0.5, False)
+        operator_node.move_to(i, -5.0 + 0.5 * i, 4.0, math.pi * 0.5, False, max_velocity_xy)
 
     # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
     while operator_node.all_robots_are_free() is False:
@@ -36,7 +36,7 @@ def test_move_to():
 
     # 制御継続フラグがTrueなので、ロボットはすぐにフリー状態になる
     for i in range(16):
-        operator_node.move_to(i, -5.0 + 0.5 * i, -4.0, -math.pi * 0.5, True)
+        operator_node.move_to(i, -5.0 + 0.5 * i, -4.0, -math.pi * 0.5, True, max_velocity_xy)
 
     while operator_node.all_robots_are_free() is False:
         pass
@@ -272,6 +272,7 @@ def test_move_to_line():
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
+    test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
@@ -279,7 +280,7 @@ def main():
     # test_shoot(1.0, 0.0)
     # test_pass_two_robots()
     # test_pass_four_robots()
-    test_stop_robots()
+    # test_stop_robots()
     # test_move_to_line()
 
 
