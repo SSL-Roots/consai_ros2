@@ -71,7 +71,7 @@ private:
   void handle_accepted(
     std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
-  State limit_world_velocity(const State & velocity) const;
+  State limit_world_velocity(const State & velocity, const double & max_velocity_xy) const;
   State limit_world_acceleration(
     const State & velocity, const State & last_velocity,
     const rclcpp::Duration & dt) const;

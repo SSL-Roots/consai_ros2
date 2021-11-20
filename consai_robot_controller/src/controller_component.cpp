@@ -239,9 +239,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot.orientation), duration.nanoseconds());
   }
 
-  // 最大速度リミットを適用
+  // 最大加速度リミットを適用
   world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-  world_vel = limit_world_velocity(world_vel);
+  // 最大速度リミットを適用
+  auto max_velocity_xy = max_velocity_xy_;
+  // 最大速度リミットを上書きできる
+  if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+    max_velocity_xy = std::min(
+      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+  }
+  world_vel = limit_world_velocity(world_vel, max_velocity_xy);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
@@ -415,11 +422,12 @@ void Controller::handle_accepted(
   goal_handle_[robot_id] = goal_handle;
 }
 
-State Controller::limit_world_velocity(const State & velocity) const
+State Controller::limit_world_velocity(
+  const State & velocity, const double & max_velocity_xy) const
 {
   // ワールド座標系のロボット速度に制限を掛ける
   auto velocity_norm = std::hypot(velocity.x, velocity.y);
-  auto velocity_ratio = velocity_norm / max_velocity_xy_;
+  auto velocity_ratio = velocity_norm / max_velocity_xy;
 
   State modified_velocity = velocity;
   if (velocity_ratio > 1.0) {

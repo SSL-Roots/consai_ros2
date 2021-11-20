@@ -69,7 +69,7 @@ class RobotOperator(Node):
         goal_msg.stop = True
         return self._set_goal(robot_id, goal_msg)
 
-    def move_to(self, robot_id, x, y, theta, keep=False):
+    def move_to(self, robot_id, x, y, theta, keep=False, max_velocity_xy=None):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
         # 目的地に到達しても制御を維持する場合はkeepをtrue
         pose = ConstraintPose()
@@ -81,6 +81,10 @@ class RobotOperator(Node):
         goal_msg = RobotControl.Goal()
         goal_msg.pose.append(pose)
         goal_msg.keep_control = keep
+
+        # 最大走行速度を制限する
+        if max_velocity_xy:
+            goal_msg.max_velocity_xy.append(max_velocity_xy)
 
         return self._set_goal(robot_id, goal_msg)
 
