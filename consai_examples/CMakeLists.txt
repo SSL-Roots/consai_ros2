@@ -27,6 +27,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
+    ${PROJECT_NAME}/decisions/attacker.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
     DESTINATION lib/${PROJECT_NAME})

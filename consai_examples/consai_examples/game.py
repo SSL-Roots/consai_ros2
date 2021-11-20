@@ -19,6 +19,7 @@ import argparse
 import threading
 import time
 
+from decisions.attacker import AttackerDecition
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecition
 import rclpy
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
     decisions = {
         ROLE_GOALIE: GoaleDecition(operator_node),
-        ROLE_ATTACKER: DecisionBase(operator_node),
+        ROLE_ATTACKER: AttackerDecition(operator_node),
         ROLE_DEFENSE1: DecisionBase(operator_node),
         ROLE_DEFENSE2: DecisionBase(operator_node),
         ROLE_DEFENSE3: DecisionBase(operator_node),

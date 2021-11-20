@@ -17,16 +17,15 @@
 
 from decisions.decision_base import DecisionBase
 
-class GoaleDecition(DecisionBase):
+class AttackerDecition(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
     def halt(self, robot_id):
-        print("goalie HALT:{}".format(robot_id))
+        print("attacker HALT:{}".format(robot_id))
         self._operator.stop(robot_id)
 
     def stop(self, robot_id):
-        print("goalie STOP:{}".format(robot_id))
-        self._operator.move_to_normalized(robot_id, -1.0, 0.0, 0.0, True)
-
+        print("attacker STOP:{}".format(robot_id))
+        self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
