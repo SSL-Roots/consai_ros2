@@ -16,16 +16,19 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
+from field_observer import FieldObserver
 
 class AttackerDecition(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
-    def halt(self, robot_id):
-        print("attacker HALT:{}".format(robot_id))
-        self._operator.stop(robot_id)
-
     def stop(self, robot_id):
-        print("attacker STOP:{}".format(robot_id))
+        # ボールがディフェンスエリアにあるときは、別の場所に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+            self._operator.move_to(robot_id, 0.0, 0.0, 0.0, True, self.MAX_VELOCITY_AT_STOP_GAME)
+            return
+
+        # ボールを追いかける
         self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+        print("ball_state:{}".format(self._ball_state))
