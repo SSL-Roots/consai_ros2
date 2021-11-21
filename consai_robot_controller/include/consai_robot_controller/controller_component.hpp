@@ -42,6 +42,7 @@ using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
+using FieldInfoParser = consai_robot_controller::FieldInfoParser;
 
 
 class Controller : public rclcpp::Node
@@ -93,7 +94,7 @@ private:
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
   std::vector<State> last_world_vel_;
 
-  consai_robot_controller::FieldInfoParser parser_;
+  std::shared_ptr<FieldInfoParser> parser_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   bool team_is_yellow_;

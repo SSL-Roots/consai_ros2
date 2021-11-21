@@ -58,6 +58,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
 
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
+  parser_ = std::make_shared<FieldInfoParser>(team_is_yellow_);
 
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
 
@@ -204,7 +205,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
-  if (!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)) {
+  if (!parser_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) +
       " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg);
@@ -221,7 +222,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
-  if (parser_.parse_goal(
+  if (parser_->parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, kick_power,
       dribble_power))
   {
@@ -323,12 +324,12 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 {
-  parser_.set_detection_tracked(msg);
+  parser_->set_detection_tracked(msg);
 }
 
 void Controller::callback_geometry(const GeometryData::SharedPtr msg)
 {
-  parser_.set_geometry(msg);
+  parser_->set_geometry(msg);
 }
 
 bool Controller::update_pid_gain_from_param(
@@ -374,7 +375,7 @@ rclcpp_action::GoalResponse Controller::handle_goal(
 
   // 目標値の解析に失敗したらReject
   State goal_pose;
-  if (!parser_.parse_goal(goal, goal_pose)) {
+  if (!parser_->parse_goal(goal, goal_pose)) {
     return rclcpp_action::GoalResponse::REJECT;
   }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;

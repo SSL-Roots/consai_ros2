@@ -49,7 +49,7 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 class FieldInfoParser
 {
 public:
-  FieldInfoParser();
+  FieldInfoParser(const bool team_is_yellow);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   bool extract_robot(
@@ -81,6 +81,7 @@ public:
 private:
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
+  bool team_is_yellow_;
 };
 
 }  // namespace consai_robot_controller

@@ -24,7 +24,8 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 
-FieldInfoParser::FieldInfoParser()
+FieldInfoParser::FieldInfoParser(const bool team_is_yellow):
+  team_is_yellow_(team_is_yellow)
 {
 }
 
