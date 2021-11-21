@@ -15,14 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from field_observer import FieldObserver
 
 class DecisionBase(object):
+    MAX_VELOCITY_AT_STOP_GAME = 1.5  # m/s
 
     def __init__(self, robot_operator):
         self._operator = robot_operator
+        self._ball_state = FieldObserver.BALL_NONE
+
+    def set_ball_state(self, ball_state):
+        self._ball_state = ball_state
 
     def halt(self, robot_id):
-        print("HALT:{}".format(robot_id))
         self._operator.stop(robot_id)
 
     def stop(self, robot_id):
