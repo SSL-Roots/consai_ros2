@@ -22,6 +22,7 @@ from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
+from consai_msgs.msg import ConstraintXY
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -98,6 +99,38 @@ class RobotOperator(Node):
         line.p2.value_y.append(p2_y)
         line.distance = distance
         line.theta.value_theta.append(theta)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.line.append(line)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def move_to_line_to_defend_our_goal(self, robot_id, p1_x, p1_y, p2_x, p2_y, keep=False):
+        # 自チームのゴールをボールから守るように、直線p1->p2に移動する
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1.value_x.append(p1_x)
+        line.p1.value_y.append(p1_y)
+        line.p2.value_x.append(p2_x)
+        line.p2.value_y.append(p2_y)
+
+        # 自チームのゴールとボールを結ぶ直線p3->p4を作成
+        p3 = ConstraintXY()
+        p3.normalized = True
+        p3.value_x.append(-1.0)
+        p3.value_y.append(0.0)
+
+        p4 = ConstraintXY()
+        obj_ball = ConstraintObject()
+        obj_ball.type = ConstraintObject.BALL
+        p4.object.append(obj_ball)
+
+        line.p3.append(p3)
+        line.p4.append(p4)
+        line.theta.object.append(obj_ball)
+        line.theta.param = ConstraintTheta.PARAM_LOOK_TO
 
         goal_msg = RobotControl.Goal()
         goal_msg.line.append(line)

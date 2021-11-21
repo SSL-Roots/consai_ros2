@@ -9,6 +9,6 @@ float64 distance
 ConstraintTheta theta
 
 # P3とP4をセットした場合、P3とP4を結ぶ直線Line3to4を作り
-# Line1to2とLine3to4の交点を目標位置とする
+# Line1to2上で、Line3to4と交わるところを目標位置とする
 ConstraintXY[<=1] p3
 ConstraintXY[<=1] p4 
