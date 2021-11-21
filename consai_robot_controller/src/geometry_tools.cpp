@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 #include "consai_robot_controller/geometry_tools.hpp"
 
@@ -74,6 +75,28 @@ double to_degrees(const double radians)
 {
   constexpr double TO_DEGREES = 180.0 / M_PI;
   return radians * TO_DEGREES;
+}
+
+State intersection(const State & p1, const State & p2, const State & p3, const State & p4)
+{
+  // 直線p1->p2上で、直線p3->p4と交差する座標を返す
+  // reference:http://imagingsolution.blog107.fc2.com/blog-entry-137.html
+
+  double s1 = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / 2.0;
+  double s2 = ((p4.x - p3.x) * (p3.y - p2.y) - (p4.y - p3.y) * (p3.x - p2.x)) / 2.0;
+  double coefficient = 0;
+
+  try {
+    coefficient = s1 / (s1 + s2);
+  } catch (...) {
+    std::cerr << "Zero division at geometry_tools.intersection()." << std::endl;
+  }
+
+  State output;
+  output.x = p1.x + (p2.x - p1.x) * coefficient;
+  output.y = p1.y + (p2.y - p1.y) * coefficient;
+
+  return output;
 }
 
 Trans::Trans(const State & center, const double theta)

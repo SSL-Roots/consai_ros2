@@ -36,6 +36,7 @@ State pose_state(const TrackedRobot & robot);
 State pose_state(const TrackedBall & ball);
 double to_radians(const double degrees);
 double to_degrees(const double radians);
+State intersection(const State & p1, const State & p2, const State & p3, const State & p4);
 
 class Trans
 {
