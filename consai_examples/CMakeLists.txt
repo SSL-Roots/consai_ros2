@@ -23,6 +23,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/control.py
     ${PROJECT_NAME}/control_by_referee.py
     ${PROJECT_NAME}/control_with_role.py
+    ${PROJECT_NAME}/field_observer.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/robot_operator.py
