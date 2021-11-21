@@ -22,6 +22,7 @@ import time
 from decisions.attacker import AttackerDecition
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecition
+from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -42,6 +43,7 @@ ROLE_CENTER = 10
 
 def main():
     prev_referee_command = -1  # レフェリーコマンド更新判定用の変数
+    prev_ball_state = -1  # ボール状態更新判定用の変数
     while rclpy.ok():
         # ロボットの役割の更新し、
         # 役割が変わったロボットのみ、行動を更新する
@@ -52,9 +54,20 @@ def main():
             prev_referee_command = referee_parser.get_command()
             updated_roles = assignment_node.get_active_roles()
 
+        # ボール状態が変化した場合は、すべてのロボットの行動を更新する
+        if prev_ball_state != field_observer.get_ball_state():
+            prev_ball_state = field_observer.get_ball_state()
+            updated_roles = assignment_node.get_active_roles()
+
         for role in updated_roles:
             robot_id = assignment_node.get_robot_id(role)
             # レフェリーコマンドに合わせて行動を決定する
+            if field_observer.ball_is_outside():
+                # ボールが場外に出たらロボットを停止する
+                decisions[role].halt(robot_id)
+                print("ボールが外に出た")
+                continue
+
             if referee_parser.halt():
                 decisions[role].halt(robot_id)
             elif referee_parser.stop():
@@ -119,11 +132,13 @@ if __name__ == '__main__':
     operator_node = RobotOperator(args.yellow)
     assignment_node = RoleAssignment(args.goalie, args.yellow)
     referee_parser = RefereeParser(args.yellow, args.invert)
+    field_observer = FieldObserver()
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
     executor.add_node(assignment_node)
     executor.add_node(referee_parser)
+    executor.add_node(field_observer)
 
     # エグゼキュータは別スレッドでspinさせ続ける
     executor_thread = threading.Thread(target=executor.spin, daemon=True)

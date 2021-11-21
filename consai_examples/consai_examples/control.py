@@ -316,12 +316,12 @@ def main():
     # test_chase_ball()
     # test_chase_robot()
     # test_for_config_pid(test_x=True)
-    # test_shoot(1.0, 0.0)
+    test_shoot(1.0, 0.0)
     # test_pass_two_robots()
     # test_pass_four_robots()
     # test_stop_robots()
     # test_move_to_line()
-    test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
+    # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
