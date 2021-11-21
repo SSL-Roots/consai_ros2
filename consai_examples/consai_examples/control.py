@@ -269,10 +269,49 @@ def test_move_to_line():
         while operator_node.all_robots_are_free() is False:
             pass
 
+def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
+    robot_harf_width = 0.09
+    harf_width = 6.0
+    defence_harf_width = 0.9
+    defence_harf_height = 1.8
+    goal_harf_height = 0.9
+    # 0番はキーパの位置に
+    x = harf_width - robot_harf_width
+    y = goal_harf_height
+    operator_node.move_to_line_to_defend_our_goal(0, -x, y, -x, -y, True)
+    # 1番はディフェンスエリアの上左側に
+    # 2番はディフェンスエリアの上右側に
+    y = defence_harf_height + robot_harf_width
+    x = harf_width - robot_harf_width
+    end_x = harf_width - defence_harf_width
+    middle_x = harf_width - defence_harf_width - robot_harf_width * 2.0
+    middle_end_x = harf_width - defence_harf_width * 2.0 - robot_harf_width
+    operator_node.move_to_line_to_defend_our_goal(1, -x, y, -end_x, y, True)
+    operator_node.move_to_line_to_defend_our_goal(2, -middle_x, y, -middle_end_x, y, True)
+
+    # 3番はディフェンスエリアの下左側に
+    # 4番はディフェンスエリアの下右側に
+    operator_node.move_to_line_to_defend_our_goal(3, -x, -y, -end_x, -y, True)
+    operator_node.move_to_line_to_defend_our_goal(4, -middle_x, -y, -middle_end_x, -y, True)
+
+    # 5番はディフェンスエリアの正面上側に
+    # 6番はディフェンスエリアの正面上側に
+    # 7番はディフェンスエリアの正面下側に
+    # 8番はディフェンスエリアの正面下側に
+    x = harf_width - defence_harf_width * 2.0 - robot_harf_width
+    y = defence_harf_height - robot_harf_width
+    end_y = defence_harf_height * 0.5
+    middle_y = defence_harf_height * 0.5 - robot_harf_width * 2.0
+    middle_end_y = robot_harf_width
+    operator_node.move_to_line_to_defend_our_goal(5, -x, y, -x, end_y, True)
+    operator_node.move_to_line_to_defend_our_goal(6, -x, middle_y, -x, middle_end_y, True)
+    operator_node.move_to_line_to_defend_our_goal(7, -x, -y, -x, -end_y, True)
+    operator_node.move_to_line_to_defend_our_goal(8, -x, -middle_y, -x, -middle_end_y, True)
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
-    test_move_to(1.5)  # 走行速度を1.0 m/sに制限
+    # test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
@@ -282,7 +321,7 @@ def main():
     # test_pass_four_robots()
     # test_stop_robots()
     # test_move_to_line()
-
+    test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

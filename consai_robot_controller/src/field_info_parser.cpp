@@ -197,16 +197,42 @@ bool FieldInfoParser::parse_constraint_line(
     return false;
   }
 
-  // p1からp2を見た座標系を生成
+  State p3, p4;
+  bool has_p3_p4 = false;
+  if (line.p3.size() > 0 && line.p4.size()) {
+    if (parse_constraint_xy(line.p3[0], p3.x, p3.y) &&
+        parse_constraint_xy(line.p4[0], p4.x, p4.y)) {
+      has_p3_p4 = true;
+    }
+  }
+
+  // 直線p1->p2の座標系を作成
   auto angle_p1_to_p2 = tools::calc_angle(p1, p2);
   tools::Trans trans_1to2(p1, angle_p1_to_p2);
-  // 直線p1 -> p2上で、p1からdistanceだけ離れた位置を目標位置する
-  parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);
+  if(has_p3_p4) {
+    // p1 ~ p4がセットされていれば、
+    // 直線p1->p2上で、直線p3->p4と交わるところを目標位置とする
+    State intersection = tools::intersection(p1, p2, p3, p4);
+    // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
+    auto intersection_1to2 = trans_1to2.transform(intersection);
+    auto p2_1to2 = trans_1to2.transform(p2);
+    if (intersection_1to2.x < 0.0) {
+      parsed_pose = p1;
+    } else if (intersection_1to2.x > p2_1to2.x) {
+      parsed_pose = p2;
+    } else {
+      parsed_pose = intersection;
+    }
+  }else {
+    // 直線p1->p2上で、p1からdistanceだけ離れた位置を目標位置する
+    parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);
+  }
 
   if (!parse_constraint_theta(line.theta, parsed_pose.x, parsed_pose.y,
                               parsed_pose.theta)) {
     return false;
   }
+
 
   return true;
 }
