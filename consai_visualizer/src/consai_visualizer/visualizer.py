@@ -137,3 +137,6 @@ class Visualizer(Plugin):
         if len(msg.stage_time_left) > 0:
             self._widget.label_ref_stage_time_left.setText(
                 ref_parser.parse_stage_time_left(msg.stage_time_left[0]))
+        if len(msg.current_action_time_remaining) > 0:
+            self._widget.label_ref_action_time_remaining.setText(
+                ref_parser.parse_action_time_remaining(msg.current_action_time_remaining[0]))

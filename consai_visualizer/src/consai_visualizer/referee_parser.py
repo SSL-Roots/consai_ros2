@@ -92,7 +92,17 @@ def parse_command(ref_command):
 
     return output
 
+def _microseconds_to_text(microseconds):
+    minutes, seconds = divmod(math.ceil(microseconds * 1e-6), 60)  # ceilで小数点切り上げ
+    return '{} : {:0=2}'.format(minutes, seconds)  # 秒はゼロで埋める
+
 def parse_stage_time_left(ref_stage_time_left):
     # レフェリーステージの残り時間(usec)を文字列に変換する
-    minutes, seconds = divmod(math.ceil(ref_stage_time_left * 1e-6), 60)  # ceilで小数点切り上げ
-    return '{} : {:0=2}'.format(minutes, seconds)  # 秒はゼロで埋める
+    return "STAGE: " + _microseconds_to_text(ref_stage_time_left)
+
+def parse_action_time_remaining(ref_action_time_remaining):
+    # アクション残り時間(usec)を文字列に変換する
+    text = "0:00"
+    if ref_action_time_remaining > 0:
+        text = _microseconds_to_text(ref_action_time_remaining)
+    return "ACT: " + text
