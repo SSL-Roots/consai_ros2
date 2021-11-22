@@ -27,6 +27,7 @@ from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
+from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
 
@@ -69,6 +70,9 @@ class Visualizer(Plugin):
         self._sub_detection_tracked = self._node.create_subscription(
             TrackedFrame, 'detection_tracked',
             self._widget.field_widget.set_detection_tracked, 10)
+        self._sub_referee = self._node.create_subscription(
+            Referee, 'referee',
+            self._callback_referee, 10)
 
         self._sub_goal_pose = []
         for i in range(16):
@@ -125,3 +129,9 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(True)
         else:
             self._widget.field_widget.set_can_draw_replacement(False)
+
+    def _callback_referee(self, msg):
+        self._widget.label_ref_stage.setText(str(msg.stage))
+        self._widget.label_ref_command.setText(str(msg.command))
+        if len(msg.stage_time_left) > 0:
+            self._widget.label_ref_stage_time_left.setText(str(msg.stage_time_left[0]))
