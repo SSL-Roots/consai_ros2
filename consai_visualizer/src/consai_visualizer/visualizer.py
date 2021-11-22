@@ -21,6 +21,7 @@ import os
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPose
 from consai_visualizer.field_widget import FieldWidget
+import consai_visualizer.referee_parser as ref_parser
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
@@ -131,7 +132,8 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(False)
 
     def _callback_referee(self, msg):
-        self._widget.label_ref_stage.setText(str(msg.stage))
-        self._widget.label_ref_command.setText(str(msg.command))
+        self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
+        self._widget.label_ref_command.setText(ref_parser.parse_command(msg.command))
         if len(msg.stage_time_left) > 0:
-            self._widget.label_ref_stage_time_left.setText(str(msg.stage_time_left[0]))
+            self._widget.label_ref_stage_time_left.setText(
+                ref_parser.parse_stage_time_left(msg.stage_time_left[0]))
