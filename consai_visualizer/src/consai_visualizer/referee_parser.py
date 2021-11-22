@@ -118,3 +118,9 @@ def parse_yellow_card_times(yellow_card_times):
     for time in yellow_card_times:
         text += _microseconds_to_text(time) + ", "
     return text
+
+def parse_timeouts(timeouts):
+    return 'Timeouts: ' + str(timeouts)
+
+def parse_timeout_time(timeout_time):
+    return _microseconds_to_text(timeout_time)
