@@ -162,3 +162,7 @@ class Visualizer(Plugin):
             ref_parser.parse_timeout_time(msg.blue.timeout_time))
         self._widget.label_ref_y_team_timeout_time.setText(
             ref_parser.parse_timeout_time(msg.yellow.timeout_time))
+
+        # ボール配置の目標位置をセット
+        if len(msg.designated_position) > 0:
+            self._widget.field_widget.set_designated_position(msg.designated_position[0])

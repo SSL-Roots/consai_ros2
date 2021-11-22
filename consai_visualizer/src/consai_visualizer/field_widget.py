@@ -28,6 +28,7 @@ from python_qt_binding.QtGui import QPen
 from python_qt_binding.QtWidgets import QWidget
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
+from robocup_ssl_msgs.msg import Point as RefPoint
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedFrame
@@ -54,6 +55,7 @@ class FieldWidget(QWidget):
         self._COLOR_REPLACEMENT_POS = QColor('magenta')
         self._COLOR_REPLACEMENT_VEL_ANGLE = QColor('darkviolet')
         self._COLOR_GOAL_POSE = QColor('silver')
+        self._COLOR_DESIGNATED_POSITION = QColor('red')
         self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
@@ -68,6 +70,7 @@ class FieldWidget(QWidget):
         self._GAIN_REPLACE_BALL_VEL = 0.001 * 3.0
         self._MAX_VELOCITY_OF_REPLACE_BALL = 8.0
         self._ID_POS = QPoint(150, 150)  # IDの表示位置 mm.
+        self._RADIUS_DESIGNATED_POSITION = 150  # ボールプレースメント成功範囲
 
         # 外部からセットするパラメータ
         self._logger = None
@@ -82,6 +85,7 @@ class FieldWidget(QWidget):
         self._detections = {}
         self._detection_tracked = TrackedFrame()
         self._goal_poses = {}
+        self._designated_position = {}  # ball placementの目標位置
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -125,10 +129,14 @@ class FieldWidget(QWidget):
     def set_goal_pose(self, msg, robot_id):
         self._goal_poses[robot_id] = msg
 
+    def set_designated_position(self, msg):
+        self._designated_position[0] = msg
+
     def reset_topics(self):
         # 取得したトピックをリセットする
         self._detections = {}
         self._goal_poses = {}
+        self._designated_position = {}
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
@@ -208,6 +216,8 @@ class FieldWidget(QWidget):
 
         if self._can_draw_geometry:
             self._draw_geometry(painter)
+
+        self._draw_designated_position(painter)
 
         if self._can_draw_replacement:
             self._draw_replacement(painter)
@@ -588,6 +598,16 @@ class FieldWidget(QWidget):
             end_point = self._apply_transpose_to_draw_point(self._mouse_current_point)
             painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
             painter.drawLine(point, end_point)
+
+    def _draw_designated_position(self, painter):
+        if self._designated_position:
+            point = self._convert_field_to_draw_point(
+                self._designated_position[0].x, self._designated_position[0].y)
+            size = self._RADIUS_DESIGNATED_POSITION * self._scale_field_to_draw
+
+            painter.setPen(self._COLOR_DESIGNATED_POSITION)
+            painter.setBrush(self._COLOR_DESIGNATED_POSITION)
+            painter.drawEllipse(point, size, size)
 
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
