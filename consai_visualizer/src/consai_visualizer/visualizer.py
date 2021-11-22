@@ -21,12 +21,14 @@ import os
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPose
 from consai_visualizer.field_widget import FieldWidget
+import consai_visualizer.referee_parser as ref_parser
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
+from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
 
@@ -69,6 +71,9 @@ class Visualizer(Plugin):
         self._sub_detection_tracked = self._node.create_subscription(
             TrackedFrame, 'detection_tracked',
             self._widget.field_widget.set_detection_tracked, 10)
+        self._sub_referee = self._node.create_subscription(
+            Referee, 'referee',
+            self._callback_referee, 10)
 
         self._sub_goal_pose = []
         for i in range(16):
@@ -125,3 +130,39 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(True)
         else:
             self._widget.field_widget.set_can_draw_replacement(False)
+
+    def _callback_referee(self, msg):
+        self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
+        self._widget.label_ref_command.setText(ref_parser.parse_command(msg.command))
+        if len(msg.stage_time_left) > 0:
+            self._widget.label_ref_stage_time_left.setText(
+                ref_parser.parse_stage_time_left(msg.stage_time_left[0]))
+        if len(msg.current_action_time_remaining) > 0:
+            self._widget.label_ref_action_time_remaining.setText(
+                ref_parser.parse_action_time_remaining(msg.current_action_time_remaining[0]))
+
+        # チーム情報の解析
+        self._widget.label_ref_b_team_red_num.setText(
+            ref_parser.parse_red_cards(msg.blue.red_cards))
+        self._widget.label_ref_y_team_red_num.setText(
+            ref_parser.parse_red_cards(msg.yellow.red_cards))
+        self._widget.label_ref_b_team_yellow_num.setText(
+            ref_parser.parse_yellow_cards(msg.blue.yellow_cards))
+        self._widget.label_ref_y_team_yellow_num.setText(
+            ref_parser.parse_yellow_cards(msg.yellow.yellow_cards))
+        self._widget.label_ref_b_team_yellow_time.setText(
+            ref_parser.parse_yellow_card_times(msg.blue.yellow_card_times))
+        self._widget.label_ref_y_team_yellow_time.setText(
+            ref_parser.parse_yellow_card_times(msg.yellow.yellow_card_times))
+        self._widget.label_ref_b_team_timeouts.setText(
+            ref_parser.parse_timeouts(msg.blue.timeouts))
+        self._widget.label_ref_y_team_timeouts.setText(
+            ref_parser.parse_timeouts(msg.yellow.timeouts))
+        self._widget.label_ref_b_team_timeout_time.setText(
+            ref_parser.parse_timeout_time(msg.blue.timeout_time))
+        self._widget.label_ref_y_team_timeout_time.setText(
+            ref_parser.parse_timeout_time(msg.yellow.timeout_time))
+
+        # ボール配置の目標位置をセット
+        if len(msg.designated_position) > 0:
+            self._widget.field_widget.set_designated_position(msg.designated_position[0])
