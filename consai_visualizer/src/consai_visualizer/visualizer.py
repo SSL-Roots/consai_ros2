@@ -140,3 +140,17 @@ class Visualizer(Plugin):
         if len(msg.current_action_time_remaining) > 0:
             self._widget.label_ref_action_time_remaining.setText(
                 ref_parser.parse_action_time_remaining(msg.current_action_time_remaining[0]))
+
+        # チーム情報の解析
+        self._widget.label_ref_b_team_red_num.setText(
+            ref_parser.parse_red_cards(msg.blue.red_cards))
+        self._widget.label_ref_y_team_red_num.setText(
+            ref_parser.parse_red_cards(msg.yellow.red_cards))
+        self._widget.label_ref_b_team_yellow_num.setText(
+            ref_parser.parse_yellow_cards(msg.blue.yellow_cards))
+        self._widget.label_ref_y_team_yellow_num.setText(
+            ref_parser.parse_yellow_cards(msg.yellow.yellow_cards))
+        self._widget.label_ref_b_team_yellow_time.setText(
+            ref_parser.parse_yellow_card_times(msg.blue.yellow_card_times))
+        self._widget.label_ref_y_team_yellow_time.setText(
+            ref_parser.parse_yellow_card_times(msg.yellow.yellow_card_times))

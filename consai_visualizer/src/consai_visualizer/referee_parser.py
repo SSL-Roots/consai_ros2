@@ -106,3 +106,15 @@ def parse_action_time_remaining(ref_action_time_remaining):
     if ref_action_time_remaining > 0:
         text = _microseconds_to_text(ref_action_time_remaining)
     return "ACT: " + text
+
+def parse_red_cards(ref_team_red_cards):
+    return str(ref_team_red_cards)
+
+def parse_yellow_cards(ref_team_yellow_cards):
+    return str(ref_team_yellow_cards)
+
+def parse_yellow_card_times(yellow_card_times):
+    text = ""
+    for time in yellow_card_times:
+        text += _microseconds_to_text(time) + ", "
+    return text
