@@ -171,6 +171,17 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_dribble(
             self._line_goal(line, keep=True), target))
 
+    def receive_from(self, robot_id, x, y, offset):
+        # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
+        # ボールを受け取る
+        line = ConstraintLine()
+        line.p1 = self._xy(x, y)
+        line.p2.object.append(self._object_ball())
+        line.distance = -offset
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(
+            self._line_goal(line, keep=True)))
+
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
         # 目的地の座標(x, y)は-1.0 ~ 1.0に正規化されている
@@ -345,6 +356,10 @@ class RobotOperator(Node):
     def _with_dribble(self, goal_msg, target):
         goal_msg.dribble_enable = True
         goal_msg.dribble_target = target
+        return goal_msg
+
+    def _with_receive(self, goal_msg):
+        goal_msg.receive_ball = True
         return goal_msg
 
     def _set_goal(self, robot_id, goal_msg):
