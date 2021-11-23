@@ -19,6 +19,7 @@ from field_observer import FieldObserver
 
 class DecisionBase(object):
     MAX_VELOCITY_AT_STOP_GAME = 1.5  # m/s
+    ACT_ID_INIT = -1
     ACT_ID_HALT = 10
     ACT_ID_STOP = 20
     ACT_ID_INPLAY = 30
@@ -36,13 +37,16 @@ class DecisionBase(object):
         self._operator = robot_operator
         self._ball_state = FieldObserver.BALL_NONE
         self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
-        self._act_id = -1
+        self._act_id = self.ACT_ID_INIT
 
     def set_ball_state(self, ball_state):
         self._ball_state = ball_state
 
     def set_ball_placement_state(self, ball_placement_state):
         self._ball_placement_state = ball_placement_state
+
+    def reset_act_id(self):
+        self._act_id = self.ACT_ID_INIT
 
     def halt(self, robot_id):
         if self._act_id != self.ACT_ID_HALT:

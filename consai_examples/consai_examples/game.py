@@ -53,7 +53,8 @@ def main():
            not observer.ball_is_moving():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
-            assignor.update_role()
+            for role in assignor.update_role():
+                decisions[role].reset_act_id()
 
         for role in assignor.get_active_roles():
             robot_id = assignor.get_robot_id(role)
