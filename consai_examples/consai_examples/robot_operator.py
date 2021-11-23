@@ -138,6 +138,63 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def move_to_defend_our_goal_from_ball(self, robot_id, distance):
+        # 自チームとボールを結び、ボールからdistanceだけ離れた位置に移動する
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy_our_goal()
+        line.distance = distance
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._line_goal(line, keep=True))
+
+    def pass_to(self, robot_id, x, y):
+        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
+        # 指定位置に向かってパスする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy(x, y)
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy(x, y)
+        return self._set_goal(robot_id, self._with_kick(
+            self._line_goal(line, keep=True), target, kick_pass=True))
+
+    def dribble_to(self, robot_id, x, y):
+        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
+        # 指定位置に向かってドリブルする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy(x, y)
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy(x, y)
+        return self._set_goal(robot_id, self._with_dribble(
+            self._line_goal(line, keep=True), target))
+
+    def receive_from(self, robot_id, x, y, offset, dynamic_receive=True):
+        # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
+        # ボールを受け取る
+        line = ConstraintLine()
+        line.p1 = self._xy(x, y)
+        line.p2.object.append(self._object_ball())
+        line.distance = -offset
+        line.theta = self._theta_look_ball()
+        if dynamic_receive:
+            return self._set_goal(robot_id, self._with_receive(
+                self._line_goal(line, keep=True)))
+        else:
+            return self._set_goal(robot_id, self._line_goal(line, keep=True))
+
+    def approach_to_ball(self, robot_id, distance):
+        # 自分とボールを結ぶ直線上で、ボールからdistanceだけ離れた位置に移動する
+        # 最終到達位置は、自分の初期位置に依存する
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2.object.append(self._object_our_robot(robot_id))
+        line.distance = distance
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._line_goal(line, keep=True))
+
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
         # 目的地の座標(x, y)は-1.0 ~ 1.0に正規化されている
@@ -229,7 +286,7 @@ class RobotOperator(Node):
         goal_msg.pose.append(pose)
         goal_msg.keep_control = True
 
-        goal_msg.kick_shoot = True
+        goal_msg.kick_enable = True
 
         goal_msg.kick_target.normalized = True
         goal_msg.kick_target.value_x.append(target_x)
@@ -258,7 +315,7 @@ class RobotOperator(Node):
         goal_msg.receive_ball = True
 
         # targetロボットを狙ってキックする
-        goal_msg.kick_shoot = True
+        goal_msg.kick_enable = True
         constraint_robot = ConstraintObject()
         constraint_robot.robot_id = target_id
         constraint_robot.type = ConstraintObject.BLUE_ROBOT
@@ -267,6 +324,65 @@ class RobotOperator(Node):
         goal_msg.kick_target.object.append(constraint_robot)
 
         return self._set_goal(robot_id, goal_msg)
+
+    def _object_ball(self):
+        # ConstraintObjectのBallを返す
+        obj_ball = ConstraintObject()
+        obj_ball.type = ConstraintObject.BALL
+        return obj_ball
+
+    def _object_our_robot(self, robot_id):
+        # ConstraintObjectの自チームのRobotを返す
+        obj_robot = ConstraintObject()
+        obj_robot.robot_id = robot_id
+        obj_robot.type = ConstraintObject.BLUE_ROBOT
+        if self._target_is_yellow:
+            obj_robot.type = ConstraintObject.YELLOW_ROBOT
+        return obj_robot
+
+    def _xy(self, x, y, normalized=False):
+        # x, y座標を指定したConstraintXYを返す
+        xy = ConstraintXY()
+        xy.value_x.append(x)
+        xy.value_y.append(y)
+        xy.normalized = normalized
+        return xy
+
+    def _xy_our_goal(self):
+        # ConstraintXYの自チームゴール座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(-1.0)
+        our_goal.value_y.append(0.0)
+        return our_goal
+
+    def _theta_look_ball(self):
+        # ConstraintThetaでボールを見る角度を返す
+        look_ball = ConstraintTheta()
+        look_ball.object.append(self._object_ball())
+        look_ball.param = ConstraintTheta.PARAM_LOOK_TO
+        return look_ball
+
+    def _line_goal(self, line, keep=True):
+        goal_msg = RobotControl.Goal()
+        goal_msg.line.append(line)
+        goal_msg.keep_control = keep
+        return goal_msg
+
+    def _with_kick(self, goal_msg, target, kick_pass=False):
+        goal_msg.kick_enable = True
+        goal_msg.kick_pass = kick_pass
+        goal_msg.kick_target = target
+        return goal_msg
+
+    def _with_dribble(self, goal_msg, target):
+        goal_msg.dribble_enable = True
+        goal_msg.dribble_target = target
+        return goal_msg
+
+    def _with_receive(self, goal_msg):
+        goal_msg.receive_ball = True
+        return goal_msg
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する

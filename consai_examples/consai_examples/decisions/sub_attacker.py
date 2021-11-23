@@ -18,25 +18,10 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 
-class AttackerDecision(DecisionBase):
+class SubAttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
-
-    def stop(self, robot_id):
-        ID_IN_DEFENSE = self.ACT_ID_STOP + 0
-        ID_CHASE = self.ACT_ID_STOP + 1
-        # ボールがディフェンスエリアにあるときは、別の場所に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
-            if self._act_id != ID_IN_DEFENSE:
-                self._operator.move_to(robot_id, 0.0, 0.0, 0.0, True, self.MAX_VELOCITY_AT_STOP_GAME)
-                self._act_id = ID_IN_DEFENSE
-            return
-
-        # ボールを追いかける
-        if self._act_id != ID_CHASE:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
-            self._act_id = ID_CHASE
 
     def our_ball_placement(self, robot_id, placement_pos):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
@@ -44,16 +29,16 @@ class AttackerDecision(DecisionBase):
         ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
-            # ボール位置が配置目標位置から離れているときはパスする
+            # ボールを受け取る
             if self._act_id != ID_FAR_FROM:
-                self._operator.pass_to(robot_id, placement_pos.x, placement_pos.y)
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
                 self._act_id = ID_FAR_FROM
             return
         
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
-            # ボール位置が配置目標位置に近づいたときはドリブルする
+            # 目標位置に近づきボールを支える
             if self._act_id != ID_NEAR:
-                self._operator.dribble_to(robot_id, placement_pos.x, placement_pos.y)
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
                 self._act_id = ID_NEAR
             return
 
