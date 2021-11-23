@@ -32,11 +32,16 @@ class FieldObserver(Node):
     BALL_IS_IN_THEIR_SIDE = 4
     BALL_IS_IN_THEIR_DEFENSE_AREA = 5
 
+    BALL_PLACEMENT_NONE = 0
+    BALL_PLACEMENT_FAR_FROM_TARGET = 1
+    BALL_PLACEMENT_NEAR_TARGET = 2
+
     def __init__(self):
         super().__init__('field_observer')
 
         self._ball_state = self.BALL_NONE
         self._ball_is_moving = False
+        self._ball = TrackedBall()
 
         self._field_x = 12.0  # meters
         self._field_half_x = self._field_x * 0.5
@@ -53,6 +58,7 @@ class FieldObserver(Node):
         if len(msg.balls) > 0:
             self._update_ball_state(msg.balls[0])
             self._update_ball_moving_state(msg.balls[0])
+            self._ball = msg.balls[0]
 
     def _update_ball_state(self, ball):
         # フィールド場外判定
@@ -112,3 +118,13 @@ class FieldObserver(Node):
     
     def ball_is_moving(self):
         return self._ball_is_moving
+
+    def get_ball_placement_state(self, placement_position):
+        ARRIVED_THRESHOLD = 0.15
+        diff_x = placement_position.x - self._ball.pos.x
+        diff_y = placement_position.y - self._ball.pos.y
+        distance = math.hypot(diff_x, diff_y)
+        
+        if distance < ARRIVED_THRESHOLD:
+            return self.BALL_PLACEMENT_NEAR_TARGET
+        return self.BALL_PLACEMENT_FAR_FROM_TARGET
