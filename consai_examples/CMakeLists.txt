@@ -31,6 +31,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/attacker.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
+    ${PROJECT_NAME}/decisions/sub_attacker.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
