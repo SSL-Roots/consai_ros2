@@ -61,6 +61,7 @@ public:
     const std::shared_ptr<const RobotControl::Goal> goal,
     const TrackedRobot & my_robot, State & parsed_pose,
     double & kick_power, double & dribble_power) const;
+private:
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
   bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
   bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
@@ -72,6 +73,12 @@ public:
     const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const bool & kick_pass,
     State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
+  bool parse_dribble(
+    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    State & parsed_pose, double & parsed_dribble_power) const;
+  bool control_ball(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const;
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
@@ -79,7 +86,6 @@ public:
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
 
-private:
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
 };

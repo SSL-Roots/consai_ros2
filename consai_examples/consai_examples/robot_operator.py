@@ -159,6 +159,18 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_kick(
             self._line_goal(line, keep=True), target, kick_pass=True))
 
+    def dribble_to(self, robot_id, x, y):
+        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
+        # 指定位置に向かってドリブルする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy(x, y)
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy(x, y)
+        return self._set_goal(robot_id, self._with_dribble(
+            self._line_goal(line, keep=True), target))
+
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
         # 目的地の座標(x, y)は-1.0 ~ 1.0に正規化されている
@@ -328,6 +340,11 @@ class RobotOperator(Node):
         goal_msg.kick_enable = True
         goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
+        return goal_msg
+
+    def _with_dribble(self, goal_msg, target):
+        goal_msg.dribble_enable = True
+        goal_msg.dribble_target = target
         return goal_msg
 
     def _set_goal(self, robot_id, goal_msg):
