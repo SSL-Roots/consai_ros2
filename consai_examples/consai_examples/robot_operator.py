@@ -298,8 +298,8 @@ class RobotOperator(Node):
     def _xy(self, x, y, normalized=False):
         # x, y座標を指定したConstraintXYを返す
         xy = ConstraintXY()
-        xy.value_x.append(-1.0)
-        xy.value_y.append(0.0)
+        xy.value_x.append(x)
+        xy.value_y.append(y)
         xy.normalized = normalized
         return xy
 

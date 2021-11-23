@@ -334,16 +334,15 @@ bool FieldInfoParser::parse_kick(
   const double DRIBBLE_POWER = 0.6;
   const double KICK_POWER_SHOOT = 6.5;
   const double KICK_POWER_PASS = 3.0;
-  const double LOOKING_BALL_DISTANCE = 0.2;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - 15);
+  const double LOOKING_BALL_DISTANCE = 0.20;  // meters
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - 20);
   const double LOOKING_TARGET_THETA = tools::to_radians(30);
   const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(5);
-  const double CAN_PASS_THETA = tools::to_radians(3);
   const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(30);  // meters
-  const double DISTANCE_TO_KICK_BALL = -0.005;  // meters
+  const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(45);  // meters
+  const double DISTANCE_TO_KICK_BALL = 0.02;  // meters
 
   // ボールを向きながらボールに近づく
   auto ball_pose = tools::pose_state(ball);
@@ -369,23 +368,21 @@ bool FieldInfoParser::parse_kick(
   // ロボットがボールに近ければドリブルをON
   bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
   // ロボットがキックターゲットに焦点を当てたらキックをON
-  bool can_kick = false;
-  if (kick_pass) {
-    can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_PASS_THETA &&
+  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
       std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
-  } else {
-    can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
-      std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
-  }
+
+  // キックパワーを初期化
+  parsed_kick_power = 0.0;
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
     parsed_pose = trans_BtoR.inverted_transform(DISTANCE_TO_LOOK_BALL, 0, M_PI);
-    if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
+    // if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
   } else if (!is_looking_target) {
     // キックターゲットを見るまで、ドリブラをボールに付けながら回転する
     double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
 
+    distance_robot_to_ball -= 0.05; // 調整項
     parsed_pose = trans_BtoR.inverted_transform(
       distance_robot_to_ball * std::cos(add_angle),
       distance_robot_to_ball * std::sin(add_angle), 0.0);
