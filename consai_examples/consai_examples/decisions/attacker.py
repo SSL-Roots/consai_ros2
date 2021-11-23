@@ -42,7 +42,8 @@ class AttackerDecision(DecisionBase):
             self._operator.dribble_to(robot_id, placement_pos.x, placement_pos.y)
         elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
-            self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.6)
+            self._operator.approach_to_ball(robot_id, 0.6)
+            # self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.6)
         else:
             self._operator.stop(robot_id)
 

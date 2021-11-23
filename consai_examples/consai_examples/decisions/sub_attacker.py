@@ -32,10 +32,11 @@ class SubAttackerDecision(DecisionBase):
             self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
         elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # 目標位置に近づきボールを支える
-            self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
+            self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
         elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
-            self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.6)
+            self._operator.approach_to_ball(robot_id, 0.6)
+            # self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.6)
         else:
             self._operator.stop(robot_id)
 

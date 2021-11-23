@@ -163,9 +163,9 @@ class FieldObserver(Node):
         return self._ball_is_moving
 
     def _update_ball_placement_state(self, placement_position):
-        ARRIVED_THRESHOLD = 0.13
+        ARRIVED_THRESHOLD = 0.14
         NEAR_THRESHOLD = 3.0
-        THRESHOLD_MARGIN = 0.02
+        THRESHOLD_MARGIN = 0.01
         diff_x = placement_position.x - self._ball.pos.x
         diff_y = placement_position.y - self._ball.pos.y
         distance = math.hypot(diff_x, diff_y)

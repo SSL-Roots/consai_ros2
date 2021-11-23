@@ -65,9 +65,10 @@ def main():
 
         # ボール配置状態が変化した場合は、すべてのロボットの行動を更新する
         if referee.our_ball_placement() or referee.their_ball_placement():
-            if prev_ball_placement_state != observer.get_ball_placement_state(referee.placement_position()):
+            current_state = observer.get_ball_placement_state(referee.placement_position())
+            if prev_ball_placement_state != current_state:
                 print("ball placement state has changed")
-                prev_ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
+                prev_ball_placement_state = current_state
                 updated_roles = assignor.get_active_roles()
 
         # アタッカーの切り替わりを防ぐため、

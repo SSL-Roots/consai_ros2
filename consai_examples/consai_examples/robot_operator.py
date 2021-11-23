@@ -171,7 +171,7 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_dribble(
             self._line_goal(line, keep=True), target))
 
-    def receive_from(self, robot_id, x, y, offset):
+    def receive_from(self, robot_id, x, y, offset, dynamic_receive=True):
         # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
         # ボールを受け取る
         line = ConstraintLine()
@@ -179,8 +179,21 @@ class RobotOperator(Node):
         line.p2.object.append(self._object_ball())
         line.distance = -offset
         line.theta = self._theta_look_ball()
-        return self._set_goal(robot_id, self._with_receive(
-            self._line_goal(line, keep=True)))
+        if dynamic_receive:
+            return self._set_goal(robot_id, self._with_receive(
+                self._line_goal(line, keep=True)))
+        else:
+            return self._set_goal(robot_id, self._line_goal(line, keep=True))
+
+    def approach_to_ball(self, robot_id, distance):
+        # 自分とボールを結ぶ直線上で、ボールからdistanceだけ離れた位置に移動する
+        # 最終到達位置は、自分の初期位置に依存する
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2.object.append(self._object_our_robot(robot_id))
+        line.distance = distance
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._line_goal(line, keep=True))
 
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
@@ -317,6 +330,15 @@ class RobotOperator(Node):
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
         return obj_ball
+
+    def _object_our_robot(self, robot_id):
+        # ConstraintObjectの自チームのRobotを返す
+        obj_robot = ConstraintObject()
+        obj_robot.robot_id = robot_id
+        obj_robot.type = ConstraintObject.BLUE_ROBOT
+        if self._target_is_yellow:
+            obj_robot.type = ConstraintObject.YELLOW_ROBOT
+        return obj_robot
 
     def _xy(self, x, y, normalized=False):
         # x, y座標を指定したConstraintXYを返す
