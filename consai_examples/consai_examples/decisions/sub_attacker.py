@@ -23,20 +23,27 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
-    def stop(self, robot_id):
-        self._operator.stop(robot_id)
-
     def our_ball_placement(self, robot_id, placement_pos):
+        ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
+        ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
+        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボールを受け取る
-            self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
-        elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
+            if self._act_id != ID_FAR_FROM:
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
+                self._act_id = ID_FAR_FROM
+            return
+        
+        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # 目標位置に近づきボールを支える
-            self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
-        elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            # ボール位置が配置目標位置に到着したらボールから離れる
-            self._operator.approach_to_ball(robot_id, 0.6)
-            # self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.6)
-        else:
-            self._operator.stop(robot_id)
+            if self._act_id != ID_NEAR:
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
+                self._act_id = ID_NEAR
+            return
 
+        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
+            # ボール位置が配置目標位置に到着したらボールから離れる
+            if self._act_id != ID_ARRIVED:
+                self._operator.approach_to_ball(robot_id, 0.6)
+                self._act_id = ID_ARRIVED

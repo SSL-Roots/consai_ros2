@@ -21,7 +21,7 @@ import time
 
 from decisions.attacker import AttackerDecision
 from decisions.decision_base import DecisionBase
-from decisions.goalie import GoaleDecition
+from decisions.goalie import GoaleDecision
 from decisions.sub_attacker import SubAttackerDecision
 from field_observer import FieldObserver
 import rclpy
@@ -43,50 +43,24 @@ ROLE_SIDE_BACK1 = 9
 ROLE_SIDE_BACK2 = 10
 
 def main():
-    prev_referee_command = -1  # レフェリーコマンド更新判定用の変数
-    prev_ball_state = -1  # ボール状態更新判定用の変数
-    prev_ball_placement_state = -1  # ボール配置状態更新判定用の変数
     while rclpy.ok():
-        updated_roles = []
-        referee_has_changed = prev_referee_command != referee.get_command()
-        ball_state_has_changed = prev_ball_state != observer.get_ball_state()
-
-        # レフェリーコマンドが変化した場合は、全てのロボットの行動を更新する
-        if referee_has_changed:
-            print("referee command has changed")
-            prev_referee_command = referee.get_command()
-            updated_roles = assignor.get_active_roles()
-
-        # ボール状態が変化した場合は、すべてのロボットの行動を更新する
-        if ball_state_has_changed:
-            print("ball state has changed")
-            prev_ball_state = observer.get_ball_state()
-            updated_roles = assignor.get_active_roles()
-
-        # ボール配置状態が変化した場合は、すべてのロボットの行動を更新する
-        if referee.our_ball_placement() or referee.their_ball_placement():
-            current_state = observer.get_ball_placement_state(referee.placement_position())
-            if prev_ball_placement_state != current_state:
-                print("ball placement state has changed")
-                prev_ball_placement_state = current_state
-                updated_roles = assignor.get_active_roles()
+        ball_state = observer.get_ball_state()
+        ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
 
         # アタッカーの切り替わりを防ぐため、
         # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
-        if not referee_has_changed and \
-           not ball_state_has_changed and \
-           not observer.ball_is_in_our_defense_area() and \
+        if not observer.ball_is_in_our_defense_area() and \
            not observer.ball_is_moving():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
-            updated_roles = assignor.update_role()
+            assignor.update_role()
 
-        for role in updated_roles:
+        for role in assignor.get_active_roles():
             robot_id = assignor.get_robot_id(role)
             # ボール状態をセットする
-            decisions[role].set_ball_state(prev_ball_state)
+            decisions[role].set_ball_state(ball_state)
             # ボール配置状態をセットする
-            decisions[role].set_ball_placement_state(prev_ball_placement_state)
+            decisions[role].set_ball_placement_state(ball_placement_state)
 
             # レフェリーコマンドに合わせて行動を決定する
             if observer.ball_is_outside():
@@ -172,7 +146,7 @@ if __name__ == '__main__':
     executor_thread.start()
 
     decisions = {
-        ROLE_GOALIE: GoaleDecition(operator),
+        ROLE_GOALIE: GoaleDecision(operator),
         ROLE_ATTACKER: AttackerDecision(operator),
         ROLE_CENTER_BACK1: DecisionBase(operator),
         ROLE_CENTER_BACK2: DecisionBase(operator),
