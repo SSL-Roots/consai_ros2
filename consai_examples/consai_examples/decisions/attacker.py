@@ -36,8 +36,7 @@ class AttackerDecition(DecisionBase):
     def our_ball_placement(self, robot_id, placement_pos):
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする
-            print("Attacker pass to placement")
-            self._operator.stop(robot_id)
+            self._operator.pass_to(robot_id, placement_pos.x, placement_pos.y)
         elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボール位置が配置目標位置に近づいたときはドリブルする
             print("Attacker dribble to placement")

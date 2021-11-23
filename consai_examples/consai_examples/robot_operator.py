@@ -145,7 +145,19 @@ class RobotOperator(Node):
         line.p2 = self._xy_our_goal()
         line.distance = distance
         line.theta = self._theta_look_ball()
-        return self._set_line_goal(robot_id, line)
+        return self._set_goal(robot_id, self._line_goal(line, keep=True))
+
+    def pass_to(self, robot_id, x, y):
+        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
+        # 指定位置に向かってパスする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy(x, y)
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy(x, y)
+        return self._set_goal(robot_id, self._with_kick(
+            self._line_goal(line, keep=True), target, shoot=False))
 
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
@@ -283,6 +295,14 @@ class RobotOperator(Node):
         obj_ball.type = ConstraintObject.BALL
         return obj_ball
 
+    def _xy(self, x, y, normalized=False):
+        # x, y座標を指定したConstraintXYを返す
+        xy = ConstraintXY()
+        xy.value_x.append(-1.0)
+        xy.value_y.append(0.0)
+        xy.normalized = normalized
+        return xy
+
     def _xy_our_goal(self):
         # ConstraintXYの自チームゴール座標を返す
         our_goal = ConstraintXY()
@@ -298,12 +318,16 @@ class RobotOperator(Node):
         look_ball.param = ConstraintTheta.PARAM_LOOK_TO
         return look_ball
 
-    def _set_line_goal(self, robot_id, line, keep=True):
-        # ConstraintLineのアクションを設定する
+    def _line_goal(self, line, keep=True):
         goal_msg = RobotControl.Goal()
         goal_msg.line.append(line)
         goal_msg.keep_control = keep
-        return self._set_goal(robot_id, goal_msg)
+        return goal_msg
+
+    def _with_kick(self, goal_msg, target, shoot=True):
+        goal_msg.kick_shoot = shoot
+        goal_msg.kick_target = target
+        return goal_msg
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
