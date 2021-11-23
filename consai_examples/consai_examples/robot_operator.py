@@ -286,11 +286,11 @@ class RobotOperator(Node):
         goal_handle = future.result()
 
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected')
+            self.get_logger().debug('Goal rejected')
             self._robot_is_free[robot_id] = True
             return
 
-        self.get_logger().info('Goal accepted')
+        self.get_logger().debug('Goal accepted')
         self._get_result_future[robot_id] = goal_handle.get_result_async()
         self._get_result_future[robot_id].add_done_callback(
             partial(self._get_result_callback, robot_id=robot_id))
@@ -303,6 +303,6 @@ class RobotOperator(Node):
     def _get_result_callback(self, future, robot_id):
         # アクションサーバからの行動完了通知を受信したら実行される関数
         result = future.result().result
-        self.get_logger().info('RobotId: {}, Result: {}, Message: {}'.format(
+        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(
             robot_id, result.success, result.message))
         self._robot_is_free[robot_id] = True
