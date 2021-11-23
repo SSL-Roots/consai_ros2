@@ -15,9 +15,21 @@
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    declare_arg_vision_addr = DeclareLaunchArgument(
+        'vision_addr', default_value='224.5.23.2',
+        description=('Set multicast address to connect SSL-Vision.')
+    )
+
+    declare_arg_vision_port = DeclareLaunchArgument(
+        'vision_port', default_value='10006',
+        description=('Set multicast port to connect SSL-Vision.')
+    )
+
     container = ComposableNodeContainer(
             name='test_container',
             namespace='',
@@ -27,7 +39,12 @@ def generate_launch_description():
                 ComposableNode(
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::Vision',
-                    name='vision'),
+                    name='vision',
+                    parameters=[{
+                        'multicast_address': LaunchConfiguration('vision_addr'),
+                        'multicast_port': LaunchConfiguration('vision_port'),
+                        }],
+                    ),
                 ComposableNode(
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::GameController',
@@ -40,4 +57,8 @@ def generate_launch_description():
             output='screen',
     )
 
-    return launch.LaunchDescription([container])
+    return launch.LaunchDescription([
+        declare_arg_vision_addr,
+        declare_arg_vision_port,
+        container
+    ])
