@@ -31,15 +31,15 @@ from role_assignment import RoleAssignment
 
 ROLE_GOALIE = 0
 ROLE_ATTACKER = 1
-ROLE_DEFENSE1 = 2
-ROLE_DEFENSE2 = 3
-ROLE_DEFENSE3 = 4
-ROLE_DEFENSE4 = 5
-ROLE_OFFENSE1 = 6
-ROLE_OFFENSE2 = 7
-ROLE_OFFENSE3 = 8
-ROLE_OFFENSE4 = 9
-ROLE_CENTER = 10
+ROLE_CENTER_BACK1 = 2
+ROLE_CENTER_BACK2 = 3
+ROLE_SUB_ATTACKER = 4
+ROLE_ZONE1 = 5
+ROLE_ZONE2 = 6
+ROLE_ZONE3 = 7
+ROLE_ZONE4 = 8
+ROLE_SIDE_BACK1 = 9
+ROLE_SIDE_BACK2 = 10
 
 def main():
     prev_referee_command = -1  # レフェリーコマンド更新判定用の変数
@@ -171,15 +171,15 @@ if __name__ == '__main__':
     decisions = {
         ROLE_GOALIE: GoaleDecition(operator_node),
         ROLE_ATTACKER: AttackerDecition(operator_node),
-        ROLE_DEFENSE1: DecisionBase(operator_node),
-        ROLE_DEFENSE2: DecisionBase(operator_node),
-        ROLE_DEFENSE3: DecisionBase(operator_node),
-        ROLE_DEFENSE4: DecisionBase(operator_node),
-        ROLE_OFFENSE1: DecisionBase(operator_node),
-        ROLE_OFFENSE2: DecisionBase(operator_node),
-        ROLE_OFFENSE3: DecisionBase(operator_node),
-        ROLE_OFFENSE4: DecisionBase(operator_node),
-        ROLE_CENTER: DecisionBase(operator_node),
+        ROLE_CENTER_BACK1: DecisionBase(operator_node),
+        ROLE_CENTER_BACK2: DecisionBase(operator_node),
+        ROLE_SUB_ATTACKER: DecisionBase(operator_node),
+        ROLE_ZONE1: DecisionBase(operator_node),
+        ROLE_ZONE2: DecisionBase(operator_node),
+        ROLE_ZONE3: DecisionBase(operator_node),
+        ROLE_ZONE4: DecisionBase(operator_node),
+        ROLE_SIDE_BACK1: DecisionBase(operator_node),
+        ROLE_SIDE_BACK2: DecisionBase(operator_node),
     }
 
     try:
