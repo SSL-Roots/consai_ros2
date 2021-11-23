@@ -157,7 +157,7 @@ class RobotOperator(Node):
         line.theta = self._theta_look_ball()
         target = self._xy(x, y)
         return self._set_goal(robot_id, self._with_kick(
-            self._line_goal(line, keep=True), target, shoot=False))
+            self._line_goal(line, keep=True), target, kick_pass=True))
 
     def move_to_normalized(self, robot_id, x, y, theta, keep=False):
         # 指定したIDのロボットを目的地（x, y, theta）へ移動させる
@@ -250,7 +250,7 @@ class RobotOperator(Node):
         goal_msg.pose.append(pose)
         goal_msg.keep_control = True
 
-        goal_msg.kick_shoot = True
+        goal_msg.kick_enable = True
 
         goal_msg.kick_target.normalized = True
         goal_msg.kick_target.value_x.append(target_x)
@@ -279,7 +279,7 @@ class RobotOperator(Node):
         goal_msg.receive_ball = True
 
         # targetロボットを狙ってキックする
-        goal_msg.kick_shoot = True
+        goal_msg.kick_enable = True
         constraint_robot = ConstraintObject()
         constraint_robot.robot_id = target_id
         constraint_robot.type = ConstraintObject.BLUE_ROBOT
@@ -324,8 +324,9 @@ class RobotOperator(Node):
         goal_msg.keep_control = keep
         return goal_msg
 
-    def _with_kick(self, goal_msg, target, shoot=True):
-        goal_msg.kick_shoot = shoot
+    def _with_kick(self, goal_msg, target, kick_pass=False):
+        goal_msg.kick_enable = True
+        goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
         return goal_msg
 

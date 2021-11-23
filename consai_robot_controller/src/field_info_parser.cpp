@@ -147,12 +147,12 @@ bool FieldInfoParser::parse_goal(
 
   // ボール蹴る
   State kick_target;
-  if (goal->kick_shoot &&
+  if (goal->kick_enable &&
     parse_constraint_xy(goal->kick_target, kick_target.x, kick_target.y))
   {
     // 目標姿勢とボールが近ければ、キック処理を行う
     if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7) {
-      parse_kick(kick_target, my_robot, ball, parsed_pose, kick_power, dribble_power);
+      parse_kick(kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
     }
   }
 
@@ -328,15 +328,18 @@ bool FieldInfoParser::parse_constraint_object(
 
 bool FieldInfoParser::parse_kick(
   const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  const bool & kick_pass,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
   const double DRIBBLE_POWER = 0.6;
-  const double KICK_POWER = 8.0;
+  const double KICK_POWER_SHOOT = 6.5;
+  const double KICK_POWER_PASS = 3.0;
   const double LOOKING_BALL_DISTANCE = 0.2;  // meters
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 15);
   const double LOOKING_TARGET_THETA = tools::to_radians(30);
   const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(5);
+  const double CAN_PASS_THETA = tools::to_radians(3);
   const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
   const double THETA_TO_ROTATE = tools::to_radians(30);  // meters
@@ -366,8 +369,14 @@ bool FieldInfoParser::parse_kick(
   // ロボットがボールに近ければドリブルをON
   bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
   // ロボットがキックターゲットに焦点を当てたらキックをON
-  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
-    std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+  bool can_kick = false;
+  if (kick_pass) {
+    can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_PASS_THETA &&
+      std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+  } else {
+    can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
+      std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+  }
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
@@ -386,7 +395,13 @@ bool FieldInfoParser::parse_kick(
     // キックターゲットに向かって前進する
     parsed_pose = trans_BtoT.inverted_transform(DISTANCE_TO_KICK_BALL, 0.0, 0.0);
     if (can_dribble) {parsed_dribble_power = DRIBBLE_POWER;}
-    if (can_kick) {parsed_kick_power = KICK_POWER;}
+    if (can_kick) {
+      if (kick_pass) {
+        parsed_kick_power = KICK_POWER_PASS;
+      } else {
+        parsed_kick_power = KICK_POWER_SHOOT;
+      }
+    }
   }
 
   return true;
