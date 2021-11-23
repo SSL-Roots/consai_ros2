@@ -23,9 +23,13 @@ class DecisionBase(object):
     def __init__(self, robot_operator):
         self._operator = robot_operator
         self._ball_state = FieldObserver.BALL_NONE
+        self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
 
     def set_ball_state(self, ball_state):
         self._ball_state = ball_state
+
+    def set_ball_placement_state(self, ball_placement_state):
+        self._ball_placement_state = ball_placement_state
 
     def halt(self, robot_id):
         self._operator.stop(robot_id)

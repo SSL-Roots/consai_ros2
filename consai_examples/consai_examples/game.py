@@ -49,7 +49,6 @@ def main():
         updated_roles = []
         referee_has_changed = prev_referee_command != referee_parser.get_command()
         ball_state_has_changed = prev_ball_state != field_observer.get_ball_state()
-        ball_placement_has_changed = prev_ball_placement_state != field_observer.get_ball_placement_state(referee_parser.placement_position())
 
         # レフェリーコマンドが変化した場合は、全てのロボットの行動を更新する
         if referee_has_changed:
@@ -65,7 +64,7 @@ def main():
 
         # ボール配置状態が変化した場合は、すべてのロボットの行動を更新する
         if referee_parser.our_ball_placement() or referee_parser.their_ball_placement():
-            if ball_placement_has_changed:
+            if prev_ball_placement_state != field_observer.get_ball_placement_state(referee_parser.placement_position()):
                 print("ball placement state has changed")
                 prev_ball_placement_state = field_observer.get_ball_placement_state(referee_parser.placement_position())
                 updated_roles = assignment_node.get_active_roles()
@@ -84,6 +83,8 @@ def main():
             robot_id = assignment_node.get_robot_id(role)
             # ボール状態をセットする
             decisions[role].set_ball_state(prev_ball_state)
+            # ボール配置状態をセットする
+            decisions[role].set_ball_placement_state(prev_ball_placement_state)
 
             # レフェリーコマンドに合わせて行動を決定する
             if field_observer.ball_is_outside():

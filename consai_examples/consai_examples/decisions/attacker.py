@@ -32,3 +32,16 @@ class AttackerDecition(DecisionBase):
         # ボールを追いかける
         self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
         print("ball_state:{}".format(self._ball_state))
+
+    def our_ball_placement(self, robot_id, placement_pos):
+        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
+            # ボール位置が配置目標位置から離れているときはパスする
+            print("Attacker pass to placement")
+        elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
+            # ボール位置が配置目標位置に近づいたときはドリブルする
+            print("Attacker dribble to placement")
+        elif self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
+            # ボール位置が配置目標位置に到着したらボールから離れる
+            print("Attacker run away from placement position")
+
+        self._operator.stop(robot_id)

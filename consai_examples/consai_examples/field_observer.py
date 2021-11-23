@@ -35,6 +35,7 @@ class FieldObserver(Node):
     BALL_PLACEMENT_NONE = 0
     BALL_PLACEMENT_FAR_FROM_TARGET = 1
     BALL_PLACEMENT_NEAR_TARGET = 2
+    BALL_PLACEMENT_ARRIVED_AT_TARGET = 3
 
     THRESHOLD_MARGIN = 0.1  # meters. 状態変化のしきい値にヒステリシスをもたせる
 
@@ -163,16 +164,22 @@ class FieldObserver(Node):
 
     def _update_ball_placement_state(self, placement_position):
         ARRIVED_THRESHOLD = 0.13
+        NEAR_THRESHOLD = 1.0
         THRESHOLD_MARGIN = 0.02
         diff_x = placement_position.x - self._ball.pos.x
         diff_y = placement_position.y - self._ball.pos.y
         distance = math.hypot(diff_x, diff_y)
 
-        threshold = ARRIVED_THRESHOLD
-        if self._ball_placement_state == self.BALL_PLACEMENT_NEAR_TARGET:
-            threshold += THRESHOLD_MARGIN
+        arrived_threshold = ARRIVED_THRESHOLD
+        near_threshold = NEAR_THRESHOLD
+        if self._ball_placement_state == self.BALL_PLACEMENT_ARRIVED_AT_TARGET:
+            arrived_threshold += THRESHOLD_MARGIN
+        elif self._ball_placement_state == self.BALL_PLACEMENT_NEAR_TARGET:
+            near_threshold += THRESHOLD_MARGIN
         
-        if distance < threshold:
+        if distance < arrived_threshold:
+            self._ball_placement_state = self.BALL_PLACEMENT_ARRIVED_AT_TARGET
+        elif distance < near_threshold:
             self._ball_placement_state = self.BALL_PLACEMENT_NEAR_TARGET
         else:
             self._ball_placement_state = self.BALL_PLACEMENT_FAR_FROM_TARGET
