@@ -196,7 +196,7 @@ class Visualizer(Plugin):
 
     def _callback_battery_voltage(self, msg, robot_id):
         MAX_VOLTAGE = 16.8
-        MIN_VOLTAGE = 15.0
+        MIN_VOLTAGE = 14.8
         percentage = (msg.voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
