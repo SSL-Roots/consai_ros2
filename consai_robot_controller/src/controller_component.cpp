@@ -149,6 +149,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
+  sub_referee_ = create_subscription<Referee>(
+    "referee", 10, std::bind(&Controller::callback_referee, this, _1));
 
   auto param_change_callback =
     [this](std::vector<rclcpp::Parameter> parameters) {
@@ -329,6 +331,11 @@ void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
 void Controller::callback_geometry(const GeometryData::SharedPtr msg)
 {
   parser_.set_geometry(msg);
+}
+
+void Controller::callback_referee(const Referee::SharedPtr msg)
+{
+  parser_.set_referee(msg);
 }
 
 bool Controller::update_pid_gain_from_param(

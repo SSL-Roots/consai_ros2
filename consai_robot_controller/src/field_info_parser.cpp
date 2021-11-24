@@ -38,6 +38,10 @@ void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
   geometry_ = geometry;
 }
 
+void FieldInfoParser::set_referee(const Referee::SharedPtr referee) { 
+  referee_ = referee;
+}
+
 bool FieldInfoParser::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
@@ -553,6 +557,34 @@ bool FieldInfoParser::avoid_obstacles(
   }
 
   return true;
+}
+
+
+bool FieldInfoParser::avoid_placement_area(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const State & designated_position, State & avoidance_pose) const {
+  // Ball Placementを邪魔しないように避ける
+  double AVOID_POS_Y = 0.6;  // ルール上は 0.5 m離れる必要あり
+
+  // 直線ball -> designated_positionの座標系を作成
+  auto ball_pose = tools::pose_state(ball);
+  auto angle_BtoD = tools::calc_angle(ball_pose, designated_position);
+  tools::Trans trans_BtoD(ball_pose, angle_BtoD);
+
+  // 目標位置を座標変換
+  auto goal_pose_BtoD = trans_BtoD.transform(goal_pose);
+
+  // if (std::fabs(goal_pose_BtoD.y) < AVOIDANCE_POS_Y)
+
+
+  // if(has_p3_p4) {
+  //   // p1 ~ p4がセットされていれば、
+  //   // 直線p1->p2上で、直線p3->p4と交わるところを目標位置とする
+  //   State intersection = tools::intersection(p1, p2, p3, p4);
+  //   // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
+  //   auto intersection_1to2 = trans_1to2.transform(intersection);
+  //   auto p2_1to2 = trans_1to2.transform(p2);
+
 }
 
 }  // namespace consai_robot_controller
