@@ -203,7 +203,11 @@ class Visualizer(Plugin):
         elif percentage > 100:
             percentage = 100
 
-        getattr(self._widget, f"robot{robot_id}_battery_voltage").setValue(int(percentage))
+        try: 
+            getattr(self._widget, f"robot{robot_id}_battery_voltage").setValue(int(percentage))
+        except AttributeError:
+            # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+            pass
 
         # for synthetics
         self.latest_update_time[robot_id] = time.time()
@@ -217,7 +221,11 @@ class Visualizer(Plugin):
         elif percentage > 100:
             percentage = 100
 
-        getattr(self._widget, f"robot{robot_id}_kicker_voltage").setValue(int(percentage))
+        try:
+            getattr(self._widget, f"robot{robot_id}_kicker_voltage").setValue(int(percentage))
+        except AttributeError:
+            # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+            pass
 
     def _update_robot_synthetics(self):
         # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
@@ -227,12 +235,20 @@ class Visualizer(Plugin):
             diff_time = now - self.latest_update_time[i]
             if diff_time > 1.0:
                 # DEATH
-                getattr(self._widget, f"robot{i}_connection_status").setText("❌")
-                getattr(self._widget, f"robot{i}_battery_voltage").setValue(0)
-                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(0)
+                try:
+                    getattr(self._widget, f"robot{i}_connection_status").setText("❌")
+                    getattr(self._widget, f"robot{i}_battery_voltage").setValue(0)
+                    getattr(self._widget, f"robot{i}_kicker_voltage").setValue(0)
+                except AttributeError:
+                    # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                    pass
             else:
                 # ALIVE
-                getattr(self._widget, f"robot{i}_connection_status").setText("👍")
+                try:
+                    getattr(self._widget, f"robot{i}_connection_status").setText("👍")
+                except AttributeError:
+                    # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                    pass
 
 
         
