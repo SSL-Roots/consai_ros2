@@ -25,6 +25,7 @@ from decisions.center_back2 import CenterBack2Decision
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
 from decisions.side_back1 import SideBack1Decision
+from decisions.side_back2 import SideBack2Decision
 from decisions.sub_attacker import SubAttackerDecision
 from field_observer import FieldObserver
 import rclpy
@@ -167,7 +168,7 @@ if __name__ == '__main__':
         ROLE_ZONE3: DecisionBase(operator),
         ROLE_ZONE4: DecisionBase(operator),
         ROLE_SIDE_BACK1: SideBack1Decision(operator),
-        ROLE_SIDE_BACK2: DecisionBase(operator),
+        ROLE_SIDE_BACK2: SideBack2Decision(operator),
     }
 
     try:
