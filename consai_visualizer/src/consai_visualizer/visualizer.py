@@ -17,6 +17,7 @@
 
 from functools import partial
 import os
+import time
 
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPose
@@ -123,6 +124,16 @@ class Visualizer(Plugin):
         self._reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
         self._reset_timer.start(5000)
 
+        # ロボットの死活監視
+        # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
+        self.latest_update_time = [0] * 16
+        self._reset_timer = QTimer()
+        self._reset_timer.timeout.connect(self._update_robot_synthetics)
+        self._reset_timer.start(1000)
+        
+
+
+
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
             self._widget.field_widget.set_can_draw_geometry(True)
@@ -194,6 +205,9 @@ class Visualizer(Plugin):
 
         getattr(self._widget, f"robot{robot_id}_battery_voltage").setValue(int(percentage))
 
+        # for synthetics
+        self.latest_update_time[robot_id] = time.time()
+
     def _callback_kicker_voltage(self, msg, robot_id):
         MAX_VOLTAGE = 200
         MIN_VOLTAGE = 0
@@ -204,6 +218,22 @@ class Visualizer(Plugin):
             percentage = 100
 
         getattr(self._widget, f"robot{robot_id}_kicker_voltage").setValue(int(percentage))
+
+    def _update_robot_synthetics(self):
+        # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
+        now = time.time()
+
+        for i in range(16):
+            diff_time = now - self.latest_update_time[i]
+            if diff_time > 1.0:
+                # DEATH
+                getattr(self._widget, f"robot{i}_connection_status").setText("❌")
+                getattr(self._widget, f"robot{i}_battery_voltage").setValue(0)
+                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(0)
+            else:
+                # ALIVE
+                getattr(self._widget, f"robot{i}_connection_status").setText("👍")
+
 
         
         
