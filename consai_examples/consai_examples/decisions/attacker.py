@@ -24,13 +24,22 @@ class AttackerDecision(DecisionBase):
         super().__init__(robot_operator)
 
     def stop(self, robot_id):
-        ID_IN_DEFENSE = self.ACT_ID_STOP + 0
-        ID_CHASE = self.ACT_ID_STOP + 1
-        # ボールがディフェンスエリアにあるときは、別の場所に移動する
+        ID_CHASE = self.ACT_ID_STOP + 0
+        ID_IN_OUR_DEFENSE = self.ACT_ID_STOP + 1
+        ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
+
+        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
-            if self._act_id != ID_IN_DEFENSE:
-                self._operator.move_to(robot_id, 0.0, 0.0, 0.0, True, self.MAX_VELOCITY_AT_STOP_GAME)
-                self._act_id = ID_IN_DEFENSE
+            if self._act_id != ID_IN_OUR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, -3.0)
+                self._act_id = ID_IN_OUR_DEFENSE
+            return
+
+        # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+            if self._act_id != ID_IN_THEIR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, 3.0)
+                self._act_id = ID_IN_THEIR_DEFENSE
             return
 
         # ボールを追いかける
@@ -46,14 +55,14 @@ class AttackerDecision(DecisionBase):
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                self._operator.move_to_ball_y(robot_id, -4.0)
+                self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                self._operator.move_to_ball_y(robot_id, 4.0)
+                self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
