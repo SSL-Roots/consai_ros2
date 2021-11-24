@@ -32,6 +32,8 @@ from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
 
+from frootspi_msgs.msg import BatteryVoltage
+
 
 class Visualizer(Plugin):
 
@@ -74,6 +76,20 @@ class Visualizer(Plugin):
         self._sub_referee = self._node.create_subscription(
             Referee, 'referee',
             self._callback_referee, 10)
+
+        self._sub_battery_voltage = []
+        for i in range(16):
+            topic_name = 'robot' + str(i) + '/battery_voltage'
+            self._sub_battery_voltage.append(self._node.create_subscription(
+                BatteryVoltage, topic_name,
+                partial(self._callback_battery_voltage, robot_id=i), 10))
+
+        self._sub_kicker_voltage = []
+        for i in range(16):
+            topic_name = 'robot' + str(i) + '/kicker_voltage'
+            self._sub_kicker_voltage.append(self._node.create_subscription(
+                BatteryVoltage, topic_name,
+                partial(self._callback_kicker_voltage, robot_id=i), 10))
 
         self._sub_goal_pose = []
         for i in range(16):
@@ -166,3 +182,28 @@ class Visualizer(Plugin):
         # ボール配置の目標位置をセット
         if len(msg.designated_position) > 0:
             self._widget.field_widget.set_designated_position(msg.designated_position[0])
+
+    def _callback_battery_voltage(self, msg, robot_id):
+        MAX_VOLTAGE = 16.8
+        MIN_VOLTAGE = 15.0
+        percentage = (msg.voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
+
+        getattr(self._widget, f"robot{robot_id}_battery_voltage").setValue(int(percentage))
+
+    def _callback_kicker_voltage(self, msg, robot_id):
+        MAX_VOLTAGE = 200
+        MIN_VOLTAGE = 0
+        percentage = (msg.voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
+
+        getattr(self._widget, f"robot{robot_id}_kicker_voltage").setValue(int(percentage))
+
+        
+        
