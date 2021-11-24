@@ -158,22 +158,23 @@ class FieldObserver(Node):
             self._ball_is_moving = False
 
     def _update_ball_zone_state(self, ball_pos):
+        ZONE_THRESHOLD = 0.2  # meters
         # ボールがどのZONEに存在するのかを判定する
         threshold_x = 0.0
         if self.ball_is_in_our_side():
-            threshold_x += self.THRESHOLD_MARGIN
+            threshold_x += ZONE_THRESHOLD
 
         threshold_y_top = self._field_quarter_y
         if self.ball_is_in_right_top_zone() or self.ball_is_in_left_top_zone():
-            threshold_y_top -= self.THRESHOLD_MARGIN
+            threshold_y_top -= ZONE_THRESHOLD
 
         threshold_y_mid_top = 0.0
         if self.ball_is_in_right_mid_top_zone() or self.ball_is_in_left_mid_top_zone():
-            threshold_y_mid_top -= self.THRESHOLD_MARGIN
+            threshold_y_mid_top -= ZONE_THRESHOLD
 
         threshold_y_mid_bottom = -self._field_quarter_y
         if self.ball_is_in_right_mid_bottom_zone() or self.ball_is_in_left_mid_bottom_zone():
-            threshold_y_mid_bottom -= self.THRESHOLD_MARGIN
+            threshold_y_mid_bottom -= ZONE_THRESHOLD
 
         if ball_pos.x > threshold_x:
             if ball_pos.y > threshold_y_top:
