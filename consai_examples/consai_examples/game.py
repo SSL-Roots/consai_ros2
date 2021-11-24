@@ -30,6 +30,7 @@ from decisions.sub_attacker import SubAttackerDecision
 from decisions.zone1 import Zone1Decision
 from decisions.zone2 import Zone2Decision
 from decisions.zone3 import Zone3Decision
+from decisions.zone4 import Zone4Decision
 from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -173,7 +174,7 @@ if __name__ == '__main__':
         ROLE_ZONE1: Zone1Decision(operator),
         ROLE_ZONE2: Zone2Decision(operator),
         ROLE_ZONE3: Zone3Decision(operator),
-        ROLE_ZONE4: DecisionBase(operator),
+        ROLE_ZONE4: Zone4Decision(operator),
         ROLE_SIDE_BACK1: SideBack1Decision(operator),
         ROLE_SIDE_BACK2: SideBack2Decision(operator),
     }

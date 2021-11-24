@@ -18,7 +18,7 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 
-class Zone3Decision(DecisionBase):
+class Zone4Decision(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
@@ -30,15 +30,7 @@ class Zone3Decision(DecisionBase):
 
         # ゾーン内にボールがあれば、ボールを追いかける
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-            chase_ball = False
-            if self._num_of_zone_roles == 3:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
-                    chase_ball = True
-            else:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
-                    chase_ball = True
-
-            if chase_ball:
+            if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                 if self._act_id != ID_DEFEND_BALL:
                     self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
                     self._act_id = ID_DEFEND_BALL
@@ -48,8 +40,6 @@ class Zone3Decision(DecisionBase):
         if self._act_id != ID_IN_ZONE:
             target_x = -2.0
             target_y = -4.5 * 0.75
-            if self._num_of_zone_roles == 4:
-                target_y = -4.5 * 0.25
             self._operator.move_to_receive(robot_id, target_x, target_y)
             self._act_id = ID_IN_ZONE
         return
