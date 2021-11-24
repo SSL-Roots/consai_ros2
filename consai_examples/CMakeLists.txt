@@ -37,6 +37,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/side_back2.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
     ${PROJECT_NAME}/decisions/zone1.py
+    ${PROJECT_NAME}/decisions/zone2.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

@@ -18,7 +18,7 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 
-class Zone1Decision(DecisionBase):
+class Zone2Decision(DecisionBase):
 
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
@@ -31,14 +31,16 @@ class Zone1Decision(DecisionBase):
         # ゾーン内にボールがあれば、ボールを追いかける
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
             chase_ball = False
-            if self._num_of_zone_roles == 1:
-                chase_ball = True
-            elif self._num_of_zone_roles == 2:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+            if self._num_of_zone_roles == 2:
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM,
+                                             FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                     chase_ball = True
-            elif self._num_of_zone_roles == 3 or self._num_of_zone_roles == 4:
-                if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
+            elif self._num_of_zone_roles == 3:
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP,
+                                             FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
+                    chase_ball = True
+            else:
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
                     chase_ball = True
 
             if chase_ball:
@@ -50,11 +52,11 @@ class Zone1Decision(DecisionBase):
         # ゾーン内で待機する
         if self._act_id != ID_IN_ZONE:
             target_x = -2.0
-            target_y = 0
-            if self._num_of_zone_roles == 2:
-                target_y = 4.5 * 0.5
-            elif self._num_of_zone_roles >= 3:
-                target_y = 4.5 * 0.75
+            target_y = -4.5 * 0.5
+            if self._num_of_zone_roles == 3:
+                target_y = 0.0
+            elif self._num_of_zone_roles == 4:
+                target_y = 4.5 * 0.25
             self._operator.move_to_receive(robot_id, target_x, target_y)
             self._act_id = ID_IN_ZONE 
         return
