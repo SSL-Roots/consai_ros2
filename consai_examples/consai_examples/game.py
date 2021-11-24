@@ -20,6 +20,7 @@ import threading
 import time
 
 from decisions.attacker import AttackerDecision
+from decisions.center_back1 import CenterBack1Decision
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
 from decisions.sub_attacker import SubAttackerDecision
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     decisions = {
         ROLE_GOALIE: GoaleDecision(operator),
         ROLE_ATTACKER: AttackerDecision(operator),
-        ROLE_CENTER_BACK1: DecisionBase(operator),
+        ROLE_CENTER_BACK1: CenterBack1Decision(operator),
         ROLE_CENTER_BACK2: DecisionBase(operator),
         ROLE_SUB_ATTACKER: DecisionBase(operator),
         ROLE_ZONE1: DecisionBase(operator),
