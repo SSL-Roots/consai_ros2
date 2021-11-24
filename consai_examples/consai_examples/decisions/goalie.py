@@ -17,6 +17,8 @@
 
 from decisions.decision_base import DecisionBase
 
+from field_observer import FieldObserver
+
 class GoaleDecision(DecisionBase):
 
     def __init__(self, robot_operator):
@@ -35,9 +37,19 @@ class GoaleDecision(DecisionBase):
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
+        ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
+        ID_IN_PLAY = self.ACT_ID_INPLAY + 1
+
+        # ボールがディフェンスエリアにあるときは、別の場所に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+            if self._act_id != ID_IN_DEFENSE:
+                self._operator.shoot_to(robot_id, 5.0, 0.0)
+                self._act_id = ID_IN_DEFENSE
+            return
+
+        if self._act_id != ID_IN_PLAY:
             self._defend_goal(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+            self._act_id = ID_IN_PLAY
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
