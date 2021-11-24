@@ -159,25 +159,40 @@ class FieldObserver(Node):
 
     def _update_ball_zone_state(self, ball_pos):
         # ボールがどのZONEに存在するのかを判定する
-        if ball_pos.x > 0.0:
-            if ball_pos.y > self._field_quarter_y:
+        threshold_x = 0.0
+        if self.ball_is_in_our_side():
+            threshold_x += self.THRESHOLD_MARGIN
+
+        threshold_y_top = self._field_quarter_y
+        if self.ball_is_in_right_top_zone() or self.ball_is_in_left_top_zone():
+            threshold_y_top -= self.THRESHOLD_MARGIN
+
+        threshold_y_mid_top = 0.0
+        if self.ball_is_in_right_mid_top_zone() or self.ball_is_in_left_mid_top_zone():
+            threshold_y_mid_top -= self.THRESHOLD_MARGIN
+
+        threshold_y_mid_bottom = -self._field_quarter_y
+        if self.ball_is_in_right_mid_bottom_zone() or self.ball_is_in_left_mid_bottom_zone():
+            threshold_y_mid_bottom -= self.THRESHOLD_MARGIN
+
+        if ball_pos.x > threshold_x:
+            if ball_pos.y > threshold_y_top:
                 self._ball_zone_state = self.BALL_ZONE_RIGHT_TOP
-            elif ball_pos.y > 0.0:
+            elif ball_pos.y > threshold_y_mid_top:
                 self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_TOP
-            elif ball_pos.y > -self._field_quarter_y:
+            elif ball_pos.y > threshold_y_mid_bottom:
                 self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_BOTTOM
             else:
                 self._ball_zone_state = self.BALL_ZONE_RIGHT_BOTTOM
         else:
-            if ball_pos.y > self._field_quarter_y:
+            if ball_pos.y > threshold_y_top:
                 self._ball_zone_state = self.BALL_ZONE_LEFT_TOP
-            elif ball_pos.y > 0.0:
+            elif ball_pos.y > threshold_y_mid_top:
                 self._ball_zone_state = self.BALL_ZONE_LEFT_MID_TOP
-            elif ball_pos.y > -self._field_quarter_y:
+            elif ball_pos.y > threshold_y_mid_bottom:
                 self._ball_zone_state = self.BALL_ZONE_LEFT_MID_BOTTOM
             else:
                 self._ball_zone_state = self.BALL_ZONE_LEFT_BOTTOM
-
 
     def get_ball_state(self):
         return self._ball_state
