@@ -37,6 +37,16 @@ class FieldObserver(Node):
     BALL_PLACEMENT_NEAR_TARGET = 2
     BALL_PLACEMENT_ARRIVED_AT_TARGET = 3
 
+    BALL_ZONE_NONE = 0
+    BALL_ZONE_LEFT_TOP = 1
+    BALL_ZONE_LEFT_MID_TOP = 2
+    BALL_ZONE_LEFT_MID_BOTTOM = 3
+    BALL_ZONE_LEFT_BOTTOM = 3
+    BALL_ZONE_RIGHT_TOP = 1
+    BALL_ZONE_RIGHT_MID_TOP = 2
+    BALL_ZONE_RIGHT_MID_BOTTOM = 3
+    BALL_ZONE_RIGHT_BOTTOM = 3
+
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
 
     def __init__(self):
@@ -44,6 +54,7 @@ class FieldObserver(Node):
 
         self._ball_state = self.BALL_NONE
         self._ball_placement_state = self.BALL_PLACEMENT_NONE
+        self._ball_zone_state = self.BALL_ZONE_NONE
         self._ball_is_moving = False
         self._ball = TrackedBall()
 
@@ -51,6 +62,7 @@ class FieldObserver(Node):
         self._field_half_x = self._field_x * 0.5
         self._field_y = 9.0  # meters
         self._field_half_y = self._field_y * 0.5
+        self._field_quarter_y = self._field_half_y * 0.5
         self._field_defense_x = 1.8  # meters
         self._field_defense_y = 3.6  # meters
         self._field_defense_half_y = self._field_defense_y * 0.5  # meters
@@ -62,6 +74,7 @@ class FieldObserver(Node):
         if len(msg.balls) > 0:
             self._update_ball_state(msg.balls[0])
             self._update_ball_moving_state(msg.balls[0])
+            self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
 
     def _update_ball_state(self, ball):
@@ -144,6 +157,28 @@ class FieldObserver(Node):
         else:
             self._ball_is_moving = False
 
+    def _update_ball_zone_state(self, ball_pos):
+        # ボールがどのZONEに存在するのかを判定する
+        if ball_pos.x > 0.0:
+            if ball_pos.y > self._field_quarter_y:
+                self._ball_zone_state = self.BALL_ZONE_RIGHT_TOP
+            elif ball_pos.y > 0.0:
+                self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_TOP
+            elif ball_pos.y > -self._field_quarter_y:
+                self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_BOTTOM
+            else:
+                self._ball_zone_state = self.BALL_ZONE_RIGHT_BOTTOM
+        else:
+            if ball_pos.y > self._field_quarter_y:
+                self._ball_zone_state = self.BALL_ZONE_LEFT_TOP
+            elif ball_pos.y > 0.0:
+                self._ball_zone_state = self.BALL_ZONE_LEFT_MID_TOP
+            elif ball_pos.y > -self._field_quarter_y:
+                self._ball_zone_state = self.BALL_ZONE_LEFT_MID_BOTTOM
+            else:
+                self._ball_zone_state = self.BALL_ZONE_LEFT_BOTTOM
+
+
     def get_ball_state(self):
         return self._ball_state
 
@@ -161,6 +196,33 @@ class FieldObserver(Node):
     
     def ball_is_moving(self):
         return self._ball_is_moving
+
+    def get_ball_zone_state(self):
+        return self._ball_zone_state
+
+    def ball_is_in_left_top_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_LEFT_TOP
+
+    def ball_is_in_left_mid_top_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_LEFT_MID_TOP
+
+    def ball_is_in_left_mid_bottom_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_LEFT_MID_BOTTOM
+
+    def ball_is_in_left_bottom_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_LEFT_BOTTOM
+
+    def ball_is_in_right_top_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_RIGHT_TOP
+
+    def ball_is_in_right_mid_top_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_RIGHT_MID_TOP
+
+    def ball_is_in_right_mid_bottom_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_RIGHT_MID_BOTTOM
+
+    def ball_is_in_right_bottom_zone(self):
+        return self._ball_zone_state == self.BALL_ZONE_RIGHT_BOTTOM
 
     def _update_ball_placement_state(self, placement_position):
         ARRIVED_THRESHOLD = 0.13

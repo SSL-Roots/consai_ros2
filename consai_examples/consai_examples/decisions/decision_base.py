@@ -37,6 +37,7 @@ class DecisionBase(object):
         self._operator = robot_operator
         self._ball_state = FieldObserver.BALL_NONE
         self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
+        self._ball_zone_state = FieldObserver.BALL_ZONE_NONE
         self._act_id = self.ACT_ID_INIT
 
     def set_ball_state(self, ball_state):
@@ -44,6 +45,9 @@ class DecisionBase(object):
 
     def set_ball_placement_state(self, ball_placement_state):
         self._ball_placement_state = ball_placement_state
+
+    def set_ball_zone_state(self, ball_zone_state):
+        self._ball_zone_state = ball_zone_state
 
     def reset_act_id(self):
         self._act_id = self.ACT_ID_INIT

@@ -23,10 +23,84 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
+        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_RIGHT_TOP,
+                           FieldObserver.BALL_ZONE_LEFT_MID_TOP, FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
+
+        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_LEFT_MID_TOP]
+        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM, FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
+
+    def _offend(self, robot_id, base_id):
+        # ボールがフィールド上半分にあるときは、フィールド下側に移動する
+        if self._ball_zone_state in self._ZONE_TOPS:
+            if self._act_id != base_id + 0:
+                self._operator.move_to_ball_x(robot_id, -2.5)
+                self._act_id = base_id + 0
+            return
+        else:
+            if self._act_id != base_id + 1:
+                self._operator.move_to_ball_x(robot_id, 2.5)
+                self._act_id = base_id + 1
+            return
+
+    def _offend_our_side(self, robot_id, base_id):
+        # ボールがフィールド上半分にあるときは、フィールド下側に移動する
+        if self._ball_zone_state in self._OUR_ZONE_TOPS:
+            if self._act_id != base_id + 0:
+                self._operator.move_to_ball_x(robot_id, -2.5)
+                self._act_id = base_id + 0
+            return
+        elif self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
+            if self._act_id != base_id + 1:
+                self._operator.move_to_ball_x(robot_id, 2.5)
+                self._act_id = base_id + 1
+            return
+        else:
+            if self._act_id != base_id + 2:
+                self._operator.move_to_ball_x(robot_id, -2.5)
+                self._act_id = base_id + 2
+            return
+
+    def stop(self, robot_id):
+        self._offend(robot_id, self.ACT_ID_STOP)
+
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.chase_ball(robot_id, -0.7, 0.1, 0.0, look_from=False, keep=True)
-            self._act_id = self.ACT_ID_INPLAY
+        self._offend(robot_id, self.ACT_ID_INPLAY)
+
+    def our_pre_kickoff(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)
+
+    def our_kickoff(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_KICKOFF)
+
+    def their_pre_kickoff(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)
+
+    def their_kickoff(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_KICKOFF)
+
+    def our_pre_penalty(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PRE_PENALTY)
+
+    def our_penalty(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PENALTY)
+
+    def their_pre_penalty(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PRE_PENALTY)
+
+    def their_penalty(self, robot_id):
+        self._offend_our_side(robot_id, self.ACT_ID_PENALTY)
+
+    def our_direct(self, robot_id):
+        self._offend(robot_id, self.ACT_ID_DIRECT)
+
+    def their_direct(self, robot_id):
+        self._offend(robot_id, self.ACT_ID_DIRECT)
+
+    def our_indirect(self, robot_id):
+        self._offend(robot_id, self.ACT_ID_INDIRECT)
+
+    def their_indirect(self, robot_id):
+        self._offend(robot_id, self.ACT_ID_INDIRECT)
 
     def our_ball_placement(self, robot_id, placement_pos):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
