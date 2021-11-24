@@ -21,6 +21,7 @@ import time
 
 from decisions.attacker import AttackerDecision
 from decisions.center_back1 import CenterBack1Decision
+from decisions.center_back2 import CenterBack2Decision
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
 from decisions.sub_attacker import SubAttackerDecision
@@ -68,7 +69,6 @@ def main():
             if observer.ball_is_outside():
                 # ボールが場外に出たらロボットを停止する
                 decisions[role].halt(robot_id)
-                print("ボールが外に出た")
                 continue
 
             if referee.halt():
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         ROLE_GOALIE: GoaleDecision(operator),
         ROLE_ATTACKER: AttackerDecision(operator),
         ROLE_CENTER_BACK1: CenterBack1Decision(operator),
-        ROLE_CENTER_BACK2: DecisionBase(operator),
+        ROLE_CENTER_BACK2: CenterBack2Decision(operator),
         ROLE_SUB_ATTACKER: DecisionBase(operator),
         ROLE_ZONE1: DecisionBase(operator),
         ROLE_ZONE2: DecisionBase(operator),

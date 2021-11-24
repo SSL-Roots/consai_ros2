@@ -30,6 +30,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
     ${PROJECT_NAME}/decisions/center_back1.py
+    ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
