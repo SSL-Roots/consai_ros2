@@ -27,6 +27,7 @@ from decisions.goalie import GoaleDecision
 from decisions.side_back1 import SideBack1Decision
 from decisions.side_back2 import SideBack2Decision
 from decisions.sub_attacker import SubAttackerDecision
+from decisions.zone1 import Zone1Decision
 from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -65,6 +66,8 @@ def main():
             # 役割が変わったロボットのみ、行動を更新する
             for role in assignor.update_role():
                 decisions[role].reset_act_id()
+
+        num_of_zone_roles = num_of_active_zone_roles(assignor.get_active_roles())
         
         for role in assignor.get_active_roles():
             robot_id = assignor.get_robot_id(role)
@@ -74,6 +77,8 @@ def main():
             decisions[role].set_ball_placement_state(ball_placement_state)
             # ボールゾーン状態をセットする
             decisions[role].set_ball_zone_state(ball_zone_state)
+            # ゾーンディフェンスの担当者数をセットする
+            decisions[role].set_num_of_zone_roles(num_of_zone_roles)
 
             # レフェリーコマンドに合わせて行動を決定する
             if observer.ball_is_outside():
@@ -163,7 +168,7 @@ if __name__ == '__main__':
         ROLE_CENTER_BACK1: CenterBack1Decision(operator),
         ROLE_CENTER_BACK2: CenterBack2Decision(operator),
         ROLE_SUB_ATTACKER: SubAttackerDecision(operator),
-        ROLE_ZONE1: DecisionBase(operator),
+        ROLE_ZONE1: Zone1Decision(operator),
         ROLE_ZONE2: DecisionBase(operator),
         ROLE_ZONE3: DecisionBase(operator),
         ROLE_ZONE4: DecisionBase(operator),

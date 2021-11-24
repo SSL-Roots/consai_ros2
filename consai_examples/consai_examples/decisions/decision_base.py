@@ -38,6 +38,7 @@ class DecisionBase(object):
         self._ball_state = FieldObserver.BALL_NONE
         self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
         self._ball_zone_state = FieldObserver.BALL_ZONE_NONE
+        self._num_of_zone_roles = 0
         self._act_id = self.ACT_ID_INIT
 
     def set_ball_state(self, ball_state):
@@ -48,6 +49,9 @@ class DecisionBase(object):
 
     def set_ball_zone_state(self, ball_zone_state):
         self._ball_zone_state = ball_zone_state
+
+    def set_num_of_zone_roles(self, num_of_zone_roles):
+        self._num_of_zone_roles = num_of_zone_roles
 
     def reset_act_id(self):
         self._act_id = self.ACT_ID_INIT

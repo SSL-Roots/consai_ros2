@@ -106,6 +106,15 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def move_to_receive(self, robot_id, x, y):
+        # x, y座標に移動する
+        # ボールが来たら受け取りに移動する
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
+
     def move_to_ball_x(self, robot_id, y):
         # ボールと同じx軸上でyの位置に移動する
         pose = ConstraintPose()
@@ -137,13 +146,13 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
     def move_to_defend_our_goal_from_ball(self, robot_id, distance):
-        # 自チームとボールを結び、ボールからdistanceだけ離れた位置に移動する
+        # 自チームのゴールとボールを結び、ボールからdistanceだけ離れた位置に移動する
         line = ConstraintLine()
         line.p1.object.append(self._object_ball())
         line.p2 = self._xy_our_goal()
         line.distance = distance
         line.theta = self._theta_look_ball()
-        return self._set_goal(robot_id, self._line_goal(line, keep=True))
+        return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
     def pass_to(self, robot_id, x, y):
         # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
