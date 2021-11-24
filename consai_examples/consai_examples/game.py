@@ -151,7 +151,7 @@ if __name__ == '__main__':
         ROLE_ATTACKER: AttackerDecision(operator),
         ROLE_CENTER_BACK1: DecisionBase(operator),
         ROLE_CENTER_BACK2: DecisionBase(operator),
-        ROLE_SUB_ATTACKER: SubAttackerDecision(operator),
+        ROLE_SUB_ATTACKER: DecisionBase(operator),
         ROLE_ZONE1: DecisionBase(operator),
         ROLE_ZONE2: DecisionBase(operator),
         ROLE_ZONE3: DecisionBase(operator),

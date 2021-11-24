@@ -106,6 +106,14 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def move_to_ball_y(self, robot_id, x):
+        # ボールと同じy軸上でxの位置に移動する
+        pose = ConstraintPose()
+        pose.xy.object.append(self._object_ball())
+        pose.xy.value_x.append(x)
+        pose.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
+
     def move_to_line_to_defend_our_goal(self, robot_id, p1_x, p1_y, p2_x, p2_y):
         # 自チームのゴールをボールから守るように、直線p1->p2に移動する
         line = ConstraintLine()
@@ -152,6 +160,19 @@ class RobotOperator(Node):
         target = self._xy(x, y)
         return self._set_goal(robot_id, self._with_kick(
             self._line_goal(line, keep=True), target, kick_pass=False))
+
+    def shoot_to_their_goal(self, robot_id):
+        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
+        # 相手ゴールに向かってパスする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy_their_goal()
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_receive(
+            self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False)))
 
     def dribble_to(self, robot_id, x, y):
         # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
@@ -356,12 +377,26 @@ class RobotOperator(Node):
         our_goal.value_y.append(0.0)
         return our_goal
 
+    def _xy_their_goal(self):
+        # ConstraintXYの相手チームゴール座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(1.0)
+        our_goal.value_y.append(0.0)
+        return our_goal
+
     def _theta_look_ball(self):
         # ConstraintThetaでボールを見る角度を返す
         look_ball = ConstraintTheta()
         look_ball.object.append(self._object_ball())
         look_ball.param = ConstraintTheta.PARAM_LOOK_TO
         return look_ball
+
+    def _pose_goal(self, pose, keep=True):
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = keep
+        return goal_msg
 
     def _line_goal(self, line, keep=True):
         goal_msg = RobotControl.Goal()

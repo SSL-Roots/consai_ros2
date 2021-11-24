@@ -39,9 +39,28 @@ class AttackerDecision(DecisionBase):
             self._act_id = ID_CHASE
 
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.shoot_to(robot_id, 5.0, 0.0)
-            self._act_id = self.ACT_ID_INPLAY
+        ID_INPLAY = self.ACT_ID_INPLAY + 0
+        ID_IN_OUR_DEFENSE = self.ACT_ID_INPLAY + 1
+        ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
+
+        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+            if self._act_id != ID_IN_OUR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, -4.0)
+                self._act_id = ID_IN_OUR_DEFENSE
+            return
+
+        # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+            if self._act_id != ID_IN_THEIR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, 4.0)
+                self._act_id = ID_IN_THEIR_DEFENSE
+            return
+
+        # ゴールに向かってシュートする
+        if self._act_id != ID_INPLAY:
+            self._operator.shoot_to_their_goal(robot_id)
+            self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:

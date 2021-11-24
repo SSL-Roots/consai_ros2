@@ -253,23 +253,25 @@ bool FieldInfoParser::parse_constraint_xy(
     if (parse_constraint_object(xy.object[0], object_pose)) {
       parsed_x = object_pose.x;
       parsed_y = object_pose.y;
-      return true;
+    } else {
+      return false;
     }
   }
 
-  if (xy.value_x.size() > 0 && xy.value_y.size() > 0) {
+  if (xy.value_x.size() > 0) {
     parsed_x = xy.value_x[0];
-    parsed_y = xy.value_y[0];
-
-    // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
-    if (xy.normalized) {
-      parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
-      parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
-    }
-    return true;
   }
 
-  return false;
+  if (xy.value_y.size() > 0) {
+    parsed_y = xy.value_y[0];
+  }
+
+  // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
+  if (xy.normalized) {
+    parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
+    parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
+  }
+  return true;
 }
 
 bool FieldInfoParser::parse_constraint_theta(
