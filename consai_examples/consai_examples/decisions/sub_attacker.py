@@ -23,6 +23,11 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
+    def inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.chase_ball(robot_id, -0.7, 0.1, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_INPLAY
+
     def our_ball_placement(self, robot_id, placement_pos):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
         ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1

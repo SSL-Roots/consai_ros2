@@ -37,7 +37,7 @@ class FieldObserver(Node):
     BALL_PLACEMENT_NEAR_TARGET = 2
     BALL_PLACEMENT_ARRIVED_AT_TARGET = 3
 
-    THRESHOLD_MARGIN = 0.1  # meters. 状態変化のしきい値にヒステリシスをもたせる
+    THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
 
     def __init__(self):
         super().__init__('field_observer')

@@ -38,6 +38,78 @@ class AttackerDecision(DecisionBase):
             self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = ID_CHASE
 
+    def inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def our_pre_kickoff(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_KICKOFF:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_PRE_KICKOFF
+
+    def our_kickoff(self, robot_id):
+        if self._act_id != self.ACT_ID_KICKOFF:
+            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._act_id = self.ACT_ID_KICKOFF
+
+    def their_pre_kickoff(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_KICKOFF:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_PRE_KICKOFF
+
+    def their_kickoff(self, robot_id):
+        if self._act_id != self.ACT_ID_KICKOFF:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_KICKOFF
+
+    def our_pre_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def our_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PENALTY:
+            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._act_id = self.ACT_ID_PENALTY
+
+    def their_pre_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def their_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PENALTY:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_PENALTY
+
+    def our_direct(self, robot_id):
+        if self._act_id != self.ACT_ID_DIRECT:
+            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._act_id = self.ACT_ID_DIRECT
+
+    def their_direct(self, robot_id):
+        if self._act_id != self.ACT_ID_DIRECT:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_DIRECT
+
+    def our_indirect(self, robot_id):
+        if self._act_id != self.ACT_ID_INDIRECT:
+            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._act_id = self.ACT_ID_INDIRECT
+
+    def their_indirect(self, robot_id):
+        if self._act_id != self.ACT_ID_INDIRECT:
+            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._act_id = self.ACT_ID_INDIRECT
+
+    def their_ball_placement(self, robot_id, placement_pos):
+        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
+            print("THEIR BALL PLACEMENT:{} to x:{}, y:{}".format(
+                robot_id, placement_pos.x, placement_pos.y))
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_THEIR_PLACEMENT
+
     def our_ball_placement(self, robot_id, placement_pos):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
         ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1

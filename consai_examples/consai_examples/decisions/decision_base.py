@@ -139,13 +139,11 @@ class DecisionBase(object):
 
     def our_timeout(self, robot_id):
         if self._act_id != self.ACT_ID_TIMEOUT:
-            print("OUR TIMEOUT:{}".format(robot_id))
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_TIMEOUT
 
     def their_timeout(self, robot_id):
         if self._act_id != self.ACT_ID_TIMEOUT:
-            print("THEIR TIMEOUT:{}".format(robot_id))
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_TIMEOUT
 

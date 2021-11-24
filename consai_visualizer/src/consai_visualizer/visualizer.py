@@ -164,5 +164,6 @@ class Visualizer(Plugin):
             ref_parser.parse_timeout_time(msg.yellow.timeout_time))
 
         # ボール配置の目標位置をセット
-        if len(msg.designated_position) > 0:
-            self._widget.field_widget.set_designated_position(msg.designated_position[0])
+        if ref_parser.is_ball_placement(msg.command):
+            if len(msg.designated_position) > 0:
+                self._widget.field_widget.set_designated_position(msg.designated_position[0])
