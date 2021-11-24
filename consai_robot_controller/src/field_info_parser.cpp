@@ -431,6 +431,7 @@ bool FieldInfoParser::control_ball(
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
     parsed_pose = trans_BtoR.inverted_transform(DISTANCE_TO_LOOK_BALL, 0, M_PI);
+    if (can_dribble) { need_dribble = true;}
   } else if (!is_looking_target) {
     // ターゲットを見るまで、ドリブラをボールに付けながら回転する
     double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
