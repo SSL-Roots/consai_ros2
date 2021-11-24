@@ -69,7 +69,7 @@ class AttackerDecision(DecisionBase):
 
     def our_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
-            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._operator.setplay_shoot_to_their_goal(robot_id)
             self._act_id = self.ACT_ID_KICKOFF
 
     def their_pre_kickoff(self, robot_id):
@@ -89,7 +89,7 @@ class AttackerDecision(DecisionBase):
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._operator.setplay_shoot_to_their_goal(robot_id)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
@@ -104,7 +104,7 @@ class AttackerDecision(DecisionBase):
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
-            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._operator.setplay_shoot_to_their_goal(robot_id)
             self._act_id = self.ACT_ID_DIRECT
 
     def their_direct(self, robot_id):
@@ -114,7 +114,7 @@ class AttackerDecision(DecisionBase):
 
     def our_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
-            self._operator.shoot_to(robot_id, 5.0, 0.0)
+            self._operator.setplay_shoot_to_their_goal(robot_id)
             self._act_id = self.ACT_ID_INDIRECT
 
     def their_indirect(self, robot_id):

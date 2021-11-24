@@ -151,7 +151,7 @@ class RobotOperator(Node):
 
     def shoot_to(self, robot_id, x, y):
         # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってパスする
+        # 指定位置に向かってシュートする
         line = ConstraintLine()
         line.p1.object.append(self._object_ball())
         line.p2 = self._xy(x, y)
@@ -162,8 +162,8 @@ class RobotOperator(Node):
             self._line_goal(line, keep=True), target, kick_pass=False))
 
     def shoot_to_their_goal(self, robot_id):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってパスする
+        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
+        # 相手ゴールに向かってシュートする
         line = ConstraintLine()
         line.p1.object.append(self._object_ball())
         line.p2 = self._xy_their_goal()
@@ -173,6 +173,19 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_receive(
             self._with_kick(
                 self._line_goal(line, keep=True), target, kick_pass=False)))
+
+    def setplay_shoot_to_their_goal(self, robot_id):
+        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
+        # 相手ゴールに向かってシュートする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy_their_goal()
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_receive(
+            self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=True)))
 
     def dribble_to(self, robot_id, x, y):
         # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
@@ -404,10 +417,11 @@ class RobotOperator(Node):
         goal_msg.keep_control = keep
         return goal_msg
 
-    def _with_kick(self, goal_msg, target, kick_pass=False):
+    def _with_kick(self, goal_msg, target, kick_pass=False, kick_setplay=False):
         goal_msg.kick_enable = True
         goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
+        goal_msg.kick_setplay = kick_setplay
         return goal_msg
 
     def _with_dribble(self, goal_msg, target):
