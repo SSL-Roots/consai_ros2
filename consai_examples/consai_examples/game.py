@@ -87,11 +87,6 @@ def main():
             decisions[role].set_zone_targets(zone_targets)
 
             # レフェリーコマンドに合わせて行動を決定する
-            if observer.ball_is_outside():
-                # ボールが場外に出たらロボットを停止する
-                decisions[role].halt(robot_id)
-                continue
-
             if referee.halt():
                 decisions[role].halt(robot_id)
             elif referee.stop():
