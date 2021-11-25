@@ -26,7 +26,15 @@ class Zone4Decision(DecisionBase):
     def _zone_defense(self, robot_id, base_id):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
-        ID_IN_ZONE = base_id + self._num_of_zone_roles + 4
+        ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
+        ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
+
+        # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
+        if self._zone_targets[3] is not None:
+            if self._act_id != ID_MAN_MARK:
+                self._operator.man_mark(robot_id, self._zone_targets[3], 0.5)
+                self._act_id = ID_MAN_MARK 
+            return
 
         # ゾーン内にボールがあれば、ボールを追いかける
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:

@@ -154,6 +154,16 @@ class RobotOperator(Node):
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
+    def man_mark(self, robot_id, their_id, distance):
+        # ボールと敵チームロボットの間に入る
+        # 敵ロボットからdistanceだけ離れた位置に移動する
+        line = ConstraintLine()
+        line.p1.object.append(self._object_their_robot(their_id))
+        line.p2.object.append(self._object_ball())
+        line.distance = distance
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
     def pass_to(self, robot_id, x, y):
         # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
         # 指定位置に向かってパスする
@@ -388,6 +398,15 @@ class RobotOperator(Node):
         obj_robot.robot_id = robot_id
         obj_robot.type = ConstraintObject.BLUE_ROBOT
         if self._target_is_yellow:
+            obj_robot.type = ConstraintObject.YELLOW_ROBOT
+        return obj_robot
+
+    def _object_their_robot(self, robot_id):
+        # ConstraintObjectの相手チームのRobotを返す
+        obj_robot = ConstraintObject()
+        obj_robot.robot_id = robot_id
+        obj_robot.type = ConstraintObject.BLUE_ROBOT
+        if not self._target_is_yellow:
             obj_robot.type = ConstraintObject.YELLOW_ROBOT
         return obj_robot
 

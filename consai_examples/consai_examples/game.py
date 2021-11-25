@@ -71,6 +71,7 @@ def main():
                 decisions[role].reset_act_id()
 
         num_of_zone_roles = num_of_active_zone_roles(assignor.get_active_roles())
+        zone_targets = observer.update_zone_targets(num_of_zone_roles)
         
         for role in assignor.get_active_roles():
             robot_id = assignor.get_robot_id(role)
@@ -82,6 +83,8 @@ def main():
             decisions[role].set_ball_zone_state(ball_zone_state)
             # ゾーンディフェンスの担当者数をセットする
             decisions[role].set_num_of_zone_roles(num_of_zone_roles)
+            # ゾーンディフェンスのターゲットをセットする
+            decisions[role].set_zone_targets(zone_targets)
 
             # レフェリーコマンドに合わせて行動を決定する
             if observer.ball_is_outside():
@@ -153,7 +156,7 @@ if __name__ == '__main__':
     operator = RobotOperator(args.yellow)
     assignor = RoleAssignment(args.goalie, args.yellow)
     referee = RefereeParser(args.yellow, args.invert)
-    observer = FieldObserver()
+    observer = FieldObserver(args.yellow)
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator)
