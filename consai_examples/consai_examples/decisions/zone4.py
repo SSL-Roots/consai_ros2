@@ -28,6 +28,14 @@ class Zone4Decision(DecisionBase):
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
         ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
+        ID_IN_OUR_DEFENSE = base_id + self._num_of_zone_roles + 300
+
+        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+            if self._act_id != ID_IN_OUR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, -2.0)
+                self._act_id = ID_IN_OUR_DEFENSE
+            return
 
         # ゾーン内にボールがあれば、ボールを追いかける
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
