@@ -117,7 +117,7 @@ class SubAttackerDecision(DecisionBase):
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # 目標位置に近づきボールを支える
             if self._act_id != ID_NEAR:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1, dynamic_receive=False)
                 self._act_id = ID_NEAR
             return
 
