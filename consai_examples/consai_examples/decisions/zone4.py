@@ -29,13 +29,6 @@ class Zone4Decision(DecisionBase):
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
         ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
 
-        # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
-        if self._zone_targets[3] is not None:
-            if self._act_id != ID_MAN_MARK:
-                self._operator.man_mark(robot_id, self._zone_targets[3], 0.5)
-                self._act_id = ID_MAN_MARK 
-            return
-
         # ゾーン内にボールがあれば、ボールを追いかける
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
             if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
@@ -43,6 +36,13 @@ class Zone4Decision(DecisionBase):
                     self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
                     self._act_id = ID_DEFEND_BALL
                 return
+
+        # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
+        if self._zone_targets[3] is not None:
+            if self._act_id != ID_MAN_MARK:
+                self._operator.man_mark(robot_id, self._zone_targets[3], 0.5)
+                self._act_id = ID_MAN_MARK 
+            return
 
         # ゾーン内で待機する
         if self._act_id != ID_IN_ZONE:
@@ -95,26 +95,11 @@ class Zone4Decision(DecisionBase):
         self._zone_defense(robot_id, self.ACT_ID_INDIRECT)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
-        ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
-        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+        if self._act_id != self.ACT_ID_OUR_PLACEMENT:
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 7.0)
+            self._act_id = self.ACT_ID_OUR_PLACEMENT
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
-            # ボールを受け取る
-            if self._act_id != ID_FAR_FROM:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
-                self._act_id = ID_FAR_FROM
-            return
-        
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
-            # 目標位置に近づきボールを支える
-            if self._act_id != ID_NEAR:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.2, dynamic_receive=False)
-                self._act_id = ID_NEAR
-            return
-
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            # ボール位置が配置目標位置に到着したらボールから離れる
-            if self._act_id != ID_ARRIVED:
-                self._operator.approach_to_ball(robot_id, 0.6)
-                self._act_id = ID_ARRIVED
+    def their_ball_placement(self, robot_id, placement_pos):
+        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 7.0)
+            self._act_id = self.ACT_ID_THEIR_PLACEMENT

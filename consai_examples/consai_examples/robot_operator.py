@@ -106,6 +106,14 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def move_to_look_ball(self, robot_id, x, y):
+        # x, y座標に移動し、ボールを眺める
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._pose_goal(pose, keep=True))
+
     def move_to_receive(self, robot_id, x, y):
         # x, y座標に移動する
         # ボールが来たら受け取りに移動する
@@ -115,10 +123,11 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
 
-    def move_to_ball_x(self, robot_id, y):
+    def move_to_ball_x(self, robot_id, y, offset_x=0.0):
         # ボールと同じx軸上でyの位置に移動する
         pose = ConstraintPose()
         pose.xy.object.append(self._object_ball())
+        pose.xy.value_x.append(offset_x)
         pose.xy.value_y.append(y)
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))

@@ -133,9 +133,7 @@ class AttackerDecision(DecisionBase):
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            print("THEIR BALL PLACEMENT:{} to x:{}, y:{}".format(
-                robot_id, placement_pos.x, placement_pos.y))
-            self._operator.stop(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT
 
     def our_ball_placement(self, robot_id, placement_pos):

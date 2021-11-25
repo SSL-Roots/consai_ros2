@@ -46,17 +46,17 @@ class SubAttackerDecision(DecisionBase):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         if self._ball_zone_state in self._OUR_ZONE_TOPS:
             if self._act_id != base_id + 0:
-                self._operator.move_to_ball_x(robot_id, -2.5)
+                self._operator.move_to_ball_x(robot_id, -2.5, -0.3)
                 self._act_id = base_id + 0
             return
         elif self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
             if self._act_id != base_id + 1:
-                self._operator.move_to_ball_x(robot_id, 2.5)
+                self._operator.move_to_ball_x(robot_id, 2.5, -0.3)
                 self._act_id = base_id + 1
             return
         else:
             if self._act_id != base_id + 2:
-                self._operator.move_to_ball_x(robot_id, -2.5)
+                self._operator.move_to_ball_x(robot_id, -2.5, -0.3)
                 self._act_id = base_id + 2
             return
 
@@ -126,3 +126,8 @@ class SubAttackerDecision(DecisionBase):
             if self._act_id != ID_ARRIVED:
                 self._operator.approach_to_ball(robot_id, 0.6)
                 self._act_id = ID_ARRIVED
+
+    def their_ball_placement(self, robot_id, placement_pos):
+        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.2 * 3.0)
+            self._act_id = self.ACT_ID_THEIR_PLACEMENT

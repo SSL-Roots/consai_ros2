@@ -103,10 +103,10 @@ class SideBack2Decision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            self._defend_lower_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
             self._act_id = self.ACT_ID_OUR_PLACEMENT
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._defend_lower_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT
