@@ -330,62 +330,89 @@ class FieldObserver(Node):
         self._zone_targets[2] = nearest_id2
         self._zone_targets[3] = nearest_id3
 
+    def _is_in_defence_area(self, pos):
+        # ディフェンスエリアに入ってたらtrue
+        if pos.x < -6.0 + 1.9 and math.fabs(pos.y) < 1.9:
+            return True
+        return False
+
     def _is_in_zone1_0(self, pos):
         # ZONE1 (左サイドの全部)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
+
         if pos.x < 0.0:
             return True
         return False
 
     def _is_in_zone2_0(self, pos):
         # ZONE2 (左サイドの上半分)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y > 0.0:
             return True
         return False
 
     def _is_in_zone2_1(self, pos):
         # ZONE2 (左サイドの下半分)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y <= 0.0:
             return True
         return False
 
     def _is_in_zone3_0(self, pos):
         # ZONE3 (左サイドの上半分の上)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y > 4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone3_1(self, pos):
         # ZONE3 (左サイドの真ん中)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and math.fabs(pos.y) <= 4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone3_2(self, pos):
         # ZONE3 (左サイドの下半分の下)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y < -4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone4_0(self, pos):
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y > 4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone4_1(self, pos):
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y > 0.0 and pos.y <= 4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone4_2(self, pos):
         # ZONE4 (左サイドの下半分の上)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y <= 0.0 and pos.y > -4.5 * 0.5:
             return True
         return False
 
     def _is_in_zone4_3(self, pos):
         # ZONE4 (左サイドの下半分の下)にロボットがいればtrue
+        if self._is_in_defence_area(pos):
+            return False
         if pos.x < 0.0 and pos.y <= -4.5 * 0.5:
             return True
         return False

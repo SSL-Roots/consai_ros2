@@ -87,15 +87,12 @@ def main():
             decisions[role].set_zone_targets(zone_targets)
 
             # レフェリーコマンドに合わせて行動を決定する
-            if observer.ball_is_outside():
-                # ボールが場外に出たらロボットを停止する
-                decisions[role].halt(robot_id)
-                continue
-
             if referee.halt():
                 decisions[role].halt(robot_id)
             elif referee.stop():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].stop(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
             elif referee.inplay():
                 decisions[role].inplay(robot_id)
             elif referee.our_pre_kickoff():
@@ -130,8 +127,10 @@ def main():
                 decisions[role].our_ball_placement(
                     robot_id, referee.placement_position())
             elif referee.their_ball_placement():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
+                decisions[role].disable_stop_game_velocity(robot_id)
             else:
                 print("UNDEFINED REFEREE COMMAND!!!")
 

@@ -129,5 +129,5 @@ class SubAttackerDecision(DecisionBase):
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.2 * 3.0)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 3.0)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT
