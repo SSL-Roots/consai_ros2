@@ -23,7 +23,7 @@ class Zone3Decision(DecisionBase):
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
-    def _zone_defense(self, robot_id, base_id):
+    def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
@@ -46,7 +46,7 @@ class Zone3Decision(DecisionBase):
                 return
 
         # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
-        if self._zone_targets[2] is not None:
+        if self._zone_targets[2] is not None and without_mark is False:
             if self._act_id != ID_MAN_MARK:
                 self._operator.man_mark(robot_id, self._zone_targets[2], 0.5)
                 self._act_id = ID_MAN_MARK 
@@ -63,7 +63,7 @@ class Zone3Decision(DecisionBase):
         return
 
     def stop(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_STOP)
+        self._zone_defense(robot_id, self.ACT_ID_STOP, without_mark=True)
 
     def inplay(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INPLAY)

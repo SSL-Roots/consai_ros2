@@ -71,7 +71,7 @@ class Zone2Decision(DecisionBase):
         return
 
     def stop(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_STOP)
+        self._zone_defense(robot_id, self.ACT_ID_STOP, without_mark=True)
 
     def inplay(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INPLAY)
