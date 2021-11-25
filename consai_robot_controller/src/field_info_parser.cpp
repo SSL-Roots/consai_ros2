@@ -361,7 +361,7 @@ bool FieldInfoParser::parse_kick(
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
   const double DRIBBLE_DISTANCE = -0.03;
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_POWER = 1.0;
   const double KICK_POWER_SHOOT = 6.5;
   const double KICK_POWER_PASS = 1.5;
   bool need_kick = false;
@@ -416,15 +416,15 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = 0.3;  // meters
+  const double LOOKING_BALL_DISTANCE = 0.2;  // meters
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(10);
   const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(45);  // meters
-  const double DISTANCE_TO_ROTATE = 0.2;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(20);  // meters
+  const double DISTANCE_TO_ROTATE = 0.1;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -513,7 +513,7 @@ bool FieldInfoParser::receive_ball(
   State & parsed_pose, double & parsed_dribble_power) const
 {
   // 転がっているボールを受け取る
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_POWER = 1.0;
 
   // ボール情報に速度情報がなければ終了
   if (ball.vel.size() == 0) {

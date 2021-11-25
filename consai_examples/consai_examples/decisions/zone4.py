@@ -67,16 +67,16 @@ class Zone4Decision(DecisionBase):
         self._zone_defense(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
 
     def our_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
 
     def their_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
 
     def their_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
 
     def our_pre_penalty(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_PRE_PENALTY)
