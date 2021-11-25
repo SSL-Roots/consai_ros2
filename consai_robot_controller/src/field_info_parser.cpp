@@ -24,8 +24,12 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 
-FieldInfoParser::FieldInfoParser()
+FieldInfoParser::FieldInfoParser() : invert_(false)
 {
+}
+
+void FieldInfoParser::set_invert(const bool & invert) {
+  invert_ = invert;
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
@@ -166,6 +170,22 @@ bool FieldInfoParser::parse_goal(
   // 衝突を回避する
   if (goal->avoid_obstacles) {
     avoid_obstacles(my_robot, parsed_pose, parsed_pose);
+
+    // ボールプレイスメントエリアを回避する
+    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW || referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE) {
+      if (referee_->designated_position.size() > 0) {
+        State designated_position;
+        designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
+        designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
+
+        // サイド反転
+        if (invert_) { 
+          designated_position.x *= -1.0;
+          designated_position.y *= -1.0;
+        }
+        avoid_placement_area(my_robot, parsed_pose, ball, designated_position, parsed_pose);
+      }
+    }
   }
 
   return true;
@@ -592,6 +612,42 @@ bool FieldInfoParser::avoid_obstacles(
       obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
       goal_pose_MtoG.theta
     );
+  }
+
+  return true;
+}
+
+
+bool FieldInfoParser::avoid_placement_area(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const State & designated_position, State & avoidance_pose) const {
+  // プレースメント範囲を回避する
+  const double THRESHOLD_Y = 0.6;
+  const double THRESHOLD_X = 0.0;
+  const double AVOIDANCE_POS_Y = 0.7;
+
+  auto my_robot_pose = tools::pose_state(my_robot);
+  auto ball_pose= tools::pose_state(ball);
+  tools::Trans trans_BtoD(ball_pose, tools::calc_angle(ball_pose, designated_position));
+
+  auto robot_pose_BtoD = trans_BtoD.transform(my_robot_pose);
+  auto goal_pose_BtoD = trans_BtoD.transform(goal_pose);
+  auto designated_BtoD = trans_BtoD.transform(designated_position);
+
+  // 0.5 m 離れなければならない
+  // 現在位置と目標位置がともにプレースメントエリアにある場合、回避点を生成する
+  bool my_pose_is_in_area = std::fabs(robot_pose_BtoD.y) < THRESHOLD_Y
+    && robot_pose_BtoD.x > THRESHOLD_X
+    && robot_pose_BtoD.x < designated_BtoD.x;
+  bool goal_pose_is_in_area = std::fabs(goal_pose_BtoD.y) < THRESHOLD_Y
+    && goal_pose_BtoD.x > THRESHOLD_X
+    && goal_pose_BtoD.x < designated_BtoD.x;
+
+  if (my_pose_is_in_area && goal_pose_is_in_area) {
+    avoidance_pose = trans_BtoD.inverted_transform(goal_pose_BtoD.x, AVOIDANCE_POS_Y, 0.0);
+    avoidance_pose.theta = goal_pose.theta;
+  } else {
+    avoidance_pose = goal_pose;
   }
 
   return true;

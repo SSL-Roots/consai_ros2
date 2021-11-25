@@ -56,7 +56,9 @@ def generate_launch_description():
                     package='consai_robot_controller',
                     plugin='consai_robot_controller::Controller',
                     name='controller',
-                    parameters=[pid_gains, {'team_is_yellow': LaunchConfiguration('yellow')}],
+                    parameters=[pid_gains,
+                                {'team_is_yellow': LaunchConfiguration('yellow')},
+                                {'invert': LaunchConfiguration('invert')}],
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(

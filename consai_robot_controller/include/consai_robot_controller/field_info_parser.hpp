@@ -52,6 +52,7 @@ class FieldInfoParser
 {
 public:
   FieldInfoParser();
+  void set_invert(const bool & invert);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
@@ -98,6 +99,7 @@ private:
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
   std::shared_ptr<Referee> referee_;
+  bool invert_;
 };
 
 }  // namespace consai_robot_controller
