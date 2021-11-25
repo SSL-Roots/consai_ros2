@@ -64,7 +64,9 @@ def main():
         # アタッカーの切り替わりを防ぐため、
         # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
         if not observer.ball_is_in_our_defense_area() and \
-           not observer.ball_is_moving():
+           not observer.ball_is_moving() and \
+           not referee.our_ball_placement() and \
+           not referee.their_ball_placement():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
             for role in assignor.update_role():
