@@ -89,6 +89,10 @@ private:
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
+  bool reflect_kick(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
+    double & parsed_dribble_power) const;
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;

@@ -131,6 +131,33 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
 
+    def move_to_reflect_shoot_to_their_goal(self, robot_id, x, y):
+        # x, y座標に移動する
+        # ボールが来たら相手ゴールに向かってリフレクトシュート
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(
+            robot_id, self._with_reflect_kick(
+                self._pose_goal(pose, keep=True), target, kick_pass=False))
+
+    def move_to_reflect_shoot_to_our_robot(self, robot_id, target_id, x, y):
+        # x, y座標に移動する
+        # ボールが来たら相手ゴールに向かってリフレクトシュート
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = ConstraintXY()
+        target.object.append(self._object_our_robot(target_id))
+        return self._set_goal(
+            robot_id, self._with_reflect_kick(
+                self._pose_goal(pose, keep=True), target, kick_pass=False))
+
     def move_to_ball_x(self, robot_id, y, offset_x=0.0):
         # ボールと同じx軸上でyの位置に移動する
         pose = ConstraintPose()
@@ -475,6 +502,14 @@ class RobotOperator(Node):
         goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
         goal_msg.kick_setplay = kick_setplay
+        return goal_msg
+
+    def _with_reflect_kick(self, goal_msg, target, kick_pass=False):
+        goal_msg.receive_ball = True
+        goal_msg.kick_enable = True
+        goal_msg.kick_pass = kick_pass
+        goal_msg.kick_target = target
+        goal_msg.kick_setplay = False
         return goal_msg
 
     def _with_dribble(self, goal_msg, target):

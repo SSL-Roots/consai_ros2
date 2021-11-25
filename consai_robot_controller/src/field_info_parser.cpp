@@ -148,14 +148,20 @@ bool FieldInfoParser::parse_goal(
     return true;
   }
 
-  // 転がっているボールを受け取る
-  if (goal->receive_ball) {
-    receive_ball(my_robot, ball, parsed_pose, dribble_power);
-  }
-
-  // 目標姿勢とボールが近ければ、ボールを操作する
-  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7) {
-    State target;
+  State target;
+  bool result = false;
+  if (goal->receive_ball && goal->kick_enable && parse_constraint_xy(goal->kick_target, target.x, target.y) ) {
+    // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
+    result = reflect_kick(target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
+  } 
+  
+  if (goal->receive_ball && result == false) {
+    // 転がっているボールを受け取る
+    result = receive_ball(my_robot, ball, parsed_pose, dribble_power);
+  } 
+  
+  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7 && result == false) {
+    // 目標姿勢とボールが近ければ、ボールを操作する
     if (goal->kick_enable &&
         parse_constraint_xy(goal->kick_target, target.x, target.y))
     {
@@ -416,15 +422,15 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = 0.2;  // meters
+  const double LOOKING_BALL_DISTANCE = 0.3;  // meters
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(10);
   const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(20);  // meters
-  const double DISTANCE_TO_ROTATE = 0.1;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(22);  // meters
+  const double DISTANCE_TO_ROTATE = 0.2;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -545,6 +551,87 @@ bool FieldInfoParser::receive_ball(
   robot_pose_BtoV.theta = M_PI;
   parsed_pose = trans_BtoV.inverted_transform(robot_pose_BtoV);
   parsed_dribble_power = DRIBBLE_POWER;
+
+  return true;
+}
+
+bool FieldInfoParser::reflect_kick(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
+    double & parsed_dribble_power) const {
+  // 転がっているボールの軌道上に移動し、targetに向かって蹴る
+  // targetを狙えない場合は、蹴らずにボールを受け取る
+
+  const double MIN_VELOCITY_THRESHOLD = 0.5;  // m/s ボールの最低動作速度
+  const double MAX_DISTANCE_TO_RECEIVE = 1.5;  // meters ボールを受け取る最長距離
+  const double DISTANCE_TO_DRIBBLER = 0.055;  // meters ロボットの中心からドリブラーまでの距離
+  const double CAN_REFLECT_ANGLE = 60.0;  // degress リフレクトできる最大角度
+  const double KICK_POWER_SHOOT = 6.5;
+  const double KICK_POWER_PASS = 1.5;
+
+  // パラメータを初期化
+  parsed_dribble_power = 0.0;
+  parsed_kick_power = 0.0;
+
+  // ボール情報に速度情報がなければ終了
+  if (ball.vel.size() == 0) {
+    return false;
+  }
+
+  State velocity;
+  velocity.x = ball.vel[0].x;
+  velocity.y = ball.vel[0].y;
+  auto velocity_norm = std::hypot(velocity.x, velocity.y);
+  // ボール速度が一定値以下であれば終了
+  if (velocity_norm <= MIN_VELOCITY_THRESHOLD) {
+    return false;
+  }
+
+  // ロボット座標と、ロボットのドリブラー座標を作成
+  auto robot_pose = tools::pose_state(my_robot);
+  auto dribbler_pose = robot_pose;
+  dribbler_pose.x += DISTANCE_TO_DRIBBLER * std::cos(robot_pose.theta);
+  dribbler_pose.y += DISTANCE_TO_DRIBBLER * std::sin(robot_pose.theta);
+
+  // ボールを中心にボール速度方向への座標系を作成
+  auto ball_pose = tools::pose_state(ball);
+  auto angle_velocity = std::atan2(velocity.y, velocity.x);
+  tools::Trans trans_BtoV(ball_pose, angle_velocity);
+
+  auto dribbler_pose_BtoV = trans_BtoV.transform(dribbler_pose);
+
+  // ロボットがボールの軌道から離れていたら終了
+  if (std::fabs(dribbler_pose_BtoV.y) > MAX_DISTANCE_TO_RECEIVE || dribbler_pose_BtoV.x < 0.0) {
+    return false;
+  }
+
+  // ドリブラーをボール軌道上へ移動する
+  dribbler_pose_BtoV.y = 0.0;
+
+  // targetへの角度を計算し、リフレクトシュートできるか判定する
+  auto target_BtoV = trans_BtoV.transform(target);
+  auto angle_dribbler_to_target_BtoV = tools::calc_angle(dribbler_pose_BtoV, target_BtoV);
+  if (std::fabs(angle_dribbler_to_target_BtoV) < tools::to_radians(180 - CAN_REFLECT_ANGLE)) {
+    // リフレクトシュートできないため終了
+    return false;
+  }
+
+  auto receiving_dribbler_pose = trans_BtoV.inverted_transform(dribbler_pose_BtoV);
+  auto angle_dribbler_to_target = tools::calc_angle(receiving_dribbler_pose, target);
+  tools::Trans trans_DtoT(receiving_dribbler_pose, angle_dribbler_to_target);
+  auto ball_pose_DtoT = trans_DtoT.transform(ball_pose);
+  auto angle_dribbler_to_ball_DtoT = std::atan2(ball_pose_DtoT.y, ball_pose_DtoT.x);
+
+  // リフレクトシュート目標位置を生成
+  // TODO:ボール速度、キック速度のベクトルを結合して、目標角度を求める
+  auto target_angle_DtoT = angle_dribbler_to_ball_DtoT * 0.7 * velocity_norm / 6.5;
+  parsed_pose = trans_DtoT.inverted_transform(-DISTANCE_TO_DRIBBLER, 0.0, target_angle_DtoT);
+  // キックパワーをセット
+  if (kick_pass) { 
+    parsed_kick_power = KICK_POWER_PASS;
+  } else {
+    parsed_kick_power = KICK_POWER_SHOOT;
+  }
 
   return true;
 }
