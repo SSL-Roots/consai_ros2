@@ -124,3 +124,10 @@ def parse_timeouts(timeouts):
 
 def parse_timeout_time(timeout_time):
     return _microseconds_to_text(timeout_time)
+
+def is_ball_placement(ref_command):
+    if ref_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
+        return True
+    elif ref_command == Referee.COMMAND_BALL_PLACEMENT_BLUE:
+        return True
+    return False

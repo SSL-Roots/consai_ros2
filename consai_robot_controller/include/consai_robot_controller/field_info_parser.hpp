@@ -27,6 +27,7 @@
 #include "consai_msgs/msg/state2_d.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
+#include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -42,6 +43,7 @@ using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
 using ConstraintXY = consai_msgs::msg::ConstraintXY;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
+using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
@@ -52,6 +54,7 @@ public:
   FieldInfoParser();
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
+  void set_referee(const Referee::SharedPtr referee);
   bool extract_robot(
     const unsigned int robot_id, const bool team_is_yellow,
     TrackedRobot & my_robot) const;
@@ -71,7 +74,7 @@ private:
   bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
   bool parse_kick(
     const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass,
+    const bool & kick_pass, const bool & kick_setplay,
     State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
   bool parse_dribble(
     const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
@@ -79,15 +82,22 @@ private:
   bool control_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const;
+  bool control_ball_at_setplay(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    State & parsed_pose, bool & need_kick, bool & need_dribble) const;
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
+  bool avoid_placement_area(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const State & designated_position, State & avoidance_pose) const;
 
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
+  std::shared_ptr<Referee> referee_;
 };
 
 }  // namespace consai_robot_controller

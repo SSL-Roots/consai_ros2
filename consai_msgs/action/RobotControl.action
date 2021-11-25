@@ -19,6 +19,8 @@ bool kick_enable false
 # kick_pass = falseで最大速度でボールを蹴る
 # kick_pass = trueで低速度でボールを蹴る
 bool kick_pass false
+# kick_setplay = true でセットプレイ用の落ち着いたキックを実行する
+bool kick_setplay false
 # キックの目標地点
 ConstraintXY kick_target
 
