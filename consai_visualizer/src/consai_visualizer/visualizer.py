@@ -191,8 +191,9 @@ class Visualizer(Plugin):
             ref_parser.parse_timeout_time(msg.yellow.timeout_time))
 
         # ボール配置の目標位置をセット
-        if len(msg.designated_position) > 0:
-            self._widget.field_widget.set_designated_position(msg.designated_position[0])
+        if ref_parser.is_ball_placement(msg.command):
+            if len(msg.designated_position) > 0:
+                self._widget.field_widget.set_designated_position(msg.designated_position[0])
 
     def _callback_battery_voltage(self, msg, robot_id):
         MAX_VOLTAGE = 16.8
@@ -249,7 +250,3 @@ class Visualizer(Plugin):
                 except AttributeError:
                     # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                     pass
-
-        if ref_parser.is_ball_placement(msg.command):
-            if len(msg.designated_position) > 0:
-                self._widget.field_widget.set_designated_position(msg.designated_position[0])
