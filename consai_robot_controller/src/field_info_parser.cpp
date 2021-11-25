@@ -340,10 +340,10 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.02;
+  const double DRIBBLE_DISTANCE = 0.04;
   const double DRIBBLE_POWER = 0.6;
   const double KICK_POWER_SHOOT = 6.5;
-  const double KICK_POWER_PASS = 3.0;
+  const double KICK_POWER_PASS = 1.5;
   bool need_kick = false;
   bool need_dribble = false;
 
