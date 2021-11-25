@@ -463,12 +463,17 @@ class FieldObserver(Node):
         return self._ball_zone_state == self.BALL_ZONE_RIGHT_BOTTOM
 
     def _update_ball_placement_state(self, placement_position):
-        ARRIVED_THRESHOLD = 0.13
+        ARRIVED_THRESHOLD = 0.13  # meters
+        ARRIVED_VELOCTY_THRESHOLD = 0.2  # m/s
         NEAR_THRESHOLD = 3.0
         THRESHOLD_MARGIN = 0.02
         diff_x = placement_position.x - self._ball.pos.x
         diff_y = placement_position.y - self._ball.pos.y
         distance = math.hypot(diff_x, diff_y)
+        # ボール速度が小さければ、目標位置にたどり着いたと判定する
+        velocity_norm = 0.0
+        if len(self._ball.vel) > 0:
+            velocity_norm = math.hypot(self._ball.vel[0].x, self._ball.vel[0].y)
 
         arrived_threshold = ARRIVED_THRESHOLD
         near_threshold = NEAR_THRESHOLD
@@ -477,7 +482,7 @@ class FieldObserver(Node):
         elif self._ball_placement_state == self.BALL_PLACEMENT_NEAR_TARGET:
             near_threshold += THRESHOLD_MARGIN
         
-        if distance < arrived_threshold:
+        if distance < arrived_threshold and velocity_norm < ARRIVED_VELOCTY_THRESHOLD:
             self._ball_placement_state = self.BALL_PLACEMENT_ARRIVED_AT_TARGET
         elif distance < near_threshold:
             self._ball_placement_state = self.BALL_PLACEMENT_NEAR_TARGET
