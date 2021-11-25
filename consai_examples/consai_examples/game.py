@@ -20,9 +20,17 @@ import threading
 import time
 
 from decisions.attacker import AttackerDecision
+from decisions.center_back1 import CenterBack1Decision
+from decisions.center_back2 import CenterBack2Decision
 from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
+from decisions.side_back1 import SideBack1Decision
+from decisions.side_back2 import SideBack2Decision
 from decisions.sub_attacker import SubAttackerDecision
+from decisions.zone1 import Zone1Decision
+from decisions.zone2 import Zone2Decision
+from decisions.zone3 import Zone3Decision
+from decisions.zone4 import Zone4Decision
 from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -42,10 +50,16 @@ ROLE_ZONE4 = 8
 ROLE_SIDE_BACK1 = 9
 ROLE_SIDE_BACK2 = 10
 
+def num_of_active_zone_roles(active_roles):
+    # アクティブなゾーンディフェンス担当者の数を返す
+    role_zone_list = [ROLE_ZONE1, ROLE_ZONE2, ROLE_ZONE3, ROLE_ZONE4]
+    return len(set(role_zone_list) & set(active_roles))
+
 def main():
     while rclpy.ok():
         ball_state = observer.get_ball_state()
         ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
+        ball_zone_state = observer.get_ball_zone_state()
 
         # アタッカーの切り替わりを防ぐため、
         # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
@@ -56,18 +70,26 @@ def main():
             for role in assignor.update_role():
                 decisions[role].reset_act_id()
 
+        num_of_zone_roles = num_of_active_zone_roles(assignor.get_active_roles())
+        zone_targets = observer.update_zone_targets(num_of_zone_roles)
+        
         for role in assignor.get_active_roles():
             robot_id = assignor.get_robot_id(role)
             # ボール状態をセットする
             decisions[role].set_ball_state(ball_state)
             # ボール配置状態をセットする
             decisions[role].set_ball_placement_state(ball_placement_state)
+            # ボールゾーン状態をセットする
+            decisions[role].set_ball_zone_state(ball_zone_state)
+            # ゾーンディフェンスの担当者数をセットする
+            decisions[role].set_num_of_zone_roles(num_of_zone_roles)
+            # ゾーンディフェンスのターゲットをセットする
+            decisions[role].set_zone_targets(zone_targets)
 
             # レフェリーコマンドに合わせて行動を決定する
             if observer.ball_is_outside():
                 # ボールが場外に出たらロボットを停止する
                 decisions[role].halt(robot_id)
-                print("ボールが外に出た")
                 continue
 
             if referee.halt():
@@ -134,7 +156,7 @@ if __name__ == '__main__':
     operator = RobotOperator(args.yellow)
     assignor = RoleAssignment(args.goalie, args.yellow)
     referee = RefereeParser(args.yellow, args.invert)
-    observer = FieldObserver()
+    observer = FieldObserver(args.yellow)
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator)
@@ -149,15 +171,15 @@ if __name__ == '__main__':
     decisions = {
         ROLE_GOALIE: GoaleDecision(operator),
         ROLE_ATTACKER: AttackerDecision(operator),
-        ROLE_CENTER_BACK1: DecisionBase(operator),
-        ROLE_CENTER_BACK2: DecisionBase(operator),
+        ROLE_CENTER_BACK1: CenterBack1Decision(operator),
+        ROLE_CENTER_BACK2: CenterBack2Decision(operator),
         ROLE_SUB_ATTACKER: SubAttackerDecision(operator),
-        ROLE_ZONE1: DecisionBase(operator),
-        ROLE_ZONE2: DecisionBase(operator),
-        ROLE_ZONE3: DecisionBase(operator),
-        ROLE_ZONE4: DecisionBase(operator),
-        ROLE_SIDE_BACK1: DecisionBase(operator),
-        ROLE_SIDE_BACK2: DecisionBase(operator),
+        ROLE_ZONE1: Zone1Decision(operator),
+        ROLE_ZONE2: Zone2Decision(operator),
+        ROLE_ZONE3: Zone3Decision(operator),
+        ROLE_ZONE4: Zone4Decision(operator),
+        ROLE_SIDE_BACK1: SideBack1Decision(operator),
+        ROLE_SIDE_BACK2: SideBack2Decision(operator),
     }
 
     try:

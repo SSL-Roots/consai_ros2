@@ -155,7 +155,7 @@ bool FieldInfoParser::parse_goal(
     if (goal->kick_enable &&
         parse_constraint_xy(goal->kick_target, target.x, target.y))
     {
-      parse_kick(target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
+      parse_kick(target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose, kick_power, dribble_power);
     } else if (goal->dribble_enable &&
                parse_constraint_xy(goal->dribble_target, target.x, target.y))
     {
@@ -253,23 +253,25 @@ bool FieldInfoParser::parse_constraint_xy(
     if (parse_constraint_object(xy.object[0], object_pose)) {
       parsed_x = object_pose.x;
       parsed_y = object_pose.y;
-      return true;
+    } else {
+      return false;
     }
   }
 
-  if (xy.value_x.size() > 0 && xy.value_y.size() > 0) {
+  if (xy.value_x.size() > 0) {
     parsed_x = xy.value_x[0];
-    parsed_y = xy.value_y[0];
-
-    // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
-    if (xy.normalized) {
-      parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
-      parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
-    }
-    return true;
   }
 
-  return false;
+  if (xy.value_y.size() > 0) {
+    parsed_y = xy.value_y[0];
+  }
+
+  // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
+  if (xy.normalized) {
+    parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
+    parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
+  }
+  return true;
 }
 
 bool FieldInfoParser::parse_constraint_theta(
@@ -335,7 +337,7 @@ bool FieldInfoParser::parse_constraint_object(
 
 bool FieldInfoParser::parse_kick(
   const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  const bool & kick_pass,
+  const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
   const double DRIBBLE_DISTANCE = 0.02;
@@ -345,7 +347,12 @@ bool FieldInfoParser::parse_kick(
   bool need_kick = false;
   bool need_dribble = false;
 
-  control_ball(kick_target, my_robot, ball, DRIBBLE_DISTANCE, parsed_pose, need_kick, need_dribble);
+  if (kick_setplay) {
+    control_ball_at_setplay(kick_target, my_robot, ball, parsed_pose, need_kick, need_dribble);
+  } else {
+    control_ball(kick_target, my_robot, ball, DRIBBLE_DISTANCE, parsed_pose, need_kick, need_dribble);
+
+  }
 
   if (need_dribble) {
     parsed_dribble_power = DRIBBLE_POWER;
@@ -450,6 +457,36 @@ bool FieldInfoParser::control_ball(
   }
   return true;
 }
+
+bool FieldInfoParser::control_ball_at_setplay(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    State & parsed_pose, bool & need_kick, bool & need_dribble) const {
+  // セットプレイ用の落ち着いたキックを実施
+
+  // 変数の初期化
+  need_kick = false;
+  need_dribble = false;
+
+  auto ball_pose = tools::pose_state(ball);
+  auto robot_pose = tools::pose_state(my_robot);
+
+  // ボールからターゲットを見た座標系を生成
+  auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
+  tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
+  auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
+
+  // ロボットがボールの裏側に回ったらcan_kick
+  bool can_kick = robot_pose_BtoT.x < 0.01 && std::fabs(robot_pose_BtoT.y) < 0.05;
+
+  if (can_kick) { 
+    parsed_pose = trans_BtoT.inverted_transform(0.02, 0.0, 0.0);
+    need_kick = true;
+  } else {
+    parsed_pose = trans_BtoT.inverted_transform(-0.3, 0.0, 0.0);
+  }
+  return true;
+}
+
 
 bool FieldInfoParser::receive_ball(
   const TrackedRobot & my_robot, const TrackedBall & ball,
@@ -558,34 +595,6 @@ bool FieldInfoParser::avoid_obstacles(
   }
 
   return true;
-}
-
-
-bool FieldInfoParser::avoid_placement_area(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const State & designated_position, State & avoidance_pose) const {
-  // Ball Placementを邪魔しないように避ける
-  double AVOID_POS_Y = 0.6;  // ルール上は 0.5 m離れる必要あり
-
-  // 直線ball -> designated_positionの座標系を作成
-  auto ball_pose = tools::pose_state(ball);
-  auto angle_BtoD = tools::calc_angle(ball_pose, designated_position);
-  tools::Trans trans_BtoD(ball_pose, angle_BtoD);
-
-  // 目標位置を座標変換
-  auto goal_pose_BtoD = trans_BtoD.transform(goal_pose);
-
-  // if (std::fabs(goal_pose_BtoD.y) < AVOIDANCE_POS_Y)
-
-
-  // if(has_p3_p4) {
-  //   // p1 ~ p4がセットされていれば、
-  //   // 直線p1->p2上で、直線p3->p4と交わるところを目標位置とする
-  //   State intersection = tools::intersection(p1, p2, p3, p4);
-  //   // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
-  //   auto intersection_1to2 = trans_1to2.transform(intersection);
-  //   auto p2_1to2 = trans_1to2.transform(p2);
-
 }
 
 }  // namespace consai_robot_controller
