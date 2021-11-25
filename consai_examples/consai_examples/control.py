@@ -192,6 +192,8 @@ def test_shoot(target_x, target_y):
     while operator_node.all_robots_are_free() is False:
         pass
 
+def test_shoot_to_their(robot_id):
+    operator_node.shoot_to_their_goal(robot_id)
 
 def test_pass_two_robots():
     # 2台のロボットでパスし合う
@@ -316,7 +318,8 @@ def main():
     # test_chase_ball()
     # test_chase_robot()
     # test_for_config_pid(test_x=True)
-    test_shoot(1.0, 0.0)
+    # test_shoot(1.0, 0.0)
+    test_shoot_to_their(6)
     # test_pass_two_robots()
     # test_pass_four_robots()
     # test_stop_robots()

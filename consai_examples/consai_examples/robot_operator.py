@@ -30,6 +30,7 @@ from rclpy.node import Node
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
 
+    STOP_GAME_VELOCITY = 1.0  # m/s
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -46,11 +47,18 @@ class RobotOperator(Node):
         self._send_goal_future = [None] * ROBOT_NUM
         self._get_result_future = [None] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
+        self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
 
         if self._target_is_yellow:
             self.get_logger().info('yellowロボットを動かします')
         else:
             self.get_logger().info('blueロボットを動かします')
+
+    def enable_stop_game_velocity(self, robot_id):
+        self._stop_game_velocity_has_enabled[robot_id] = True
+
+    def disable_stop_game_velocity(self, robot_id):
+        self._stop_game_velocity_has_enabled[robot_id] = False
 
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
@@ -483,6 +491,9 @@ class RobotOperator(Node):
         if not self._action_clients[robot_id].wait_for_server(5):
             self.get_logger().error('TIMEOUT: wait_for_server')
             return False
+
+        if self._stop_game_velocity_has_enabled[robot_id]:
+            goal_msg.max_velocity_xy.append(self.STOP_GAME_VELOCITY)
 
         self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
             goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))
