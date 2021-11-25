@@ -400,10 +400,10 @@ bool FieldInfoParser::control_ball(
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 20);
   const double LOOKING_TARGET_THETA = tools::to_radians(30);
   const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(5);
+  const double CAN_SHOOT_THETA = tools::to_radians(10);
   const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(45);  // meters
+  const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(60);  // meters
 
   // 変数の初期化
   need_kick = false;
