@@ -29,9 +29,17 @@ install(PROGRAMS
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
+    ${PROJECT_NAME}/decisions/center_back1.py
+    ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
+    ${PROJECT_NAME}/decisions/side_back1.py
+    ${PROJECT_NAME}/decisions/side_back2.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
+    ${PROJECT_NAME}/decisions/zone1.py
+    ${PROJECT_NAME}/decisions/zone2.py
+    ${PROJECT_NAME}/decisions/zone3.py
+    ${PROJECT_NAME}/decisions/zone4.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

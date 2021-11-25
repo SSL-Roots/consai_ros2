@@ -74,7 +74,7 @@ private:
   bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
   bool parse_kick(
     const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass,
+    const bool & kick_pass, const bool & kick_setplay,
     State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
   bool parse_dribble(
     const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
@@ -82,6 +82,9 @@ private:
   bool control_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const;
+  bool control_ball_at_setplay(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    State & parsed_pose, bool & need_kick, bool & need_dribble) const;
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
