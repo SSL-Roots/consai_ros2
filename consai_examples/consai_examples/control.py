@@ -310,6 +310,19 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     operator_node.move_to_line_to_defend_our_goal(7, -x, -y, -x, -end_y, True)
     operator_node.move_to_line_to_defend_our_goal(8, -x, -middle_y, -x, -middle_end_y, True)
 
+def test_reflect_shoot(robot_id, x, y):
+    operator_node.move_to_reflect_shoot_to_their_goal(robot_id, x, y)
+
+def test_refelect_shoot_four_robots(id1, id2, id3, id4):
+    # 4台のロボットでパスし合う
+    dist = 2.5
+    operator_node.move_to_reflect_shoot_to_our_robot(id1, id2, dist, dist)
+    operator_node.move_to_reflect_shoot_to_our_robot(id2, id3, dist, -dist)
+    operator_node.move_to_reflect_shoot_to_our_robot(id3, id4, -dist, dist)
+    operator_node.move_to_reflect_shoot_to_our_robot(id4, id1, -dist, -dist)
+    while operator_node.all_robots_are_free() is False:
+        pass
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
@@ -319,12 +332,14 @@ def main():
     # test_chase_robot()
     # test_for_config_pid(test_x=True)
     # test_shoot(1.0, 0.0)
-    test_shoot_to_their(6)
+    # test_shoot_to_their(6)
     # test_pass_two_robots()
     # test_pass_four_robots()
     # test_stop_robots()
     # test_move_to_line()
     # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
+    # test_reflect_shoot(0, 0, 0)
+    test_refelect_shoot_four_robots(0, 1, 2, 3)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
