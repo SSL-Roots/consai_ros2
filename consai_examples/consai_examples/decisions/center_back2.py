@@ -45,14 +45,17 @@ class CenterBack2Decision(DecisionBase):
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
-            if self._act_id != self.ACT_ID_INPLAY + 0:
-                self._defend_lower_front_defense_area(robot_id)
-                self._act_id = self.ACT_ID_INPLAY + 0
-        else:
-            if self._act_id != self.ACT_ID_INPLAY + 1:
-                self._defend_lower_front_defense_area_with_kick(robot_id)
-                self._act_id = self.ACT_ID_INPLAY + 1
+        if self._act_id != self.ACT_ID_INPLAY + 0:
+            self._defend_lower_front_defense_area(robot_id)
+            self._act_id = self.ACT_ID_INPLAY + 0
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+        #     if self._act_id != self.ACT_ID_INPLAY + 0:
+        #         self._defend_lower_front_defense_area(robot_id)
+        #         self._act_id = self.ACT_ID_INPLAY + 0
+        # else:
+        #     if self._act_id != self.ACT_ID_INPLAY + 1:
+        #         self._defend_lower_front_defense_area_with_kick(robot_id)
+        #         self._act_id = self.ACT_ID_INPLAY + 1
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:

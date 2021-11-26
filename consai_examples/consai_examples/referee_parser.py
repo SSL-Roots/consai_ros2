@@ -18,6 +18,7 @@
 import math
 
 from rclpy.node import Node
+from consai_msgs.msg import ParsedReferee
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
@@ -96,6 +97,7 @@ class RefereeParser(Node):
         self._prev_command = 0
         self._placement_pos = Point()
 
+        self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
         self._sub_referee = self.create_subscription(
@@ -127,6 +129,22 @@ class RefereeParser(Node):
             if self._invert_placement_pos:
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
+
+        # 解釈したレフェリー情報をpublishする
+        self._publish_parsed_referee()
+
+    def _publish_parsed_referee(self):
+        # 解析したレフェリー情報をpublishする
+        referee = ParsedReferee()
+        referee.designated_position.x = self._placement_pos.x
+        referee.designated_position.y = self._placement_pos.y
+        referee.is_placement = self.our_ball_placement() or self.their_ball_placement()
+        referee.is_inplay = self.inplay()
+        referee.is_our_setplay = self.our_direct() or self.our_indirect() or self.our_kickoff() or\
+                                 self.our_penalty() or self.our_ball_placement() or self.our_pre_kickoff() or self.our_pre_penalty()
+        referee.is_their_setplay = self.their_direct() or self.their_indirect() or self.their_kickoff() or\
+                                 self.their_penalty() or self.their_ball_placement() or self.their_pre_kickoff() or self.their_pre_penalty()
+        self._pub_parsed_referee.publish(referee)
 
     def _check_inplay(self, msg):
         # referee情報とフィールド情報をもとに、インプレイ状態を判定する

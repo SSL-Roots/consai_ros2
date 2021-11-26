@@ -23,6 +23,7 @@
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/goal_pose.hpp"
+#include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
@@ -41,6 +42,7 @@ using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControl = consai_msgs::action::RobotControl;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
+using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
@@ -60,6 +62,7 @@ private:
   void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
   void callback_geometry(const GeometryData::SharedPtr msg);
   void callback_referee(const Referee::SharedPtr msg);
+  void callback_parsed_referee(const ParsedReferee::SharedPtr msg);
   bool update_pid_gain_from_param(
     const rclcpp::Parameter & param,
     const std::string & prefix,
@@ -100,6 +103,7 @@ private:
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
+  rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
   OnSetParametersCallbackHandle::SharedPtr handler_change_param_;
