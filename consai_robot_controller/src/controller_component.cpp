@@ -59,6 +59,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
 
   parser_.set_invert(get_parameter("invert").get_value<bool>());
+  parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);

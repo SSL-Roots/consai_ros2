@@ -53,6 +53,7 @@ class FieldInfoParser
 public:
   FieldInfoParser();
   void set_invert(const bool & invert);
+  void set_team_is_yellow(const bool & team_is_yellow);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
@@ -98,6 +99,7 @@ private:
     State & avoidance_pose) const;
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const;
   bool avoid_robots(
     const TrackedRobot & my_robot, const State & goal_pose,
@@ -110,6 +112,7 @@ private:
   std::shared_ptr<GeometryData> geometry_;
   std::shared_ptr<Referee> referee_;
   bool invert_;
+  bool team_is_yellow_;
 };
 
 }  // namespace consai_robot_controller
