@@ -402,7 +402,7 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = -0.03;
+  const double DRIBBLE_DISTANCE = 0.3;
   const double DRIBBLE_POWER = 1.0;
   const double KICK_POWER_SHOOT = 6.5;
   const double KICK_POWER_PASS = 1.5;
@@ -459,14 +459,14 @@ bool FieldInfoParser::control_ball(
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
   const double LOOKING_BALL_DISTANCE = 0.25;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - 45);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(20);
-  const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
+  // const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
-  const double DISTANCE_TO_ROTATE = 0.15;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(50);  // meters
+  const double DISTANCE_TO_ROTATE = 0.2;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -488,15 +488,19 @@ bool FieldInfoParser::control_ball(
   bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
     std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
 
-  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA;
+  auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
+  std::cout << std::fabs(tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT)) * 180.0 / M_PI << std::endl;
+  auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
+  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA &&
+    std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(15);
 
   double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
 
   // ロボットがボールに近ければドリブルをON
   bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
   // ロボットがキックターゲットに焦点を当てたらキックをON
-  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
-      std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA;
+      // std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
