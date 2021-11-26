@@ -167,6 +167,17 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
 
+    def move_to_ball_x_with_reflect(self, robot_id, y, offset_x=0.0):
+        # ボールと同じx軸上でyの位置に移動する
+        pose = ConstraintPose()
+        pose.xy.object.append(self._object_ball())
+        pose.xy.value_x.append(offset_x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._pose_goal(pose, keep=True), target, kick_pass=False))
+
     def move_to_ball_y(self, robot_id, x):
         # ボールと同じy軸上でxの位置に移動する
         pose = ConstraintPose()
@@ -189,6 +200,22 @@ class RobotOperator(Node):
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
+    def move_to_line_to_defend_our_goal_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 自チームのゴールをボールから守るように、直線p1->p2に移動する
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        # 自チームのゴールとボールを結ぶ直線p3->p4を作成
+        line.p3.append(self._xy_our_goal())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+
     def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
         # 直線p1->p2と
         # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
@@ -202,6 +229,21 @@ class RobotOperator(Node):
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
+    def move_to_cross_line_their_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 直線p1->p2と
+        # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        line.p3.append(self._xy_their_side_center())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
 
     def move_to_defend_our_goal_from_ball(self, robot_id, distance):
         # 自チームのゴールとボールを結び、ボールからdistanceだけ離れた位置に移動する

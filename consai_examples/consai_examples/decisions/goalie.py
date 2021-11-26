@@ -30,6 +30,14 @@ class GoaleDecision(DecisionBase):
         p2_x = -6.0 + 0.3
         p2_y = -0.9
         self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        # self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+
+    def _defend_goal_with_kick(self, robot_id):
+        p1_x = -6.0 + 0.3
+        p1_y = 0.9
+        p2_x = -6.0 + 0.3
+        p2_y = -0.9
+        self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
@@ -48,7 +56,8 @@ class GoaleDecision(DecisionBase):
             return
 
         if self._act_id != ID_IN_PLAY:
-            self._defend_goal(robot_id)
+            # self._defend_goal(robot_id)
+            self._defend_goal_with_kick(robot_id)
             self._act_id = ID_IN_PLAY
 
     def our_pre_kickoff(self, robot_id):
