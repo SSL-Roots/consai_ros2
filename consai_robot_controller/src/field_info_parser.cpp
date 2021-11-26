@@ -175,7 +175,9 @@ bool FieldInfoParser::parse_goal(
 
   // 衝突を回避する
   if (goal->avoid_obstacles) {
-    avoid_obstacles(my_robot, parsed_pose, parsed_pose);
+    auto avoidance_pose = parsed_pose;
+    avoid_obstacles(my_robot, parsed_pose, avoidance_pose);
+    parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
 
     // ボールプレイスメントエリアを回避する
     if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW || referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE) {
@@ -189,8 +191,19 @@ bool FieldInfoParser::parse_goal(
           designated_position.x *= -1.0;
           designated_position.y *= -1.0;
         }
-        avoid_placement_area(my_robot, parsed_pose, ball, designated_position, parsed_pose);
+        avoid_placement_area(my_robot, parsed_pose, ball, designated_position, avoidance_pose);
+        parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
       }
+    }
+
+    // 目標位置とロボットの重なりを回避する
+    avoid_robots(my_robot, parsed_pose, avoidance_pose);
+    parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+
+    // STOP_GAME中はボールから離れる
+    if (referee_->command == Referee::COMMAND_STOP) {
+      avoid_ball_500mm(my_robot, parsed_pose, ball, avoidance_pose);
+      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
     }
   }
 
@@ -737,6 +750,75 @@ bool FieldInfoParser::avoid_placement_area(
     avoidance_pose = goal_pose;
   }
 
+  return true;
+}
+
+bool FieldInfoParser::avoid_robots(
+    const TrackedRobot & my_robot, const State & goal_pose,
+    State & avoidance_pose) const {
+  // ロボットを回避するposeを生成する
+  // 全ロボット情報を検索し、
+  // 目標位置とロボットが重なっている場合は、
+  // 自己位置方向に目標位置をずらす
+  
+  const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
+  const double ROBOT_DIAMETER = 0.18; // meters ロボットの直径
+
+  // ロボットを全探索
+  for (const auto & robot : detection_tracked_->robots) {
+    if (robot.visibility.size() == 0) {
+      continue;
+    }
+    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+      continue;
+    }
+
+    // 自身の情報は除外する
+    if (robot.robot_id.id == my_robot.robot_id.id &&
+      robot.robot_id.team_color == my_robot.robot_id.team_color)
+    {
+      continue;
+    }
+
+    // ロボットの位置が目標位置上に存在するか判定
+    auto robot_pose = tools::pose_state(robot);
+    auto distance = tools::distance(robot_pose, goal_pose);
+    if (distance < ROBOT_DIAMETER) {
+      // 自己方向にずらした目標位置を生成
+      auto my_robot_pose = tools::pose_state(my_robot);
+      tools::Trans trans_GtoM(goal_pose, tools::calc_angle(goal_pose, my_robot_pose));
+      avoidance_pose = trans_GtoM.inverted_transform(ROBOT_DIAMETER, 0.0 ,0.0);
+      avoidance_pose.theta = goal_pose.theta;
+      return true;
+    }
+  }
+
+  // 障害物がなければ、目標位置を回避位置とする
+  avoidance_pose = goal_pose;
+  return true;
+}
+
+bool FieldInfoParser::avoid_ball_500mm(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    State & avoidance_pose) const {
+  // ボールから500 mm離れる
+  const double DISTANCE_TO_AVOID = 0.6;
+  const double AVOID_MARGIN = 0.1;
+  
+  auto robot_pose = tools::pose_state(my_robot);
+  auto ball_pose = tools::pose_state(ball);
+  auto distance = tools::distance(robot_pose, ball_pose);
+
+  if (distance < DISTANCE_TO_AVOID + AVOID_MARGIN) {
+    // ロボットがボールに近づいた場合は、自己方向にずらした目標位置を生成
+    tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+    avoidance_pose = trans_BtoR.inverted_transform(DISTANCE_TO_AVOID, 0.0 ,0.0);
+    avoidance_pose.theta = goal_pose.theta;
+    return true;
+  }
+
+  // 障害物がなければ、目標位置を回避位置とする
+  avoidance_pose = goal_pose;
   return true;
 }
 
