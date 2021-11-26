@@ -64,7 +64,9 @@ def main():
         # アタッカーの切り替わりを防ぐため、
         # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
         if not observer.ball_is_in_our_defense_area() and \
-           not observer.ball_is_moving():
+           not observer.ball_is_moving() and \
+           not referee.our_ball_placement() and \
+           not referee.their_ball_placement():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
             for role in assignor.update_role():
@@ -87,15 +89,12 @@ def main():
             decisions[role].set_zone_targets(zone_targets)
 
             # レフェリーコマンドに合わせて行動を決定する
-            if observer.ball_is_outside():
-                # ボールが場外に出たらロボットを停止する
-                decisions[role].halt(robot_id)
-                continue
-
             if referee.halt():
                 decisions[role].halt(robot_id)
             elif referee.stop():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].stop(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
             elif referee.inplay():
                 decisions[role].inplay(robot_id)
             elif referee.our_pre_kickoff():
@@ -130,8 +129,10 @@ def main():
                 decisions[role].our_ball_placement(
                     robot_id, referee.placement_position())
             elif referee.their_ball_placement():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
+                decisions[role].disable_stop_game_velocity(robot_id)
             else:
                 print("UNDEFINED REFEREE COMMAND!!!")
 

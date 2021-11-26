@@ -30,6 +30,7 @@ from rclpy.node import Node
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
 
+    STOP_GAME_VELOCITY = 1.0  # m/s
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -46,11 +47,18 @@ class RobotOperator(Node):
         self._send_goal_future = [None] * ROBOT_NUM
         self._get_result_future = [None] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
+        self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
 
         if self._target_is_yellow:
             self.get_logger().info('yellowロボットを動かします')
         else:
             self.get_logger().info('blueロボットを動かします')
+
+    def enable_stop_game_velocity(self, robot_id):
+        self._stop_game_velocity_has_enabled[robot_id] = True
+
+    def disable_stop_game_velocity(self, robot_id):
+        self._stop_game_velocity_has_enabled[robot_id] = False
 
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
@@ -123,6 +131,33 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
 
+    def move_to_reflect_shoot_to_their_goal(self, robot_id, x, y):
+        # x, y座標に移動する
+        # ボールが来たら相手ゴールに向かってリフレクトシュート
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(
+            robot_id, self._with_reflect_kick(
+                self._pose_goal(pose, keep=True), target, kick_pass=False))
+
+    def move_to_reflect_shoot_to_our_robot(self, robot_id, target_id, x, y):
+        # x, y座標に移動する
+        # ボールが来たら相手ゴールに向かってリフレクトシュート
+        pose = ConstraintPose()
+        pose.xy.value_x.append(x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = ConstraintXY()
+        target.object.append(self._object_our_robot(target_id))
+        return self._set_goal(
+            robot_id, self._with_reflect_kick(
+                self._pose_goal(pose, keep=True), target, kick_pass=False))
+
     def move_to_ball_x(self, robot_id, y, offset_x=0.0):
         # ボールと同じx軸上でyの位置に移動する
         pose = ConstraintPose()
@@ -131,6 +166,17 @@ class RobotOperator(Node):
         pose.xy.value_y.append(y)
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
+
+    def move_to_ball_x_with_reflect(self, robot_id, y, offset_x=0.0):
+        # ボールと同じx軸上でyの位置に移動する
+        pose = ConstraintPose()
+        pose.xy.object.append(self._object_ball())
+        pose.xy.value_x.append(offset_x)
+        pose.xy.value_y.append(y)
+        pose.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._pose_goal(pose, keep=True), target, kick_pass=False))
 
     def move_to_ball_y(self, robot_id, x):
         # ボールと同じy軸上でxの位置に移動する
@@ -153,6 +199,51 @@ class RobotOperator(Node):
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
+    def move_to_line_to_defend_our_goal_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 自チームのゴールをボールから守るように、直線p1->p2に移動する
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        # 自チームのゴールとボールを結ぶ直線p3->p4を作成
+        line.p3.append(self._xy_our_goal())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+
+    def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 直線p1->p2と
+        # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        line.p3.append(self._xy_their_side_center())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
+    def move_to_cross_line_their_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 直線p1->p2と
+        # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        line.p3.append(self._xy_their_side_center())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
 
     def move_to_defend_our_goal_from_ball(self, robot_id, distance):
         # 自チームのゴールとボールを結び、ボールからdistanceだけ離れた位置に移動する
@@ -443,6 +534,14 @@ class RobotOperator(Node):
         our_goal.value_y.append(0.0)
         return our_goal
 
+    def _xy_their_side_center(self):
+        # ConstraintXYの相手サイドの中央を返す
+        their_center = ConstraintXY()
+        their_center.normalized = True
+        their_center.value_x.append(0.5)
+        their_center.value_y.append(0.0)
+        return their_center
+
     def _theta_look_ball(self):
         # ConstraintThetaでボールを見る角度を返す
         look_ball = ConstraintTheta()
@@ -469,6 +568,14 @@ class RobotOperator(Node):
         goal_msg.kick_setplay = kick_setplay
         return goal_msg
 
+    def _with_reflect_kick(self, goal_msg, target, kick_pass=False):
+        goal_msg.receive_ball = True
+        goal_msg.kick_enable = True
+        goal_msg.kick_pass = kick_pass
+        goal_msg.kick_target = target
+        goal_msg.kick_setplay = False
+        return goal_msg
+
     def _with_dribble(self, goal_msg, target):
         goal_msg.dribble_enable = True
         goal_msg.dribble_target = target
@@ -483,6 +590,9 @@ class RobotOperator(Node):
         if not self._action_clients[robot_id].wait_for_server(5):
             self.get_logger().error('TIMEOUT: wait_for_server')
             return False
+
+        if self._stop_game_velocity_has_enabled[robot_id]:
+            goal_msg.max_velocity_xy.append(self.STOP_GAME_VELOCITY)
 
         self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
             goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))

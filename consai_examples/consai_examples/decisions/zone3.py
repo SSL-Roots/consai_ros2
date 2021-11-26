@@ -23,30 +23,38 @@ class Zone3Decision(DecisionBase):
     def __init__(self, robot_operator):
         super().__init__(robot_operator)
 
-    def _zone_defense(self, robot_id, base_id):
+    def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
         ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
+        ID_IN_OUR_DEFENSE = base_id + self._num_of_zone_roles + 300
 
-        # ゾーン内にボールがあれば、ボールを追いかける
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-            chase_ball = False
-            if self._num_of_zone_roles == 3:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
-                    chase_ball = True
-            else:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
-                    chase_ball = True
+        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+            if self._act_id != ID_IN_OUR_DEFENSE:
+                self._operator.move_to_ball_y(robot_id, -2.0)
+                self._act_id = ID_IN_OUR_DEFENSE
+            return
 
-            if chase_ball:
-                if self._act_id != ID_DEFEND_BALL:
-                    self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-                    self._act_id = ID_DEFEND_BALL
-                return
+        # # ゾーン内にボールがあれば、ボールを追いかける
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        #     chase_ball = False
+        #     if self._num_of_zone_roles == 3:
+        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+        #             chase_ball = True
+        #     else:
+        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
+        #             chase_ball = True
+
+        #     if chase_ball:
+        #         if self._act_id != ID_DEFEND_BALL:
+        #             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
+        #             self._act_id = ID_DEFEND_BALL
+        #         return
 
         # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
-        if self._zone_targets[2] is not None:
+        if self._zone_targets[2] is not None and without_mark is False:
             if self._act_id != ID_MAN_MARK:
                 self._operator.man_mark(robot_id, self._zone_targets[2], 0.5)
                 self._act_id = ID_MAN_MARK 
@@ -63,22 +71,22 @@ class Zone3Decision(DecisionBase):
         return
 
     def stop(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_STOP)
+        self._zone_defense(robot_id, self.ACT_ID_STOP, without_mark=True)
 
     def inplay(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
 
     def our_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
 
     def their_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
 
     def their_kickoff(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_KICKOFF)
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
 
     def our_pre_penalty(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_PRE_PENALTY)

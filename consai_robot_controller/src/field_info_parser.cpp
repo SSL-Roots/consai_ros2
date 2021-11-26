@@ -24,8 +24,16 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 
-FieldInfoParser::FieldInfoParser()
+FieldInfoParser::FieldInfoParser() : invert_(false), team_is_yellow_(false)
 {
+}
+
+void FieldInfoParser::set_invert(const bool & invert) {
+  invert_ = invert;
+}
+
+void FieldInfoParser::set_team_is_yellow(const bool & team_is_yellow) {
+  team_is_yellow_ = team_is_yellow;
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
@@ -40,6 +48,10 @@ void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
 
 void FieldInfoParser::set_referee(const Referee::SharedPtr referee) { 
   referee_ = referee;
+}
+
+void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee) {
+  parsed_referee_ = parsed_referee;
 }
 
 bool FieldInfoParser::extract_robot(
@@ -144,14 +156,20 @@ bool FieldInfoParser::parse_goal(
     return true;
   }
 
-  // 転がっているボールを受け取る
-  if (goal->receive_ball) {
-    receive_ball(my_robot, ball, parsed_pose, dribble_power);
-  }
+  State target;
+  bool result = false;
+  if (goal->receive_ball && goal->kick_enable && parse_constraint_xy(goal->kick_target, target.x, target.y) ) {
+    // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
+    result = reflect_kick(target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
+  } 
 
-  // 目標姿勢とボールが近ければ、ボールを操作する
-  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7) {
-    State target;
+  if (goal->receive_ball && result == false) {
+    // 転がっているボールを受け取る
+    result = receive_ball(my_robot, ball, parsed_pose, dribble_power);
+  } 
+
+  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7 && result == false) {
+    // 目標姿勢とボールが近ければ、ボールを操作する
     if (goal->kick_enable &&
         parse_constraint_xy(goal->kick_target, target.x, target.y))
     {
@@ -165,7 +183,51 @@ bool FieldInfoParser::parse_goal(
 
   // 衝突を回避する
   if (goal->avoid_obstacles) {
-    avoid_obstacles(my_robot, parsed_pose, parsed_pose);
+    auto avoidance_pose = parsed_pose;
+    avoid_obstacles(my_robot, parsed_pose, avoidance_pose);
+    parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+
+    // ボールプレイスメントエリアを回避する
+    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW || referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE) {
+      if (referee_->designated_position.size() > 0) {
+        State designated_position;
+        designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
+        designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
+
+        // サイド反転
+        if (invert_) { 
+          designated_position.x *= -1.0;
+          designated_position.y *= -1.0;
+        }
+
+        bool is_our_placement = 
+          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW && team_is_yellow_ == true) ||
+          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
+        bool avoid_kick_receive_area = true;
+        // 自チームのプレースメント時は、キック、レシーブエリアを避けない
+        if (is_our_placement) {
+          avoid_kick_receive_area = false;
+        }
+        avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
+        parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+      }
+    }
+
+    // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
+    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
+        referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE  ||
+        referee_->command == Referee::COMMAND_STOP ) {
+      avoid_robots(my_robot, parsed_pose, avoidance_pose);
+      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+    }
+
+    // STOP_GAME中はボールから離れる
+    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+    // if (parsed_referee_->is_placement == false && parsed_referee_->is_inplay == false) {
+    // if (referee_->command == Referee::COMMAND_STOP) {
+      avoid_ball_500mm(my_robot, parsed_pose, ball, avoidance_pose);
+      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+    }
   }
 
   return true;
@@ -340,10 +402,10 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.02;
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_DISTANCE = -0.03;
+  const double DRIBBLE_POWER = 1.0;
   const double KICK_POWER_SHOOT = 6.5;
-  const double KICK_POWER_PASS = 3.0;
+  const double KICK_POWER_PASS = 1.5;
   bool need_kick = false;
   bool need_dribble = false;
 
@@ -376,8 +438,8 @@ bool FieldInfoParser::parse_dribble(
   const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
   State & parsed_pose, double & parsed_dribble_power) const {
 
-  const double DRIBBLE_DISTANCE = 0.02;
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_DISTANCE = 0.15;
+  const double DRIBBLE_POWER = 1.0;
   bool need_kick = false;
   bool need_dribble = false;
 
@@ -396,14 +458,15 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = 0.20;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - 20);
-  const double LOOKING_TARGET_THETA = tools::to_radians(30);
-  const double CAN_DRIBBLE_DISTANCE = 0.5;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(5);
-  const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(45);  // meters
+  const double LOOKING_BALL_DISTANCE = 0.25;  // meters
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
+  const double LOOKING_TARGET_THETA = tools::to_radians(15);
+  const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
+  const double CAN_SHOOT_THETA = tools::to_radians(20);
+  const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
+  const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
+  const double DISTANCE_TO_ROTATE = 0.15;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -443,10 +506,9 @@ bool FieldInfoParser::control_ball(
     // ターゲットを見るまで、ドリブラをボールに付けながら回転する
     double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
 
-    distance_robot_to_ball -= 0.05; // 調整項
     parsed_pose = trans_BtoR.inverted_transform(
-      distance_robot_to_ball * std::cos(add_angle),
-      distance_robot_to_ball * std::sin(add_angle), 0.0);
+      DISTANCE_TO_ROTATE * std::cos(add_angle),
+      DISTANCE_TO_ROTATE * std::sin(add_angle), 0.0);
     parsed_pose.theta = tools::calc_angle(parsed_pose, ball_pose);
     if (can_dribble) { need_dribble = true;}
   } else {
@@ -493,7 +555,7 @@ bool FieldInfoParser::receive_ball(
   State & parsed_pose, double & parsed_dribble_power) const
 {
   // 転がっているボールを受け取る
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_POWER = 1.0;
 
   // ボール情報に速度情報がなければ終了
   if (ball.vel.size() == 0) {
@@ -525,6 +587,87 @@ bool FieldInfoParser::receive_ball(
   robot_pose_BtoV.theta = M_PI;
   parsed_pose = trans_BtoV.inverted_transform(robot_pose_BtoV);
   parsed_dribble_power = DRIBBLE_POWER;
+
+  return true;
+}
+
+bool FieldInfoParser::reflect_kick(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
+    double & parsed_dribble_power) const {
+  // 転がっているボールの軌道上に移動し、targetに向かって蹴る
+  // targetを狙えない場合は、蹴らずにボールを受け取る
+
+  const double MIN_VELOCITY_THRESHOLD = 0.5;  // m/s ボールの最低動作速度
+  const double MAX_DISTANCE_TO_RECEIVE = 1.0;  // meters ボールを受け取る最長距離
+  const double DISTANCE_TO_DRIBBLER = 0.055;  // meters ロボットの中心からドリブラーまでの距離
+  const double CAN_REFLECT_ANGLE = 60.0;  // degress リフレクトできる最大角度
+  const double KICK_POWER_SHOOT = 6.5;
+  const double KICK_POWER_PASS = 1.5;
+
+  // パラメータを初期化
+  parsed_dribble_power = 0.0;
+  parsed_kick_power = 0.0;
+
+  // ボール情報に速度情報がなければ終了
+  if (ball.vel.size() == 0) {
+    return false;
+  }
+
+  State velocity;
+  velocity.x = ball.vel[0].x;
+  velocity.y = ball.vel[0].y;
+  auto velocity_norm = std::hypot(velocity.x, velocity.y);
+  // ボール速度が一定値以下であれば終了
+  if (velocity_norm <= MIN_VELOCITY_THRESHOLD) {
+    return false;
+  }
+
+  // ロボット座標と、ロボットのドリブラー座標を作成
+  auto robot_pose = tools::pose_state(my_robot);
+  auto dribbler_pose = robot_pose;
+  dribbler_pose.x += DISTANCE_TO_DRIBBLER * std::cos(robot_pose.theta);
+  dribbler_pose.y += DISTANCE_TO_DRIBBLER * std::sin(robot_pose.theta);
+
+  // ボールを中心にボール速度方向への座標系を作成
+  auto ball_pose = tools::pose_state(ball);
+  auto angle_velocity = std::atan2(velocity.y, velocity.x);
+  tools::Trans trans_BtoV(ball_pose, angle_velocity);
+
+  auto dribbler_pose_BtoV = trans_BtoV.transform(dribbler_pose);
+
+  // ロボットがボールの軌道から離れていたら終了
+  if (std::fabs(dribbler_pose_BtoV.y) > MAX_DISTANCE_TO_RECEIVE || dribbler_pose_BtoV.x < 0.0) {
+    return false;
+  }
+
+  // ドリブラーをボール軌道上へ移動する
+  dribbler_pose_BtoV.y = 0.0;
+
+  // targetへの角度を計算し、リフレクトシュートできるか判定する
+  auto target_BtoV = trans_BtoV.transform(target);
+  auto angle_dribbler_to_target_BtoV = tools::calc_angle(dribbler_pose_BtoV, target_BtoV);
+  if (std::fabs(angle_dribbler_to_target_BtoV) < tools::to_radians(180 - CAN_REFLECT_ANGLE)) {
+    // リフレクトシュートできないため終了
+    return false;
+  }
+
+  auto receiving_dribbler_pose = trans_BtoV.inverted_transform(dribbler_pose_BtoV);
+  auto angle_dribbler_to_target = tools::calc_angle(receiving_dribbler_pose, target);
+  tools::Trans trans_DtoT(receiving_dribbler_pose, angle_dribbler_to_target);
+  auto ball_pose_DtoT = trans_DtoT.transform(ball_pose);
+  auto angle_dribbler_to_ball_DtoT = std::atan2(ball_pose_DtoT.y, ball_pose_DtoT.x);
+
+  // リフレクトシュート目標位置を生成
+  // TODO:ボール速度、キック速度のベクトルを結合して、目標角度を求める
+  auto target_angle_DtoT = angle_dribbler_to_ball_DtoT * 0.7 * velocity_norm / 6.5;
+  parsed_pose = trans_DtoT.inverted_transform(-DISTANCE_TO_DRIBBLER, 0.0, target_angle_DtoT);
+  // キックパワーをセット
+  if (kick_pass) { 
+    parsed_kick_power = KICK_POWER_PASS;
+  } else {
+    parsed_kick_power = KICK_POWER_SHOOT;
+  }
 
   return true;
 }
@@ -594,6 +737,118 @@ bool FieldInfoParser::avoid_obstacles(
     );
   }
 
+  return true;
+}
+
+
+bool FieldInfoParser::avoid_placement_area(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool avoid_kick_receive_area,
+    const State & designated_position, State & avoidance_pose) const {
+  // プレースメント範囲を回避する
+  const double THRESHOLD_Y = 0.75;
+  const double THRESHOLD_X = 0.65;
+  const double AVOIDANCE_POS_Y = 0.65;
+
+  auto my_robot_pose = tools::pose_state(my_robot);
+  auto ball_pose= tools::pose_state(ball);
+  tools::Trans trans_BtoD(ball_pose, tools::calc_angle(ball_pose, designated_position));
+
+  auto robot_pose_BtoD = trans_BtoD.transform(my_robot_pose);
+  auto goal_pose_BtoD = trans_BtoD.transform(goal_pose);
+  auto designated_BtoD = trans_BtoD.transform(designated_position);
+
+  // 0.5 m 離れなければならない
+  // 現在位置と目標位置がともにプレースメントエリアにある場合、回避点を生成する
+
+  // 自チームのプレースメント時は、ボールを蹴る位置、受け取る位置を避けない
+  double threshold_x = 0.0;
+  if (avoid_kick_receive_area) { 
+    threshold_x = THRESHOLD_X;
+  }
+  bool my_pose_is_in_area = std::fabs(robot_pose_BtoD.y) < THRESHOLD_Y
+    && robot_pose_BtoD.x > -threshold_x
+    && robot_pose_BtoD.x < designated_BtoD.x + threshold_x;
+  bool goal_pose_is_in_area = std::fabs(goal_pose_BtoD.y) < THRESHOLD_Y
+    && goal_pose_BtoD.x > -threshold_x
+    && goal_pose_BtoD.x < designated_BtoD.x + threshold_x;
+
+  if (my_pose_is_in_area && goal_pose_is_in_area) {
+    avoidance_pose = trans_BtoD.inverted_transform(goal_pose_BtoD.x, AVOIDANCE_POS_Y, 0.0);
+    avoidance_pose.theta = goal_pose.theta;
+  } else {
+    avoidance_pose = goal_pose;
+  }
+
+  return true;
+}
+
+bool FieldInfoParser::avoid_robots(
+    const TrackedRobot & my_robot, const State & goal_pose,
+    State & avoidance_pose) const {
+  // ロボットを回避するposeを生成する
+  // 全ロボット情報を検索し、
+  // 目標位置とロボットが重なっている場合は、
+  // 自己位置方向に目標位置をずらす
+  
+  const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
+  const double ROBOT_DIAMETER = 0.18; // meters ロボットの直径
+
+  // ロボットを全探索
+  for (const auto & robot : detection_tracked_->robots) {
+    if (robot.visibility.size() == 0) {
+      continue;
+    }
+    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+      continue;
+    }
+
+    // 自身の情報は除外する
+    if (robot.robot_id.id == my_robot.robot_id.id &&
+      robot.robot_id.team_color == my_robot.robot_id.team_color)
+    {
+      continue;
+    }
+
+    // ロボットの位置が目標位置上に存在するか判定
+    auto robot_pose = tools::pose_state(robot);
+    auto distance = tools::distance(robot_pose, goal_pose);
+    if (distance < ROBOT_DIAMETER) {
+      // 自己方向にずらした目標位置を生成
+      auto my_robot_pose = tools::pose_state(my_robot);
+      tools::Trans trans_GtoM(goal_pose, tools::calc_angle(goal_pose, my_robot_pose));
+      avoidance_pose = trans_GtoM.inverted_transform(ROBOT_DIAMETER, 0.0 ,0.0);
+      avoidance_pose.theta = goal_pose.theta;
+      return true;
+    }
+  }
+
+  // 障害物がなければ、目標位置を回避位置とする
+  avoidance_pose = goal_pose;
+  return true;
+}
+
+bool FieldInfoParser::avoid_ball_500mm(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    State & avoidance_pose) const {
+  // ボールから500 mm離れる
+  const double DISTANCE_TO_AVOID = 0.6;
+  const double AVOID_MARGIN = 0.1;
+  
+  auto robot_pose = tools::pose_state(my_robot);
+  auto ball_pose = tools::pose_state(ball);
+  auto distance = tools::distance(robot_pose, ball_pose);
+
+  if (distance < DISTANCE_TO_AVOID + AVOID_MARGIN) {
+    // ロボットがボールに近づいた場合は、自己方向にずらした目標位置を生成
+    tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+    avoidance_pose = trans_BtoR.inverted_transform(DISTANCE_TO_AVOID, 0.0 ,0.0);
+    avoidance_pose.theta = goal_pose.theta;
+    return true;
+  }
+
+  // 障害物がなければ、目標位置を回避位置とする
+  avoidance_pose = goal_pose;
   return true;
 }
 

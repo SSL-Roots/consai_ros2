@@ -24,6 +24,7 @@
 #include "consai_msgs/msg/constraint_pose.hpp"
 #include "consai_msgs/msg/constraint_theta.hpp"
 #include "consai_msgs/msg/constraint_xy.hpp"
+#include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
@@ -43,6 +44,7 @@ using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
 using ConstraintXY = consai_msgs::msg::ConstraintXY;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
+using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
@@ -52,9 +54,12 @@ class FieldInfoParser
 {
 public:
   FieldInfoParser();
+  void set_invert(const bool & invert);
+  void set_team_is_yellow(const bool & team_is_yellow);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
+  void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   bool extract_robot(
     const unsigned int robot_id, const bool team_is_yellow,
     TrackedRobot & my_robot) const;
@@ -88,16 +93,30 @@ private:
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
+  bool reflect_kick(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
+    double & parsed_dribble_power) const;
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const;
+  bool avoid_robots(
+    const TrackedRobot & my_robot, const State & goal_pose,
+    State & avoidance_pose) const;
+  bool avoid_ball_500mm(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    State & avoidance_pose) const;
 
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
   std::shared_ptr<Referee> referee_;
+  std::shared_ptr<ParsedReferee> parsed_referee_;
+  bool invert_;
+  bool team_is_yellow_;
 };
 
 }  // namespace consai_robot_controller

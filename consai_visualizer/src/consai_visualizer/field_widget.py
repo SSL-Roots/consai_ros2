@@ -63,8 +63,8 @@ class FieldWidget(QWidget):
         self._RADIUS_BALL = 21.5  # diameter is 43 mm.
         # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
         self._RADIUS_ROBOT = 90  # diameter is 180 mm.
-        self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 100
-        self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 200
+        self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 300
+        self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 500
         self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
         self._RADIUS_REPLACEMENT_ROBOT_ANGLE = self._RADIUS_ROBOT + 200
         self._GAIN_REPLACE_BALL_VEL = 0.001 * 3.0

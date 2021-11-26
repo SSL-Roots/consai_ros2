@@ -31,15 +31,31 @@ class CenterBack2Decision(DecisionBase):
         p2_y = -1.8
         self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
 
+    def _defend_lower_front_defense_area_with_kick(self, robot_id):
+        # ディフェンスエリアの前側下半分を守る
+        p1_x = -6.0 + 1.8 + 0.3
+        p1_y = -0.1
+        p2_x = -6.0 + 1.8 + 0.3
+        p2_y = -1.8
+        self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
             self._defend_lower_front_defense_area(robot_id)
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
+        if self._act_id != self.ACT_ID_INPLAY + 0:
             self._defend_lower_front_defense_area(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+            self._act_id = self.ACT_ID_INPLAY + 0
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+        #     if self._act_id != self.ACT_ID_INPLAY + 0:
+        #         self._defend_lower_front_defense_area(robot_id)
+        #         self._act_id = self.ACT_ID_INPLAY + 0
+        # else:
+        #     if self._act_id != self.ACT_ID_INPLAY + 1:
+        #         self._defend_lower_front_defense_area_with_kick(robot_id)
+        #         self._act_id = self.ACT_ID_INPLAY + 1
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:

@@ -39,6 +39,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   using namespace std::placeholders;
 
   declare_parameter("team_is_yellow", false);
+  declare_parameter("invert", false);
   std::vector<std::string> prefix_list = {"vx_", "vy_", "vtheta_"};
   for (const auto & prefix : prefix_list) {
     declare_parameter(prefix + "p", 1.5);
@@ -57,6 +58,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
   max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
 
+  parser_.set_invert(get_parameter("invert").get_value<bool>());
+  parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
@@ -151,6 +154,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
   sub_referee_ = create_subscription<Referee>(
     "referee", 10, std::bind(&Controller::callback_referee, this, _1));
+  sub_parsed_referee_ = create_subscription<ParsedReferee>(
+    "parsed_referee", 10, std::bind(&Controller::callback_parsed_referee, this, _1));
 
   auto param_change_callback =
     [this](std::vector<rclcpp::Parameter> parameters) {
@@ -336,6 +341,11 @@ void Controller::callback_geometry(const GeometryData::SharedPtr msg)
 void Controller::callback_referee(const Referee::SharedPtr msg)
 {
   parser_.set_referee(msg);
+}
+
+void Controller::callback_parsed_referee(const ParsedReferee::SharedPtr msg)
+{
+  parser_.set_parsed_referee(msg);
 }
 
 bool Controller::update_pid_gain_from_param(

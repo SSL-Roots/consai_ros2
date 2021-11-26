@@ -1,11 +1,11 @@
-vx_p: 2.0
+vx_p: 3.0
 vx_i: 0.0
 vx_d: 0.7
 vx_i_max: 0.0
 vx_i_min: 0.0
 vx_antiwindup: false
 
-vy_p: 2.0
+vy_p: 3.0
 vy_i: 0.0
 vy_d: 0.7
 vy_i_max: 0.0
