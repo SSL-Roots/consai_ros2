@@ -24,12 +24,16 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 
-FieldInfoParser::FieldInfoParser() : invert_(false)
+FieldInfoParser::FieldInfoParser() : invert_(false), team_is_yellow_(false)
 {
 }
 
 void FieldInfoParser::set_invert(const bool & invert) {
   invert_ = invert;
+}
+
+void FieldInfoParser::set_team_is_yellow(const bool & team_is_yellow) {
+  team_is_yellow_ = team_is_yellow;
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
@@ -191,7 +195,16 @@ bool FieldInfoParser::parse_goal(
           designated_position.x *= -1.0;
           designated_position.y *= -1.0;
         }
-        avoid_placement_area(my_robot, parsed_pose, ball, designated_position, avoidance_pose);
+
+        bool is_our_placement = 
+          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW && team_is_yellow_ == true) ||
+          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
+        bool avoid_kick_receive_area = true;
+        // 自チームのプレースメント時は、キック、レシーブエリアを避けない
+        if (is_our_placement) {
+          avoid_kick_receive_area = false;
+        }
+        avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
         parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
       }
     }
@@ -720,11 +733,12 @@ bool FieldInfoParser::avoid_obstacles(
 
 bool FieldInfoParser::avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const {
   // プレースメント範囲を回避する
-  const double THRESHOLD_Y = 0.6;
-  const double THRESHOLD_X = 0.0;
-  const double AVOIDANCE_POS_Y = 0.7;
+  const double THRESHOLD_Y = 0.7;
+  const double THRESHOLD_X = 0.6;
+  const double AVOIDANCE_POS_Y = 0.6;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   auto ball_pose= tools::pose_state(ball);
@@ -736,12 +750,18 @@ bool FieldInfoParser::avoid_placement_area(
 
   // 0.5 m 離れなければならない
   // 現在位置と目標位置がともにプレースメントエリアにある場合、回避点を生成する
+
+  // 自チームのプレースメント時は、ボールを蹴る位置、受け取る位置を避けない
+  double threshold_x = 0.0;
+  if (avoid_kick_receive_area) { 
+    threshold_x = THRESHOLD_X;
+  }
   bool my_pose_is_in_area = std::fabs(robot_pose_BtoD.y) < THRESHOLD_Y
-    && robot_pose_BtoD.x > THRESHOLD_X
-    && robot_pose_BtoD.x < designated_BtoD.x;
+    && robot_pose_BtoD.x > -threshold_x
+    && robot_pose_BtoD.x < designated_BtoD.x + threshold_x;
   bool goal_pose_is_in_area = std::fabs(goal_pose_BtoD.y) < THRESHOLD_Y
-    && goal_pose_BtoD.x > THRESHOLD_X
-    && goal_pose_BtoD.x < designated_BtoD.x;
+    && goal_pose_BtoD.x > -threshold_x
+    && goal_pose_BtoD.x < designated_BtoD.x + threshold_x;
 
   if (my_pose_is_in_area && goal_pose_is_in_area) {
     avoidance_pose = trans_BtoD.inverted_transform(goal_pose_BtoD.x, AVOIDANCE_POS_Y, 0.0);
