@@ -42,6 +42,19 @@ class SubAttackerDecision(DecisionBase):
                 self._act_id = base_id + 1
             return
 
+    def _offend_with_kick(self, robot_id, base_id):
+        # ボールがフィールド上半分にあるときは、フィールド下側に移動する
+        if self._ball_zone_state in self._ZONE_TOPS:
+            if self._act_id != base_id + 0:
+                self._operator.move_to_ball_x_with_reflect(robot_id, -2.5)
+                self._act_id = base_id + 0
+            return
+        else:
+            if self._act_id != base_id + 1:
+                self._operator.move_to_ball_x_with_reflect(robot_id, 2.5)
+                self._act_id = base_id + 1
+            return
+
     def _offend_our_side(self, robot_id, base_id):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         if self._ball_zone_state in self._OUR_ZONE_TOPS:
@@ -64,7 +77,7 @@ class SubAttackerDecision(DecisionBase):
         self._offend(robot_id, self.ACT_ID_STOP)
 
     def inplay(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_INPLAY)
+        self._offend_with_kick(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
         self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)

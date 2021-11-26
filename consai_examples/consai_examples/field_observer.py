@@ -332,7 +332,9 @@ class FieldObserver(Node):
 
     def _is_in_defence_area(self, pos):
         # ディフェンスエリアに入ってたらtrue
-        if pos.x < -6.0 + 1.9 and math.fabs(pos.y) < 1.9:
+        defense_x = -6.0 + 1.8 + 0.4  # 0.4はロボットの直径x2
+        defense_y = 1.8 + 0.4  # 0.4はロボットの直径x2
+        if pos.x < defense_x and math.fabs(pos.y) < defense_y:
             return True
         return False
 
