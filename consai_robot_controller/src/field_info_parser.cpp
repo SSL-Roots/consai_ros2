@@ -836,16 +836,25 @@ bool FieldInfoParser::avoid_ball_500mm(
     State & avoidance_pose) const {
   // ボールから500 mm離れる
   const double DISTANCE_TO_AVOID = 0.6;
-  const double AVOID_MARGIN = 0.1;
+  const double AVOID_MARGIN = 0.05;
+  const double THETA_TO_ROTATE = tools::to_radians(10);
+  const double DISTANCE_TO_ROTATE = DISTANCE_TO_AVOID + AVOID_MARGIN;
   
   auto robot_pose = tools::pose_state(my_robot);
   auto ball_pose = tools::pose_state(ball);
   auto distance = tools::distance(robot_pose, ball_pose);
 
-  if (distance < DISTANCE_TO_AVOID + AVOID_MARGIN) {
-    // ロボットがボールに近づいた場合は、自己方向にずらした目標位置を生成
-    tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    avoidance_pose = trans_BtoR.inverted_transform(DISTANCE_TO_AVOID, 0.0 ,0.0);
+  if (distance < DISTANCE_TO_AVOID) {
+    // ロボットがボールに近づいた場合は、目標位置をボールの周囲に合わせて回転させる
+    tools::Trans trans_BtoG(ball_pose, tools::calc_angle(ball_pose, goal_pose));
+    auto ball_pose_BtoG = trans_BtoG.transform(ball_pose);
+    auto robot_pose_BtoG = trans_BtoG.transform(robot_pose);
+    auto angle_ball_to_robot_BtoG = tools::calc_angle(ball_pose_BtoG, robot_pose_BtoG);
+
+    double add_angle = -std::copysign(THETA_TO_ROTATE, angle_ball_to_robot_BtoG);
+    avoidance_pose = trans_BtoG.inverted_transform(
+      DISTANCE_TO_ROTATE * std::cos(angle_ball_to_robot_BtoG + add_angle),
+      DISTANCE_TO_ROTATE * std::sin(angle_ball_to_robot_BtoG + add_angle), 0.0);
     avoidance_pose.theta = goal_pose.theta;
     return true;
   }
