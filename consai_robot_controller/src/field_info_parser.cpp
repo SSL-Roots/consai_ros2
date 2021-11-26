@@ -438,8 +438,8 @@ bool FieldInfoParser::parse_dribble(
   const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
   State & parsed_pose, double & parsed_dribble_power) const {
 
-  const double DRIBBLE_DISTANCE = 0.3;
-  const double DRIBBLE_POWER = 0.6;
+  const double DRIBBLE_DISTANCE = 0.15;
+  const double DRIBBLE_POWER = 1.0;
   bool need_kick = false;
   bool need_dribble = false;
 
