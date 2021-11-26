@@ -489,7 +489,6 @@ bool FieldInfoParser::control_ball(
     std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
 
   auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
-  std::cout << std::fabs(tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT)) * 180.0 / M_PI << std::endl;
   auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
   bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA &&
     std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(15);
