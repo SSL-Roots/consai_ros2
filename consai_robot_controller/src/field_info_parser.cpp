@@ -209,9 +209,13 @@ bool FieldInfoParser::parse_goal(
       }
     }
 
-    // 目標位置とロボットの重なりを回避する
-    avoid_robots(my_robot, parsed_pose, avoidance_pose);
-    parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+    // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
+    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
+        referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE  ||
+        referee_->command == Referee::COMMAND_STOP ) {
+      avoid_robots(my_robot, parsed_pose, avoidance_pose);
+      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+    }
 
     // STOP_GAME中はボールから離れる
     if (referee_->command == Referee::COMMAND_STOP) {
@@ -452,10 +456,10 @@ bool FieldInfoParser::control_ball(
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(10);
-  const double CAN_SHOOT_OMEGA = 0.05;  // rad/s
+  const double CAN_SHOOT_THETA = tools::to_radians(20);
+  const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(22);  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
   const double DISTANCE_TO_ROTATE = 0.2;  // meters
 
   // 変数の初期化
