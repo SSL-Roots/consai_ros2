@@ -162,12 +162,12 @@ bool FieldInfoParser::parse_goal(
     // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
     result = reflect_kick(target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
   } 
-  
+
   if (goal->receive_ball && result == false) {
     // 転がっているボールを受け取る
     result = receive_ball(my_robot, ball, parsed_pose, dribble_power);
   } 
-  
+
   if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7 && result == false) {
     // 目標姿勢とボールが近ければ、ボールを操作する
     if (goal->kick_enable &&
@@ -465,7 +465,7 @@ bool FieldInfoParser::control_ball(
   const double CAN_SHOOT_THETA = tools::to_radians(20);
   const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(60);  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
   const double DISTANCE_TO_ROTATE = 0.15;  // meters
 
   // 変数の初期化
@@ -599,7 +599,7 @@ bool FieldInfoParser::reflect_kick(
   // targetを狙えない場合は、蹴らずにボールを受け取る
 
   const double MIN_VELOCITY_THRESHOLD = 0.5;  // m/s ボールの最低動作速度
-  const double MAX_DISTANCE_TO_RECEIVE = 1.5;  // meters ボールを受け取る最長距離
+  const double MAX_DISTANCE_TO_RECEIVE = 1.0;  // meters ボールを受け取る最長距離
   const double DISTANCE_TO_DRIBBLER = 0.055;  // meters ロボットの中心からドリブラーまでの距離
   const double CAN_REFLECT_ANGLE = 60.0;  // degress リフレクトできる最大角度
   const double KICK_POWER_SHOOT = 6.5;
@@ -746,9 +746,9 @@ bool FieldInfoParser::avoid_placement_area(
     const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const {
   // プレースメント範囲を回避する
-  const double THRESHOLD_Y = 0.7;
-  const double THRESHOLD_X = 0.6;
-  const double AVOIDANCE_POS_Y = 0.6;
+  const double THRESHOLD_Y = 0.75;
+  const double THRESHOLD_X = 0.65;
+  const double AVOIDANCE_POS_Y = 0.65;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   auto ball_pose= tools::pose_state(ball);
