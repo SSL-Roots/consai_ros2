@@ -458,15 +458,15 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = 0.3;  // meters
+  const double LOOKING_BALL_DISTANCE = 0.25;  // meters
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
   const double CAN_SHOOT_THETA = tools::to_radians(20);
   const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
-  const double DISTANCE_TO_ROTATE = 0.2;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(60);  // meters
+  const double DISTANCE_TO_ROTATE = 0.15;  // meters
 
   // 変数の初期化
   need_kick = false;
