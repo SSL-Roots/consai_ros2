@@ -130,6 +130,18 @@ class RefereeParser(Node):
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
 
+        # 解釈したレフェリー情報をpublishする
+        self._publish_parsed_referee()
+
+    def _publish_parsed_referee(self):
+        # 解析したレフェリー情報をpublishする
+        referee = ParsedReferee()
+        referee.designated_position.x = self._placement_pos.x
+        referee.designated_position.y = self._placement_pos.y
+        referee.is_placement = self.our_ball_placement() or self.their_ball_placement()
+        referee.is_inplay = self.inplay()
+        self._pub_parsed_referee.publish(referee)
+
     def _check_inplay(self, msg):
         # referee情報とフィールド情報をもとに、インプレイ状態を判定する
         # インプレイ状態であれば、self._current_commandを上書きする
