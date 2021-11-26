@@ -18,6 +18,7 @@
 import math
 
 from rclpy.node import Node
+from consai_msgs.msg import ParsedReferee
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
@@ -96,6 +97,7 @@ class RefereeParser(Node):
         self._prev_command = 0
         self._placement_pos = Point()
 
+        self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
         self._sub_referee = self.create_subscription(
