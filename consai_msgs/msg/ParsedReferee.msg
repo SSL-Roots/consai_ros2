@@ -1,3 +1,5 @@
 State2D designated_position
 bool is_placement
 bool is_inplay
+bool is_their_setplay
+bool is_our_setplay

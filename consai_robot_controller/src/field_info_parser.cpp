@@ -50,6 +50,10 @@ void FieldInfoParser::set_referee(const Referee::SharedPtr referee) {
   referee_ = referee;
 }
 
+void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee) {
+  parsed_referee_ = parsed_referee;
+}
+
 bool FieldInfoParser::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
@@ -218,7 +222,9 @@ bool FieldInfoParser::parse_goal(
     }
 
     // STOP_GAME中はボールから離れる
-    if (referee_->command == Referee::COMMAND_STOP) {
+    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+    // if (parsed_referee_->is_placement == false && parsed_referee_->is_inplay == false) {
+    // if (referee_->command == Referee::COMMAND_STOP) {
       avoid_ball_500mm(my_robot, parsed_pose, ball, avoidance_pose);
       parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
     }
