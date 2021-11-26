@@ -31,6 +31,14 @@ class SideBack2Decision(DecisionBase):
         p2_y = -1.8 - 0.3
         self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
 
+    def _offend_upper_defense_area(self, robot_id):
+        # 相手フィールの上側を待機する
+        p1_x = 2.0
+        p1_y = -4.0
+        p2_x = 3.0
+        p2_y = -4.0
+        self._operator.move_to_cross_line_their_center_and_ball_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
             self._defend_lower_defense_area(robot_id)
@@ -38,7 +46,8 @@ class SideBack2Decision(DecisionBase):
 
     def inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            self._defend_lower_defense_area(robot_id)
+            self._offend_upper_defense_area(robot_id)
+            # self._defend_lower_defense_area(robot_id)
             self._act_id = self.ACT_ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):

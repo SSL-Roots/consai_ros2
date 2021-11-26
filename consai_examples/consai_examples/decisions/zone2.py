@@ -37,26 +37,26 @@ class Zone2Decision(DecisionBase):
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
-        # ゾーン内にボールがあれば、ボールを追いかける
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-            chase_ball = False
-            if self._num_of_zone_roles == 2:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM,
-                                             FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
-                    chase_ball = True
-            elif self._num_of_zone_roles == 3:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
-                    chase_ball = True
-            else:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-                    chase_ball = True
+        # # ゾーン内にボールがあれば、ボールを追いかける
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        #     chase_ball = False
+        #     if self._num_of_zone_roles == 2:
+        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM,
+        #                                      FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+        #             chase_ball = True
+        #     elif self._num_of_zone_roles == 3:
+        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP,
+        #                                      FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
+        #             chase_ball = True
+        #     else:
+        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+        #             chase_ball = True
 
-            if chase_ball:
-                if self._act_id != ID_DEFEND_BALL:
-                    self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-                    self._act_id = ID_DEFEND_BALL
-                return
+        #     if chase_ball:
+        #         if self._act_id != ID_DEFEND_BALL:
+        #             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
+        #             self._act_id = ID_DEFEND_BALL
+        #         return
 
         # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
         if self._zone_targets[1] is not None and without_mark is False:
