@@ -37,13 +37,13 @@ class Zone4Decision(DecisionBase):
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
-        # ゾーン内にボールがあれば、ボールを追いかける
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-            if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
-                if self._act_id != ID_DEFEND_BALL:
-                    self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-                    self._act_id = ID_DEFEND_BALL
-                return
+        # # ゾーン内にボールがあれば、ボールを追いかける
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        #     if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+        #         if self._act_id != ID_DEFEND_BALL:
+        #             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
+        #             self._act_id = ID_DEFEND_BALL
+        #         return
 
         # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
         if self._zone_targets[3] is not None and without_mark is False:
