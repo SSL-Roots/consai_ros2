@@ -102,6 +102,9 @@ private:
   bool avoid_robots(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
+  bool avoid_ball_500mm(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    State & avoidance_pose) const;
 
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
