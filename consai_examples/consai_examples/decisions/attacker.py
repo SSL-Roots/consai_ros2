@@ -103,13 +103,18 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PENALTY
+
+    def penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:

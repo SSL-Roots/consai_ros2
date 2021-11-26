@@ -66,6 +66,10 @@ def main():
         if not observer.ball_is_in_our_defense_area() and \
            not observer.ball_is_moving() and \
            not referee.our_ball_placement() and \
+           not referee.our_pre_penalty() and \
+           not referee.our_penalty() and \
+           not referee.their_pre_penalty() and \
+           not referee.their_penalty() and \
            not referee.their_ball_placement():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
@@ -97,6 +101,8 @@ def main():
                 decisions[role].disable_stop_game_velocity(robot_id)
             elif referee.inplay():
                 decisions[role].inplay(robot_id)
+            elif referee.penalty_inplay():
+                decisions[role].penalty_inplay(robot_id)
             elif referee.our_pre_kickoff():
                 decisions[role].our_pre_kickoff(robot_id)
             elif referee.our_kickoff():
