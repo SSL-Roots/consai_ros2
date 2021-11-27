@@ -119,10 +119,10 @@ class Zone3Decision(DecisionBase):
             self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
 
     def their_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
 
     def our_indirect(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INDIRECT)
