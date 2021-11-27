@@ -75,7 +75,8 @@ class Zone2Decision(DecisionBase):
                 target_y = 0.0
             elif self._num_of_zone_roles == 4:
                 target_y = 4.5 * 0.25
-            self._operator.move_to_receive(robot_id, target_x, target_y)
+            # self._operator.move_to_receive(robot_id, target_x, target_y)
+            self._operator.move_to_reflect_shoot_to_their_goal(robot_id, target_x, target_y)
             self._act_id = ID_IN_ZONE 
         return
 
@@ -128,10 +129,10 @@ class Zone2Decision(DecisionBase):
             self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
 
     def their_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
 
     def our_indirect(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INDIRECT)

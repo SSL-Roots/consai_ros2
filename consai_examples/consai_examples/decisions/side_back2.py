@@ -26,9 +26,9 @@ class SideBack2Decision(DecisionBase):
     def _defend_lower_defense_area(self, robot_id):
         # ディフェンスエリアの下側を守る
         p1_x = -6.0 + 0.3
-        p1_y = -1.8 - 0.3
+        p1_y = -1.8 - 0.5
         p2_x = -6.0 + 1.8 + 0.3
-        p2_y = -1.8 - 0.3
+        p2_y = -1.8 - 0.5
         self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _offend_upper_defense_area(self, robot_id):

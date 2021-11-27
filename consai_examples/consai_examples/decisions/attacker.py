@@ -68,7 +68,7 @@ class AttackerDecision(DecisionBase):
 
         # ゴールに向かってシュートする
         if self._act_id != ID_INPLAY:
-            self._operator.shoot_to_their_goal(robot_id)
+            self._operator.shoot_to_their_goal_with_reflect(robot_id)
             self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
