@@ -184,7 +184,12 @@ bool FieldInfoParser::parse_goal(
   // 衝突を回避する
   if (goal->avoid_obstacles) {
     auto avoidance_pose = parsed_pose;
-    avoid_obstacles(my_robot, parsed_pose, avoidance_pose);
+    bool avoid_ball = false;
+    // STOP_GAME中はボールから離れる
+    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+      avoid_ball = true;
+    }
+    avoid_obstacles(my_robot, parsed_pose, ball, avoid_ball, avoidance_pose);
     parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
 
     // ボールプレイスメントエリアを回避する
@@ -208,8 +213,10 @@ bool FieldInfoParser::parse_goal(
         if (is_our_placement) {
           avoid_kick_receive_area = false;
         }
-        avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
-        parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+        if (goal->avoid_placement) {
+          avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
+          parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+        }
       }
     }
 
@@ -402,7 +409,7 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = -0.03;
+  const double DRIBBLE_DISTANCE = 0.3;
   const double DRIBBLE_POWER = 1.0;
   const double KICK_POWER_SHOOT = 6.5;
   const double KICK_POWER_PASS = 1.5;
@@ -459,14 +466,14 @@ bool FieldInfoParser::control_ball(
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
   const double LOOKING_BALL_DISTANCE = 0.25;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - 90);
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - 45);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(20);
-  const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = -0.1;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(40);  // meters
-  const double DISTANCE_TO_ROTATE = 0.15;  // meters
+  const double CAN_SHOOT_THETA = tools::to_radians(10);
+  // const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
+  const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
+  const double THETA_TO_ROTATE = tools::to_radians(30);  // meters
+  const double DISTANCE_TO_ROTATE = 0.2;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -488,15 +495,18 @@ bool FieldInfoParser::control_ball(
   bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
     std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
 
-  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA;
+  auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
+  auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
+  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA &&
+    std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(15);
 
   double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
 
   // ロボットがボールに近ければドリブルをON
   bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
   // ロボットがキックターゲットに焦点を当てたらキックをON
-  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA &&
-      std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
+  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA;
+      // std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
@@ -673,8 +683,8 @@ bool FieldInfoParser::reflect_kick(
 }
 
 bool FieldInfoParser::avoid_obstacles(
-  const TrackedRobot & my_robot,
-  const State & goal_pose, State & avoidance_pose) const
+  const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+  const bool & avoid_ball, State & avoidance_pose) const
 {
   // 障害物を回避するposeを生成する
   // 全ロボット情報を検索し、
@@ -728,6 +738,22 @@ bool FieldInfoParser::avoid_obstacles(
     }
   }
 
+  if (avoid_ball) {
+    auto ball_pose = tools::pose_state(ball);
+    auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
+
+    if (ball_pose_MtoG.x > OBSTACLE_DETECTION_X &&
+      ball_pose_MtoG.x < goal_pose_MtoG.x &&
+      std::fabs(ball_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
+    {
+      double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
+      if (distance < distance_to_obstacle) {
+        obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
+        distance_to_obstacle = distance;
+      }
+    }
+  }
+
   // 障害物が存在すれば、回避位置を生成する
   if (obstacle_pose_MtoG) {
     avoidance_pose = trans_MtoG.inverted_transform(
@@ -746,9 +772,9 @@ bool FieldInfoParser::avoid_placement_area(
     const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const {
   // プレースメント範囲を回避する
-  const double THRESHOLD_Y = 0.75;
+  const double THRESHOLD_Y = 1.0;
   const double THRESHOLD_X = 0.65;
-  const double AVOIDANCE_POS_Y = 0.65;
+  const double AVOIDANCE_POS_Y = 0.9;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   auto ball_pose= tools::pose_state(ball);
@@ -773,9 +799,17 @@ bool FieldInfoParser::avoid_placement_area(
     && goal_pose_BtoD.x > -threshold_x
     && goal_pose_BtoD.x < designated_BtoD.x + threshold_x;
 
-  if (my_pose_is_in_area && goal_pose_is_in_area) {
-    avoidance_pose = trans_BtoD.inverted_transform(goal_pose_BtoD.x, AVOIDANCE_POS_Y, 0.0);
-    avoidance_pose.theta = goal_pose.theta;
+  if (my_pose_is_in_area || goal_pose_is_in_area) {
+    auto avoid_y = std::copysign(AVOIDANCE_POS_Y, robot_pose_BtoD.y);
+    avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
+
+    // デッドロック回避
+    const double FIELD_HALF_X = 6.0;
+    const double FIELD_HALF_Y = 4.5;
+    if (std::fabs(avoidance_pose.y) > FIELD_HALF_Y || std::fabs(avoidance_pose.x) > FIELD_HALF_X) {
+      avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, -avoid_y, 0.0);
+    }
+    avoidance_pose.theta = my_robot_pose.theta;
   } else {
     avoidance_pose = goal_pose;
   }
@@ -833,16 +867,25 @@ bool FieldInfoParser::avoid_ball_500mm(
     State & avoidance_pose) const {
   // ボールから500 mm離れる
   const double DISTANCE_TO_AVOID = 0.6;
-  const double AVOID_MARGIN = 0.1;
+  const double AVOID_MARGIN = 0.05;
+  const double THETA_TO_ROTATE = tools::to_radians(10);
+  const double DISTANCE_TO_ROTATE = DISTANCE_TO_AVOID + AVOID_MARGIN;
   
   auto robot_pose = tools::pose_state(my_robot);
   auto ball_pose = tools::pose_state(ball);
   auto distance = tools::distance(robot_pose, ball_pose);
 
-  if (distance < DISTANCE_TO_AVOID + AVOID_MARGIN) {
-    // ロボットがボールに近づいた場合は、自己方向にずらした目標位置を生成
-    tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    avoidance_pose = trans_BtoR.inverted_transform(DISTANCE_TO_AVOID, 0.0 ,0.0);
+  if (distance < DISTANCE_TO_AVOID) {
+    // ロボットがボールに近づいた場合は、目標位置をボールの周囲に合わせて回転させる
+    tools::Trans trans_BtoG(ball_pose, tools::calc_angle(ball_pose, goal_pose));
+    auto ball_pose_BtoG = trans_BtoG.transform(ball_pose);
+    auto robot_pose_BtoG = trans_BtoG.transform(robot_pose);
+    auto angle_ball_to_robot_BtoG = tools::calc_angle(ball_pose_BtoG, robot_pose_BtoG);
+
+    double add_angle = -std::copysign(THETA_TO_ROTATE, angle_ball_to_robot_BtoG);
+    avoidance_pose = trans_BtoG.inverted_transform(
+      DISTANCE_TO_ROTATE * std::cos(angle_ball_to_robot_BtoG + add_angle),
+      DISTANCE_TO_ROTATE * std::sin(angle_ball_to_robot_BtoG + add_angle), 0.0);
     avoidance_pose.theta = goal_pose.theta;
     return true;
   }

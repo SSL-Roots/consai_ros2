@@ -50,6 +50,9 @@ def generate_launch_description():
                 ComposableNode(
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::GameController',
+                    parameters=[{
+                        'multicast_port': 10003,
+                        }],
                     name='game_controller')
             ])
 

@@ -66,6 +66,10 @@ def main():
         if not observer.ball_is_in_our_defense_area() and \
            not observer.ball_is_moving() and \
            not referee.our_ball_placement() and \
+           not referee.our_pre_penalty() and \
+           not referee.our_penalty() and \
+           not referee.their_pre_penalty() and \
+           not referee.their_penalty() and \
            not referee.their_ball_placement():
             # ロボットの役割の更新し、
             # 役割が変わったロボットのみ、行動を更新する
@@ -87,6 +91,8 @@ def main():
             decisions[role].set_num_of_zone_roles(num_of_zone_roles)
             # ゾーンディフェンスのターゲットをセットする
             decisions[role].set_zone_targets(zone_targets)
+            # プレースメントを回避する
+            decisions[role].enable_avoid_placement(robot_id)
 
             # レフェリーコマンドに合わせて行動を決定する
             if referee.halt():
@@ -106,13 +112,31 @@ def main():
             elif referee.their_kickoff():
                 decisions[role].their_kickoff(robot_id)
             elif referee.our_pre_penalty():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].our_pre_penalty(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
+
             elif referee.our_penalty():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].our_penalty(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
+
             elif referee.their_pre_penalty():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_pre_penalty(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
+
             elif referee.their_penalty():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_penalty(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
+
+            elif referee.our_penalty_inplay():
+                decisions[role].our_penalty_inplay(robot_id)
+
+            elif referee.their_penalty_inplay():
+                decisions[role].their_penalty_inplay(robot_id)
+
             elif referee.our_direct():
                 decisions[role].our_direct(robot_id)
             elif referee.their_direct():
@@ -129,10 +153,8 @@ def main():
                 decisions[role].our_ball_placement(
                     robot_id, referee.placement_position())
             elif referee.their_ball_placement():
-                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
-                decisions[role].disable_stop_game_velocity(robot_id)
             else:
                 print("UNDEFINED REFEREE COMMAND!!!")
 
