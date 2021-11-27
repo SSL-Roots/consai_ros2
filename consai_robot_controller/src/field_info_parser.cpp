@@ -213,8 +213,10 @@ bool FieldInfoParser::parse_goal(
         if (is_our_placement) {
           avoid_kick_receive_area = false;
         }
-        avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
-        parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+        if (goal->avoid_placement) {
+          avoid_placement_area(my_robot, parsed_pose, ball, avoid_kick_receive_area, designated_position, avoidance_pose);
+          parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
+        }
       }
     }
 

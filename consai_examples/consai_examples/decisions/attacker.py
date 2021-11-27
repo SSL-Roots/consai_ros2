@@ -151,6 +151,9 @@ class AttackerDecision(DecisionBase):
         ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
         ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
 
+        # プレースメントを回避しない
+        self._operator.disable_avoid_placement(robot_id)
+
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする
             if self._act_id != ID_FAR_FROM:

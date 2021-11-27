@@ -91,6 +91,8 @@ def main():
             decisions[role].set_num_of_zone_roles(num_of_zone_roles)
             # ゾーンディフェンスのターゲットをセットする
             decisions[role].set_zone_targets(zone_targets)
+            # プレースメントを回避する
+            decisions[role].enable_avoid_placement(robot_id)
 
             # レフェリーコマンドに合わせて行動を決定する
             if referee.halt():
