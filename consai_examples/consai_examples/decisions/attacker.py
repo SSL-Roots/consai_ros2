@@ -128,7 +128,8 @@ class AttackerDecision(DecisionBase):
 
     def their_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
+            # self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_DIRECT
 
     def our_indirect(self, robot_id):

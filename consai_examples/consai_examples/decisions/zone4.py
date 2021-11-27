@@ -38,15 +38,13 @@ class Zone4Decision(DecisionBase):
             return
 
         # # ゾーン内にボールがあれば、ボールを追いかける
-        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-        #     if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
-        #         if self._act_id != ID_DEFEND_BALL:
-        #             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-        #             self._act_id = ID_DEFEND_BALL
-        #         return
+        ball_is_in_my_zone = False
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+            if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+                ball_is_in_my_zone = True
 
         # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
-        if self._zone_targets[3] is not None and without_mark is False:
+        if self._zone_targets[3] is not None and without_mark is False and ball_is_in_my_zone is False:
             if self._act_id != ID_MAN_MARK:
                 self._operator.man_mark(robot_id, self._zone_targets[3], 0.5)
                 self._act_id = ID_MAN_MARK 
@@ -109,10 +107,10 @@ class Zone4Decision(DecisionBase):
             self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
 
     def their_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
 
     def our_indirect(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INDIRECT)

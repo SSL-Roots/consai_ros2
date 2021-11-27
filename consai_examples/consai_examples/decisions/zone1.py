@@ -38,26 +38,20 @@ class Zone1Decision(DecisionBase):
             return
 
         # # ゾーン内にボールがあれば、ボールを追いかける
-        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
-        #     chase_ball = False
-        #     if self._num_of_zone_roles == 1:
-        #         chase_ball = True
-        #     elif self._num_of_zone_roles == 2:
-        #         if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-        #                                      FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-        #             chase_ball = True
-        #     elif self._num_of_zone_roles == 3 or self._num_of_zone_roles == 4:
-        #         if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
-        #             chase_ball = True
+        ball_is_in_my_zone = False
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+            if self._num_of_zone_roles == 1:
+                ball_is_in_my_zone = True
+            elif self._num_of_zone_roles == 2:
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
+                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                    ball_is_in_my_zone = True
+            elif self._num_of_zone_roles == 3 or self._num_of_zone_roles == 4:
+                if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
+                    ball_is_in_my_zone = True
 
-        #     if chase_ball:
-        #         if self._act_id != ID_DEFEND_BALL:
-        #             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-        #             self._act_id = ID_DEFEND_BALL
-        #         return
-
-        # ゾーン内の相手ロボットがいれば、ボールとロボットの間に移動する
-        if self._zone_targets[0] is not None and without_mark is False:
+        # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
+        if self._zone_targets[0] is not None and without_mark is False and ball_is_in_my_zone is False:
             if self._act_id != ID_MAN_MARK:
                 self._operator.man_mark(robot_id, self._zone_targets[0], 0.5)
                 self._act_id = ID_MAN_MARK 
@@ -124,10 +118,10 @@ class Zone1Decision(DecisionBase):
             self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
 
     def their_direct(self, robot_id):
-        self._zone_defense(robot_id, self.ACT_ID_DIRECT)
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=True)
 
     def our_indirect(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_INDIRECT)
