@@ -6,6 +6,8 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 
 **CON-SAI** stands for **CON**tribution to *S*occer **AI**.
 
+![](./resources/consai_visualizer.png)
+
 ## Requirements
 
 - Linux OS
