@@ -111,9 +111,14 @@ class AttackerDecision(DecisionBase):
             self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PENALTY
 
-    def penalty_inplay(self, robot_id):
+    def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.stop(robot_id)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.setplay_shoot_to_their_goal(robot_id)
             self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):

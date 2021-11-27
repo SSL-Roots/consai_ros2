@@ -46,7 +46,8 @@ class RefereeParser(Node):
     }
 
     _COMMAND_INPLAY = 99
-    _COMMAND_PENALTY_INPLAY = 199
+    _COMMAND_OUR_PENALTY_INPLAY = 199
+    _COMMAND_THEIR_PENALTY_INPLAY = 200
 
     def __init__(self, our_team_is_yellow=False, invert_placement_pos=False, division_a=True):
         super().__init__('referee_parser')
@@ -143,10 +144,10 @@ class RefereeParser(Node):
         referee.is_inplay = self.inplay()
         referee.is_our_setplay = self.our_direct() or self.our_indirect() or self.our_kickoff() or\
                                  self.our_penalty() or self.our_ball_placement() or self.our_pre_kickoff() or\
-                                 self.our_pre_penalty() or self.penalty_inplay()
+                                 self.our_pre_penalty() or self.our_penalty_inplay()
         referee.is_their_setplay = self.their_direct() or self.their_indirect() or self.their_kickoff() or\
                                    self.their_penalty() or self.their_ball_placement() or self.their_pre_kickoff() or\
-                                   self.their_pre_penalty() or self.penalty_inplay()
+                                   self.their_pre_penalty() or self.their_penalty_inplay()
         self._pub_parsed_referee.publish(referee)
 
     def _check_inplay(self, msg):
@@ -171,8 +172,10 @@ class RefereeParser(Node):
             if math.hypot(diff_x, diff_y) > 0.05:
                 self.get_logger().info('ボールが0.05 meter動いたためinplayに変わります')
                 # ペナルティキック時のインプレイではロボットが自由に動けないため、別のコマンドフラグを用意する
-                if self.our_penalty() or self.their_penalty():
-                    self._current_command = self._COMMAND_PENALTY_INPLAY
+                if self.our_penalty():
+                    self._current_command = self._COMMAND_OUR_PENALTY_INPLAY
+                elif self.their_penalty():
+                    self._current_command = self._COMMAND_THEIR_PENALTY_INPLAY
                 else:
                     self._current_command = self._COMMAND_INPLAY
 
@@ -212,8 +215,11 @@ class RefereeParser(Node):
     def inplay(self):
         return self._current_command == self._COMMAND_INPLAY
 
-    def penalty_inplay(self):
-        return self._current_command == self._COMMAND_PENALTY_INPLAY
+    def our_penalty_inplay(self):
+        return self._current_command == self._COMMAND_OUR_PENALTY_INPLAY
+
+    def their_penalty_inplay(self):
+        return self._current_command == self._COMMAND_THEIR_PENALTY_INPLAY
 
     def our_pre_kickoff(self):
         return self._current_command == self._COMMAND_OUR_PREPARE_KICKOFF

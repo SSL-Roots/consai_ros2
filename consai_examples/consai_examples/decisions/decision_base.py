@@ -83,9 +83,15 @@ class DecisionBase(object):
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_INPLAY
 
-    def penalty_inplay(self, robot_id):
+    def our_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            print("PENALTY_INPLAY:{}".format(robot_id))
+            print("OUR PENALTY_INPLAY:{}".format(robot_id))
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            print("THEIR PENALTY_INPLAY:{}".format(robot_id))
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_INPLAY
 

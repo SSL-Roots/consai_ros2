@@ -72,12 +72,12 @@ class SideBack2Decision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._defend_lower_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._defend_lower_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
@@ -90,7 +90,12 @@ class SideBack2Decision(DecisionBase):
             self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PENALTY
 
-    def penalty_inplay(self, robot_id):
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_INPLAY

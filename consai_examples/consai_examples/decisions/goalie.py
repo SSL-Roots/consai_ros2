@@ -107,7 +107,12 @@ class GoaleDecision(DecisionBase):
             self._penalty_defend(robot_id)
             self._act_id = self.ACT_ID_PENALTY
 
-    def penalty_inplay(self, robot_id):
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._defend_goal(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
             self._defend_goal(robot_id)
             self._act_id = self.ACT_ID_INPLAY
