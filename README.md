@@ -13,9 +13,12 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 - ROS 2
     - [Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation.html)
     - [colcon build tool](https://docs.ros.org/en/foxy/Tutorials/Colcon-Tutorial.html)
-- RoboCup SSL Official Softwares
+- [consai_frootspi_msgs](https://github.com/SSL-Roots/consai_frootspi_msgs)
+    - CON-SAIと[FrootsPi](https://github.com/SSL-Roots/FrootsPi)が通信するために必要なパッケージです
+- RoboCup SSL Official Softwares (Optional)
     - [grSim](https://github.com/RoboCup-SSL/grSim)
     - [ssl-game-controller](https://github.com/RoboCup-SSL/ssl-game-controller)
+
 
 ## Installation
 
