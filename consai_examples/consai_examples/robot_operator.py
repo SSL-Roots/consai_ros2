@@ -30,7 +30,7 @@ from rclpy.node import Node
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
 
-    STOP_GAME_VELOCITY = 1.0  # m/s
+    STOP_GAME_VELOCITY = 0.8  # m/s
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -308,6 +308,36 @@ class RobotOperator(Node):
             self._with_kick(
                 self._line_goal(line, keep=True), target, kick_pass=False)))
 
+    def shoot_to_their_goal_with_reflect(self, robot_id):
+        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
+        # 相手ゴールに向かってシュートする
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = self._xy_their_goal()
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_receive(
+            self._with_reflect_and_normal_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False)))
+
+    def shoot_to_their_corner(self, robot_id, target_is_top_corner=True, set_play=False):
+        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
+        # 相手コーナーに向かってシュートする
+        xy_target = self._xy_their_bottom_corner()
+        if target_is_top_corner:
+            xy_target = self._xy_their_top_corner()
+
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = xy_target
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = xy_target
+        return self._set_goal(robot_id, self._with_receive(
+            self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=set_play)))
+
     def setplay_shoot_to_their_goal(self, robot_id):
         # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
         # 相手ゴールに向かってシュートする
@@ -541,6 +571,22 @@ class RobotOperator(Node):
         our_goal.value_y.append(0.0)
         return our_goal
 
+    def _xy_their_top_corner(self):
+        # ConstraintXYの相手サイドのコーナー上側座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(1.0)
+        our_goal.value_y.append(1.0)
+        return our_goal
+
+    def _xy_their_bottom_corner(self):
+        # ConstraintXYの相手サイドのコーナー上側座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(1.0)
+        our_goal.value_y.append(-1.0)
+        return our_goal
+
     def _xy_their_side_center(self):
         # ConstraintXYの相手サイドの中央を返す
         their_center = ConstraintXY()
@@ -576,8 +622,15 @@ class RobotOperator(Node):
         return goal_msg
 
     def _with_reflect_kick(self, goal_msg, target, kick_pass=False):
-        goal_msg.receive_ball = True
+        goal_msg.reflect_shoot = True
+        goal_msg.kick_pass = kick_pass
+        goal_msg.kick_target = target
+        goal_msg.kick_setplay = False
+        return goal_msg
+
+    def _with_reflect_and_normal_kick(self, goal_msg, target, kick_pass=False):
         goal_msg.kick_enable = True
+        goal_msg.reflect_shoot = True
         goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
         goal_msg.kick_setplay = False
