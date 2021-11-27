@@ -138,9 +138,13 @@ def main():
                 decisions[role].their_penalty_inplay(robot_id)
 
             elif referee.our_direct():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].our_direct(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
             elif referee.their_direct():
+                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_direct(robot_id)
+                decisions[role].disable_stop_game_velocity(robot_id)
             elif referee.our_indirect():
                 decisions[role].our_indirect(robot_id)
             elif referee.their_indirect():
