@@ -55,7 +55,7 @@ $ ros2 launch consai_examples start.launch.py
 
 # anothor terminal
 $ source ~/ros2_ws/install/setup.bash
-$ ros2 run consai_examples control_by_referee.py
+$ ros2 run consai_examples game.py
 ```
 
 CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を参照してください。
