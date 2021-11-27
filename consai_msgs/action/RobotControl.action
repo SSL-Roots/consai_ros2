@@ -33,6 +33,7 @@ bool receive_ball false
 
 # 衝突回避は安全のためデフォルトでtrue
 bool avoid_obstacles true
+bool avoid_placement true
 
 ---
 bool success

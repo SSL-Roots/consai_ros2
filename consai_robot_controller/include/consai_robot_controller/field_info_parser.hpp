@@ -98,8 +98,8 @@ private:
     const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
     double & parsed_dribble_power) const;
   bool avoid_obstacles(
-    const TrackedRobot & my_robot, const State & goal_pose,
-    State & avoidance_pose) const;
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool & avoid_ball, State & avoidance_pose) const;
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const bool avoid_kick_receive_area,
