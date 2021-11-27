@@ -770,9 +770,9 @@ bool FieldInfoParser::avoid_placement_area(
     const bool avoid_kick_receive_area,
     const State & designated_position, State & avoidance_pose) const {
   // プレースメント範囲を回避する
-  const double THRESHOLD_Y = 0.75;
+  const double THRESHOLD_Y = 1.0;
   const double THRESHOLD_X = 0.65;
-  const double AVOIDANCE_POS_Y = 0.65;
+  const double AVOIDANCE_POS_Y = 0.9;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   auto ball_pose= tools::pose_state(ball);
@@ -797,9 +797,17 @@ bool FieldInfoParser::avoid_placement_area(
     && goal_pose_BtoD.x > -threshold_x
     && goal_pose_BtoD.x < designated_BtoD.x + threshold_x;
 
-  if (my_pose_is_in_area && goal_pose_is_in_area) {
-    avoidance_pose = trans_BtoD.inverted_transform(goal_pose_BtoD.x, AVOIDANCE_POS_Y, 0.0);
-    avoidance_pose.theta = goal_pose.theta;
+  if (my_pose_is_in_area || goal_pose_is_in_area) {
+    auto avoid_y = std::copysign(AVOIDANCE_POS_Y, robot_pose_BtoD.y);
+    avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
+
+    // デッドロック回避
+    const double FIELD_HALF_X = 6.0;
+    const double FIELD_HALF_Y = 4.5;
+    if (std::fabs(avoidance_pose.y) > FIELD_HALF_Y || std::fabs(avoidance_pose.x) > FIELD_HALF_X) {
+      avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, -avoid_y, 0.0);
+    }
+    avoidance_pose.theta = my_robot_pose.theta;
   } else {
     avoidance_pose = goal_pose;
   }

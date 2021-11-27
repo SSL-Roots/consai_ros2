@@ -151,10 +151,8 @@ def main():
                 decisions[role].our_ball_placement(
                     robot_id, referee.placement_position())
             elif referee.their_ball_placement():
-                decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
-                decisions[role].disable_stop_game_velocity(robot_id)
             else:
                 print("UNDEFINED REFEREE COMMAND!!!")
 
