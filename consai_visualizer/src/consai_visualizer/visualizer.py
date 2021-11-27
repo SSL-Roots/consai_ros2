@@ -130,9 +130,10 @@ class Visualizer(Plugin):
         self._reset_timer = QTimer()
         self._reset_timer.timeout.connect(self._update_robot_synthetics)
         self._reset_timer.start(1000)
+
+        self.latest_battery_voltage = [0] * 16
+        self.latest_kicker_voltage = [0] * 16
         
-
-
 
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
@@ -196,37 +197,32 @@ class Visualizer(Plugin):
                 self._widget.field_widget.set_designated_position(msg.designated_position[0])
 
     def _callback_battery_voltage(self, msg, robot_id):
-        MAX_VOLTAGE = 16.8
-        MIN_VOLTAGE = 14.8
-        percentage = (msg.voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
-        if percentage < 0:
-            percentage = 0
-        elif percentage > 100:
-            percentage = 100
-
-        try: 
-            getattr(self._widget, f"robot{robot_id}_battery_voltage").setValue(int(percentage))
-        except AttributeError:
-            # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
-            pass
-
+        self.latest_battery_voltage[robot_id] = msg.voltage
         # for synthetics
         self.latest_update_time[robot_id] = time.time()
 
     def _callback_kicker_voltage(self, msg, robot_id):
-        MAX_VOLTAGE = 200
-        MIN_VOLTAGE = 0
-        percentage = (msg.voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        self.latest_kicker_voltage[robot_id] = msg.voltage
+
+    def battery_voltage_to_percentage(self, voltage):
+        MAX_VOLTAGE = 16.8
+        MIN_VOLTAGE = 14.8
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
         elif percentage > 100:
             percentage = 100
+        return int(percentage)
 
-        try:
-            getattr(self._widget, f"robot{robot_id}_kicker_voltage").setValue(int(percentage))
-        except AttributeError:
-            # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
-            pass
+    def kicker_voltage_to_percentage(self, voltage):
+        MAX_VOLTAGE = 200
+        MIN_VOLTAGE = 0
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
+        return int(percentage)
 
     def _update_robot_synthetics(self):
         # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
@@ -234,6 +230,14 @@ class Visualizer(Plugin):
 
         for i in range(16):
             diff_time = now - self.latest_update_time[i]
+
+            try: 
+                getattr(self._widget, f"robot{i}_battery_voltage").setValue(self.battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(self.kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+            except AttributeError:
+                # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                pass
+
             if diff_time > 1.0:
                 # DEATH
                 try:
