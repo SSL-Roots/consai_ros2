@@ -184,7 +184,12 @@ bool FieldInfoParser::parse_goal(
   // 衝突を回避する
   if (goal->avoid_obstacles) {
     auto avoidance_pose = parsed_pose;
-    avoid_obstacles(my_robot, parsed_pose, avoidance_pose);
+    bool avoid_ball = false;
+    // STOP_GAME中はボールから離れる
+    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+      avoid_ball = true;
+    }
+    avoid_obstacles(my_robot, parsed_pose, ball, avoid_ball, avoidance_pose);
     parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
 
     // ボールプレイスメントエリアを回避する
@@ -676,8 +681,8 @@ bool FieldInfoParser::reflect_kick(
 }
 
 bool FieldInfoParser::avoid_obstacles(
-  const TrackedRobot & my_robot,
-  const State & goal_pose, State & avoidance_pose) const
+  const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+  const bool & avoid_ball, State & avoidance_pose) const
 {
   // 障害物を回避するposeを生成する
   // 全ロボット情報を検索し、
@@ -726,6 +731,22 @@ bool FieldInfoParser::avoid_obstacles(
       double distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
       if (distance < distance_to_obstacle) {
         obstacle_pose_MtoG = std::make_shared<State>(robot_pose_MtoG);
+        distance_to_obstacle = distance;
+      }
+    }
+  }
+
+  if (avoid_ball) {
+    auto ball_pose = tools::pose_state(ball);
+    auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
+
+    if (ball_pose_MtoG.x > OBSTACLE_DETECTION_X &&
+      ball_pose_MtoG.x < goal_pose_MtoG.x &&
+      std::fabs(ball_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
+    {
+      double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
+      if (distance < distance_to_obstacle) {
+        obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
         distance_to_obstacle = distance;
       }
     }
