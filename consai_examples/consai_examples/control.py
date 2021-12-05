@@ -325,7 +325,7 @@ def test_refelect_shoot_four_robots(id1, id2, id3, id4):
 
 def main():
     # 実行したい関数のコメントを外してください
-    # test_move_to()
+    test_move_to()
     # test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
     # test_chase_ball()
@@ -339,7 +339,7 @@ def main():
     # test_move_to_line()
     # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
-    test_refelect_shoot_four_robots(0, 1, 2, 3)
+    # test_refelect_shoot_four_robots(0, 1, 2, 3)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -352,6 +352,10 @@ if __name__ == '__main__':
     rclpy.init(args=None)
 
     operator_node = RobotOperator(target_is_yellow=args.yellow)
+
+    # すべてのロボットの衝突回避を解除
+    for i in range(16):
+        operator_node.disable_avoid_obstacles(i)
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
