@@ -1,6 +1,16 @@
 name: build_and_lint
 
-on: workflow_dispatch # 手動トリガー
+on:
+  push:
+    branches:
+      - main 
+      - '**-devel'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
 
 jobs:
   industrial_ci:
@@ -8,6 +18,8 @@ jobs:
       matrix:
         env:
           - { ROS_DISTRO: foxy, ROS_REPO: ros }
+    env:
+      UPSTREAM_WORKSPACE: .ci.rosinstall
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
