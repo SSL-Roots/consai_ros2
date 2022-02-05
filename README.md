@@ -24,9 +24,13 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 
 ## Installation
 
-### Binary installation
+### Docker
 
-TBD
+```sh
+$ docker pull ghcr.io/ssl-roots/consai_ros2:main
+```
+
+Dockerを用いたCON-SAIの開発方法については[.docker/README.md](.docker/README.md)を参照してください
 
 ### Source build
 
