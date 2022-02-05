@@ -59,7 +59,7 @@ $ rocker --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consa
 
 ## Dockerイメージをビルドする
 
-書き込まんでDockerイメージをビルドできます。
+ローカルでもDockerイメージをビルドできます。
 Dockerfileを編集したい場合におすすめです。
 
 成功すると`consai:latest`という名前のイメージが生成されます。
