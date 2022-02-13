@@ -242,9 +242,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // tanh関数を用いた速度制御
     double a_xy = 1.5;
     double a_theta = 2.0;
-    world_vel.x = std::tanh(diff_x * a_xy) * 2.0;
-    world_vel.y = std::tanh(diff_y * a_xy) * 2.0;
-    world_vel.theta = std::tanh(diff_theta * a_theta) * 2.0;
+    world_vel.x = std::tanh(diff_x * a_xy) * max_velocity_xy_;
+    world_vel.y = std::tanh(diff_y * a_xy) * max_velocity_xy_;
+    world_vel.theta = std::tanh(diff_theta * a_theta) * max_velocity_theta_;
 
     // ワールド座標系での目標速度を算出
     // world_vel.x = pid_vx_[robot_id]->computeCommand(
