@@ -232,18 +232,32 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, kick_power,
       dribble_power))
   {
-    // ワールド座標系での目標速度を算出
-    world_vel.x = pid_vx_[robot_id]->computeCommand(
-      goal_pose.x - my_robot.pos.x,
-      duration.nanoseconds());
-    world_vel.y = pid_vy_[robot_id]->computeCommand(
-      goal_pose.y - my_robot.pos.y,
-      duration.nanoseconds());
-    world_vel.theta =
-      pid_vtheta_[robot_id]->computeCommand(
-      tools::normalize_theta(
+
+    // 目標位置と現在位置の差分
+    double diff_x = goal_pose.x - my_robot.pos.x;
+    double diff_y = goal_pose.y - my_robot.pos.y;
+    double diff_theta = tools::normalize_theta(
         goal_pose.theta -
-        my_robot.orientation), duration.nanoseconds());
+        my_robot.orientation);
+    // tanh関数を用いた速度制御
+    double a_xy = 1.5;
+    double a_theta = 2.0;
+    world_vel.x = std::tanh(diff_x * a_xy) * 2.0;
+    world_vel.y = std::tanh(diff_y * a_xy) * 2.0;
+    world_vel.theta = std::tanh(diff_theta * a_theta) * 2.0;
+
+    // ワールド座標系での目標速度を算出
+    // world_vel.x = pid_vx_[robot_id]->computeCommand(
+    //     goal_pose.x - my_robot.pos.x,
+    //     duration.nanoseconds());
+    // world_vel.y = pid_vy_[robot_id]->computeCommand(
+    //     goal_pose.y - my_robot.pos.y,
+    //     duration.nanoseconds());
+    // world_vel.theta =
+    //     pid_vtheta_[robot_id]->computeCommand(
+    //     tools::normalize_theta(
+    //     goal_pose.theta -
+    //     my_robot.orientation), duration.nanoseconds());
   }
 
   // 最大加速度リミットを適用
