@@ -239,12 +239,19 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     double diff_theta = tools::normalize_theta(
         goal_pose.theta -
         my_robot.orientation);
+
+    // tanhに反応する区間の係数
+    double range_xy = 1.5;
+    double range_theta = 5.0;
+    // 最大速度調整用の係数(a < 1)
+    double a_xy = 1.0;
+    double a_theta = 1.0;
     // tanh関数を用いた速度制御
-    double a_xy = 1.5;
-    double a_theta = 2.0;
-    world_vel.x = std::tanh(diff_x * a_xy) * max_velocity_xy_;
-    world_vel.y = std::tanh(diff_y * a_xy) * max_velocity_xy_;
-    world_vel.theta = std::tanh(diff_theta * a_theta) * max_velocity_theta_;
+    world_vel.x = std::tanh(range_xy * diff_x) * a_xy * max_velocity_xy_;
+    world_vel.y = std::tanh(range_xy * diff_y) * a_xy * max_velocity_xy_;
+    world_vel.theta = std::tanh(range_theta * diff_theta) * a_theta * max_velocity_theta_;
+    // world_vel.theta = std::sin(range_theta * diff_theta) * a_theta * max_velocity_theta_;
+    // std::printf("%f", range_theta);
 
     // ワールド座標系での目標速度を算出
     // world_vel.x = pid_vx_[robot_id]->computeCommand(
