@@ -4,6 +4,8 @@
 
 ```sh
 $ cd ros2_ws
+# パッケージを選択してビルドを実行
+$  colcon build --symlink-install --packages-select consai_robot_controller
 
 # パッケージを選択してテストを実行
 $ colcon test --packages-select consai_robot_controller

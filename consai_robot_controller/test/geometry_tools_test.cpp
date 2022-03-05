@@ -15,5 +15,5 @@
 #include <gtest/gtest.h>
 
 TEST(TestGeometryTools, hoge) {
-  EXPECT_EQ(0, 1+1);
+  EXPECT_EQ(2, 1+1);
 }
