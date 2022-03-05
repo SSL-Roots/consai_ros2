@@ -105,7 +105,6 @@ if(BUILD_TESTING)
     consai_msgs
     robocup_ssl_msgs
   )
-rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controller::GrSimCommandConverter")
 endif()
 
 ament_package()
