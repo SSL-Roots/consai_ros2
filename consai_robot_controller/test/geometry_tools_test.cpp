@@ -13,7 +13,11 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
+#include "consai_robot_controller/geometry_tools.hpp"
 
-TEST(TestGeometryTools, hoge) {
-  EXPECT_EQ(2, 1+1);
+TEST(TestGeometryTools, to_radians) {
+  const double ABS_ERROR = 0.00001;
+  EXPECT_NEAR(geometry_tools::to_radians(0), 0, ABS_ERROR);
+  EXPECT_NEAR(geometry_tools::to_radians(180), 3.141592, ABS_ERROR);
+  EXPECT_NEAR(geometry_tools::to_radians(-180), -3.141592, ABS_ERROR);
 }

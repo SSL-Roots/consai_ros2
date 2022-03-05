@@ -100,7 +100,12 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # ament_lint_auto_find_test_dependencies()
   find_package(ament_cmake_gtest)
-  ament_add_gtest(geometry_tools_test test/geometry_tools_test.cpp)
+  ament_add_gtest(geometry_tools_test test/geometry_tools_test.cpp src/geometry_tools.cpp)
+  ament_target_dependencies(geometry_tools_test
+    consai_msgs
+    robocup_ssl_msgs
+  )
+rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controller::GrSimCommandConverter")
 endif()
 
 ament_package()
