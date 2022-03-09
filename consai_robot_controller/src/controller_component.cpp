@@ -23,6 +23,7 @@
 
 #include "consai_robot_controller/controller_component.hpp"
 #include "consai_robot_controller/geometry_tools.hpp"
+#include "consai_robot_controller/control_tools.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace consai_robot_controller
@@ -30,6 +31,7 @@ namespace consai_robot_controller
 
 using namespace std::chrono_literals;
 namespace tools = geometry_tools;
+namespace ctools = control_tools;
 
 const int ROBOT_NUM = 16;
 
@@ -246,27 +248,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // 最大速度調整用の係数(a < 1)
     double a_xy = 1.0;
     double a_theta = 0.7;
+
     // tanh関数を用いた速度制御
-    world_vel.x = std::tanh(range_xy * diff_x) * a_xy * max_velocity_xy_;
-    world_vel.y = std::tanh(range_xy * diff_y) * a_xy * max_velocity_xy_;
-    // world_vel.theta = std::tanh(range_theta * diff_theta / M_PI) * a_theta * max_velocity_theta_;
+    world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy, max_velocity_xy_);
+    world_vel.y = ctools::velocity_contol_tanh(diff_y, range_xy, a_xy, max_velocity_xy_);
     // sin関数を用いた角速度制御
-    world_vel.theta = a_theta * max_velocity_theta_;
-    if (-M_PI_2 < diff_theta && diff_theta < M_PI_2) {
-      world_vel.theta = std::sin(diff_theta) * a_theta * max_velocity_theta_;
-    }
-    // ワールド座標系での目標速度を算出
-    // world_vel.x = pid_vx_[robot_id]->computeCommand(
-    //     goal_pose.x - my_robot.pos.x,
-    //     duration.nanoseconds());
-    // world_vel.y = pid_vy_[robot_id]->computeCommand(
-    //     goal_pose.y - my_robot.pos.y,
-    //     duration.nanoseconds());
-    // world_vel.theta =
-    //     pid_vtheta_[robot_id]->computeCommand(
-    //     tools::normalize_theta(
-    //     goal_pose.theta -
-    //     my_robot.orientation), duration.nanoseconds());
+    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, a_theta, max_velocity_theta_);
   }
 
   // 最大加速度リミットを適用
