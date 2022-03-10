@@ -20,21 +20,20 @@
 
 namespace control_tools
 {
-  // double velocity_contol_tanh(const double diff, const double range, const double a, const double max_vel)
-  double velocity_contol_tanh(double diff, double range, double a, double max_vel)
+  double velocity_contol_tanh(const double diff, const double range, const double max_vel)
   {
     // tanh関数を用いた速度の設定
-    double vel = std::tanh(range * diff) * a * max_vel;
+    double vel = std::tanh(range * diff) * max_vel;
     return vel;
   }
 
-  double angular_velocity_contol_sin(const double diff, const double a, const double max_vel)
+  double angular_velocity_contol_sin(const double diff, const double max_vel)
   {
     // sin関数を用いた角速度の設定
-    double vel = a * max_vel;
+    double vel = ((diff>0) - (diff<0)) * max_vel;
     // -pi/2 ~ pi/2の間であればsin関数により速度を設定
     if (-M_PI_2 < diff && diff < M_PI_2) {
-      vel = std::sin(diff) * a * max_vel;
+      vel = std::sin(diff) * max_vel;
     }
     return vel;
   }

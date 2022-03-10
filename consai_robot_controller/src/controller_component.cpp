@@ -250,10 +250,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     double a_theta = 0.7;
 
     // tanh関数を用いた速度制御
-    world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy, max_velocity_xy_);
-    world_vel.y = ctools::velocity_contol_tanh(diff_y, range_xy, a_xy, max_velocity_xy_);
+    world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy * max_velocity_xy_);
+    world_vel.y = ctools::velocity_contol_tanh(diff_y, range_xy, a_xy * max_velocity_xy_);
     // sin関数を用いた角速度制御
-    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, a_theta, max_velocity_theta_);
+    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, a_theta * max_velocity_theta_);
   }
 
   // 最大加速度リミットを適用
