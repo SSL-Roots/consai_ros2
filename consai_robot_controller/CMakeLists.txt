@@ -32,6 +32,7 @@ add_library(controller_component SHARED
   src/controller_component.cpp
   src/field_info_parser.cpp
   src/geometry_tools.cpp
+  src/control_tools.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
@@ -99,6 +100,8 @@ install(TARGETS
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # ament_lint_auto_find_test_dependencies()
+  find_package(ament_cmake_gtest)
+  ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
 endif()
 
 ament_package()
