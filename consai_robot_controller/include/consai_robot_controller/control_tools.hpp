@@ -21,8 +21,8 @@
 namespace control_tools
 {
 
-double velocity_contol_tanh(const double diff, const double range, const double a, const double max_vel);
-double angular_velocity_contol_sin(const double diff, const double a, const double max_vel);
+double velocity_contol_tanh(const double diff, const double range, const double max_vel);
+double angular_velocity_contol_sin(const double diff, const double max_vel);
 
 }  // namespace control_tools
 
