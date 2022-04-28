@@ -477,47 +477,9 @@ def pass_three_robots_and_shoot(id1, id2, id3):
             pass
 
 
-def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
-    ball_pos = [0, 0]
-    enemy_robot_pos = position_random_generation(enemy_num)
-    for i in range(4, 11):
-        operator_node.move_to(
-            i, enemy_robot_pos[i-4][0], enemy_robot_pos[i-4][1], 0, False)
-
-    ally_robots_pos = [[4, -2], [2, 3], [5, 1]]
-    operator_node.move_to_look_ball(ally_id1, ball_pos[0]-1, ball_pos[1])
-    operator_node.move_to_look_ball(
-        ally_id2, ally_robots_pos[0][0], ally_robots_pos[0][1])
-    operator_node.move_to_look_ball(
-        ally_id3, ally_robots_pos[1][0], ally_robots_pos[1][1])
-    operator_node.move_to_look_ball(
-        ally_id4, ally_robots_pos[2][0], ally_robots_pos[2][1])
-    while operator_node.all_robots_are_free() is False:
-        pass
-
-    pass_to_robot = eval_easy_to_pass_radius(
-        enemy_robot_pos, ball_pos, ally_robots_pos)
-    print(pass_to_robot)
-
-    while operator_node.all_robots_are_free() is False:
-        pass
-
-    operator_node.kick_pass(ally_id1, pass_to_robot +
-                            1, ball_pos[0], ball_pos[1])
-    start_time = time.time()
-    while time.time() - start_time < 1:
-        pass
-
-    operator_node.move_to_receive(
-        pass_to_robot + 1, ally_robots_pos[pass_to_robot][0], ally_robots_pos[pass_to_robot][1])
-
-    while operator_node.all_robots_are_free() is False:
-        pass
-
-    operator_node.shoot_to_their_goal(pass_to_robot + 1)
-
-
 def test_prototyping(conb):
+    # 評価関数の処理時間測定用関数
+
     enemy_robot_pos = position_random_generation(conb)
     ball_pos = position_random_generation(1)
 
@@ -530,14 +492,62 @@ def test_prototyping(conb):
     necessary_time = time.time() - start
     print(necessary_time)
 
+
+def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
+    # パスを出すロボットが味方ロボットの3台農地いずれかにパスを出すプログラム
+
+    # ボールの位置座標を指定
+    ball_pos = [0, 0]
+
+    # 味方のロボットのうち，使用していないロボットを仮想敵として配置するために配置する位置座標を生成する
+    enemy_robot_pos = position_random_generation(enemy_num)
+    for i in range(4, 11):
+        operator_node.move_to(
+            i, enemy_robot_pos[i-4][0], enemy_robot_pos[i-4][1], 0, False)
+
+    # 味方のロボットを配置させる位置座標
+    ally_robots_pos = [[4, -2], [2, 3], [5, 1]]
+    operator_node.move_to_look_ball(ally_id1, ball_pos[0]-1, ball_pos[1])
+    operator_node.move_to_look_ball(
+        ally_id2, ally_robots_pos[0][0], ally_robots_pos[0][1])
+    operator_node.move_to_look_ball(
+        ally_id3, ally_robots_pos[1][0], ally_robots_pos[1][1])
+    operator_node.move_to_look_ball(
+        ally_id4, ally_robots_pos[2][0], ally_robots_pos[2][1])
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    # どのロボットにパスを出せばいいかの結果を格納
+    pass_to_robot = eval_easy_to_pass_radius(
+        enemy_robot_pos, ball_pos, ally_robots_pos)
+    print(pass_to_robot)
+
+    # パスを出すロボットに向けてパスをする
+    operator_node.kick_pass(ally_id1, pass_to_robot +
+                            1, ball_pos[0], ball_pos[1])
+    start_time = time.time()
+    while time.time() - start_time < 1:
+        pass
+
+    # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
+    operator_node.move_to_receive(
+        pass_to_robot + 1, ally_robots_pos[pass_to_robot][0], ally_robots_pos[pass_to_robot][1])
+
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    operator_node.shoot_to_their_goal(pass_to_robot + 1)
+
 # 評価関数部 ------------------------------------------------------------------------------------
 
 
 def eval_easy_to_pass_radius(enemy_robot_pos, ball_pos, ally_robot_pos):
+    # どのロボットにパスを出すべきかの評価をする関数
     enemy_robot_pos = np.array(enemy_robot_pos)
     ally_robot_pos = np.array(ally_robot_pos)
     ball_pos = np.array(ball_pos)
 
+    # 敵ロボットの動作予想範囲の半径を1に設定
     r = 1
     count = 0
 
@@ -547,6 +557,7 @@ def eval_easy_to_pass_radius(enemy_robot_pos, ball_pos, ally_robot_pos):
     print(forward_enemy_robot_pos)
     forward_enemy_robot_pos = np.array(forward_enemy_robot_pos)
 
+    # ボールから味方のロボットまでの距離を計測し，近い順にソートする
     diff_ball_to_robot = [[ball_pos[0] - ally_robot_pos[i][0],
                            ball_pos[1] - ally_robot_pos[i][1]] for i in range(len(ally_robot_pos))]
     print(diff_ball_to_robot)
@@ -554,10 +565,12 @@ def eval_easy_to_pass_radius(enemy_robot_pos, ball_pos, ally_robot_pos):
         diff_ball_to_robot[i][1]) ** 2), i] for i in range(len(ally_robot_pos))]
     receive_dist_ally_robot = sorted(receive_dist_ally_robot)
 
+    # ボールから敵ロボットの距離を計測する
     diff_enemy_to_ball = [[ball_pos[0] - enemy_robot_pos[i][0], ball_pos[1] -
                            enemy_robot_pos[i][1]] for i in range(len(enemy_robot_pos))]
 
     print(receive_dist_ally_robot)
+
     # 解を求めよう
     for i in range(len(ally_robot_pos)):
         a = diff_ball_to_robot[receive_dist_ally_robot[i][1]][0] ** 2 + \
@@ -572,10 +585,12 @@ def eval_easy_to_pass_radius(enemy_robot_pos, ball_pos, ally_robot_pos):
             factor2 = a + 2 * b + c
 
             if (factor1 >= 0 and factor2 <= 0) or (factor1 <= 0 and factor2 >= 0):
+                # 敵ロボットの動作予想範囲にどれか一つにでもパスコースが被ったときの処理
                 count = 0
                 print('くそ')
                 break
             else:
+                # 敵ロボットの影響を受けなければ以下の処理へ
                 count += 1
                 if count == len(forward_enemy_robot_pos):
                     print('入った')
