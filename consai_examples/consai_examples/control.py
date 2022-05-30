@@ -520,6 +520,8 @@ def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
+    start_time = time.time()
+
     # どのロボットにパスを出せばいいかの結果を格納
     pass_to_robot = developer_pass_course.eval_easy_to_pass_radius(
         enemy_robot_pos, ball_pos, ally_robots_pos)
@@ -548,6 +550,9 @@ def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
         pass
 
     # operator_node.shoot_to_their_goal(pass_to_robot + 1)
+
+    necessary_time = time.time() - start_time
+    print(necessary_time)
 
 
 def main():

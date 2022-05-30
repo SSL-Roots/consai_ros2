@@ -31,37 +31,65 @@ def eval_easy_to_pass_radius(enemy_robot_pos, ball_pos, ally_robot_pos):
     receive_dist_ally_robot = sorted(receive_dist_ally_robot)
 
     # ボールから敵ロボットの距離を計測する
-    diff_enemy_to_ball = [[ball_pos[0] - enemy_robot_pos[i][0], ball_pos[1] -
-                           enemy_robot_pos[i][1]] for i in range(len(enemy_robot_pos))]
+    # diff_enemy_to_ball = [[ball_pos[0] - enemy_robot_pos[i][0], ball_pos[1] -
+    #                        enemy_robot_pos[i][1]] for i in range(len(enemy_robot_pos))]
 
     print(receive_dist_ally_robot)
 
     # 解を求めよう
+    # for i in range(len(ally_robot_pos)):
+    #     a = diff_ball_to_robot[receive_dist_ally_robot[i][1]][0] ** 2 + \
+    #         diff_ball_to_robot[receive_dist_ally_robot[i][1]][1] ** 2
+    #     for j in range(len(forward_enemy_robot_pos)):
+    #         b = diff_ball_to_robot[receive_dist_ally_robot[i][1]][0]*diff_enemy_to_ball[j][0] + \
+    #             diff_ball_to_robot[receive_dist_ally_robot[i][1]
+    #                                ][1]*diff_enemy_to_ball[j][1]
+    #         c = diff_enemy_to_ball[j][0]**2 + \
+    #             diff_enemy_to_ball[j][1]**2-r**2
+
+    #         factor1 = c
+    #         factor2 = a + 2 * b + c
+
+    #         if (factor1 >= 0 and factor2 <= 0) or (factor1 <= 0 and factor2 >= 0):
+    #             # 敵ロボットの動作予想範囲にどれか一つにでもパスコースが被ったときの処理
+    #             count = 0
+    #             print('だめポ')
+    #             break
+    #         else:
+    #             # 敵ロボットの影響を受けなければ以下の処理へ
+    #             count += 1
+    #             if count == len(forward_enemy_robot_pos):
+    #                 print('いけそう')
+    #                 # return ally_robot_pos[receive_dist_ally_robot[i][1]]
+    #                 return receive_dist_ally_robot[i][1]
+
+    # 解を求める前のとこから↓
+    # 味方ロボットとボールまでの直線の方程式
     for i in range(len(ally_robot_pos)):
-        a = diff_ball_to_robot[receive_dist_ally_robot[i][1]][0] ** 2 + \
-            diff_ball_to_robot[receive_dist_ally_robot[i][1]][1] ** 2
+        # x差分
+        x = ally_robot_pos[receive_dist_ally_robot[i][1]][0]-ball_pos[0]
+        # y差分
+        y = ally_robot_pos[receive_dist_ally_robot[i][1]][1]-ball_pos[1]
+
+        a = y/x
+        b = y
+
+        # 解の公式
         for j in range(len(forward_enemy_robot_pos)):
-            b = diff_ball_to_robot[receive_dist_ally_robot[i][1]][0]*diff_enemy_to_ball[j][0] + \
-                diff_ball_to_robot[receive_dist_ally_robot[i][1]
-                                   ][1]*diff_enemy_to_ball[j][1]
-            c = diff_enemy_to_ball[j][0]**2 + \
-                diff_enemy_to_ball[j][1]**2-r**2
+            a_kai = a ** 2 + 1
+            b_kai = 2 * \
+                ((b - forward_enemy_robot_pos[j][1])
+                 * a - forward_enemy_robot_pos[j][0])
+            c_kai = ball_pos[0] ** 2 + (b - ball_pos[1]) ** 2
 
-            factor1 = c
-            factor2 = a + 2 * b + c
+            D = b_kai ** 2 - 4 * a_kai * c_kai
 
-            if (factor1 >= 0 and factor2 <= 0) or (factor1 <= 0 and factor2 >= 0):
-                # 敵ロボットの動作予想範囲にどれか一つにでもパスコースが被ったときの処理
-                count = 0
-                print('だめポ')
-                break
+            print(D)
+            if D < 0:
+                print('いけそ')
+                return receive_dist_ally_robot[i][1]
             else:
-                # 敵ロボットの影響を受けなければ以下の処理へ
-                count += 1
-                if count == len(forward_enemy_robot_pos):
-                    print('いけそう')
-                    # return ally_robot_pos[receive_dist_ally_robot[i][1]]
-                    return receive_dist_ally_robot[i][1]
+                print('だめぽ')
 
 
 def position_random_generation(how_many: int):
