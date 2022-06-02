@@ -535,12 +535,12 @@ def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     while time.time() - start_time < 1:
         pass
 
-    # operator_node.move_to_look_ball(
-    #     pass_to_robot + 1, ally_robots_pos[pass_to_robot][0] + 1, ally_robots_pos[pass_to_robot][1])
+    operator_node.move_to_look_ball(
+        pass_to_robot + 1, ally_robots_pos[pass_to_robot][0] + 1, ally_robots_pos[pass_to_robot][1])
 
-    # start_time = time.time()
-    # while time.time() - start_time < 0.5:
-    #     pass
+    start_time = time.time()
+    while time.time() - start_time < 0.5:
+        pass
 
     # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
     operator_node.move_to_receive(
@@ -549,7 +549,7 @@ def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
-    # operator_node.shoot_to_their_goal(pass_to_robot + 1)
+    operator_node.shoot_to_their_goal(pass_to_robot + 1)
 
     necessary_time = time.time() - start_time
     print(necessary_time)
