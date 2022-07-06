@@ -495,8 +495,8 @@ def test_prototyping(conb):
     print(necessary_time)
 
 
-def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
-    # パスを出すロボットが味方ロボットの3台農地いずれかにパスを出すプログラム
+def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
+    # 静的な敵がいる状態でパスを出すロボットが味方ロボットの3台農地いずれかにパスを出すプログラム
 
     # ボールの位置座標を指定
     ball_pos = [0, 0]
@@ -531,20 +531,90 @@ def pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     operator_node.kick_pass(ally_id1, pass_to_robot +
                             1, ball_pos[0], ball_pos[1])
 
-    start_time = time.time()
-    while time.time() - start_time < 1:
+    delay_time = time.time()
+    while time.time() - delay_time < 1:
         pass
 
     operator_node.move_to_look_ball(
         pass_to_robot + 1, ally_robots_pos[pass_to_robot][0] + 1, ally_robots_pos[pass_to_robot][1])
 
-    start_time = time.time()
-    while time.time() - start_time < 0.5:
+    delay_time = time.time()
+    while time.time() - delay_time < 0.5:
         pass
 
     # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
     operator_node.move_to_receive(
         pass_to_robot + 1, ally_robots_pos[pass_to_robot][0] + 1, ally_robots_pos[pass_to_robot][1])
+
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    operator_node.shoot_to_their_goal(pass_to_robot + 1)
+
+    necessary_time = time.time() - start_time
+    print(necessary_time)
+
+
+def dynamic_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
+    ball_pos = [0, 0]
+
+    enemy_robot_pos = developer_pass_course.position_random_generation(
+        enemy_num)
+
+    enemy_robot_state = developer_pass_course.robot_vvector_generation(
+        enemy_num)
+
+    # 味方のロボットを配置させる位置座標
+    ally_robot_pos = [[4, -2], [2, 3], [5, 1]]
+
+    # 敵ロボットを配置する
+    for i in range(4, 11):
+        operator_node.move_to(
+            i, enemy_robot_pos[i-4][0], enemy_robot_pos[i-4][1], 0, False)
+
+    operator_node.move_to_look_ball(ally_id1, ball_pos[0]-1, ball_pos[1])
+    operator_node.move_to_look_ball(
+        ally_id2, ally_robot_pos[0][0], ally_robot_pos[0][1])
+    operator_node.move_to_look_ball(
+        ally_id3, ally_robot_pos[1][0], ally_robot_pos[1][1])
+    operator_node.move_to_look_ball(
+        ally_id4, ally_robot_pos[2][0], ally_robot_pos[2][1])
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    enemy_robot_move_point = [[enemy_robot_pos[i][0] + enemy_robot_state[i][0] * 2 * math.cos(
+        enemy_robot_state[i][1]), enemy_robot_pos[i][1] + enemy_robot_state[i][0] * 2 * math.sin(
+        enemy_robot_state[i][1])] for i in range(7)]
+    for i in range(4, 11):
+        operator_node.move_to(
+            i, enemy_robot_move_point[i-4][0], enemy_robot_move_point[i-4][1], 0, False)
+
+    start_time = time.time()
+
+    # どのロボットにパスを出せばいいかの結果を格納
+    pass_to_robot = developer_pass_course.dynamic_enemy_for_pass_to(
+        enemy_robot_pos, enemy_robot_state, ball_pos, ally_robot_pos)
+
+    print(pass_to_robot)
+
+    # パスを出すロボットに向けてパスをする
+    operator_node.kick_pass(ally_id1, pass_to_robot +
+                            1, ball_pos[0], ball_pos[1])
+
+    delay_time = time.time()
+    while time.time() - delay_time < 1:
+        pass
+
+    operator_node.move_to_look_ball(
+        pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
+
+    delay_time = time.time()
+    while time.time() - delay_time < 0.5:
+        pass
+
+    # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
+    operator_node.move_to_receive(
+        pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
 
     while operator_node.all_robots_are_free() is False:
         pass
@@ -578,7 +648,8 @@ def main():
     # pass_two_robots_and_shoot(0, 1)
     # pass_three_robots_and_shoot(0, 1, 2)
     # test_prototyping(11)
-    pass_and_shoot(7, 0, 1, 2, 3)
+    # static_pass_and_shoot(7, 0, 1, 2, 3)
+    dynamic_pass_and_shoot(7, 0, 1, 2, 3)
 
 
 if __name__ == '__main__':
