@@ -555,7 +555,7 @@ def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     print(necessary_time)
 
 
-def dynamic_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
+def dynamic_pass_and_shoot(enemy_num):
     ball_pos = [0, 0]
 
     enemy_robot_pos = developer_pass_course.position_random_generation(
@@ -565,20 +565,18 @@ def dynamic_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
         enemy_num)
 
     # 味方のロボットを配置させる位置座標
-    ally_robot_pos = [[4, -2], [2, 3], [5, 1]]
+    ally_robot_pos = developer_pass_course.forward_position_random_generation(
+        10 - enemy_num)
 
     # 敵ロボットを配置する
-    for i in range(4, 11):
+    for i in range(11 - enemy_num, 11):
         operator_node.move_to(
             i, enemy_robot_pos[i-4][0], enemy_robot_pos[i-4][1], 0, False)
 
-    operator_node.move_to_look_ball(ally_id1, ball_pos[0]-1, ball_pos[1])
-    operator_node.move_to_look_ball(
-        ally_id2, ally_robot_pos[0][0], ally_robot_pos[0][1])
-    operator_node.move_to_look_ball(
-        ally_id3, ally_robot_pos[1][0], ally_robot_pos[1][1])
-    operator_node.move_to_look_ball(
-        ally_id4, ally_robot_pos[2][0], ally_robot_pos[2][1])
+    operator_node.move_to_look_ball(0, ball_pos[0]-0.3, ball_pos[1])
+    for i in range(1, 11-enemy_num):
+        operator_node.move_to_look_ball(
+            i, ally_robot_pos[i-1][0], ally_robot_pos[i-1][1])
     while operator_node.all_robots_are_free() is False:
         pass
 
@@ -589,40 +587,43 @@ def dynamic_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
         operator_node.move_to(
             i, enemy_robot_move_point[i-4][0], enemy_robot_move_point[i-4][1], 0, False)
 
-    start_time = time.time()
+    start_time = time.perf_counter()
 
     # どのロボットにパスを出せばいいかの結果を格納
     pass_to_robot = developer_pass_course.dynamic_enemy_for_pass_to(
         enemy_robot_pos, enemy_robot_state, ball_pos, ally_robot_pos)
 
-    print(pass_to_robot)
+    if pass_to_robot == None:
+        print("I can't pass.")
+        print('全ロボットの動作停止')
+        for i in range(11):
+            operator_node.stop(i)
+    else:
+        print("パスするロボットの番号", pass_to_robot + 1)
 
-    # パスを出すロボットに向けてパスをする
-    operator_node.kick_pass(ally_id1, pass_to_robot +
-                            1, ball_pos[0], ball_pos[1])
+        necessary_time = time.perf_counter() - start_time
+        print("処理にかかった時間", necessary_time * 1000, "[ms]")
 
-    delay_time = time.time()
-    while time.time() - delay_time < 1:
-        pass
+        # パスを出すロボットに向けてパスをする
+        operator_node.kick_pass(0, pass_to_robot +
+                                1, ball_pos[0], ball_pos[1])
 
-    operator_node.move_to_look_ball(
-        pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
+        # delay_time = time.perf_counter()
+        # while time.perf_counter() - delay_time < 1:
+        #     pass
 
-    delay_time = time.time()
-    while time.time() - delay_time < 0.5:
-        pass
+        operator_node.move_to_look_ball(
+            pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
 
-    # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
-    operator_node.move_to_receive(
-        pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
+        # delay_time = time.perf_counter()
+        # while time.perf_counter() - delay_time < 0.5:
+        #     pass
 
-    while operator_node.all_robots_are_free() is False:
-        pass
+        # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
+        # operator_node.move_to_receive(
+        #     pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
 
-    operator_node.shoot_to_their_goal(pass_to_robot + 1)
-
-    necessary_time = time.time() - start_time
-    print(necessary_time)
+        operator_node.shoot_to_their_goal(pass_to_robot + 1)
 
 
 def main():
@@ -649,7 +650,7 @@ def main():
     # pass_three_robots_and_shoot(0, 1, 2)
     # test_prototyping(11)
     # static_pass_and_shoot(7, 0, 1, 2, 3)
-    dynamic_pass_and_shoot(7, 0, 1, 2, 3)
+    dynamic_pass_and_shoot(7)
 
 
 if __name__ == '__main__':
