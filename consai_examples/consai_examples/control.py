@@ -27,6 +27,7 @@ import numpy as np
 import statistics
 import matplotlib.pyplot as plt
 
+from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
@@ -480,19 +481,22 @@ def pass_three_robots_and_shoot(id1, id2, id3):
 
 def test_prototyping(conb):
     # 評価関数の処理時間測定用関数
+    ball_state = observer_node.get_ball_state()
+    # ball_placement = observer_node.get_ball_placement_state(referee.placement_position())
+    ball_zone_state = observer_node.get_ball_zone_state()
+    ball_outside = observer_node.ball_is_outside()
+    ball_moving = observer_node.ball_is_moving()
+    ball_our_side = observer_node.ball_is_in_our_side()
+    ball_there_defense_area = observer_node.ball_is_in_their_defense_area()
+    ball_pos = observer_node.get_ball_pos()
 
-    enemy_robot_pos = developer_pass_course.position_random_generation(conb)
-    ball_pos = developer_pass_course.position_random_generation(1)
-
-    start = time.time()
-    print(enemy_robot_pos)  # 敵ロボットの位置座標
-    print(ball_pos)  # ボールの位置座標
-
-    result = developer_pass_course.eval_easy_to_pass_radius(
-        enemy_robot_pos, ball_pos)
-    print(result)
-    necessary_time = time.time() - start
-    print(necessary_time)
+    print("ball_state:", ball_state)
+    print("zone_state:", ball_zone_state)
+    print("ball_outside:", ball_outside)
+    print("ball_moving:", ball_moving)
+    print("ball_our_side:", ball_our_side)
+    print("ball_there_defense_area:", ball_there_defense_area)
+    print(ball_pos)
 
 
 def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
@@ -520,6 +524,7 @@ def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
+    # 処理開始時間を記憶
     start_time = time.time()
 
     # どのロボットにパスを出せばいいかの結果を格納
@@ -531,13 +536,16 @@ def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     operator_node.kick_pass(ally_id1, pass_to_robot +
                             1, ball_pos[0], ball_pos[1])
 
+    # パスを成功させる都合上必要な遅延時間
     delay_time = time.time()
     while time.time() - delay_time < 1:
         pass
 
+    # パス目標の位置からずれた位置にパスが出るのでその補正用
     operator_node.move_to_look_ball(
         pass_to_robot + 1, ally_robots_pos[pass_to_robot][0] + 1, ally_robots_pos[pass_to_robot][1])
 
+    # パスを成功させる都合上必要な遅延時間
     delay_time = time.time()
     while time.time() - delay_time < 0.5:
         pass
@@ -549,18 +557,25 @@ def static_pass_and_shoot(enemy_num, ally_id1, ally_id2, ally_id3, ally_id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
+    # シュートさせる
     operator_node.shoot_to_their_goal(pass_to_robot + 1)
 
+    # 処理時間の計算
     necessary_time = time.time() - start_time
     print(necessary_time)
 
 
 def dynamic_pass_and_shoot(enemy_num):
+    # 動的な敵がいる状態でパスを出すロボットがランダムに配置された味方ロボットの3台農地いずれかにパスを出すプログラム
+
+    # ボールの位置座標を指定
     ball_pos = [0, 0]
 
+    # 敵ロボットの位置座標をランダムで生成
     enemy_robot_pos = developer_pass_course.position_random_generation(
         enemy_num)
 
+    # 敵ロボットの移動速度と移動角度をランダムで生成
     enemy_robot_state = developer_pass_course.robot_vvector_generation(
         enemy_num)
 
@@ -573,6 +588,7 @@ def dynamic_pass_and_shoot(enemy_num):
         operator_node.move_to(
             i, enemy_robot_pos[i-4][0], enemy_robot_pos[i-4][1], 0, False)
 
+    # パスロボットと味方ロボットを配置する
     operator_node.move_to_look_ball(0, ball_pos[0]-0.3, ball_pos[1])
     for i in range(1, 11-enemy_num):
         operator_node.move_to_look_ball(
@@ -580,50 +596,63 @@ def dynamic_pass_and_shoot(enemy_num):
     while operator_node.all_robots_are_free() is False:
         pass
 
+    # 敵ロボットがt病後（設定としては２秒後）に到達しているであろう予測位置座標を計算
     enemy_robot_move_point = [[enemy_robot_pos[i][0] + enemy_robot_state[i][0] * 2 * math.cos(
         enemy_robot_state[i][1]), enemy_robot_pos[i][1] + enemy_robot_state[i][0] * 2 * math.sin(
         enemy_robot_state[i][1])] for i in range(7)]
+    # 計算した場所に移動させる
     for i in range(4, 11):
         operator_node.move_to(
             i, enemy_robot_move_point[i-4][0], enemy_robot_move_point[i-4][1], 0, False)
 
+    # 処理時間計測用の変数
     start_time = time.perf_counter()
 
     # どのロボットにパスを出せばいいかの結果を格納
     pass_to_robot = developer_pass_course.dynamic_enemy_for_pass_to(
         enemy_robot_pos, enemy_robot_state, ball_pos, ally_robot_pos)
 
+    # もし戻り値がなし（パスできるロボットがいない）ときの処理
     if pass_to_robot == None:
         print("I can't pass.")
         print('全ロボットの動作停止')
+        # 全ロボットを停止させる
         for i in range(11):
             operator_node.stop(i)
+    # 何らかの戻り値があった（パスを出すロボットのIDが帰ってきた）とき
     else:
         print("パスするロボットの番号", pass_to_robot + 1)
-
+        # 処理にかかった時間を計算
         necessary_time = time.perf_counter() - start_time
         print("処理にかかった時間", necessary_time * 1000, "[ms]")
 
-        # パスを出すロボットに向けてパスをする
+        # パスを出してからシュートまでの流れ
+        # 未だにパスがつながらないため改善する必要あり
+
+        # 戻り値で与えられたロボットIDに向けてパスをする
         operator_node.kick_pass(0, pass_to_robot +
                                 1, ball_pos[0], ball_pos[1])
 
-        # delay_time = time.perf_counter()
-        # while time.perf_counter() - delay_time < 1:
-        #     pass
-
+        # パスの誤差を考えて受け取るために移動
         operator_node.move_to_look_ball(
             pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
 
-        # delay_time = time.perf_counter()
-        # while time.perf_counter() - delay_time < 0.5:
-        #     pass
-
-        # パスを受けるロボットは，ボールをレシーブした後，敵ゴールに向けてシュートする
-        # operator_node.move_to_receive(
-        #     pass_to_robot + 1, ally_robot_pos[pass_to_robot][0] + 1, ally_robot_pos[pass_to_robot][1])
-
+        # 敵ゴールに向かってシュートする
         operator_node.shoot_to_their_goal(pass_to_robot + 1)
+
+
+def goalie_save(goalie_robot_id):
+    # goalie（ゴールキーパー）がセーブするためのプログラム
+
+    # 味方のゴールキーパーを自ゴールの中心地点に配置する
+    operator_node.move_to_look_ball(goalie_robot_id, -6, 3)
+
+    # 敵ロボットからゴールの両端までの範囲をシュート可能ゾーンに設定する
+
+    # それ以外の範囲にボールが進んでいたらその進行先にあるロボットに対象を移す
+    # シュート可能ゾーンに入っている場合は敵ロボットの存在次第で挙動を変える
+    # いなければシュートとして扱う
+    # いれば関係性を見つける
 
 
 def main():
@@ -648,9 +677,11 @@ def main():
     # try_test_shoot_ball(1.0, 1.0, 6)
     # pass_two_robots_and_shoot(0, 1)
     # pass_three_robots_and_shoot(0, 1, 2)
-    # test_prototyping(11)
+    test_prototyping(11)
+
     # static_pass_and_shoot(7, 0, 1, 2, 3)
-    dynamic_pass_and_shoot(7)
+    # dynamic_pass_and_shoot(7)
+    # goalie_save(10)
 
 
 if __name__ == '__main__':
@@ -664,6 +695,7 @@ if __name__ == '__main__':
     rclpy.init(args=None)
 
     operator_node = RobotOperator(target_is_yellow=args.yellow)
+    observer_node = FieldObserver(args.yellow)
 
     # すべてのロボットの衝突回避を解除
     for i in range(16):
