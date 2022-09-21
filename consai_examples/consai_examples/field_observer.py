@@ -16,15 +16,20 @@
 # limitations under the License.
 
 import math
+from turtle import pos
 
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import RobotId
 
+from robocup_ssl_msgs.msg import DetectionRobot
+from robocup_ssl_msgs.msg import TrackedRobot
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
+
+
 class FieldObserver(Node):
     BALL_NONE = 0
     BALL_IS_OUTSIDE = 1
@@ -62,6 +67,27 @@ class FieldObserver(Node):
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
 
+        self._our_robot = TrackedRobot()
+        self._enemy_robot = TrackedRobot()
+        # self.robots = []
+        self.robots = TrackedRobot()
+
+        # self.our_robots = TrackedRobot()
+
+        # ------------------------------------------------------------------------------
+
+        self.our_robots_pos = []
+        self.our_robots_angle = []
+        self.our_robots_vel = []
+        self.our_robots_speed = []
+
+        self.enemy_robots_pos = []
+        self.enemy_robots_angle = []
+        self.enemy_robots_vel = []
+        self.enemy_robots_speed = []
+
+        # ------------------------------------------------------------------------------
+
         self._field_x = 12.0  # meters
         self._field_half_x = self._field_x * 0.5
         self._field_y = 9.0  # meters
@@ -70,7 +96,7 @@ class FieldObserver(Node):
         self._field_defense_x = 1.8  # meters
         self._field_defense_y = 3.6  # meters
         self._field_defense_half_y = self._field_defense_y * 0.5  # meters
-        self._sub_detection_tracked = self.create_subscription(
+        self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
     def _detection_tracked_callback(self, msg):
@@ -80,6 +106,106 @@ class FieldObserver(Node):
             self._update_ball_moving_state(msg.balls[0])
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
+        if len(msg.robots) > 0:
+            self.robots = msg.robots
+            if self._our_team_is_yellow:
+                self._update_our_robots_pos(
+                    [msg.robots[our_robot] for our_robot in range(16, 32)])
+                self._update_enemy_robots_pos(
+                    [msg.robots[enemy_robot] for enemy_robot in range(16)])
+                self._update_our_robots_vel(
+                    [msg.robots[our_robot] for our_robot in range(16, 32)])
+                self._update_enemy_robots_vel(
+                    [msg.robots[enemy_robot] for enemy_robot in range(16)])
+                self._our_robot = [msg.robots[robot]
+                                   for robot in range(16, 32)]
+                self._enemy_robot = [msg.robots[robot] for robot in range(16)]
+            elif not self._our_team_is_yellow:
+                self._update_our_robots_pos(
+                    [msg.robots[our_robot] for our_robot in range(16)])
+                self._update_enemy_robots_pos(
+                    [msg.robots[enemy_robot] for enemy_robot in range(16, 32)])
+                self._update_our_robots_vel(
+                    [msg.robots[our_robot] for our_robot in range(16)])
+                self._update_enemy_robots_vel(
+                    [msg.robots[enemy_robot] for enemy_robot in range(16, 32)])
+                self._our_robot = [msg.robots[robot] for robot in range(16)]
+                self._enemy_robot = [msg.robots[robot]
+                                     for robot in range(16, 32)]
+
+    def update_robot_state(self):
+        # robot_state = []
+        # robot_state.append([self._robot.x, self._robot.y])
+        # return robot_state
+
+        # robot_id = []
+        # for robot in self._robot.robot_id:
+        #     robot_id.append(robot)
+        # return robot_id
+        return self.robots
+
+        # robocup_ssl_msgs.msg.TrackedRobot(robot_id=robocup_ssl_msgs.msg.RobotId(id=15, team_color=1),
+        # pos=robocup_ssl_msgs.msg.Vector2(x=0.0, y=0.0), orientation=0.0,
+        # vel=[robocup_ssl_msgs.msg.Vector2(x=0.0, y=0.0)], vel_angular=[0.0], visibility=[0.0])
+
+    # 味方ロボットの位置座標 [x,y] 取得
+    def _update_our_robots_pos(self, our_robots):
+        self.our_robots_pos = [
+            "None" if our_robots[robot].visibility[0] <= 0.2 else [our_robots[robot].pos.x, our_robots[robot].pos.y] for robot in range(len(our_robots))]
+
+    def get_our_robots_pos(self):
+        return self.our_robots_pos
+
+    def get_our_robot_pos(self, our_robot_id):
+        return self.our_robots_pos[our_robot_id]
+
+    # 相手ロボットの位置座標 [x,y] 取得
+    def _update_enemy_robots_pos(self, enemy_robots):
+        self.enemy_robots_pos = [
+            "None" if enemy_robots[robot].visibility[0] <= 0.2 else [enemy_robots[robot].pos.x, enemy_robots[robot].pos.y] for robot in range(len(enemy_robots))]
+
+    def get_enemy_robots_pos(self):
+        return self.enemy_robots_pos
+
+    def get_enemy_robot_pos(self, enemy_robot_id):
+        return self.enemy_robots_pos[enemy_robot_id]
+
+    # 味方ロボットの速度 [x,y] 取得
+    def _update_our_robots_vel(self, our_robots):
+        self.our_robots_vel = [
+            our_robots[robot].vel for robot in range(len(our_robots))]
+        self.our_robots_vel = sum(self.our_robots_vel, [])
+        self.our_robots_vel = ["None" if our_robots[robot].visibility[0] <= 0.2 else [
+            self.our_robots_vel[robot].x, self.our_robots_vel[robot].y] for robot in range(len(self.our_robots_vel))]
+
+    def get_our_robots_vel(self):
+        return self.our_robots_vel
+
+    # def get_our_robots_speed(self):
+    #     self.our_robots_speed = [math.sqrt()]
+
+    # 相手ロボットの速度 [x,y] 取得
+
+    def _update_enemy_robots_vel(self, enemy_robots):
+        self.enemy_robots_vel = [
+            enemy_robots[robot].vel for robot in range(len(enemy_robots))]
+        self.enemy_robots_vel = sum(self.enemy_robots_vel, [])
+        self.enemy_robots_vel = ["None" if enemy_robots[robot].visibility[0] <= 0.2 else [
+            self.enemy_robots_vel[robot].x, self.enemy_robots_vel[robot].y] for robot in range(len(self.enemy_robots_vel))]
+
+    def get_enemy_robots_vel(self):
+        return self.enemy_robots_vel
+
+    def update_our_robots_thita(self):
+        our_robots_thita = [
+            self._our_robot[robot].orientation for robot in range(len(self._our_robot))]
+        return our_robots_thita
+
+    # 味方ロボットの角速度取得
+    def update_our_robots_vel_angle(self):
+        our_robots_vel_angle = [
+            self._our_robot[robot].vel_angular[0] for robot in range(len(self._our_robot))]
+        return our_robots_vel_angle
 
     def _update_ball_state(self, ball):
         # フィールド場外判定
@@ -433,7 +559,7 @@ class FieldObserver(Node):
 
     def ball_is_in_our_side(self):
         return self._ball_state == self.BALL_IS_IN_OUR_SIDE
-    
+
     def ball_is_moving(self):
         return self._ball_is_moving
 
@@ -475,7 +601,8 @@ class FieldObserver(Node):
         # ボール速度が小さければ、目標位置にたどり着いたと判定する
         velocity_norm = 0.0
         if len(self._ball.vel) > 0:
-            velocity_norm = math.hypot(self._ball.vel[0].x, self._ball.vel[0].y)
+            velocity_norm = math.hypot(
+                self._ball.vel[0].x, self._ball.vel[0].y)
 
         arrived_threshold = ARRIVED_THRESHOLD
         near_threshold = NEAR_THRESHOLD
@@ -483,7 +610,7 @@ class FieldObserver(Node):
             arrived_threshold += THRESHOLD_MARGIN
         elif self._ball_placement_state == self.BALL_PLACEMENT_NEAR_TARGET:
             near_threshold += THRESHOLD_MARGIN
-        
+
         if distance < arrived_threshold and velocity_norm < ARRIVED_VELOCTY_THRESHOLD:
             self._ball_placement_state = self.BALL_PLACEMENT_ARRIVED_AT_TARGET
         elif distance < near_threshold:
@@ -494,3 +621,6 @@ class FieldObserver(Node):
     def get_ball_placement_state(self, placement_position):
         self._update_ball_placement_state(placement_position)
         return self._ball_placement_state
+
+    def get_ball_pos(self):
+        return self._ball
