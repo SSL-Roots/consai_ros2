@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+ workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -44,7 +45,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
-          context: .docker
+          file: .docker/Dockerfile
           build-args: ROS_DISTRO=${{ matrix.env.ROS_DISTRO }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}

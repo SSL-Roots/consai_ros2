@@ -7,10 +7,13 @@ on:
       - '**-devel'
     paths-ignore:
       - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
   pull_request:
     paths-ignore:
       - '**.md'
-
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
 
 jobs:
   industrial_ci:
