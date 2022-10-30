@@ -46,7 +46,7 @@ target_link_libraries(proto_cpp ${PROTOBUF_LIBRARIES})
 # Install
 install(
   FILES ${PROTO_H}
-  DESTINATION include/${PROJECT_NAME})
+  DESTINATION include/${PROJECT_NAME}/${PROJECT_NAME})
 
 install(
   TARGETS proto_cpp
