@@ -214,7 +214,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   if (!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)) {
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) +
       " robot from detection_tracked msg.";
-    RCLCPP_WARN(this->get_logger(), error_msg);
+    RCLCPP_WARN(this->get_logger(), error_msg.c_str());
 
     switch_to_stop_control_mode(robot_id, false, error_msg);
     return;
