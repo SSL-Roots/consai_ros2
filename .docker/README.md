@@ -62,11 +62,12 @@ $ rocker --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consa
 ローカルでもDockerイメージをビルドできます。
 Dockerfileを編集したい場合におすすめです。
 
-成功すると`consai:latest`という名前のイメージが生成されます。
+`build.sh`の引数には`$ROS_DISTRO（例：humble）`を与えます。
+成功すると`consai:humble`という名前のイメージが生成されます。
 
 ```sh
 $ cd consai_ros2/.docker
-$ ./build.sh
+$ ./build.sh 
 ...
 Summary: 10 packages finished [1min 58s]
 Removing intermediate container bd43dc976256
@@ -74,7 +75,7 @@ Removing intermediate container bd43dc976256
 Step 9/9 : COPY ./ros_entrypoint.sh /ros_entrypoint.sh
  ---> 2707a311afa4
 Successfully built 2707a311afa4
-Successfully tagged consai:latest
+Successfully tagged consai:humble
 ```
 
 ## その他
