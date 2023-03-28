@@ -243,7 +243,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot.orientation);
 
     // tanhに反応する区間の係数
-    double range_xy = 1.5;
+    double range_xy = 1.0;
     // double range_theta = 0.1;
     // 最大速度調整用の係数(a < 1)
     double a_xy = 1.0;
