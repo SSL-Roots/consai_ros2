@@ -16,9 +16,12 @@ from ament_index_python.packages import get_package_share_directory
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch.substitutions import PythonExpression
 from launch_ros.actions import ComposableNodeContainer
+from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
 
 
@@ -31,6 +34,16 @@ def generate_launch_description():
     declare_arg_yellow = DeclareLaunchArgument(
         'yellow', default_value='false',
         description=('Set "true" to control yellow team robots.')
+    )
+
+    declare_arg_game = DeclareLaunchArgument(
+        'game', default_value='false',
+        description=('Set "true" to run game script.')
+    )
+
+    declare_arg_goalie = DeclareLaunchArgument(
+        'goalie', default_value='0',
+        description=('Set goalie id for game script.')
     )
 
     controller = IncludeLaunchDescription(
@@ -56,9 +69,25 @@ def generate_launch_description():
                     name='game_controller')
             ])
 
+    cmd_arg_yellow = ['"--yellow" if "true" == "', LaunchConfiguration('yellow'), '" else ""']
+    cmd_arg_invert = ['"--invert" if "true" == "', LaunchConfiguration('invert'), '" else ""']
+    game_node = Node(package='consai_examples',
+                     executable='game.py',
+                     output='screen',
+                     arguments=[
+                        PythonExpression(cmd_arg_yellow),
+                        PythonExpression(cmd_arg_invert),
+                        '--goalie', LaunchConfiguration('goalie')
+                     ],
+                     condition=IfCondition(LaunchConfiguration('game')),
+                    )
+
     return launch.LaunchDescription([
         declare_arg_invert,
         declare_arg_yellow,
+        declare_arg_game,
+        declare_arg_goalie,
         controller,
-        container
+        container,
+        game_node
     ])

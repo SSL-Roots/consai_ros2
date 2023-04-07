@@ -52,6 +52,7 @@ class RoleAssignment(Node):
 
         self._role = [None] * self.ROLE_NUM
         self._goalie_id = goalie_id
+        self.get_logger().info('goalie IDは{}です'.format(self._goalie_id))
 
         self._detection = TrackedFrame()
         self._sub_detection_tracked = self.create_subscription(

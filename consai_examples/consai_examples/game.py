@@ -176,9 +176,9 @@ if __name__ == '__main__':
                             default=0,
                             type=int,
                             help='ゴールキーパのIDをセットする')
-    args = arg_parser.parse_args()
+    args, other_args = arg_parser.parse_known_args()
 
-    rclpy.init(args=None)
+    rclpy.init(args=other_args)
 
     operator = RobotOperator(args.yellow)
     assignor = RoleAssignment(args.goalie, args.yellow)
