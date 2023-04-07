@@ -12,25 +12,22 @@ GUIアプリを起動するため、
 [osrf/rocker](https://github.com/osrf/rocker)
 を使用することを推奨します
 
+```sh
+# rockerのインストール
+$ sudo apt install python3-rocker
+```
+
 rockerのオプションには、
 ホストのネットワーク環境を使用するための`--net=host`と
 [ネットワーク使用時のエラー](https://github.com/osrf/rocker/issues/13)
 を回避するための`--privileged`を与えます。
 
-```sh
-# rockerのインストール
-$ sudo apt install python3-rocker
-
-# NVIDIA GPUを使用する場合
-$ rocker --nvidia --x11 --net=host --privileged ghcr.io/ssl-roots/consai_ros2:main rqt
-# Intelグラフィックスを使用する場合
-$ rocker --devices /dev/dri/card0 --x11 --net=host --privileged ghcr.io/ssl-roots/consai_ros2:main rqt
-```
+またROSは通信に共有メモリを使用するため、`/dev/shm`をコンテナにマウントします。
 
 次のコマンドは`start.launch.py`を起動する例です
 
 ```sh
-$ rocker --devices /dev/dri/card0 --x11 --net=host --privileged ghcr.io/ssl-roots/consai_ros2:main ros2 launch consai_examples start.launch.py
+$ rocker --x11 --net=host --privileged --volume /dev/shm:/dev/shm -- ghcr.io/ssl-roots/consai_ros2:main ros2 launch consai_examples start.launch.py
 ```
 
 ## DockerでCON-SAIを開発する
@@ -50,11 +47,11 @@ $ git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git
 
 # 以下、どのディレクトリでコマンドを実行してもOKです
 # --volumeオプションでワークスペースをマウントしてコンテナを起動
-$ rocker --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main
+$ rocker --x11 --net=host --privileged --volume /dev/shm:/dev/shm ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main
 # 例：パッケージをビルドする
-$ rocker --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main colcon build --symlink-install
+$ rocker --x11 --net=host --privileged --volume /dev/shm:/dev/shm ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main colcon build --symlink-install
 # 例：CON-SAIを起動する
-$ rocker --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main ros2 launch consai_examples start.launch.py
+$ rocker --x11 --net=host --privileged --volume /dev/shm:/dev/shm ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main ros2 launch consai_examples start.launch.py
 ```
 
 ## Dockerイメージをビルドする
@@ -85,9 +82,5 @@ Successfully tagged consai:humble
 `--env`オプションを使用します
 
 ```sh
-$ rocker --env ROS_DOMAIN_ID=22 --devices /dev/dri/card0 --x11 --net=host --privileged --volume ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main
+$ rocker --env ROS_DOMAIN_ID=22 --x11 --net=host --privileged --volume /dev/shm:/dev/shm ~/consai_ws:/root/ros2_ws -- ghcr.io/ssl-roots/consai_ros2:main
 ```
-
-### コンテナ同士で通信する
-
-調査中です
