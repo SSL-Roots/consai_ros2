@@ -13,8 +13,9 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 - Linux OS
     - Ubuntu 20.04 tested and is recommended
 - ROS 2
+    - [Humble Hawksbill](https://docs.ros.org/en/humble/Installation.html)
     - [Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation.html)
-    - [colcon build tool](https://docs.ros.org/en/foxy/Tutorials/Colcon-Tutorial.html)
+    - [colcon build tool](https://docs.ros.org/en/humble/Tutorials/Colcon-Tutorial.html)
 - [consai_frootspi_msgs](https://github.com/SSL-Roots/consai_frootspi_msgs)
     - CON-SAIと[FrootsPi](https://github.com/SSL-Roots/FrootsPi)が通信するために必要なパッケージです
 - RoboCup SSL Official Softwares (Optional)
@@ -36,7 +37,7 @@ Dockerを用いたCON-SAIの開発方法については[.docker/README.md](.dock
 
 ```sh
 # Setup ROS environment
-$ source /opt/ros/foxy/setup.bash
+$ source /opt/ros/humble/setup.bash
 
 # Create working directory
 $ mkdir -p ~/ros2_ws/src
@@ -140,7 +141,7 @@ $ ament_flake8 consai_examples/consai_examples/control.py
 ```
 
 外部ツール（例：autopep8）を使えば自動整形できます。
-[ROS 2のPythonコードスタイル](https://docs.ros.org/en/foxy/Contributing/Code-Style-Language-Versions.html#python)
+[ROS 2のPythonコードスタイル](https://docs.ros.org/en/humble/Contributing/Code-Style-Language-Versions.html#python)
 に沿うようにパラメータを設定してください。
 
 ```sh

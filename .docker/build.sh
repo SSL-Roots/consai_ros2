@@ -2,13 +2,20 @@
 
 set -e
 
+if [ $# -eq 0 ]; then
+    echo "Please set ROS_DISTRO to the argument."
+    echo "e.g. ./build.sh humble"
+fi
+ROS_DISTRO=$1
+
 OPTION=""
-if [ $# -eq 1 ]; then
-    OPTION=$1
+if [ $# -ge 2 ]; then
+    OPTION=$2
 fi
 
 # .dockerディレクトリへ移動する
-cd $(dirname $0)/
+cd $(dirname $0)/../
 
 # Dockerfileのビルド
-docker build $OPTION -t consai:latest .
+docker build $OPTION -t consai:$ROS_DISTRO -f .docker/Dockerfile . \
+    --build-arg ROS_DISTRO=$ROS_DISTRO \

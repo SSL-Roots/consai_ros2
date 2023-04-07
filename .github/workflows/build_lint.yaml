@@ -7,10 +7,13 @@ on:
       - '**-devel'
     paths-ignore:
       - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
   pull_request:
     paths-ignore:
       - '**.md'
-
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
 
 jobs:
   industrial_ci:
@@ -18,6 +21,7 @@ jobs:
       matrix:
         env:
           - { ROS_DISTRO: foxy, ROS_REPO: ros }
+          - { ROS_DISTRO: humble, ROS_REPO: ros }
     env:
       UPSTREAM_WORKSPACE: .ci.rosinstall
     runs-on: ubuntu-latest
