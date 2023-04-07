@@ -130,3 +130,36 @@ $ ros2 launch consai_examples start.launch.py yellow:=true invert:=true
 # ゴールキーパのIDを2とする
 $ ros2 run consai_examples control_with_role.py --goalie 2 --yellow
 ```
+
+## 試合をする
+
+`start.launch.py`に引数`game:=true`をセットすると、試合用のスクリプトが起動します。
+
+```sh
+$ ros2 launch consai_examples start.launch.py game:=true
+```
+
+また、黄色ロボットを動かすための`yellow`、
+逆サイドで動かすための`invert`、
+ゴールキーパーIDの`goalie`オプションも設定できます。
+
+```sh
+# 黄色ロボットを動かす かつ
+# 逆サイド かつ
+# ゴールキーパのIDが2
+$ ros2 launch consai_examples start.launch.py game:=true yellow:=true invert:=true goalie:=2
+```
+
+## CON-SAI vs CON-SAIで試合をする
+
+環境変数`ROS_DOMAIN_ID`を設定することでROSのネットワークを分離できます。
+
+これを応用して、CON-SAI vs CON-SAIで試合ができます。
+
+```sh
+# 青色チームを起動
+$ ROS_DOMAIN_ID=1 ros2 launch consai_examples start.launch.py game:=true
+
+# 別のターミナルで、逆サイドの黄色チームを起動
+$ ROS_DOMAIN_ID=2 ros2 launch consai_examples start.launch.py game:=true yellow:=true invert:=true
+```
