@@ -325,18 +325,21 @@ def test_refelect_shoot_four_robots(id1, id2, id3, id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
-def test_prototyping():
+def find_passable_robots(robot_id, select_forward_between):
+    # パスができる味方ロボットを探す
+    # select_forward_betweenは
+    # 0であれば前方の相手ロボットすべてを対象にする
+    # 1であればパサーと味方ロボットの間にいる相手ロボットを対象にする
     while rclpy.ok():
         our_robots_pos = observer_node.get_our_robots_pos()
         their_robots_pos = observer_node.get_their_robots_pos()
         our_robots_vel = observer_node.get_our_robots_vel()
         their_robots_vel = observer_node.get_their_robots_vel()
-        ball_pos = observer_node.get_ball_pos()
 
         if len(our_robots_pos) > 0:
             break
 
-    robots_to_pass = operator_node.search_for_pass_cource(4, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, ball_pos)
+    robots_to_pass = operator_node.search_for_pass_cource(robot_id, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between)
     print(robots_to_pass)
 
 def main():
@@ -356,7 +359,7 @@ def main():
     # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
-    test_prototyping()
+    find_passable_robots(4, 1)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
