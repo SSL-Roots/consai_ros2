@@ -732,9 +732,9 @@ class RobotOperator(Node):
         their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * their_robots_vel[i][0] + their_robot_r] for i in forward_their_robots_id]
         
         # ボールから味方のロボットまでの距離を計測し，近い順にソートする
-        dist_our_robot = self.sort_passer_from_our_robot_distance(robot_id_has_ball, forward_our_robots_id, our_robots_pos)
+        dist_our_robot = self._sort_passer_from_our_robot_distance(robot_id_has_ball, forward_our_robots_id, our_robots_pos)
         their_robot_count = len(forward_their_robots_id)
-        
+
         # 解を求める
         # 味方ロボットとボールまでの直線の方程式
         for i in range(len(dist_our_robot)):
@@ -777,7 +777,7 @@ class RobotOperator(Node):
         
         return robots_to_pass
 
-    def sort_passer_from_our_robot_distance(self, robot_has_ball, our_robot_id, our_robots_pos):
+    def _sort_passer_from_our_robot_distance(self, robot_has_ball, our_robot_id, our_robots_pos):
         # ボールから味方のロボットまでの距離を計算し，近い順にソートする関数
         diff_ball_to_robot = [[our_robots_pos[our_robot_id[i]][0] - our_robots_pos[robot_has_ball][0], 
                                our_robots_pos[our_robot_id[i]][1] - our_robots_pos[robot_has_ball][1]] for i in range(len(our_robot_id))]
