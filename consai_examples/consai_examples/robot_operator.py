@@ -701,6 +701,8 @@ class RobotOperator(Node):
     def search_for_pass_cource(self, robot_id_has_ball, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between):
         # パス可能ロボットのIDを格納するリスト
         robots_to_pass = []
+        # 計算対象にする相手ロボットのIDを格納するリスト
+        target_their_robots_id = []
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
         their_robot_r = 0.4
         # 前方にいる相手ロボットの数と比較する用の変数
@@ -748,8 +750,10 @@ class RobotOperator(Node):
 
             if select_forward_between == 1:
                 target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[dist_our_robot[i][1]][0] > their_robots_pos[robot_id][0]]
+            else:
+                target_their_robots_id = forward_their_robots_id
 
-            if len(target_their_robots_id) != 0:
+            if len(target_their_robots_id) > 0:
                 for robot_id in target_their_robots_id:
                     # 判別式
                     a_kai = slope ** 2 + 1
@@ -766,7 +770,7 @@ class RobotOperator(Node):
                             check_count += 1
                     else:
                         check_count = 0
-                        print(i, "番の味方ロボットへのパスは", robot_id, "番の相手ロボットに防がれる可能性あり")
+                        print(dist_our_robot[i][1], "番の味方ロボットへのパスは", robot_id, "番の相手ロボットに防がれる可能性あり")
                         break
             else:
                 robots_to_pass.append(dist_our_robot[i][1])
