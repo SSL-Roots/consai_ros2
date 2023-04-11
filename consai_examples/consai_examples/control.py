@@ -329,7 +329,7 @@ def find_passable_robots(robot_id, select_forward_between):
     # パスができる味方ロボットを探す
     # select_forward_betweenは
     # 0であれば前方の相手ロボットすべてを対象にする
-    # 1であればパサーと味方ロボットの間にいる相手ロボットを対象にする
+    # 1であればパサーとレシーバー候補となる味方ロボットの間にいる相手ロボットを対象にする
     while rclpy.ok():
         our_robots_pos = observer_node.get_our_robots_pos()
         their_robots_pos = observer_node.get_their_robots_pos()
