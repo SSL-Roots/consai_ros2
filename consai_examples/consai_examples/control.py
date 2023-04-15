@@ -325,7 +325,7 @@ def test_refelect_shoot_four_robots(id1, id2, id3, id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
-def find_passable_robots(robot_id, select_forward_between):
+def find_passable_robots(robot_id_has_ball, select_forward_between):
     # パスができる味方ロボットを探す
     # select_forward_betweenは
     # 0であれば前方の相手ロボットすべてを対象にする
@@ -339,7 +339,7 @@ def find_passable_robots(robot_id, select_forward_between):
         if len(our_robots_pos) > 0:
             break
 
-    robots_to_pass = operator_node.search_for_pass_cource(robot_id, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between)
+    robots_to_pass = operator_node.search_for_pass_cource(robot_id_has_ball, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between)
     print(robots_to_pass)
 
 def main():
