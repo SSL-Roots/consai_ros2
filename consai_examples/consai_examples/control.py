@@ -20,9 +20,11 @@ import math
 import threading
 import time
 
+from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
+from referee_parser import RefereeParser
 
 
 def test_move_to(max_velocity_xy=None):
@@ -323,9 +325,26 @@ def test_refelect_shoot_four_robots(id1, id2, id3, id4):
     while operator_node.all_robots_are_free() is False:
         pass
 
+def find_passable_robots(robot_id_has_ball, select_forward_between):
+    # パスができる味方ロボットを探す
+    # select_forward_betweenは
+    # 0であれば前方の相手ロボットすべてを対象にする
+    # 1であればパサーとレシーバー候補となる味方ロボットの間にいる相手ロボットを対象にする
+    while rclpy.ok():
+        our_robots_pos = observer_node.get_our_robots_pos()
+        their_robots_pos = observer_node.get_their_robots_pos()
+        our_robots_vel = observer_node.get_our_robots_vel()
+        their_robots_vel = observer_node.get_their_robots_vel()
+
+        if len(our_robots_pos) > 0:
+            break
+
+    robots_to_pass = operator_node.search_for_pass_cource(robot_id_has_ball, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between)
+    print(robots_to_pass)
+
 def main():
     # 実行したい関数のコメントを外してください
-    test_move_to()
+    # test_move_to()
     # test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
     # test_chase_ball()
@@ -340,6 +359,7 @@ def main():
     # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
+    find_passable_robots(4, 1)
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
@@ -347,11 +367,17 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='yellowロボットを動かす場合にセットする')
+    arg_parser.add_argument('--invert',
+                            default=False,
+                            action='store_true',
+                            help='ball placementの目標座標を反転する場合にセットする')
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
 
     operator_node = RobotOperator(target_is_yellow=args.yellow)
+    observer_node = FieldObserver(args.yellow)
+    referee_node = RefereeParser(args.yellow, args.invert)
 
     # すべてのロボットの衝突回避を解除
     for i in range(16):
@@ -359,6 +385,8 @@ if __name__ == '__main__':
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
+    executor.add_node(observer_node)
+    executor.add_node(referee_node)
 
     # エグゼキュータは別スレッドでspinさせ続ける
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
