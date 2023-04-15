@@ -98,6 +98,7 @@ class RefereeParser(Node):
         self._current_command = 0
         self._prev_command = 0
         self._placement_pos = Point()
+        self._max_allowed_our_bots = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._sub_detection_tracked = self.create_subscription(
@@ -131,6 +132,14 @@ class RefereeParser(Node):
             if self._invert_placement_pos:
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
+        
+        # フィールドに出せるロボットの台数
+        if self._our_team_is_yellow:
+            if msg.yellow.max_allowed_bots:
+                self._max_allowed_our_bots = msg.yellow.max_allowed_bots[0]
+        else:
+            if msg.blue.max_allowed_bots:
+                self._max_allowed_our_bots = msg.blue.max_allowed_bots[0]
 
         # 解釈したレフェリー情報をpublishする
         self._publish_parsed_referee()
@@ -275,3 +284,6 @@ class RefereeParser(Node):
 
     def placement_position(self):
         return self._placement_pos
+
+    def max_allowed_our_bots(self):
+        return self._max_allowed_our_bots
