@@ -27,6 +27,7 @@ from decisions.goalie import GoaleDecision
 from decisions.side_back1 import SideBack1Decision
 from decisions.side_back2 import SideBack2Decision
 from decisions.sub_attacker import SubAttackerDecision
+from decisions.substitute import SubstituteDecision
 from decisions.zone1 import Zone1Decision
 from decisions.zone2 import Zone2Decision
 from decisions.zone3 import Zone3Decision
@@ -68,15 +69,19 @@ def main():
         ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
         ball_zone_state = observer.get_ball_zone_state()
 
-        # ロボットの役割の更新し、
-        # 役割が変わったロボットのみ、行動を更新する
-        for role in assignor.update_role(enable_update_attacker_by_ball_pos()):
-            decisions[role].reset_act_id()
+        # ロボットの役割の更新する
+        changed_roles = assignor.update_role(
+            enable_update_attacker_by_ball_pos(),
+            referee.max_allowed_our_bots())
 
         num_of_zone_roles = num_of_active_zone_roles(assignor.get_assigned_roles_and_ids())
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
         
         for role, robot_id in assignor.get_assigned_roles_and_ids():
+            # 役割が変わったロボットのみ、行動を更新する
+            if role in changed_roles:
+                decisions[role].reset_act_id()
+
             # ボール状態をセットする
             decisions[role].set_ball_state(ball_state)
             # ボール配置状態をセットする
@@ -203,6 +208,7 @@ if __name__ == '__main__':
         RoleName.ZONE4: Zone4Decision(operator),
         RoleName.SIDE_BACK1: SideBack1Decision(operator),
         RoleName.SIDE_BACK2: SideBack2Decision(operator),
+        RoleName.SUBSTITUTE: SubstituteDecision(operator),
     }
 
     try:

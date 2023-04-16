@@ -109,7 +109,15 @@ class RoleAssignment(Node):
                 changed_roles.append(self._active_role_list[i])
 
         # イエローカードなどでallowed_robot_numが減った場合、SUBSTITUTEを割り当てる
+        # 前回SUBSTITUTEだったroleをchanged_rolesに追加する
+        for index, role in enumerate(self._present_role_list):
+            if role == RoleName.SUBSTITUTE:
+                changed_roles.append(self._active_role_list[index])
+        
+        # present_role_listをリセット
         self._present_role_list = copy.deepcopy(self._active_role_list)
+
+        # SUBSTITUTEを割り当てる
         num_of_substitute = self._ROLE_NUM - allowed_robot_num
         if num_of_substitute > 0:
             self._overwrite_substite_to_present_role_list(num_of_substitute)

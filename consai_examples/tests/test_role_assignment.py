@@ -147,3 +147,23 @@ def test_ロボットの出場可能台数が減った時には優先度の低�
     assignor.update_role(allowed_robot_num=robot_num)
     for expected_index in expected_indexes:
         assert assignor.get_role_from_robot_id(expected_index) == RoleName.SUBSTITUTE
+
+def test_SUBSTITUTEから復帰した場合もchanged_roleとして返すこと(rclpy_init_shutdown):
+    assignor = RoleAssignment(0)
+    frame_publisher = TrackedFramePublisher()
+    frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
+
+    # トピックをsubscribeするためspine_once()を実行
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    changed_roles = assignor.update_role(allowed_robot_num=11)
+    assert len(changed_roles) == 11
+
+    # 許可台数を一つ減らす
+    changed_roles = assignor.update_role(allowed_robot_num=10)
+    assert len(changed_roles) == 1
+    assert changed_roles[0] == RoleName.SUBSTITUTE
+
+    # 復活させる
+    changed_roles = assignor.update_role(allowed_robot_num=11)
+    assert len(changed_roles) == 1
+    assert changed_roles[0] == RoleName.SIDE_BACK2
