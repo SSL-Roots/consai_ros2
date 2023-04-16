@@ -77,7 +77,8 @@ class RoleAssignment(Node):
             RoleName.SIDE_BACK2,
         ]
 
-        # ロール優先度とロボットIDを結びつけるリスト
+        # role優先度とロボットIDを結びつけるリスト
+        # indexの数値が小さいほど優先度が高い
         self._robot_id_of_role_priority = [None] * len(self._active_role_list)
 
         self._goalie_id = goalie_id
@@ -141,6 +142,11 @@ class RoleAssignment(Node):
     def _detection_tracked_callback(self, msg):
         self._detection = msg
 
+    def _get_priority_of_role(self, role):
+        # roleの優先度を返す
+        # 重複するroleが設定されている場合、高いほうの優先度を返す
+        return self._active_role_list.index(role)
+
     def _update_role_list(self, update_attacker_by_ball_pos=True):
         # 役割リストを更新する
         our_active_robots, their_active_robots = self._extract_active_robots(self._detection.robots)
@@ -169,8 +175,9 @@ class RoleAssignment(Node):
         next_attacker_id = self._determine_next_attacker_id(our_active_robots, ball.pos)
         # アタッカーのIDを役割リストにセットする
         if next_attacker_id in self._robot_id_of_role_priority:
-            next_attacker_index = self._robot_id_of_role_priority.index(next_attacker_id)
-            self._swap_role(RoleName.ATTACKER.value, next_attacker_index)
+            next_attacker_priority = self._robot_id_of_role_priority.index(next_attacker_id)
+            attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
+            self._swap_robot_id_of_priority(next_attacker_priority, attacker_role_priority)
 
     def _reset_inactive_id(self, our_active_ids):
         # 役割リストにあるIDが非アクティブな場合、リストの枠にNoneをセットする
@@ -209,37 +216,42 @@ class RoleAssignment(Node):
                     break
 
     def _sort_empty_role(self):
-        # 役割リストのIDの並び途中にNoneが来ないように、
-        # 一番後半のIDをNoneにセットしていく
+        # 優先度の高いroleに空きが出ないように、
+        # 一番優先度の低いroleの担当を、優先度の高い空きroleに割り当てる
 
-        # 空きスペースがなければ終了
+        # 空いているroleがなければ終了
         if None not in self._robot_id_of_role_priority:
             return
 
-        for index, robot_id in enumerate(self._robot_id_of_role_priority):
-            # goalieのスペースは空けておく
-            if index == RoleName.GOALIE.value:
+        for priority, robot_id in enumerate(self._robot_id_of_role_priority):
+            # goalieの担当は空けておく
+            if priority == self._get_priority_of_role(RoleName.GOALIE):
                 continue
 
-            if robot_id is None:
-                last_active_index = self._last_active_role_index()
-                # アクティブな役割がなければ終了
-                if last_active_index is None:
-                    break
-                # 空きスペースの後にアクティブなIDがあればスワップする
-                if index < last_active_index:
-                    self._swap_role(index, last_active_index)
+            # 担当がいればスキップ
+            if robot_id is not None:
+                continue
+
+            lowest_priority = self._find_lowest_prioiry_from_assigned_roles()
+            if lowest_priority is None:
+                break
+
+            # 空きスペースの後にアクティブなIDがあればスワップする
+            if priority < lowest_priority:
+                self._swap_robot_id_of_priority(priority, lowest_priority)
         
-    def _last_active_role_index(self):
-        # 役割リストを逆順に検索し、アクティブなroleのindexを返す
+    def _find_lowest_prioiry_from_assigned_roles(self):
+        # 担当がいるroleの中で最も優先度が低いものを探し、優先度を返す
+        # 担当が一人もいなければNoneを返す
         for robot_id in reversed(self._robot_id_of_role_priority):
             if robot_id is not None:
                 return self._robot_id_of_role_priority.index(robot_id)
         return None
             
-    def _swap_role(self, index1, index2):
-        # 役割リストの指定されたindexをスワップする
-        self._robot_id_of_role_priority[index1], self._robot_id_of_role_priority[index2] = self._robot_id_of_role_priority[index2], self._robot_id_of_role_priority[index1]
+    def _swap_robot_id_of_priority(self, priority1, priority2):
+        # robot_id_of_priorityの指定されたpriorityの要素を入れ替える
+        self._robot_id_of_role_priority[priority1], self._robot_id_of_role_priority[priority2] \
+            = self._robot_id_of_role_priority[priority2], self._robot_id_of_role_priority[priority1]
 
     def _extract_active_robots(self, robots_msg):
         # TrackedFrame.robots からアクティブなロボットを抽出する
