@@ -96,19 +96,20 @@ class RoleAssignment(Node):
 
     def update_role(self, update_attacker_by_ball_pos=True):
         # 役割リストを更新する
-        # 担当が変わった役割のインデックスのリストを返す
+        # 担当が変わった役割のリストを返す
         # 更新前後でリストに変化がなければ空のリストを返す
         prev_robot_id_list = copy.deepcopy(self._robot_id_of_role_priority)
 
         self._update_role_list(update_attacker_by_ball_pos)
 
-        changed_index = []
+        changed_roles = []
         for i in range(len(self._robot_id_of_role_priority)):
             if self._robot_id_of_role_priority[i] is not None \
                and self._robot_id_of_role_priority[i] != prev_robot_id_list[i]:
-                changed_index.append(i)
 
-        return changed_index
+                changed_roles.append(self._active_role_list[i])
+
+        return changed_roles
 
     def get_assigned_roles(self):
         # IDが割り当てられているroleのリストを返す
@@ -117,6 +118,25 @@ class RoleAssignment(Node):
             if self._robot_id_of_role_priority[i] is not None:
                 active_index.append(i)
         return active_index
+
+    def get_assigned_roles_and_ids(self):
+        # IDが割り当てられているroleとIDのペアのリストを返す
+        active_index = []
+        role_and_id = []
+        for i in range(len(self._robot_id_of_role_priority)):
+            role = self._active_role_list[i]
+            robot_id = self._robot_id_of_role_priority[i]
+            if robot_id is not None:
+                role_and_id.append((role, robot_id))
+        return role_and_id
+
+    def get_role_from_robot_id(self, robot_id):
+        # 指定したIDが割り当てられているroleを返す
+        # 割り当てていなければNoneを返す
+        if robot_id in self._robot_id_of_role_priority:
+            role_index = self._robot_id_of_role_priority.index(robot_id)
+            return self._active_role_list[role_index]
+        return None
 
     def _detection_tracked_callback(self, msg):
         self._detection = msg

@@ -40,13 +40,14 @@ from role_assignment import RoleAssignment
 from role_assignment import RoleName
 
 
-def num_of_active_zone_roles(active_roles):
+def num_of_active_zone_roles(active_roles_and_ids):
+    active_roles = [ t[0] for t in active_roles_and_ids]
     # アクティブなゾーンディフェンス担当者の数を返す
     role_zone_list = [
-        RoleName.ZONE1.value,
-        RoleName.ZONE2.value,
-        RoleName.ZONE3.value,
-        RoleName.ZONE4.value]
+        RoleName.ZONE1,
+        RoleName.ZONE2,
+        RoleName.ZONE3,
+        RoleName.ZONE4]
     return len(set(role_zone_list) & set(active_roles))
 
 def enable_update_attacker_by_ball_pos():
@@ -72,11 +73,10 @@ def main():
         for role in assignor.update_role(enable_update_attacker_by_ball_pos()):
             decisions[role].reset_act_id()
 
-        num_of_zone_roles = num_of_active_zone_roles(assignor.get_assigned_roles())
+        num_of_zone_roles = num_of_active_zone_roles(assignor.get_assigned_roles_and_ids())
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
         
-        for role in assignor.get_assigned_roles():
-            robot_id = assignor.get_robot_id(role)
+        for role, robot_id in assignor.get_assigned_roles_and_ids():
             # ボール状態をセットする
             decisions[role].set_ball_state(ball_state)
             # ボール配置状態をセットする
@@ -192,17 +192,17 @@ if __name__ == '__main__':
     executor_thread.start()
 
     decisions = {
-        RoleName.GOALIE.value: GoaleDecision(operator),
-        RoleName.ATTACKER.value: AttackerDecision(operator),
-        RoleName.CENTER_BACK1.value: CenterBack1Decision(operator),
-        RoleName.CENTER_BACK2.value: CenterBack2Decision(operator),
-        RoleName.SUB_ATTACKER.value: SubAttackerDecision(operator),
-        RoleName.ZONE1.value: Zone1Decision(operator),
-        RoleName.ZONE2.value: Zone2Decision(operator),
-        RoleName.ZONE3.value: Zone3Decision(operator),
-        RoleName.ZONE4.value: Zone4Decision(operator),
-        RoleName.SIDE_BACK1.value: SideBack1Decision(operator),
-        RoleName.SIDE_BACK2.value: SideBack2Decision(operator),
+        RoleName.GOALIE: GoaleDecision(operator),
+        RoleName.ATTACKER: AttackerDecision(operator),
+        RoleName.CENTER_BACK1: CenterBack1Decision(operator),
+        RoleName.CENTER_BACK2: CenterBack2Decision(operator),
+        RoleName.SUB_ATTACKER: SubAttackerDecision(operator),
+        RoleName.ZONE1: Zone1Decision(operator),
+        RoleName.ZONE2: Zone2Decision(operator),
+        RoleName.ZONE3: Zone3Decision(operator),
+        RoleName.ZONE4: Zone4Decision(operator),
+        RoleName.SIDE_BACK1: SideBack1Decision(operator),
+        RoleName.SIDE_BACK2: SideBack2Decision(operator),
     }
 
     try:
