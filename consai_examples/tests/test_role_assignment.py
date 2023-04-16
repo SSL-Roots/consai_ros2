@@ -134,3 +134,16 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
         (RoleName.ATTACKER, 7),
         (RoleName.CENTER_BACK1, 8),
         (RoleName.CENTER_BACK2, 9)]
+
+@pytest.mark.parametrize("robot_num, expected_indexes",
+    [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
+def test_ロボットの出場可能台数が減った時には優先度の低いものからSUBSTITUEロールを割り当てること(rclpy_init_shutdown, robot_num, expected_indexes):
+    assignor = RoleAssignment(0)
+    frame_publisher = TrackedFramePublisher()
+    frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
+
+    # トピックをsubscribeするためspine_once()を実行
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assignor.update_role(allowed_robot_num=robot_num)
+    for expected_index in expected_indexes:
+        assert assignor.get_role_from_robot_id(expected_index) == RoleName.SUBSTITUTE

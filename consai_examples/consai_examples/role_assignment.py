@@ -42,6 +42,7 @@ class RoleName(Enum):
     ZONE4 = 8
     SIDE_BACK1 = 9
     SIDE_BACK2 = 10
+    SUBSTITUTE = 11
 
 
 # フィールド状況を見て、ロボットの役割を決めるノード
@@ -76,10 +77,14 @@ class RoleAssignment(Node):
             RoleName.SIDE_BACK1,
             RoleName.SIDE_BACK2,
         ]
+        # 実際に運用するroleのリスト
+        # イエローカードや交代指示などで役割が変更されます
+        self._present_role_list = copy.deepcopy(self._active_role_list)
+        self._ROLE_NUM = len(self._active_role_list)
 
         # role優先度とロボットIDを結びつけるリスト
         # indexの数値が小さいほど優先度が高い
-        self._robot_id_of_role_priority = [None] * len(self._active_role_list)
+        self._robot_id_of_role_priority = [None] * self._ROLE_NUM
 
         self._goalie_id = goalie_id
         self.get_logger().info('goalie IDは{}です'.format(self._goalie_id))
@@ -88,7 +93,7 @@ class RoleAssignment(Node):
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
-    def update_role(self, update_attacker_by_ball_pos=True):
+    def update_role(self, update_attacker_by_ball_pos=True, allowed_robot_num=11):
         # 役割リストを更新する
         # 担当が変わった役割のリストを返す
         # 更新前後でリストに変化がなければ空のリストを返す
@@ -102,6 +107,13 @@ class RoleAssignment(Node):
                and self._robot_id_of_role_priority[i] != prev_robot_id_list[i]:
 
                 changed_roles.append(self._active_role_list[i])
+
+        # イエローカードなどでallowed_robot_numが減った場合、SUBSTITUTEを割り当てる
+        self._present_role_list = copy.deepcopy(self._active_role_list)
+        num_of_substitute = self._ROLE_NUM - allowed_robot_num
+        if num_of_substitute > 0:
+            self._overwrite_substite_to_present_role_list(num_of_substitute)
+            changed_roles.append(RoleName.SUBSTITUTE)
 
         return changed_roles
 
@@ -118,7 +130,7 @@ class RoleAssignment(Node):
         active_index = []
         role_and_id = []
         for i in range(len(self._robot_id_of_role_priority)):
-            role = self._active_role_list[i]
+            role = self._present_role_list[i]
             robot_id = self._robot_id_of_role_priority[i]
             if robot_id is not None:
                 role_and_id.append((role, robot_id))
@@ -129,7 +141,7 @@ class RoleAssignment(Node):
         # 割り当てていなければNoneを返す
         if robot_id in self._robot_id_of_role_priority:
             role_index = self._robot_id_of_role_priority.index(robot_id)
-            return self._active_role_list[role_index]
+            return self._present_role_list[role_index]
         return None
 
     def _detection_tracked_callback(self, msg):
@@ -316,3 +328,12 @@ class RoleAssignment(Node):
             return nearest_id
         else:
             return present_attacker_id
+
+    def _overwrite_substite_to_present_role_list(self, num_of_substitute):
+        # 指定した数だけ、presetn_role_listの後ろからSUBSTITUEロールを上書きする
+        if num_of_substitute <= 0:
+            return
+
+        self._present_role_list[-num_of_substitute:] = \
+            [RoleName.SUBSTITUTE] * min(num_of_substitute, len(self._present_role_list))
+        
