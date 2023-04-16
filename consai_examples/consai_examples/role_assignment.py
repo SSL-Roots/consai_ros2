@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import copy
+from enum import Enum
 import math
 
 from rclpy.node import Node
@@ -27,13 +28,23 @@ from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import TrackedRobot
 from robocup_ssl_msgs.msg import Vector3
 
+class RoleName(Enum):
+    GOALIE = 0
+    ATTACKER = 1
+    CENTER_BACK1 = 2
+    CENTER_BACK2 = 3
+    SUB_ATTACKER = 4
+    ZONE1 = 5
+    ZONE2 = 6
+    ZONE3 = 7
+    ZONE4 = 8
+    SIDE_BACK1 = 9
+    SIDE_BACK2 = 10
+
 
 # フィールド状況を見て、ロボットの役割を決めるノード
 # ロボットの役割が頻繁に変わらないように調整する
 class RoleAssignment(Node):
-    # 定数インデックスを変更すると可能性があるため、変更しないこと
-    ROLE_INDEX_GOALIE = 0
-    ROLE_INDEX_ATTACKER = 1
     # フィールドに出せるロボットの数は11台
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
     ROLE_NUM = 11
@@ -114,7 +125,7 @@ class RoleAssignment(Node):
         # アタッカーのIDを役割リストにセットする
         if next_attacker_id in self._role:
             next_attacker_index = self._role.index(next_attacker_id)
-            self._swap_role(self.ROLE_INDEX_ATTACKER, next_attacker_index)
+            self._swap_role(RoleName.ATTACKER.value, next_attacker_index)
 
     def _reset_inactive_id(self, our_active_ids):
         # 役割リストにあるIDが非アクティブな場合、リストの枠にNoneをセットする
@@ -139,13 +150,13 @@ class RoleAssignment(Node):
 
             # アクティブなIDがgoalieであれば、指定されたスペースにセットする
             if active_id == self._goalie_id:
-                self._role[self.ROLE_INDEX_GOALIE] = self._goalie_id
+                self._role[RoleName.GOALIE.value] = self._goalie_id
                 continue
 
             # 空きスペースにIDをセットする
             # ただし、goalieのスペースは空けておく
             for index, robot_id in enumerate(self._role):
-                if index == self.ROLE_INDEX_GOALIE:
+                if index == RoleName.GOALIE.value:
                     continue
 
                 if robot_id is None:
@@ -162,7 +173,7 @@ class RoleAssignment(Node):
 
         for index, robot_id in enumerate(self._role):
             # goalieのスペースは空けておく
-            if index == self.ROLE_INDEX_GOALIE:
+            if index == RoleName.GOALIE.value:
                 continue
 
             if robot_id is None:
@@ -225,8 +236,8 @@ class RoleAssignment(Node):
 
             # アタッカーの距離とIDをセット
             # NoneなIDを検出しない
-            if self._role[self.ROLE_INDEX_ATTACKER] and \
-               robot.robot_id.id == self._role[self.ROLE_INDEX_ATTACKER]:
+            if self._role[RoleName.ATTACKER.value] and \
+               robot.robot_id.id == self._role[RoleName.ATTACKER.value]:
                 attacker_id = robot.robot_id.id
                 attacker_distance = distance
                 continue

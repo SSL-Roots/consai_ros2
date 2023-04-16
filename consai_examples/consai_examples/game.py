@@ -37,22 +37,16 @@ from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
 from robot_operator import RobotOperator
 from role_assignment import RoleAssignment
+from role_assignment import RoleName
 
-ROLE_GOALIE = 0
-ROLE_ATTACKER = 1
-ROLE_CENTER_BACK1 = 2
-ROLE_CENTER_BACK2 = 3
-ROLE_SUB_ATTACKER = 4
-ROLE_ZONE1 = 5
-ROLE_ZONE2 = 6
-ROLE_ZONE3 = 7
-ROLE_ZONE4 = 8
-ROLE_SIDE_BACK1 = 9
-ROLE_SIDE_BACK2 = 10
 
 def num_of_active_zone_roles(active_roles):
     # アクティブなゾーンディフェンス担当者の数を返す
-    role_zone_list = [ROLE_ZONE1, ROLE_ZONE2, ROLE_ZONE3, ROLE_ZONE4]
+    role_zone_list = [
+        RoleName.ZONE1.value,
+        RoleName.ZONE2.value,
+        RoleName.ZONE3.value,
+        RoleName.ZONE4.value]
     return len(set(role_zone_list) & set(active_roles))
 
 def main():
@@ -196,17 +190,17 @@ if __name__ == '__main__':
     executor_thread.start()
 
     decisions = {
-        ROLE_GOALIE: GoaleDecision(operator),
-        ROLE_ATTACKER: AttackerDecision(operator),
-        ROLE_CENTER_BACK1: CenterBack1Decision(operator),
-        ROLE_CENTER_BACK2: CenterBack2Decision(operator),
-        ROLE_SUB_ATTACKER: SubAttackerDecision(operator),
-        ROLE_ZONE1: Zone1Decision(operator),
-        ROLE_ZONE2: Zone2Decision(operator),
-        ROLE_ZONE3: Zone3Decision(operator),
-        ROLE_ZONE4: Zone4Decision(operator),
-        ROLE_SIDE_BACK1: SideBack1Decision(operator),
-        ROLE_SIDE_BACK2: SideBack2Decision(operator),
+        RoleName.GOALIE.value: GoaleDecision(operator),
+        RoleName.ATTACKER.value: AttackerDecision(operator),
+        RoleName.CENTER_BACK1.value: CenterBack1Decision(operator),
+        RoleName.CENTER_BACK2.value: CenterBack2Decision(operator),
+        RoleName.SUB_ATTACKER.value: SubAttackerDecision(operator),
+        RoleName.ZONE1.value: Zone1Decision(operator),
+        RoleName.ZONE2.value: Zone2Decision(operator),
+        RoleName.ZONE3.value: Zone3Decision(operator),
+        RoleName.ZONE4.value: Zone4Decision(operator),
+        RoleName.SIDE_BACK1.value: SideBack1Decision(operator),
+        RoleName.SIDE_BACK2.value: SideBack2Decision(operator),
     }
 
     try:
