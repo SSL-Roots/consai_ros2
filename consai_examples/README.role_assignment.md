@@ -80,7 +80,7 @@ decisions = {
 
 ```python
 
-class Role():
+class Role:
     def __init__(self):
         self._role_name = RoleName.DEFAULT
         self._robot_id = None
@@ -100,4 +100,6 @@ class Role():
 
 ```python
 active_role_list = [Role()] * 11
+active_role_list[0].name()  # returns role name, 'RoleName.DEFAULT'
+active_role_list[0].robot_id()  # returns robot_id, None
 ```
