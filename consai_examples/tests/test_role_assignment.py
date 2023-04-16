@@ -21,7 +21,7 @@ class TrackedFramePublisher(Node):
         frame = TrackedFrame()
         self._publish(frame)
 
-    def publish_robot_exists(self, blue_ids=[], yellow_ids=[]):
+    def publish_valid_robots(self, blue_ids=[], yellow_ids=[]):
         frame = TrackedFrame()
         for blue_id in blue_ids:
             robot = TrackedRobot()
@@ -49,10 +49,10 @@ def rclpy_init_shutdown():
     rclpy.shutdown()
 
 @pytest.mark.parametrize("goalie_id", [0, 1, 10, 11])
-def test_goalieが正しく設定されるか(rclpy_init_shutdown, goalie_id, blue_ids=[0, 1, 10, 11]):
+def test_引数のgoalie_idが正しく設定されること(rclpy_init_shutdown, goalie_id, blue_ids=[0, 1, 10, 11]):
     assignor = RoleAssignment(goalie_id)  # 先頭でインスタンスを作成しないとエラーがでる
     frame_publisher = TrackedFramePublisher()
-    frame_publisher.publish_robot_exists(blue_ids)
+    frame_publisher.publish_valid_robots(blue_ids)
 
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
@@ -61,15 +61,34 @@ def test_goalieが正しく設定されるか(rclpy_init_shutdown, goalie_id, bl
     assert assignor.get_robot_id(ROLE_GOALIE) == goalie_id
 
 @pytest.mark.parametrize("goalie_id, is_yellow", [(1, False), (3, True)])
-def test_team_colorが正しく設定されるか(rclpy_init_shutdown, goalie_id, is_yellow):
+def test_引数のour_team_is_yellowが正しく設定されること(rclpy_init_shutdown, goalie_id, is_yellow):
     assignor = RoleAssignment(
         goalie_id=goalie_id,
         our_team_is_yellow=is_yellow)
     frame_publisher = TrackedFramePublisher()
-    frame_publisher.publish_robot_exists(blue_ids=[1], yellow_ids=[3])
+    frame_publisher.publish_valid_robots(blue_ids=[1], yellow_ids=[3])
 
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
     ROLE_GOALIE = 0
     assert assignor.get_robot_id(ROLE_GOALIE) == goalie_id
+
+def test_TrackedFrameを受信するまではロールは更新されないこと(rclpy_init_shutdown):
+    assignor = RoleAssignment(0)
+    assignor.update_role()
+
+    active_roles = assignor.get_active_roles()
+    assert active_roles == []
+
+def test_ロールの数よりロボットが多くてもエラーが発生しないこと(rclpy_init_shutdown):
+    assignor = RoleAssignment(0)
+    frame_publisher = TrackedFramePublisher()
+    # 12台のロボットを用意する
+    frame_publisher.publish_valid_robots(blue_ids=list(range(13)))
+
+    # トピックをsubscribeするためspine_once()を実行
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assignor.update_role()
+    active_roles = assignor.get_active_roles()
+    assert len(active_roles) == 11
