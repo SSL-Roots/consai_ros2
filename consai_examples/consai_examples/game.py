@@ -49,31 +49,33 @@ def num_of_active_zone_roles(active_roles):
         RoleName.ZONE4.value]
     return len(set(role_zone_list) & set(active_roles))
 
+def enable_update_attacker_by_ball_pos():
+    # アタッカーの切り替わりを防ぐため、
+    # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
+    return not observer.ball_is_in_our_defense_area() and \
+        not observer.ball_is_moving() and \
+        not referee.our_ball_placement() and \
+        not referee.our_pre_penalty() and \
+        not referee.our_penalty() and \
+        not referee.their_pre_penalty() and \
+        not referee.their_penalty() and \
+        not referee.their_ball_placement()
+
 def main():
     while rclpy.ok():
         ball_state = observer.get_ball_state()
         ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
         ball_zone_state = observer.get_ball_zone_state()
 
-        # アタッカーの切り替わりを防ぐため、
-        # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
-        if not observer.ball_is_in_our_defense_area() and \
-           not observer.ball_is_moving() and \
-           not referee.our_ball_placement() and \
-           not referee.our_pre_penalty() and \
-           not referee.our_penalty() and \
-           not referee.their_pre_penalty() and \
-           not referee.their_penalty() and \
-           not referee.their_ball_placement():
-            # ロボットの役割の更新し、
-            # 役割が変わったロボットのみ、行動を更新する
-            for role in assignor.update_role():
-                decisions[role].reset_act_id()
+        # ロボットの役割の更新し、
+        # 役割が変わったロボットのみ、行動を更新する
+        for role in assignor.update_role(enable_update_attacker_by_ball_pos()):
+            decisions[role].reset_act_id()
 
-        num_of_zone_roles = num_of_active_zone_roles(assignor.get_active_roles())
+        num_of_zone_roles = num_of_active_zone_roles(assignor.get_assigned_roles())
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
         
-        for role in assignor.get_active_roles():
+        for role in assignor.get_assigned_roles():
             robot_id = assignor.get_robot_id(role)
             # ボール状態をセットする
             decisions[role].set_ball_state(ball_state)

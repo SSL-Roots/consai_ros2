@@ -110,7 +110,7 @@ class RoleAssignment(Node):
 
         return changed_index
 
-    def get_active_roles(self):
+    def get_assigned_roles(self):
         # IDが割り当てられているroleのリストを返す
         active_index = []
         for i in range(len(self._robot_id_of_role_priority)):

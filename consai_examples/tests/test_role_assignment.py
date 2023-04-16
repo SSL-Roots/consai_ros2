@@ -45,8 +45,7 @@ def test_TrackedFrameを受信するまではロールは更新されないこ�
     assignor = RoleAssignment(0)
     assignor.update_role()
 
-    active_roles = assignor.get_active_roles()
-    assert active_roles == []
+    assert assignor.get_assigned_roles() == []
 
 
 def test_ロールの数よりロボットが多くてもエラーが発生しないこと(rclpy_init_shutdown):
@@ -58,8 +57,7 @@ def test_ロールの数よりロボットが多くてもエラーが発生し�
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
-    active_roles = assignor.get_active_roles()
-    assert len(active_roles) == 11
+    assert len(assignor.get_assigned_roles()) == 11
 
 
 def test_ロボットが消えても優先度の高いロールは空けないこと(rclpy_init_shutdown):
@@ -76,8 +74,7 @@ def test_ロボットが消えても優先度の高いロールは空けない�
     changed_roles = assignor.update_role()
     assert changed_roles == [2, 3]
     
-    active_roles = assignor.get_active_roles()
-    assert active_roles == [0, 1, 2, 3]
+    assert assignor.get_assigned_roles() == [0, 1, 2, 3]
 
 
 def test_ボールに一番近いロボットがAttackerになること(rclpy_init_shutdown):
@@ -92,8 +89,7 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
 
-    active_roles = assignor.get_active_roles()
-    assert active_roles == [RoleName.ATTACKER.value, 2, 3]
+    assert assignor.get_assigned_roles() == [RoleName.ATTACKER.value, 2, 3]
     assert assignor.get_robot_id(RoleName.ATTACKER.value) == 8
 
 def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
@@ -109,7 +105,5 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role(update_attacker_by_ball_pos=False)
 
-    active_roles = assignor.get_active_roles()
-    assert active_roles == [RoleName.ATTACKER.value, 2, 3]
+    assert assignor.get_assigned_roles() == [RoleName.ATTACKER.value, 2, 3]
     assert assignor.get_robot_id(RoleName.ATTACKER.value) == 7
-
