@@ -88,13 +88,6 @@ class RoleAssignment(Node):
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
-    def get_robot_id(self, role_index):
-        # 指定された役割を担当するロボットIDを返す
-        if role_index < len(self._robot_id_of_role_priority):
-            return self._robot_id_of_role_priority[role_index]
-        else:
-            return None
-
     def update_role(self, update_attacker_by_ball_pos=True):
         # 役割リストを更新する
         # 担当が変わった役割のリストを返す
@@ -202,18 +195,15 @@ class RoleAssignment(Node):
 
             # アクティブなIDがgoalieであれば、指定されたスペースにセットする
             if active_id == self._goalie_id:
-                self._robot_id_of_role_priority[RoleName.GOALIE.value] = self._goalie_id
+                goalie_priority = self._get_priority_of_role(RoleName.GOALIE)
+                self._robot_id_of_role_priority[goalie_priority] = self._goalie_id
                 continue
 
             # 空きスペースにIDをセットする
             # ただし、goalieのスペースは空けておく
-            for index, robot_id in enumerate(self._robot_id_of_role_priority):
-                if index == RoleName.GOALIE.value:
-                    continue
-
-                if robot_id is None:
-                    self._robot_id_of_role_priority[index] = active_id
-                    break
+            priority = self._find_highest_prioiry_from_free_roles(ignore_goalie=True)
+            if priority is not None:
+                self._robot_id_of_role_priority[priority] = active_id
 
     def _sort_empty_role(self):
         # 優先度の高いroleに空きが出ないように、
@@ -246,6 +236,18 @@ class RoleAssignment(Node):
         for robot_id in reversed(self._robot_id_of_role_priority):
             if robot_id is not None:
                 return self._robot_id_of_role_priority.index(robot_id)
+        return None
+
+    def _find_highest_prioiry_from_free_roles(self, ignore_goalie=True):
+        # 担当がいないroleの中で、最も優先度が高いものを探し、優先度を返す
+        # 空きroleがなければNoneを返す
+        # ignore_goalieがTrueの場合、goalieのroleを除外する
+        for priority, robot_id in enumerate(self._robot_id_of_role_priority):
+            if priority == self._get_priority_of_role(RoleName.GOALIE) and ignore_goalie:
+                continue
+
+            if robot_id is None:
+                return priority
         return None
             
     def _swap_robot_id_of_priority(self, priority1, priority2):
@@ -284,19 +286,19 @@ class RoleAssignment(Node):
 
         nearest_id = None
         nearest_distance = 1000  # 適当な巨大な距離を初期値とする
-        attacker_id = None
-        attacker_distance = 1000  # 適当な巨大な距離を初期値とする
+        present_attacker_distance = 1000  # 適当な巨大な距離を初期値とする
+
+        attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
+        present_attacker_id = self._robot_id_of_role_priority[attacker_role_priority]
         for robot in our_active_robots:
+            target_id = robot.robot_id.id
             distance_x = ball_pos.x - robot.pos.x
             distance_y = ball_pos.y - robot.pos.y
             distance = math.hypot(distance_x, distance_y)
 
-            # アタッカーの距離とIDをセット
-            # NoneなIDを検出しない
-            if self._robot_id_of_role_priority[RoleName.ATTACKER.value] and \
-               robot.robot_id.id == self._robot_id_of_role_priority[RoleName.ATTACKER.value]:
-                attacker_id = robot.robot_id.id
-                attacker_distance = distance
+            # 現在のアタッカーの距離をセット
+            if target_id == present_attacker_id:
+                present_attacker_distance = distance
                 continue
 
             # Goalieはスキップ
@@ -310,7 +312,7 @@ class RoleAssignment(Node):
 
         # アタッカー以外のロボットが十分にボールに近ければ、
         # アタッカー候補としてIDを返す
-        if attacker_distance - nearest_distance > NEAREST_THRESHOLD:
+        if present_attacker_distance - nearest_distance > NEAREST_THRESHOLD:
             return nearest_id
         else:
-            return attacker_id
+            return present_attacker_id
