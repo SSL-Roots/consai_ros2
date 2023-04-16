@@ -98,6 +98,24 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
         (RoleName.CENTER_BACK1, 8),
         (RoleName.CENTER_BACK2, 7)]
 
+def test_goalieが一番ボールに近いときは二番目に近いロボットがAttackerになること(rclpy_init_shutdown):
+    assignor = RoleAssignment(9)
+    frame_publisher = TrackedFramePublisher()
+    # ID9のロボットが一番ボールに近い、がGoalieである
+    frame_publisher.set_robot_pos(False, 7, -5.0, 0.0)
+    frame_publisher.set_robot_pos(False, 8, -2.0, 0.0)
+    frame_publisher.set_robot_pos(False, 9, 4.0, 0.0)
+    frame_publisher.set_ball_pos(3.0, 0.0)
+    frame_publisher.publish_preset_frame()
+
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assignor.update_role()
+
+    assert assignor.get_assigned_roles_and_ids() == [
+        (RoleName.GOALIE, 9),
+        (RoleName.ATTACKER, 8),
+        (RoleName.CENTER_BACK1, 7)]
+
 
 def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
     assignor = RoleAssignment(0)
