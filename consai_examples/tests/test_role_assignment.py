@@ -1,5 +1,6 @@
 
 from consai_examples.role_assignment import RoleAssignment
+from consai_examples.role_assignment import RoleName
 import pytest
 import rclpy
 from tracked_frame_publisher import TrackedFramePublisher
@@ -23,8 +24,7 @@ def test_引数のgoalie_idが正しく設定されること(rclpy_init_shutdown
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
-    ROLE_GOALIE = 0
-    assert assignor.get_robot_id(ROLE_GOALIE) == goalie_id
+    assert assignor.get_robot_id(RoleName.GOALIE.value) == goalie_id
 
 
 @pytest.mark.parametrize("goalie_id, is_yellow", [(1, False), (3, True)])
@@ -38,8 +38,7 @@ def test_引数のour_team_is_yellowが正しく設定されること(rclpy_init
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
-    ROLE_GOALIE = 0
-    assert assignor.get_robot_id(ROLE_GOALIE) == goalie_id
+    assert assignor.get_robot_id(RoleName.GOALIE.value) == goalie_id
 
 
 def test_TrackedFrameを受信するまではロールは更新されないこと(rclpy_init_shutdown):
@@ -93,7 +92,24 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
 
-    ROLE_ATTACKER = 1
     active_roles = assignor.get_active_roles()
-    assert active_roles == [ROLE_ATTACKER, 2, 3]
-    assert assignor.get_robot_id(ROLE_ATTACKER) == 8
+    assert active_roles == [RoleName.ATTACKER.value, 2, 3]
+    assert assignor.get_robot_id(RoleName.ATTACKER.value) == 8
+
+def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
+    assignor = RoleAssignment(0)
+    frame_publisher = TrackedFramePublisher()
+    # ボールに一番近いのはID9だが、IDが一番小さい7がAttackerとなる
+    frame_publisher.set_robot_pos(False, 7, -5.0, 0.0)
+    frame_publisher.set_robot_pos(False, 8, -2.0, 0.0)
+    frame_publisher.set_robot_pos(False, 9, -1.0, 0.0)
+    frame_publisher.set_ball_pos(-2.0, -0.0)
+    frame_publisher.publish_preset_frame()
+
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assignor.update_role(update_attacker_by_ball_pos=False)
+
+    active_roles = assignor.get_active_roles()
+    assert active_roles == [RoleName.ATTACKER.value, 2, 3]
+    assert assignor.get_robot_id(RoleName.ATTACKER.value) == 7
+
