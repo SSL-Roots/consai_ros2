@@ -19,11 +19,26 @@ from decisions.decision_base import DecisionBase
 
 class SubstituteDecision(DecisionBase):
 
-    def __init__(self, robot_operator):
+    def __init__(self, robot_operator, invert=False):
         super().__init__(robot_operator)
 
+        # サイドチェンジに関わらず退避位置を常に同じするためにinvertフラグを取得する
+        self._invert = invert
+
     def _move_to_substitute_area(self, robot_id):
-        self._operator.move_to(robot_id, 0, -4.5, 0, keep=True)
+        # ロボット交代位置
+        # ロボットは
+        #    フィールドマージンに部分的接触している
+        #    かつハーフウェーラインから1m離れない位置
+        # で交代できる
+        # ただしボールがハーフウェーラインから2m以上離れている場合
+        # https://robocup-ssl.github.io/ssl-rules/sslrules.html#_robot_substitution
+        pos_x = 0.0
+        pos_y = -4.5 + -0.15
+        theta = 0.0
+        if self._invert:
+            pos_y *= -1.0
+        self._operator.move_to(robot_id, pos_x, pos_y, theta, keep=True)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
