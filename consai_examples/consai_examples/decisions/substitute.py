@@ -31,9 +31,9 @@ class SubstituteDecision(DecisionBase):
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
-        if self._act_id != ID_IN_PLAY:
+        if self._act_id != self.ACT_ID_INPLAY:
             self._move_to_substitute_area(robot_id)
-            self._act_id = ID_IN_PLAY
+            self._act_id = self.ACT_ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
