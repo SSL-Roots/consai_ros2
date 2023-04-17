@@ -48,6 +48,39 @@ def test_TrackedFrameを受信するまではロールは更新されないこ�
     assert assignor.get_assigned_roles_and_ids() == []
 
 
+def test_update_roleは更新されたロボットのIDを返すこと(rclpy_init_shutdown):
+    assignor = RoleAssignment(0)
+    frame_publisher = TrackedFramePublisher()
+    frame_publisher.publish_valid_robots(blue_ids=[])
+
+    # トピックをsubscribeするためspine_once()を実行
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assert assignor.update_role() == []
+
+    # ロボットを登場させる
+    frame_publisher.publish_valid_robots(blue_ids=[0, 1, 10])
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assert assignor.update_role() == [0, 1, 10]
+
+    # ロボットを減らす
+    # 誰も役割は変わらないので、空リストが返ってくる
+    frame_publisher.publish_valid_robots(blue_ids=[0, 1])
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assert assignor.update_role() == []
+
+    # ロボットを増やす
+    frame_publisher.publish_valid_robots(blue_ids=[0, 1, 2, 3, 4, 5])
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assert assignor.update_role() == [2, 3, 4, 5]
+
+    # ロボットを減らして増やす
+    # 空きロールに新しいIDがセットされるの
+    # ID5の担当は変わらない [0, 1, 2, 8, 9, 5]
+    frame_publisher.publish_valid_robots(blue_ids=[0, 1, 2, 5, 8, 9])
+    rclpy.spin_once(assignor, timeout_sec=1.0)
+    assert assignor.update_role() == [8, 9]
+
+
 def test_ロールの数よりロボットが多くてもエラーが発生しないこと(rclpy_init_shutdown):
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
@@ -98,6 +131,7 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
         (RoleName.CENTER_BACK1, 8),
         (RoleName.CENTER_BACK2, 7)]
 
+
 def test_goalieが一番ボールに近いときは二番目に近いロボットがAttackerになること(rclpy_init_shutdown):
     assignor = RoleAssignment(9)
     frame_publisher = TrackedFramePublisher()
@@ -135,6 +169,7 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
         (RoleName.CENTER_BACK1, 8),
         (RoleName.CENTER_BACK2, 9)]
 
+
 @pytest.mark.parametrize("robot_num, expected_indexes",
     [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
 def test_ロボットの出場可能台数が減った時には優先度の低いものからSUBSTITUEロールを割り当てること(rclpy_init_shutdown, robot_num, expected_indexes):
@@ -147,6 +182,7 @@ def test_ロボットの出場可能台数が減った時には優先度の低�
     assignor.update_role(allowed_robot_num=robot_num)
     for expected_index in expected_indexes:
         assert assignor.get_role_from_robot_id(expected_index) == RoleName.SUBSTITUTE
+
 
 def test_SUBSTITUTEから復帰した場合もchanged_idとして返すこと(rclpy_init_shutdown):
     assignor = RoleAssignment(0)
