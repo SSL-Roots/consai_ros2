@@ -70,7 +70,7 @@ def main():
         ball_zone_state = observer.get_ball_zone_state()
 
         # ロボットの役割の更新する
-        changed_roles = assignor.update_role(
+        changed_ids = assignor.update_role(
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
@@ -79,7 +79,8 @@ def main():
         
         for role, robot_id in assignor.get_assigned_roles_and_ids():
             # 役割が変わったロボットのみ、行動を更新する
-            if role in changed_roles:
+            # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
+            if robot_id in changed_ids:
                 decisions[role].reset_act_id()
 
             # ボール状態をセットする
@@ -208,7 +209,7 @@ if __name__ == '__main__':
         RoleName.ZONE4: Zone4Decision(operator),
         RoleName.SIDE_BACK1: SideBack1Decision(operator),
         RoleName.SIDE_BACK2: SideBack2Decision(operator),
-        RoleName.SUBSTITUTE: SubstituteDecision(operator),
+        RoleName.SUBSTITUTE: SubstituteDecision(operator, args.invert),
     }
 
     try:

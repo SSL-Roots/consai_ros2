@@ -71,8 +71,8 @@ def test_ロボットが消えても優先度の高いロールは空けない�
     # 4番と5番を退場させる
     frame_publisher.publish_valid_robots(blue_ids=[0,3,6,7])
     rclpy.spin_once(assignor, timeout_sec=1.0)
-    changed_roles = assignor.update_role()
-    assert changed_roles == [RoleName.CENTER_BACK1, RoleName.CENTER_BACK2]
+    changed_ids = assignor.update_role()
+    assert changed_ids == [7, 6]
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.GOALIE, 0),
         (RoleName.ATTACKER, 3),
@@ -148,22 +148,26 @@ def test_ロボットの出場可能台数が減った時には優先度の低�
     for expected_index in expected_indexes:
         assert assignor.get_role_from_robot_id(expected_index) == RoleName.SUBSTITUTE
 
-def test_SUBSTITUTEから復帰した場合もchanged_roleとして返すこと(rclpy_init_shutdown):
+def test_SUBSTITUTEから復帰した場合もchanged_idとして返すこと(rclpy_init_shutdown):
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
 
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
-    changed_roles = assignor.update_role(allowed_robot_num=11)
-    assert len(changed_roles) == 11
+    changed_ids = assignor.update_role(allowed_robot_num=11)
+    assert len(changed_ids) == 11
 
     # 許可台数を一つ減らす
-    changed_roles = assignor.update_role(allowed_robot_num=10)
-    assert len(changed_roles) == 1
-    assert changed_roles[0] == RoleName.SUBSTITUTE
+    changed_ids = assignor.update_role(allowed_robot_num=10)
+    assert len(changed_ids) == 1
+    assert changed_ids[0] == 10
 
     # 復活させる
-    changed_roles = assignor.update_role(allowed_robot_num=11)
-    assert len(changed_roles) == 1
-    assert changed_roles[0] == RoleName.SIDE_BACK2
+    changed_ids = assignor.update_role(allowed_robot_num=11)
+    assert len(changed_ids) == 1
+    assert changed_ids[0] == 10
+
+    # もう一度更新する。roleの割り当てに変化はない
+    changed_ids = assignor.update_role(allowed_robot_num=11)
+    assert len(changed_ids) == 0

@@ -94,36 +94,37 @@ class RoleAssignment(Node):
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
     def update_role(self, update_attacker_by_ball_pos=True, allowed_robot_num=11):
-        # 役割リストを更新する
-        # 担当が変わった役割のリストを返す
-        # 更新前後でリストに変化がなければ空のリストを返す
-        prev_robot_id_list = copy.deepcopy(self._robot_id_of_role_priority)
+        # roleへのロボットの割り当てを更新する
 
+        # 優先度が高い順にロボットIDを並べる
+        prev_robot_id_of_priority = copy.deepcopy(self._robot_id_of_role_priority)
         self._update_role_list(update_attacker_by_ball_pos)
 
-        changed_roles = []
-        for i in range(len(self._robot_id_of_role_priority)):
-            if self._robot_id_of_role_priority[i] is not None \
-               and self._robot_id_of_role_priority[i] != prev_robot_id_list[i]:
-
-                changed_roles.append(self._active_role_list[i])
-
-        # イエローカードなどでallowed_robot_numが減った場合、SUBSTITUTEを割り当てる
-        # 前回SUBSTITUTEだったroleをchanged_rolesに追加する
-        for index, role in enumerate(self._present_role_list):
-            if role == RoleName.SUBSTITUTE:
-                changed_roles.append(self._active_role_list[index])
-        
-        # present_role_listをリセット
+        # 役割リストを更新する
+        prev_role_list = copy.deepcopy(self._present_role_list)
         self._present_role_list = copy.deepcopy(self._active_role_list)
-
-        # SUBSTITUTEを割り当てる
+        # SUBSTITUTEを更新する
         num_of_substitute = self._ROLE_NUM - allowed_robot_num
         if num_of_substitute > 0:
             self._overwrite_substite_to_present_role_list(num_of_substitute)
-            changed_roles.append(RoleName.SUBSTITUTE)
 
-        return changed_roles
+        # 担当が変わったロボットIDのリストを返す
+        changed_robot_ids = []
+        for priority, robot_id in enumerate(self._robot_id_of_role_priority):
+            # 役割にロボットIDがセットされていなければスキップ
+            if robot_id is None:
+                continue
+
+            # 前回と同じroleを担当していればスキップ
+            if robot_id in prev_robot_id_of_priority:
+                prev_priority = prev_robot_id_of_priority.index(robot_id)
+                if self._present_role_list[priority] == prev_role_list[prev_priority]:
+                    continue
+
+            # 変更リストにIDを追加する
+            changed_robot_ids.append(robot_id)
+
+        return changed_robot_ids
 
     def get_assigned_roles_and_ids(self):
         # IDが割り当てられているroleとIDのペアのリストを返す
