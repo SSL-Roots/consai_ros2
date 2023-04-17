@@ -45,7 +45,7 @@ def test_TrackedFrameを受信するまではロールは更新されないこ�
     assignor = RoleAssignment(0)
     assignor.update_role()
 
-    assert assignor.get_assigned_roles() == []
+    assert assignor.get_assigned_roles_and_ids() == []
 
 
 def test_ロールの数よりロボットが多くてもエラーが発生しないこと(rclpy_init_shutdown):
@@ -57,7 +57,7 @@ def test_ロールの数よりロボットが多くてもエラーが発生し�
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
-    assert len(assignor.get_assigned_roles()) == 11
+    assert len(assignor.get_assigned_roles_and_ids()) == 11
 
 
 def test_ロボットが消えても優先度の高いロールは空けないこと(rclpy_init_shutdown):

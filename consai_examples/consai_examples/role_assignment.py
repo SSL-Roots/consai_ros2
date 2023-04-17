@@ -125,14 +125,6 @@ class RoleAssignment(Node):
 
         return changed_roles
 
-    def get_assigned_roles(self):
-        # IDが割り当てられているroleのリストを返す
-        active_index = []
-        for i in range(len(self._robot_id_of_role_priority)):
-            if self._robot_id_of_role_priority[i] is not None:
-                active_index.append(i)
-        return active_index
-
     def get_assigned_roles_and_ids(self):
         # IDが割り当てられているroleとIDのペアのリストを返す
         active_index = []
