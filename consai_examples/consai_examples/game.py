@@ -41,8 +41,7 @@ from role_assignment import RoleAssignment
 from role_assignment import RoleName
 
 
-def num_of_active_zone_roles(active_roles_and_ids):
-    active_roles = [ t[0] for t in active_roles_and_ids]
+def num_of_active_zone_roles(active_roles):
     # アクティブなゾーンディフェンス担当者の数を返す
     role_zone_list = [
         RoleName.ZONE1,
@@ -74,7 +73,9 @@ def main():
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
-        num_of_zone_roles = num_of_active_zone_roles(assignor.get_assigned_roles_and_ids())
+        # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
+        assigned_roles = [ t[0] for t in assignor.get_assigned_roles_and_ids() ]
+        num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
         
         for role, robot_id in assignor.get_assigned_roles_and_ids():
