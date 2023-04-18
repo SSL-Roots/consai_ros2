@@ -7,9 +7,9 @@ RoleAssignmentノードの仕事は、ロボットの役割（ロール）を決
 ### 設計
 
 - RoleAssignmentノードはロール優先度をもとにロボットIDを管理します
-  - `self._robot_id_of_role_priority`
+  - `self._id_list_ordered_by_role_priority`
   - インデックスが小さいほど、優先度が高いです
-  - `self._robot_id_of_role_priority[0] == GOALIEのロボットID`と考えてOKです
+  - `self._id_list_ordered_by_role_priority[0] == GOALIEのロボットID`と考えてOKです
 - ノードはアクティブなロール一覧と、現時点でのロール一覧を管理します
   - `self._active_role_list`と`self._present_role_list`
   - 基本的にはそれぞれ同じ値を持ちますが、
