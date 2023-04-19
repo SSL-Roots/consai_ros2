@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import copy
+from enum import Enum
 import math
 
 from rclpy.node import Node
@@ -27,16 +28,26 @@ from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import TrackedRobot
 from robocup_ssl_msgs.msg import Vector3
 
+# 設定可能なロボット役割一覧
+# ロボットの台数より多く定義してもOK
+class RoleName(Enum):
+    GOALIE = 0
+    ATTACKER = 1
+    CENTER_BACK1 = 2
+    CENTER_BACK2 = 3
+    SUB_ATTACKER = 4
+    ZONE1 = 5
+    ZONE2 = 6
+    ZONE3 = 7
+    ZONE4 = 8
+    SIDE_BACK1 = 9
+    SIDE_BACK2 = 10
+    SUBSTITUTE = 11
+
 
 # フィールド状況を見て、ロボットの役割を決めるノード
 # ロボットの役割が頻繁に変わらないように調整する
 class RoleAssignment(Node):
-    # 定数インデックスを変更すると可能性があるため、変更しないこと
-    ROLE_INDEX_GOALIE = 0
-    ROLE_INDEX_ATTACKER = 1
-    # フィールドに出せるロボットの数は11台
-    # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
-    ROLE_NUM = 11
     # ロボット、ボールの消失判定しきい値
     VISIBILITY_THRESHOLD = 0.01
 
@@ -49,8 +60,32 @@ class RoleAssignment(Node):
             self.get_logger().info('ourteamはyellowです')
         else:
             self.get_logger().info('ourteamはblueです')
+        
+        # フィールド上のロボット役割一覧
+        # フィールドに出せるロボットの数は11台
+        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
+        self._active_role_list = [
+            RoleName.GOALIE,
+            RoleName.ATTACKER,
+            RoleName.CENTER_BACK1,
+            RoleName.CENTER_BACK2,
+            RoleName.SUB_ATTACKER,
+            RoleName.ZONE1,
+            RoleName.ZONE2,
+            RoleName.ZONE3,
+            RoleName.ZONE4,
+            RoleName.SIDE_BACK1,
+            RoleName.SIDE_BACK2,
+        ]
+        # 実際に運用するroleのリスト
+        # イエローカードや交代指示などで役割が変更されます
+        self._present_role_list = copy.deepcopy(self._active_role_list)
+        self._ROLE_NUM = len(self._active_role_list)
 
-        self._role = [None] * self.ROLE_NUM
+        # role優先度とロボットIDを結びつけるリスト
+        # indexの数値が小さいほど優先度が高い
+        self._id_list_ordered_by_role_priority = [None] * self._ROLE_NUM
+
         self._goalie_id = goalie_id
         self.get_logger().info('goalie IDは{}です'.format(self._goalie_id))
 
@@ -58,45 +93,78 @@ class RoleAssignment(Node):
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
-    def get_robot_id(self, role_index):
-        # 指定された役割を担当するロボットIDを返す
-        if role_index < len(self._role):
-            return self._role[role_index]
-        else:
-            return None
+    def update_role(self, update_attacker_by_ball_pos=True, allowed_robot_num=11):
+        # roleへのロボットの割り当てを更新する
 
-    def update_role(self):
+        # 優先度が高い順にロボットIDを並べる
+        prev_id_list_ordered_by_role_priority = copy.deepcopy(self._id_list_ordered_by_role_priority)
+        self._update_role_list(update_attacker_by_ball_pos)
+
         # 役割リストを更新する
-        # 担当が変わった役割のインデックスのリストを返す
-        # 更新前後でリストに変化がなければ空のリストを返す
-        prev_role_list = copy.deepcopy(self._role)
-        self._update_role_list()
-        changed_index = []
-        for i in range(len(self._role)):
-            if self._role[i] is not None and self._role[i] != prev_role_list[i]:
-                changed_index.append(i)
+        prev_role_list = copy.deepcopy(self._present_role_list)
+        self._present_role_list = copy.deepcopy(self._active_role_list)
+        # SUBSTITUTEを更新する
+        num_of_substitute = self._ROLE_NUM - allowed_robot_num
+        if num_of_substitute > 0:
+            self._overwrite_substite_to_present_role_list(num_of_substitute)
 
-        return changed_index
+        # 担当が変わったロボットIDのリストを返す
+        changed_robot_ids = []
+        for priority, robot_id in enumerate(self._id_list_ordered_by_role_priority):
+            # 役割にロボットIDがセットされていなければスキップ
+            if robot_id is None:
+                continue
 
-    def get_active_roles(self):
-        # IDが割り当てられているroleのリストを返す
+            # 前回と同じroleを担当していればスキップ
+            if robot_id in prev_id_list_ordered_by_role_priority:
+                prev_priority = prev_id_list_ordered_by_role_priority.index(robot_id)
+                if self._present_role_list[priority] == prev_role_list[prev_priority]:
+                    continue
+
+            # 変更リストにIDを追加する
+            changed_robot_ids.append(robot_id)
+
+        return changed_robot_ids
+
+    def get_assigned_roles_and_ids(self):
+        # IDが割り当てられているroleとIDのペアのリストを返す
         active_index = []
-        for i in range(len(self._role)):
-            if self._role[i] is not None:
-                active_index.append(i)
-        return active_index
+        role_and_id = []
+        for i in range(len(self._id_list_ordered_by_role_priority)):
+            role = self._present_role_list[i]
+            robot_id = self._id_list_ordered_by_role_priority[i]
+            if robot_id is not None:
+                role_and_id.append((role, robot_id))
+        return role_and_id
+
+    def get_role_from_robot_id(self, robot_id):
+        # 指定したIDが割り当てられているroleを返す
+        # 割り当てていなければNoneを返す
+        if robot_id in self._id_list_ordered_by_role_priority:
+            role_index = self._id_list_ordered_by_role_priority.index(robot_id)
+            return self._present_role_list[role_index]
+        return None
 
     def _detection_tracked_callback(self, msg):
         self._detection = msg
 
-    def _update_role_list(self):
+    def _get_priority_of_role(self, role):
+        # roleの優先度を返す
+        # 重複するroleが設定されている場合、高いほうの優先度を返す
+        return self._active_role_list.index(role)
+
+    def _update_role_list(self, update_attacker_by_ball_pos=True):
         # 役割リストを更新する
         our_active_robots, their_active_robots = self._extract_active_robots(self._detection.robots)
         our_active_ids = [robot.robot_id.id for robot in our_active_robots]
 
-        self._reset_inactive_id(our_active_ids)    
+        self._reset_inactive_id(our_active_ids)
         self._set_avtive_id_to_empty_role(our_active_ids)
         self._sort_empty_role()
+
+        # アタッカーを更新しない場合は終了
+        if update_attacker_by_ball_pos is False:
+            return
 
         # ボールが存在する場合、ボール情報を用いて役割を変更する
         if len(self._detection.balls) == 0:
@@ -112,78 +180,93 @@ class RoleAssignment(Node):
 
         next_attacker_id = self._determine_next_attacker_id(our_active_robots, ball.pos)
         # アタッカーのIDを役割リストにセットする
-        if next_attacker_id in self._role:
-            next_attacker_index = self._role.index(next_attacker_id)
-            self._swap_role(self.ROLE_INDEX_ATTACKER, next_attacker_index)
+        if next_attacker_id in self._id_list_ordered_by_role_priority:
+            next_attacker_priority = self._id_list_ordered_by_role_priority.index(next_attacker_id)
+            attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
+            self._swap_robot_id_of_priority(next_attacker_priority, attacker_role_priority)
 
     def _reset_inactive_id(self, our_active_ids):
         # 役割リストにあるIDが非アクティブな場合、リストの枠にNoneをセットする
-        for index, robot_id in enumerate(self._role):
+        for index, robot_id in enumerate(self._id_list_ordered_by_role_priority):
             if robot_id is None:
                 continue
 
             if robot_id not in our_active_ids:
-                self._role[index] = None
+                self._id_list_ordered_by_role_priority[index] = None
 
     def _set_avtive_id_to_empty_role(self, our_active_ids):
         # アクティブなIDを役割リストの空きスペース(None)にセットする
 
         for active_id in our_active_ids:
             # 空きスペースが無くなれば終了
-            if None not in self._role:
+            if None not in self._id_list_ordered_by_role_priority:
                 break
 
             # すでに役割が与えられていたらスキップする
-            if active_id in self._role:
+            if active_id in self._id_list_ordered_by_role_priority:
                 continue
 
             # アクティブなIDがgoalieであれば、指定されたスペースにセットする
             if active_id == self._goalie_id:
-                self._role[self.ROLE_INDEX_GOALIE] = self._goalie_id
+                goalie_priority = self._get_priority_of_role(RoleName.GOALIE)
+                self._id_list_ordered_by_role_priority[goalie_priority] = self._goalie_id
                 continue
 
             # 空きスペースにIDをセットする
             # ただし、goalieのスペースは空けておく
-            for index, robot_id in enumerate(self._role):
-                if index == self.ROLE_INDEX_GOALIE:
-                    continue
-
-                if robot_id is None:
-                    self._role[index] = active_id
-                    break
+            priority = self._find_highest_prioiry_from_free_roles(ignore_goalie=True)
+            if priority is not None:
+                self._id_list_ordered_by_role_priority[priority] = active_id
 
     def _sort_empty_role(self):
-        # 役割リストのIDの並び途中にNoneが来ないように、
-        # 一番後半のIDをNoneにセットしていく
+        # 優先度の高いroleに空きが出ないように、
+        # 一番優先度の低いroleの担当を、優先度の高い空きroleに割り当てる
 
-        # 空きスペースがなければ終了
-        if None not in self._role:
+        # 空いているroleがなければ終了
+        if None not in self._id_list_ordered_by_role_priority:
             return
 
-        for index, robot_id in enumerate(self._role):
-            # goalieのスペースは空けておく
-            if index == self.ROLE_INDEX_GOALIE:
+        for priority, robot_id in enumerate(self._id_list_ordered_by_role_priority):
+            # goalieの担当は空けておく
+            if priority == self._get_priority_of_role(RoleName.GOALIE):
+                continue
+
+            # 担当がいればスキップ
+            if robot_id is not None:
+                continue
+
+            lowest_priority = self._find_lowest_prioiry_from_assigned_roles()
+            if lowest_priority is None:
+                break
+
+            # 空きスペースの後にアクティブなIDがあればスワップする
+            if priority < lowest_priority:
+                self._swap_robot_id_of_priority(priority, lowest_priority)
+        
+    def _find_lowest_prioiry_from_assigned_roles(self):
+        # 担当がいるroleの中で最も優先度が低いものを探し、優先度を返す
+        # 担当が一人もいなければNoneを返す
+        for robot_id in reversed(self._id_list_ordered_by_role_priority):
+            if robot_id is not None:
+                return self._id_list_ordered_by_role_priority.index(robot_id)
+        return None
+
+    def _find_highest_prioiry_from_free_roles(self, ignore_goalie=True):
+        # 担当がいないroleの中で、最も優先度が高いものを探し、優先度を返す
+        # 空きroleがなければNoneを返す
+        # ignore_goalieがTrueの場合、goalieのroleを除外する
+        for priority, robot_id in enumerate(self._id_list_ordered_by_role_priority):
+            if priority == self._get_priority_of_role(RoleName.GOALIE) and ignore_goalie:
                 continue
 
             if robot_id is None:
-                last_active_index = self._last_active_role_index()
-                # アクティブな役割がなければ終了
-                if last_active_index is None:
-                    break
-                # 空きスペースの後にアクティブなIDがあればスワップする
-                if index < last_active_index:
-                    self._swap_role(index, last_active_index)
-        
-    def _last_active_role_index(self):
-        # 役割リストを逆順に検索し、アクティブなroleのindexを返す
-        for robot_id in reversed(self._role):
-            if robot_id is not None:
-                return self._role.index(robot_id)
+                return priority
         return None
             
-    def _swap_role(self, index1, index2):
-        # 役割リストの指定されたindexをスワップする
-        self._role[index1], self._role[index2] = self._role[index2], self._role[index1]
+    def _swap_robot_id_of_priority(self, priority1, priority2):
+        # robot_id_of_priorityの指定されたpriorityの要素を入れ替える
+        self._id_list_ordered_by_role_priority[priority1], self._id_list_ordered_by_role_priority[priority2] \
+            = self._id_list_ordered_by_role_priority[priority2], self._id_list_ordered_by_role_priority[priority1]
 
     def _extract_active_robots(self, robots_msg):
         # TrackedFrame.robots からアクティブなロボットを抽出する
@@ -216,19 +299,19 @@ class RoleAssignment(Node):
 
         nearest_id = None
         nearest_distance = 1000  # 適当な巨大な距離を初期値とする
-        attacker_id = None
-        attacker_distance = 1000  # 適当な巨大な距離を初期値とする
+        present_attacker_distance = 1000  # 適当な巨大な距離を初期値とする
+
+        attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
+        present_attacker_id = self._id_list_ordered_by_role_priority[attacker_role_priority]
         for robot in our_active_robots:
+            target_id = robot.robot_id.id
             distance_x = ball_pos.x - robot.pos.x
             distance_y = ball_pos.y - robot.pos.y
             distance = math.hypot(distance_x, distance_y)
 
-            # アタッカーの距離とIDをセット
-            # NoneなIDを検出しない
-            if self._role[self.ROLE_INDEX_ATTACKER] and \
-               robot.robot_id.id == self._role[self.ROLE_INDEX_ATTACKER]:
-                attacker_id = robot.robot_id.id
-                attacker_distance = distance
+            # 現在のアタッカーの距離をセット
+            if target_id == present_attacker_id:
+                present_attacker_distance = distance
                 continue
 
             # Goalieはスキップ
@@ -242,7 +325,16 @@ class RoleAssignment(Node):
 
         # アタッカー以外のロボットが十分にボールに近ければ、
         # アタッカー候補としてIDを返す
-        if attacker_distance - nearest_distance > NEAREST_THRESHOLD:
+        if present_attacker_distance - nearest_distance > NEAREST_THRESHOLD:
             return nearest_id
         else:
-            return attacker_id
+            return present_attacker_id
+
+    def _overwrite_substite_to_present_role_list(self, num_of_substitute):
+        # 指定した数だけ、presetn_role_listの後ろからSUBSTITUEロールを上書きする
+        if num_of_substitute <= 0:
+            return
+
+        self._present_role_list[-num_of_substitute:] = \
+            [RoleName.SUBSTITUTE] * min(num_of_substitute, len(self._present_role_list))
+        
