@@ -215,6 +215,7 @@ class FieldWidget(QWidget):
         if self._can_draw_geometry:
             self._draw_geometry(painter)
 
+        # ボールプレースメントでの目標位置と進入禁止エリアを描画
         self._draw_designated_position(painter)
 
         if self._can_draw_replacement:
@@ -599,14 +600,45 @@ class FieldWidget(QWidget):
             painter.drawLine(point, end_point)
 
     def _draw_designated_position(self, painter):
-        if self._designated_position:
-            point = self._convert_field_to_draw_point(
-                self._designated_position[0].x, self._designated_position[0].y)
-            size = self._RADIUS_DESIGNATED_POSITION * self._scale_field_to_draw
+        # ボールプレースメントの目標位置と進入禁止エリアを描画する関数
+        if not self._designated_position:
+            return
+        if not self._detection_tracked.balls:
+            return
 
-            painter.setPen(self._COLOR_DESIGNATED_POSITION)
-            painter.setBrush(self._COLOR_DESIGNATED_POSITION)
-            painter.drawEllipse(point, size, size)
+        # 目標位置とボール位置を取得
+        designated_point = self._convert_field_to_draw_point(
+            self._designated_position[0].x, self._designated_position[0].y)
+        ball = self._detection_tracked.balls[0]
+        ball_point = self._convert_field_to_draw_point(
+            ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
+
+        # ボール配置しないロボットは、ボールと目標位置を結ぶラインから0.5 m以上離れなければならない
+        PROHIBITED_DISTANCE = 500
+        color_prohibited = QColor(Qt.black)
+        color_prohibited.setAlpha(100)
+        painter.setPen(color_prohibited)
+        painter.setBrush(color_prohibited)
+        size = PROHIBITED_DISTANCE * self._scale_field_to_draw
+
+        # 目標位置周りの進入禁止エリアを描画
+        painter.drawEllipse(designated_point, size, size)
+
+        # ボール周りの進入禁止エリアを描画
+        painter.drawEllipse(ball_point, size, size)
+
+        # ボールと目標位置を結ぶラインを描画
+        pen_line = QPen()
+        pen_line.setColor(color_prohibited)
+        pen_line.setWidthF(size * 2.0)  # 幅を2倍にする
+        painter.setPen(pen_line)
+        painter.drawLine(designated_point, ball_point)
+
+        # 目標位置を描画
+        size = self._RADIUS_DESIGNATED_POSITION * self._scale_field_to_draw
+        painter.setPen(self._COLOR_DESIGNATED_POSITION)
+        painter.setBrush(self._COLOR_DESIGNATED_POSITION)
+        painter.drawEllipse(designated_point, size, size)
 
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
