@@ -337,6 +337,11 @@ bool FieldInfoParser::parse_constraint_xy(
 
   // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
   if (xy.normalized) {
+    // フィールド情報がなければfalse
+    if (!geometry_) {
+      return false;
+    }
+
     parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
     parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
   }
