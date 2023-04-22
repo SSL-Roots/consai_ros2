@@ -41,7 +41,7 @@ RobotTracker::RobotTracker(const int team_color, const int id, const double dt)
   prev_tracked_robot_.robot_id.team_color = team_color;
   prev_tracked_robot_.robot_id.id = id;
   // visibilityはoptionalなので、ここでデフォルト値を設定しておく
-  prev_tracked_robot_.visibility.push_back(1.0);
+  prev_tracked_robot_.visibility.push_back(0.0);
   // velocityはoptionalなので、ここでデフォルト値を設定しておく
   prev_tracked_robot_.vel.push_back(Vector2());
   prev_tracked_robot_.vel_angular.push_back(0.0);
