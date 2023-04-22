@@ -24,6 +24,8 @@ from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
+from consai_msgs.msg import NamedTargets
+from consai_msgs.msg import State2D
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -51,6 +53,11 @@ class RobotOperator(Node):
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._avoid_placement_enabled = [True] * ROBOT_NUM
+
+        # 名前付きターゲット格納用の辞書
+        # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
+        self._named_targets = {}
+        self._pub_named_targets = self.create_publisher(NamedTargets, 'named_targets', 1)
 
         if self._target_is_yellow:
             self.get_logger().info('yellowロボットを動かします')
@@ -86,6 +93,28 @@ class RobotOperator(Node):
     def all_robots_are_free(self):
         # チームの全てのロボットが行動を完了していたらtrue
         return all(self._robot_is_free)
+
+    def append_named_target(self, name, x, y, theta=0.0):
+        # 名前付きターゲットを追加する
+        # すでに同じ名前のターゲットが用意されていても上書きする
+        self._named_targets[name] = State2D(x=x, y=y, theta=theta)
+
+    def remove_named_target(self, name):
+        # 指定した名前付きターゲットを削除する
+        if name in self._named_targets:
+            self._named_targets.pop(name)
+
+    def clear_named_targets(self):
+        # 名前付きターゲットを初期化する
+        self._named_targets.clear()
+
+    def publish_named_targets(self):
+        # 名前付きターゲットを送信する
+        msg = NamedTargets()
+        for name, pose in self._named_targets.items():
+            msg.name.append(name)
+            msg.pose.append(pose)
+        self._pub_named_targets.publish(msg)
 
     def stop(self, robot_id):
         # 指定されたIDの制御を停止する
