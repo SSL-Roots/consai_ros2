@@ -141,6 +141,20 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def move_to_named_target(self, robot_id, name, keep=False):
+        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
+
+        pose = ConstraintPose()
+
+        pose.xy = self._xy_object_named_target(name)
+        pose.theta = self._theta_object_named_target(name)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
     def move_to_line(self, robot_id, p1_x, p1_y, p2_x, p2_y, distance, theta, keep=False):
         # 指定したIDのロボットを直線上へ移動させる
         line = ConstraintLine()
@@ -566,6 +580,26 @@ class RobotOperator(Node):
         xy.object.append(self._object_ball())
         return xy
 
+    def _object_named_target(self, name):
+        # ConstraintObjectのNamedTargetを返す
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.NAMED_TARGET
+        obj.name = name
+        return obj
+
+    def _xy_object_named_target(self, name):
+        # NamedTargetを適用したConstraintXYを返す
+        xy = ConstraintXY()
+        xy.object.append(self._object_named_target(name))
+        return xy
+
+    def _theta_object_named_target(self, name):
+        # NamedTargetを適用したConstraintThetaを返す
+        theta = ConstraintTheta()
+        theta.object.append(self._object_named_target(name))
+        theta.param = ConstraintTheta.PARAM_THETA
+        return theta
+
     def _object_our_robot(self, robot_id):
         # ConstraintObjectの自チームのRobotを返す
         obj_robot = ConstraintObject()
@@ -706,7 +740,7 @@ class RobotOperator(Node):
         goal_handle = future.result()
 
         if not goal_handle.accepted:
-            self.get_logger().debug('Goal rejected')
+            self.get_logger().info('Goal rejected')
             self._robot_is_free[robot_id] = True
             return
 

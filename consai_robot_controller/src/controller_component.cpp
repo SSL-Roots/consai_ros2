@@ -158,6 +158,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "referee", 10, std::bind(&Controller::callback_referee, this, _1));
   sub_parsed_referee_ = create_subscription<ParsedReferee>(
     "parsed_referee", 10, std::bind(&Controller::callback_parsed_referee, this, _1));
+  sub_named_targets_ = create_subscription<NamedTargets>(
+    "named_targets", 10, std::bind(&Controller::callback_named_targets, this, _1));
 
   auto param_change_callback =
     [this](std::vector<rclcpp::Parameter> parameters) {
@@ -356,6 +358,11 @@ void Controller::callback_referee(const Referee::SharedPtr msg)
 void Controller::callback_parsed_referee(const ParsedReferee::SharedPtr msg)
 {
   parser_.set_parsed_referee(msg);
+}
+
+void Controller::callback_named_targets(const NamedTargets::SharedPtr msg)
+{
+  parser_.set_named_targets(msg);
 }
 
 bool Controller::update_pid_gain_from_param(

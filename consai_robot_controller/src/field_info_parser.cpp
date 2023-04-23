@@ -54,6 +54,17 @@ void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_r
   parsed_referee_ = parsed_referee;
 }
 
+void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg) {
+  // トピックを受け取るたびに初期化する
+  named_targets_.clear();
+
+  for(std::size_t i = 0; i < msg->name.size(); ++i) {
+    auto name = msg->name[i];
+    auto pose = msg->pose[i];
+    named_targets_[name] = pose;
+  }
+}
+
 bool FieldInfoParser::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
@@ -120,11 +131,15 @@ bool FieldInfoParser::parse_goal(
   if (goal->pose.size() > 0) {
     if (parse_constraint_pose(goal->pose[0], target_pose)) {
       parse_succeeded = true;
+    } else {
+      std::cout << "parse_constraint_pose failed" << std::endl;
     }
   }
   if (goal->line.size() > 0) {
     if (parse_constraint_line(goal->line[0], target_pose)) {
       parse_succeeded = true;
+    } else {
+      std::cout << "parse_constraint_line failed" << std::endl;
     }
   }
 
@@ -244,6 +259,7 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
 {
   double parsed_x, parsed_y;
   if (!parse_constraint_xy(pose.xy, parsed_x, parsed_y)) {
+    std::cout << "parse_constraint_xy failed" << std::endl;
     return false;
   }
   parsed_x += pose.offset.x;
@@ -251,6 +267,7 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
 
   double parsed_theta;
   if (!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)) {
+    std::cout << "parse_constraint_theta failed" << std::endl;
     return false;
   }
 
@@ -403,6 +420,11 @@ bool FieldInfoParser::parse_constraint_object(
     object_pose.x = robot.pos.x;
     object_pose.y = robot.pos.y;
     object_pose.theta = robot.orientation;
+    return true;
+  } else if (object.type == ConstraintObject::NAMED_TARGET &&
+    named_targets_.find(object.name) != named_targets_.end())
+  {
+    object_pose = named_targets_.at(object.name);
     return true;
   }
 
