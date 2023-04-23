@@ -20,6 +20,7 @@ import os
 
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPose
+from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
 import consai_visualizer.referee_parser as ref_parser
 from python_qt_binding import loadUi
@@ -74,6 +75,9 @@ class Visualizer(Plugin):
         self._sub_referee = self._node.create_subscription(
             Referee, 'referee',
             self._callback_referee, 10)
+        self._sub_named_targets = self._node.create_subscription(
+            NamedTargets, 'named_targets',
+            self._widget.field_widget.set_named_targets, 10)
 
         self._sub_goal_pose = []
         for i in range(16):
