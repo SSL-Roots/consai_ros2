@@ -334,6 +334,10 @@ class RobotOperator(Node):
         # ボールの後ろに移動し、相手ゴールに向かってシュートする
         return self._act_to_ball(robot_id, self._xy_their_goal(), do_shoot=True)
 
+    def shoot_to_named_target(self, robot_id, name):
+        # ボールの後ろに移動し、名前付きターゲットに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_object_named_target(name), do_shoot=True)
+
     def shoot_to_their_goal_with_reflect(self, robot_id):
         # ボールの後ろに移動し、相手ゴールに向かってシュートする
         # ボールが自分に向かって転がってきた場合はリフレクトシュートする

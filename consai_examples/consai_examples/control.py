@@ -364,10 +364,11 @@ def test_use_named_targets():
         # return State2D(x=clamp(x, -LIMIT_X, LIMIT_X), y=clamp(y, -LIMIT_Y, LIMIT_Y))
 
     def calc_pose_based_on_pose1(angle, offset_angle, pose1):
-        # pose1の周りを一周するposeを計算
+        # pose1の周りをN周するposeを計算
+        NUM_OF_ROTATIONS = 4
         LENGTH = 0.5
-        x = pose1.x + LENGTH * math.cos(4.0*(angle + offset_angle))
-        y = pose1.y + LENGTH * math.sin(4.0*(angle + offset_angle))
+        x = pose1.x + LENGTH * math.cos(NUM_OF_ROTATIONS*(angle + offset_angle))
+        y = pose1.y + LENGTH * math.sin(NUM_OF_ROTATIONS*(angle + offset_angle))
         return State2D(x=x, y=y)
 
     print("test_use_named_targets")
@@ -399,6 +400,10 @@ def test_use_named_targets():
     operator_node.move_to_named_target(2, "pose3", keep=True)
     operator_node.move_to_named_target(3, "pose4", keep=True)
 
+    # 別のロボットにはpose1に対してボールを蹴り続けてもらう
+    # NamedTargetはボールのキック対象としても選択可能である
+    operator_node.shoot_to_named_target(4, "pose1")
+
     MOTION_TIME = 20.0  # 動作の実行時間 seconds
     start_time = time.time()
     elapsed_time = 0.0
@@ -415,6 +420,13 @@ def test_use_named_targets():
         operator_node.set_named_target("pose3", pose3.x, pose3.y)
         operator_node.set_named_target("pose4", pose4.x, pose4.y)
         operator_node.publish_named_targets()
+
+    print('ロボットの動作停止！')
+    for i in range(5):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
 
 def main():
     # 実行したい関数のコメントを外してください
