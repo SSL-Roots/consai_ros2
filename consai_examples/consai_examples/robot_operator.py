@@ -141,20 +141,6 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
-    def move_to_named_target(self, robot_id, name, keep=False):
-        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
-
-        pose = ConstraintPose()
-
-        pose.xy = self._xy_object_named_target(name)
-        pose.theta = self._theta_object_named_target(name)
-
-        goal_msg = RobotControl.Goal()
-        goal_msg.pose.append(pose)
-        goal_msg.keep_control = keep
-
-        return self._set_goal(robot_id, goal_msg)
-
     def move_to_line(self, robot_id, p1_x, p1_y, p2_x, p2_y, distance, theta, keep=False):
         # 指定したIDのロボットを直線上へ移動させる
         line = ConstraintLine()
@@ -321,6 +307,37 @@ class RobotOperator(Node):
         line.distance = distance
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
+    def move_to_named_target(self, robot_id, name, keep=False):
+        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
+        pose = ConstraintPose()
+        pose.xy = self._xy_object_named_target(name)
+        pose.theta = self._theta_object_named_target(name)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def move_to_named_target_with_reflect_pass_to_named_target(
+        self, robot_id, name_to_move, name_to_pass):
+        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
+        # ボールが来たらリフレクトパスを実施する
+
+        pose = ConstraintPose()
+        pose.xy = self._xy_object_named_target(name_to_move)
+        pose.theta = self._theta_object_named_target(name_to_move)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = True
+
+        goal_msg = self._with_receive(
+            self._with_reflect_and_normal_kick(
+                goal_msg, self._xy_object_named_target(name_to_pass), kick_pass=True))
+
+        return self._set_goal(robot_id, goal_msg)
 
     def pass_to(self, robot_id, x, y):
         # ボールの後ろに移動し、指定位置に向かってパスする

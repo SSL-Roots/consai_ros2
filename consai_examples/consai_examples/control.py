@@ -349,19 +349,12 @@ def test_use_named_targets():
     # 名前付きターゲットを使うことで、動的に変動するposeを参照した行動を指示できる
     # ロボットやボールから相対的に計算できない、複雑な目標位置を指示する際に有効である
 
-    LIMIT_X = 2.0
-    LIMIT_Y = 2.0
-
-    def clamp(value, min_value, max_value):
-        return max(min(value, max_value), min_value)
-
     def calc_pose1(angle):
         # フィールドを1周するposeを計算
         LENGTH = 3.0
         x = LENGTH * math.cos(angle)
         y = LENGTH * math.sin(angle)
         return State2D(x=x, y=y)
-        # return State2D(x=clamp(x, -LIMIT_X, LIMIT_X), y=clamp(y, -LIMIT_Y, LIMIT_Y))
 
     def calc_pose_based_on_pose1(angle, offset_angle, pose1):
         # pose1の周りをN周するposeを計算
@@ -428,6 +421,67 @@ def test_use_named_targets():
     while operator_node.all_robots_are_free() is False:
         pass
 
+def test_star_pass():
+    # 5台のロボットが互いにパスし続けるテスト
+
+    def calc_pose(angle, offset_angle, base_pose):
+        LENGTH = 2.5
+        target_angle = angle + offset_angle
+        x = base_pose.x + LENGTH * math.cos(target_angle)
+        y = base_pose.y + LENGTH * math.sin(target_angle)
+        theta = math.pi + target_angle
+        return State2D(x=x, y=y, theta=theta)
+
+    print("test_star_pass")
+    time.sleep(1.0)  # operatorの起動を待つ
+
+    # スタート位置を生成し、named_targetsとしてpublishさせる
+    ROBOT_NUM = 5
+    base_pose = State2D(x=0.0, y=0.0)
+    for i in range(ROBOT_NUM):
+        offset_angle = math.radians(i * 360.0 / ROBOT_NUM)
+        pose = calc_pose(0.0, offset_angle, base_pose)
+        target_name = "pose{}".format(i)
+        operator_node.set_named_target(target_name, pose.x, pose.y, pose.theta)
+    operator_node.publish_named_targets()
+
+    # ロボットをスタート位置へ移動させる
+    for i in range(ROBOT_NUM):
+        target_name = "pose{}".format(i)
+        operator_node.move_to_named_target(i, target_name)
+    # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    # 互いにパスし合うように指示する
+    # TODO: 距離をもとにパス威力を設定できるように、controllerを改善すること
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(0, "pose0", "pose2")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(2, "pose2", "pose4")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(4, "pose4", "pose1")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(1, "pose1", "pose3")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(3, "pose3", "pose0")
+
+    MOTION_TIME = 30.0  # 動作の実行時間 seconds
+    start_time = time.time()
+    elapsed_time = 0.0
+    while elapsed_time < MOTION_TIME:
+        elapsed_time = time.time() - start_time
+        angle = 2.0 * math.pi * elapsed_time / MOTION_TIME
+
+        for i in range(ROBOT_NUM):
+            offset_angle = math.radians(i * 360.0 / ROBOT_NUM)
+            pose = calc_pose(angle, offset_angle, base_pose)
+            target_name = "pose{}".format(i)
+            operator_node.set_named_target(target_name, pose.x, pose.y, pose.theta)
+        operator_node.publish_named_targets()
+
+    print('ロボットの動作停止！')
+    for i in range(ROBOT_NUM):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
@@ -446,7 +500,8 @@ def main():
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # find_passable_robots(4, 1)
-    test_use_named_targets()
+    # test_use_named_targets()
+    test_star_pass()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
