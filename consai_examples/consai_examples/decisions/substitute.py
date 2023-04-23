@@ -33,12 +33,14 @@ class SubstituteDecision(DecisionBase):
         # で交代できる
         # ただしボールがハーフウェーラインから2m以上離れている場合
         # https://robocup-ssl.github.io/ssl-rules/sslrules.html#_robot_substitution
+        target_name = "SUBSTITUTION_POS"
         pos_x = 0.0
         pos_y = -4.5 + -0.15
-        theta = 0.0
         if self._invert:
             pos_y *= -1.0
-        self._operator.move_to(robot_id, pos_x, pos_y, theta, keep=True)
+        self._operator.set_named_target(target_name, pos_x, pos_y)
+        self._operator.publish_named_targets()
+        self._operator.move_to_named_target(robot_id, target_name, keep=True)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:

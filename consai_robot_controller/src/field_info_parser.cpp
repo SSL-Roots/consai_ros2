@@ -54,6 +54,17 @@ void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_r
   parsed_referee_ = parsed_referee;
 }
 
+void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg) {
+  // トピックを受け取るたびに初期化する
+  named_targets_.clear();
+
+  for(std::size_t i = 0; i < msg->name.size(); ++i) {
+    auto name = msg->name[i];
+    auto pose = msg->pose[i];
+    named_targets_[name] = pose;
+  }
+}
+
 bool FieldInfoParser::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
@@ -403,6 +414,11 @@ bool FieldInfoParser::parse_constraint_object(
     object_pose.x = robot.pos.x;
     object_pose.y = robot.pos.y;
     object_pose.theta = robot.orientation;
+    return true;
+  } else if (object.type == ConstraintObject::NAMED_TARGET &&
+    named_targets_.find(object.name) != named_targets_.end())
+  {
+    object_pose = named_targets_.at(object.name);
     return true;
   }
 

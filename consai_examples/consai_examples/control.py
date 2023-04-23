@@ -20,6 +20,7 @@ import math
 import threading
 import time
 
+from consai_msgs.msg import State2D
 from field_observer import FieldObserver
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -342,6 +343,145 @@ def find_passable_robots(robot_id_has_ball, select_forward_between):
     robots_to_pass = operator_node.search_for_pass_cource(robot_id_has_ball, our_robots_pos, our_robots_vel, their_robots_pos, their_robots_vel, select_forward_between)
     print(robots_to_pass)
 
+def test_use_named_targets():
+    # 名前付きターゲットを用いてロボットを動かす
+    # 名前付きターゲットはnamed_targetsトピックに含まれるpose情報である
+    # 名前付きターゲットを使うことで、動的に変動するposeを参照した行動を指示できる
+    # ロボットやボールから相対的に計算できない、複雑な目標位置を指示する際に有効である
+
+    def calc_pose1(angle):
+        # フィールドを1周するposeを計算
+        LENGTH = 3.0
+        x = LENGTH * math.cos(angle)
+        y = LENGTH * math.sin(angle)
+        return State2D(x=x, y=y)
+
+    def calc_pose_based_on_pose1(angle, offset_angle, pose1):
+        # pose1の周りをN周するposeを計算
+        NUM_OF_ROTATIONS = 4
+        LENGTH = 0.5
+        x = pose1.x + LENGTH * math.cos(NUM_OF_ROTATIONS*(angle + offset_angle))
+        y = pose1.y + LENGTH * math.sin(NUM_OF_ROTATIONS*(angle + offset_angle))
+        return State2D(x=x, y=y)
+
+    print("test_use_named_targets")
+    time.sleep(1.0)  # operatorの起動を待つ
+
+    # スタート位置を生成し、named_targetsとしてpublishさせる
+    pose1 = calc_pose1(0.0)
+    pose2 = calc_pose_based_on_pose1(0.0, math.radians(0), pose1)
+    pose3 = calc_pose_based_on_pose1(0.0, math.radians(120), pose1)
+    pose4 = calc_pose_based_on_pose1(0.0, math.radians(-120), pose1)
+    operator_node.set_named_target("pose1", pose1.x, pose1.y)
+    operator_node.set_named_target("pose2", pose2.x, pose2.y)
+    operator_node.set_named_target("pose3", pose3.x, pose3.y)
+    operator_node.set_named_target("pose4", pose4.x, pose4.y)
+    operator_node.publish_named_targets()
+
+    # ロボットをスタート位置へ移動させる
+    operator_node.move_to_named_target(0, "pose1")
+    operator_node.move_to_named_target(1, "pose2")
+    operator_node.move_to_named_target(2, "pose3")
+    operator_node.move_to_named_target(3, "pose4")
+    # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    # ロボット目標位置へ移動させ続ける
+    operator_node.move_to_named_target(0, "pose1", keep=True)
+    operator_node.move_to_named_target(1, "pose2", keep=True)
+    operator_node.move_to_named_target(2, "pose3", keep=True)
+    operator_node.move_to_named_target(3, "pose4", keep=True)
+
+    # 別のロボットにはpose1に対してボールを蹴り続けてもらう
+    # NamedTargetはボールのキック対象としても選択可能である
+    operator_node.shoot_to_named_target(4, "pose1")
+
+    MOTION_TIME = 20.0  # 動作の実行時間 seconds
+    start_time = time.time()
+    elapsed_time = 0.0
+    while elapsed_time < MOTION_TIME:
+        elapsed_time = time.time() - start_time
+        angle = 2.0 * math.pi * elapsed_time / MOTION_TIME
+
+        pose1 = calc_pose1(angle)
+        pose2 = calc_pose_based_on_pose1(angle, math.radians(0), pose1)
+        pose3 = calc_pose_based_on_pose1(angle, math.radians(120), pose1)
+        pose4 = calc_pose_based_on_pose1(angle, math.radians(-120), pose1)
+        operator_node.set_named_target("pose1", pose1.x, pose1.y)
+        operator_node.set_named_target("pose2", pose2.x, pose2.y)
+        operator_node.set_named_target("pose3", pose3.x, pose3.y)
+        operator_node.set_named_target("pose4", pose4.x, pose4.y)
+        operator_node.publish_named_targets()
+
+    print('ロボットの動作停止！')
+    for i in range(5):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+def test_star_pass():
+    # 5台のロボットが互いにパスし続けるテスト
+
+    def calc_pose(angle, offset_angle, base_pose):
+        LENGTH = 2.5
+        target_angle = angle + offset_angle
+        x = base_pose.x + LENGTH * math.cos(target_angle)
+        y = base_pose.y + LENGTH * math.sin(target_angle)
+        theta = math.pi + target_angle
+        return State2D(x=x, y=y, theta=theta)
+
+    print("test_star_pass")
+    time.sleep(1.0)  # operatorの起動を待つ
+
+    # スタート位置を生成し、named_targetsとしてpublishさせる
+    ROBOT_NUM = 5
+    base_pose = State2D(x=0.0, y=0.0)
+    for i in range(ROBOT_NUM):
+        offset_angle = math.radians(i * 360.0 / ROBOT_NUM)
+        pose = calc_pose(0.0, offset_angle, base_pose)
+        target_name = "pose{}".format(i)
+        operator_node.set_named_target(target_name, pose.x, pose.y, pose.theta)
+    operator_node.publish_named_targets()
+
+    # ロボットをスタート位置へ移動させる
+    for i in range(ROBOT_NUM):
+        target_name = "pose{}".format(i)
+        operator_node.move_to_named_target(i, target_name)
+    # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
+    # 互いにパスし合うように指示する
+    # TODO: 距離をもとにパス威力を設定できるように、controllerを改善すること
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(0, "pose0", "pose2")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(2, "pose2", "pose4")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(4, "pose4", "pose1")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(1, "pose1", "pose3")
+    operator_node.move_to_named_target_with_reflect_pass_to_named_target(3, "pose3", "pose0")
+
+    MOTION_TIME = 30.0  # 動作の実行時間 seconds
+    start_time = time.time()
+    elapsed_time = 0.0
+    while elapsed_time < MOTION_TIME:
+        elapsed_time = time.time() - start_time
+        angle = 2.0 * math.pi * elapsed_time / MOTION_TIME
+
+        for i in range(ROBOT_NUM):
+            offset_angle = math.radians(i * 360.0 / ROBOT_NUM)
+            pose = calc_pose(angle, offset_angle, base_pose)
+            target_name = "pose{}".format(i)
+            operator_node.set_named_target(target_name, pose.x, pose.y, pose.theta)
+        operator_node.publish_named_targets()
+
+    print('ロボットの動作停止！')
+    for i in range(ROBOT_NUM):
+        operator_node.stop(i)
+    # 動作完了まで待機
+    while operator_node.all_robots_are_free() is False:
+        pass
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
@@ -359,7 +499,9 @@ def main():
     # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
-    find_passable_robots(4, 1)
+    # find_passable_robots(4, 1)
+    # test_use_named_targets()
+    test_star_pass()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

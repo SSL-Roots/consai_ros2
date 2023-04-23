@@ -84,6 +84,7 @@ class FieldWidget(QWidget):
         self._detection_tracked = TrackedFrame()
         self._goal_poses = {}
         self._designated_position = {}  # ball placementの目標位置
+        self._named_targets = {}
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -129,6 +130,12 @@ class FieldWidget(QWidget):
 
     def set_designated_position(self, msg):
         self._designated_position[0] = msg
+
+    def set_named_targets(self, msg):
+        # トピックを受け取るたびに初期化する
+        self._named_targets = {}
+        for i in range(len(msg.name)):
+            self._named_targets[msg.name[i]] = msg.pose[i]
 
     def reset_topics(self):
         # 取得したトピックをリセットする
@@ -214,6 +221,9 @@ class FieldWidget(QWidget):
 
         if self._can_draw_geometry:
             self._draw_geometry(painter)
+
+        # 名前付きターゲットを描画
+        self._draw_named_targets(painter)
 
         # ボールプレースメントでの目標位置と進入禁止エリアを描画
         self._draw_designated_position(painter)
@@ -639,6 +649,31 @@ class FieldWidget(QWidget):
         painter.setPen(self._COLOR_DESIGNATED_POSITION)
         painter.setBrush(self._COLOR_DESIGNATED_POSITION)
         painter.drawEllipse(designated_point, size, size)
+
+    def _draw_named_targets(self, painter):
+        # 名前付きターゲットを描画する
+        TARGET_RADIUS = 70  # ターゲット位置の描画直径 mm
+        NAME_POS = QPointF(100.0, 100.0)  # ターゲット名の描画座標 mm
+
+        painter.setPen(Qt.black)
+        painter.setBrush(Qt.white)
+
+        for name, pose in self._named_targets.items():
+            # x,y座標
+            point = self._convert_field_to_draw_point(
+                pose.x * 1000, pose.y * 1000)  # meters to mm
+            size = TARGET_RADIUS * self._scale_field_to_draw
+            painter.drawEllipse(point, size, size)
+
+            # 角度
+            line_x = TARGET_RADIUS * math.cos(pose.theta)
+            line_y = TARGET_RADIUS * math.sin(pose.theta)
+            line_point = point + self._convert_field_to_draw_point(line_x, line_y)
+            painter.drawLine(point, line_point)
+
+            # 名前
+            text_point = point + self._convert_field_to_draw_point(NAME_POS.x(), NAME_POS.y())
+            painter.drawText(text_point, str(name))
 
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
