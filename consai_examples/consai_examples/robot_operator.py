@@ -94,8 +94,8 @@ class RobotOperator(Node):
         # チームの全てのロボットが行動を完了していたらtrue
         return all(self._robot_is_free)
 
-    def append_named_target(self, name, x, y, theta=0.0):
-        # 名前付きターゲットを追加する
+    def set_named_target(self, name, x, y, theta=0.0):
+        # 名前付きターゲットをセットする
         # すでに同じ名前のターゲットが用意されていても上書きする
         self._named_targets[name] = State2D(x=x, y=y, theta=theta)
 

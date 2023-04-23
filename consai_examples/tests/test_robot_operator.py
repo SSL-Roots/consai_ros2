@@ -30,7 +30,7 @@ def test_セットしたnamed_targetsがpublishされること(rclpy_init_shutdo
     operator = RobotOperator()
     subscriber = NamedTargetsSubscriber()
 
-    operator.append_named_target("test", x=1.2, y=3.4, theta=5.6)
+    operator.set_named_target("test", x=1.2, y=3.4, theta=5.6)
     operator.publish_named_targets()
 
     # トピックをsubscribeするためspine_once()を実行
@@ -46,9 +46,9 @@ def test_複数のnamed_targetsをセットできること(rclpy_init_shutdown):
     operator = RobotOperator()
     subscriber = NamedTargetsSubscriber()
 
-    operator.append_named_target("test1", 0.0, 0.0)
-    operator.append_named_target("test2", 0.0, 0.0)
-    operator.append_named_target("test3", 0.0, 0.0)
+    operator.set_named_target("test1", 0.0, 0.0)
+    operator.set_named_target("test2", 0.0, 0.0)
+    operator.set_named_target("test3", 0.0, 0.0)
     operator.publish_named_targets()
 
     # トピックをsubscribeするためspine_once()を実行
@@ -60,8 +60,8 @@ def test_同じ名前のnamed_targetsをセットした場合はデータを上�
     operator = RobotOperator()
     subscriber = NamedTargetsSubscriber()
 
-    operator.append_named_target("test", 0.0, 0.0)
-    operator.append_named_target("test", 1.2, 3.4)
+    operator.set_named_target("test", 0.0, 0.0)
+    operator.set_named_target("test", 1.2, 3.4)
     operator.publish_named_targets()
 
     # トピックをsubscribeするためspine_once()を実行
@@ -76,9 +76,9 @@ def test_セットしたnamed_targetを個別に削除できること(rclpy_init
     operator = RobotOperator()
     subscriber = NamedTargetsSubscriber()
 
-    operator.append_named_target("test1", 0.0, 0.0)
-    operator.append_named_target("test2", 0.0, 0.0)
-    operator.append_named_target("test3", 0.0, 0.0)
+    operator.set_named_target("test1", 0.0, 0.0)
+    operator.set_named_target("test2", 0.0, 0.0)
+    operator.set_named_target("test3", 0.0, 0.0)
 
     operator.remove_named_target("test1")
     # 存在しないnameを指定してもエラーが出ないこと
@@ -93,9 +93,9 @@ def test_セットしたnamed_targetsを一括削除できること(rclpy_init_s
     operator = RobotOperator()
     subscriber = NamedTargetsSubscriber()
 
-    operator.append_named_target("test1", 0.0, 0.0)
-    operator.append_named_target("test2", 0.0, 0.0)
-    operator.append_named_target("test3", 0.0, 0.0)
+    operator.set_named_target("test1", 0.0, 0.0)
+    operator.set_named_target("test2", 0.0, 0.0)
+    operator.set_named_target("test3", 0.0, 0.0)
 
     operator.clear_named_targets()
     operator.publish_named_targets()
