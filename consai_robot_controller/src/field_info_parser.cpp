@@ -131,15 +131,11 @@ bool FieldInfoParser::parse_goal(
   if (goal->pose.size() > 0) {
     if (parse_constraint_pose(goal->pose[0], target_pose)) {
       parse_succeeded = true;
-    } else {
-      std::cout << "parse_constraint_pose failed" << std::endl;
     }
   }
   if (goal->line.size() > 0) {
     if (parse_constraint_line(goal->line[0], target_pose)) {
       parse_succeeded = true;
-    } else {
-      std::cout << "parse_constraint_line failed" << std::endl;
     }
   }
 
@@ -259,7 +255,6 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
 {
   double parsed_x, parsed_y;
   if (!parse_constraint_xy(pose.xy, parsed_x, parsed_y)) {
-    std::cout << "parse_constraint_xy failed" << std::endl;
     return false;
   }
   parsed_x += pose.offset.x;
@@ -267,7 +262,6 @@ bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State &
 
   double parsed_theta;
   if (!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)) {
-    std::cout << "parse_constraint_theta failed" << std::endl;
     return false;
   }
 
