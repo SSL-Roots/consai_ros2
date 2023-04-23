@@ -323,96 +323,37 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
     def pass_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってパスする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_kick(
-            self._line_goal(line, keep=True), target, kick_pass=True))
+        # ボールの後ろに移動し、指定位置に向かってパスする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
 
     def shoot_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_kick(
-            self._line_goal(line, keep=True), target, kick_pass=False))
+        # ボールの後ろに移動し、指定位置に向かってシュートする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_shoot=True)
 
     def shoot_to_their_goal(self, robot_id):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy_their_goal()
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False)))
+        # ボールの後ろに移動し、相手ゴールに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_shoot=True)
 
     def shoot_to_their_goal_with_reflect(self, robot_id):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy_their_goal()
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_reflect_and_normal_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False)))
+        # ボールの後ろに移動し、相手ゴールに向かってシュートする
+        # ボールが自分に向かって転がってきた場合はリフレクトシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_reflect_shoot=True)
 
     def shoot_to_their_corner(self, robot_id, target_is_top_corner=True, set_play=False):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手コーナーに向かってシュートする
+        # ボールの後ろに移動し、相手コーナーに向かってシュートする
         xy_target = self._xy_their_bottom_corner()
         if target_is_top_corner:
             xy_target = self._xy_their_top_corner()
 
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = xy_target
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = xy_target
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=set_play)))
+        return self._act_to_ball(robot_id, xy_target, do_shoot=True, as_setplay=set_play)
 
     def setplay_shoot_to_their_goal(self, robot_id):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy_their_goal()
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=True)))
+        # ボールの後ろに移動し、セットプレイのように慎重に、相手ゴールに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_shoot=True, as_setplay=True)
 
     def dribble_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってドリブルする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_dribble(
-            self._line_goal(line, keep=True), target))
+        # ボールの後ろに移動し、指定位置に向かってドリブルする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_dribble=True)
 
     def receive_from(self, robot_id, x, y, offset, dynamic_receive=True):
         # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
@@ -715,6 +656,40 @@ class RobotOperator(Node):
     def _with_receive(self, goal_msg):
         goal_msg.receive_ball = True
         return goal_msg
+
+    def _act_to_ball(self, robot_id, target_xy_object,
+                     do_shoot=False, do_pass=False, do_dribble=False,
+                     do_reflect_shoot=False,
+                     as_setplay=False):
+        # ボールとobjectを結ぶ直線上で、ボールの後ろに移動し、
+        # objectに向かってshoot/pass/dribbleする
+        if not any([do_shoot, do_pass, do_dribble, do_reflect_shoot]):
+            self.get_logger().warn('do_***のいずれかをセットしてください')
+            return
+
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = target_xy_object
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = target_xy_object
+
+        goal = None
+        if do_shoot:
+            goal = self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=as_setplay)
+        elif do_pass:
+            goal = self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=True)
+        elif do_dribble:
+            goal = self._with_dribble(
+                self._line_goal(line, keep=True), target)
+        elif do_reflect_shoot:
+            goal = self._with_receive(
+                self._with_reflect_and_normal_kick(
+                    self._line_goal(line, keep=True), target, kick_pass=False))
+
+        self._set_goal(robot_id, goal)
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
