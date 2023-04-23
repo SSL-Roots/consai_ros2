@@ -15,6 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 #define CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -24,6 +25,7 @@
 #include "consai_msgs/msg/constraint_pose.hpp"
 #include "consai_msgs/msg/constraint_theta.hpp"
 #include "consai_msgs/msg/constraint_xy.hpp"
+#include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -42,6 +44,7 @@ using ConstraintObject = consai_msgs::msg::ConstraintObject;
 using ConstraintPose = consai_msgs::msg::ConstraintPose;
 using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
 using ConstraintXY = consai_msgs::msg::ConstraintXY;
+using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
@@ -60,6 +63,7 @@ public:
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
+  void set_named_targets(const NamedTargets::SharedPtr msg);
   bool extract_robot(
     const unsigned int robot_id, const bool team_is_yellow,
     TrackedRobot & my_robot) const;
@@ -117,6 +121,7 @@ private:
   std::shared_ptr<ParsedReferee> parsed_referee_;
   bool invert_;
   bool team_is_yellow_;
+  std::map<std::string, State> named_targets_;
 };
 
 }  // namespace consai_robot_controller

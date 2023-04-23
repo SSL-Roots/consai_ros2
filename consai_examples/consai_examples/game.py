@@ -64,6 +64,12 @@ def enable_update_attacker_by_ball_pos():
 
 def main():
     while rclpy.ok():
+
+        if referee.halt():
+            # 各decisionsがセットしたNamedTargetを消去する
+            operator.clear_named_targets()
+            operator.publish_named_targets()
+
         ball_state = observer.get_ball_state()
         ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
         ball_zone_state = observer.get_ball_zone_state()
