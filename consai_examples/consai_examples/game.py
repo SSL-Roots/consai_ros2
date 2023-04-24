@@ -205,18 +205,18 @@ if __name__ == '__main__':
     executor_thread.start()
 
     decisions = {
-        RoleName.GOALIE: GoaleDecision(operator),
-        RoleName.ATTACKER: AttackerDecision(operator),
-        RoleName.CENTER_BACK1: CenterBack1Decision(operator),
-        RoleName.CENTER_BACK2: CenterBack2Decision(operator),
-        RoleName.SUB_ATTACKER: SubAttackerDecision(operator),
-        RoleName.ZONE1: Zone1Decision(operator),
-        RoleName.ZONE2: Zone2Decision(operator),
-        RoleName.ZONE3: Zone3Decision(operator),
-        RoleName.ZONE4: Zone4Decision(operator),
-        RoleName.SIDE_BACK1: SideBack1Decision(operator),
-        RoleName.SIDE_BACK2: SideBack2Decision(operator),
-        RoleName.SUBSTITUTE: SubstituteDecision(operator, args.invert),
+        RoleName.GOALIE: GoaleDecision(operator, observer),
+        RoleName.ATTACKER: AttackerDecision(operator, observer),
+        RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
+        RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
+        RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
+        RoleName.ZONE1: Zone1Decision(operator, observer),
+        RoleName.ZONE2: Zone2Decision(operator, observer),
+        RoleName.ZONE3: Zone3Decision(operator, observer),
+        RoleName.ZONE4: Zone4Decision(operator, observer),
+        RoleName.SIDE_BACK1: SideBack1Decision(operator, observer),
+        RoleName.SIDE_BACK2: SideBack2Decision(operator, observer),
+        RoleName.SUBSTITUTE: SubstituteDecision(operator, observer, args.invert),
     }
 
     try:

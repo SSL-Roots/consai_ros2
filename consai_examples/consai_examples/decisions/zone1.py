@@ -20,8 +20,8 @@ from field_observer import FieldObserver
 
 class Zone1Decision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
     def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
