@@ -20,8 +20,8 @@ from field_observer import FieldObserver
 
 class SideBack2Decision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
     def _defend_lower_defense_area(self, robot_id):
         # ディフェンスエリアの下側を守る

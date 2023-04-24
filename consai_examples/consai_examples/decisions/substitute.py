@@ -19,8 +19,8 @@ from decisions.decision_base import DecisionBase
 
 class SubstituteDecision(DecisionBase):
 
-    def __init__(self, robot_operator, invert=False):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer, invert=False):
+        super().__init__(robot_operator, field_observer)
 
         # サイドチェンジに関わらず退避位置を常に同じするためにinvertフラグを取得する
         self._invert = invert

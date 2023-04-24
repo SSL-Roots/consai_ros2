@@ -33,8 +33,9 @@ class DecisionBase(object):
     ACT_ID_OUR_PLACEMENT = 110
     ACT_ID_THEIR_PLACEMENT = 120
 
-    def __init__(self, robot_operator):
+    def __init__(self, robot_operator, field_observer):
         self._operator = robot_operator
+        self._field_observer = field_observer
         self._ball_state = FieldObserver.BALL_NONE
         self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
         self._ball_zone_state = FieldObserver.BALL_ZONE_NONE

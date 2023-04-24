@@ -21,8 +21,8 @@ from field_observer import FieldObserver
 
 class GoaleDecision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
     def _defend_goal(self, robot_id):
         p1_x = -6.0 + 0.3

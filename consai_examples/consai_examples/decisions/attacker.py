@@ -20,8 +20,8 @@ from field_observer import FieldObserver
 
 class AttackerDecision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
     def stop(self, robot_id):
         ID_CHASE = self.ACT_ID_STOP + 0

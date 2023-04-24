@@ -20,8 +20,8 @@ from field_observer import FieldObserver
 
 class SubAttackerDecision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
         self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_RIGHT_TOP,
                            FieldObserver.BALL_ZONE_LEFT_MID_TOP, FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
