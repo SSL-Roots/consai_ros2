@@ -63,8 +63,8 @@ class GoaleDecision(DecisionBase):
 
                 # リストが空でない場合
                 if 0 < len(receiver_robots_id):
-                    ball_pos = self._field_observer.get_ball_pos()
-                    self._operator.kick_pass(robot_id, receiver_robots_id[0], ball_pos[0], ball_pos[1])
+                    # リストの先頭のロボットにパス
+                    self._operator.pass_to_robot(robot_id, receiver_robots_id[0])
                 # リストが空の場合
                 else:
                     # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
