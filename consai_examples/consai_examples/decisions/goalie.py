@@ -73,7 +73,7 @@ class GoaleDecision(DecisionBase):
                         self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=True, set_play=False)
                     else:
                         self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=False, set_play=False)
-                    self._act_id = ID_IN_DEFENSE
+                self._act_id = ID_IN_DEFENSE
             return
 
         if self._act_id != ID_IN_PLAY:
