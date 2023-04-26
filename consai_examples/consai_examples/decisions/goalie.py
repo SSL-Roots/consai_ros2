@@ -58,13 +58,22 @@ class GoaleDecision(DecisionBase):
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
             if self._act_id != ID_IN_DEFENSE:
-                # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-                    self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=True, set_play=False)
+                # レシーバ候補のロボットIDリストを取得
+                receiver_robots_id = self._field_observer.get_receiver_robots_id(robot_id)
+
+                # リストが空でない場合
+                if 0 < len(receiver_robots_id):
+                    ball_pos = self._field_observer.get_ball_pos()
+                    self._operator.kick_pass(robot_id, receiver_robots_id[0], ball_pos[0], ball_pos[1])
+                # リストが空の場合
                 else:
-                    self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=False, set_play=False)
-                self._act_id = ID_IN_DEFENSE
+                    # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
+                    if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
+                                                 FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                        self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=True, set_play=False)
+                    else:
+                        self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=False, set_play=False)
+                    self._act_id = ID_IN_DEFENSE
             return
 
         if self._act_id != ID_IN_PLAY:
