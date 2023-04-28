@@ -534,9 +534,9 @@ class RobotOperator(Node):
         # ボールの後ろに移動し、指定位置に向かってパスする
         return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
 
-    def pass_to_robot(self, robot_id, target_id):
+    def pass_to_our_robot(self, robot_id, target_id):
         # ボールの後ろに移動し、指定したIDのロボットが、指定したIDの目標ロボットに対してボールをパスする
-        return self._act_to_ball(robot_id, self._xy_object_robot(target_id), do_pass=True)
+        return self._act_to_ball(robot_id, self._xy_object_our_robot(target_id), do_pass=True)
 
     def _object_ball(self):
         # ConstraintObjectのBallを返す
@@ -550,7 +550,7 @@ class RobotOperator(Node):
         xy.object.append(self._object_ball())
         return xy
 
-    def _xy_object_robot(self, robot_id):
+    def _xy_object_our_robot(self, robot_id):
         # ConstraintObjectのBallを返す
         xy = ConstraintXY()
         xy.object.append(self._object_our_robot(robot_id))

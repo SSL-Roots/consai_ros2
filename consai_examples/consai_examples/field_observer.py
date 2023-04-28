@@ -652,7 +652,7 @@ class FieldObserver(Node):
                                   their_robots_vel[robot_id][0] / math.sqrt(their_robots_vel[robot_id][0] ** 2 + their_robots_vel[robot_id][1] ** 2)]
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
-        if forward_our_robots_id == 0:
+        if len(forward_our_robots_id) == 0:
             return forward_our_robots_id
 
         # 自分と各ロボットまでの距離を計測し近い順にソート
