@@ -43,11 +43,12 @@ class ZoneDefenseDecisionBase(DecisionBase):
 
         ZONE_TARGET = zone_id.value
 
-        # FIXME: ここはあとで直す
-        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
+        # ボールが自分ディフェンスエリアにあるときは、ゾーン初期位置で待機
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                self._operator.move_to_ball_y(robot_id, -2.0)
+                target_x, target_y = self._get_zone_trget_xy(zone_id)
+                self._operator.move_to_reflect_shoot_to_their_goal(
+                    robot_id, target_x, target_y)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
