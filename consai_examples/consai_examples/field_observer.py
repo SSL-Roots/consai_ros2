@@ -638,18 +638,10 @@ class FieldObserver(Node):
         if type(our_robots_vel[0]) is not list:
             return []
 
-        # フィールド上にいるロボットのIDのみリストに格納する
-        our_robots_in_field = [robot_id for robot_id in range(len(our_robots_pos)) if our_robots_pos[robot_id] != "None"]
-        their_robots_in_field = [robot_id for robot_id in range(len(their_robots_pos)) if their_robots_pos[robot_id] != "None"]
-
         # パサーよりも前にいる味方ロボットIDをリストにまとめる
-        forward_our_robots_id = [robot_id for robot_id in our_robots_in_field 
-                                if robot_id != my_robot_id and our_robots_pos[my_robot_id][0] < our_robots_pos[robot_id][0] + (abs(our_robots_vel[robot_id][0]) * dt + robot_r) * 
-                                our_robots_vel[robot_id][0] / math.sqrt(our_robots_vel[robot_id][0] ** 2 + our_robots_vel[robot_id][1] ** 2)]
+        forward_our_robots_id = self._forward_our_robots_id(my_robot_id, our_robots_pos, our_robots_vel, robot_r, dt)
         # パサーよりも前にいる敵ロボットIDをリストにまとめる
-        forward_their_robots_id = [robot_id for robot_id in their_robots_in_field 
-                                  if our_robots_pos[my_robot_id][0] < their_robots_pos[robot_id][0] + (abs(their_robots_vel[robot_id][0]) * dt + robot_r) * 
-                                  their_robots_vel[robot_id][0] / math.sqrt(their_robots_vel[robot_id][0] ** 2 + their_robots_vel[robot_id][1] ** 2)]
+        forward_their_robots_id = self._forward_their_robots_id(my_robot_id, our_robots_pos, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
         if len(forward_our_robots_id) == 0:
@@ -734,3 +726,29 @@ class FieldObserver(Node):
 
         return receive_dist_our_robot
 
+    def _get_our_robots_in_field(self, our_robots_pos):
+        our_robots_in_field = [robot_id for robot_id in range(len(our_robots_pos)) if our_robots_pos[robot_id] != "None"]
+        return our_robots_in_field
+
+    def _get_their_robots_in_field(self, their_robots_pos):
+        # フィールド上にいる相手ロボットのIDのみリストに格納する
+        their_robots_in_field = [robot_id for robot_id in range(len(their_robots_pos)) if their_robots_pos[robot_id] != "None"]
+        return their_robots_in_field
+
+    def _forward_our_robots_id(self, robot_id_has_ball, our_robots_pos, our_robots_vel, robot_r, dt):
+        # フィールド上にいる味方ロボットのIDのみリストに格納する
+        our_robots_in_field = self._get_our_robots_in_field(our_robots_pos)
+        # パサーよりも前にいるロボットIDをリストにまとめる
+        # 味方ロボットに対して
+        forward_our_robots_id = [robot_id for robot_id in our_robots_in_field 
+                                if robot_id != robot_id_has_ball and our_robots_pos[robot_id_has_ball][0] < our_robots_pos[robot_id][0] + (abs(our_robots_vel[robot_id][0]) * dt + robot_r) * 
+                                our_robots_vel[robot_id][0] / math.sqrt(our_robots_vel[robot_id][0] ** 2 + our_robots_vel[robot_id][1] ** 2)]
+        return forward_our_robots_id
+
+    def _forward_their_robots_id(self, robot_id_has_ball, our_robots_pos, their_robots_pos, their_robots_vel, robot_r, dt):
+        their_robots_in_field = self._get_their_robots_in_field(their_robots_pos)
+        # 相手ロボットに対してパサーよりも前にいるロボットIDをリストにまとめる
+        forward_their_robots_id = [robot_id for robot_id in their_robots_in_field 
+                                  if our_robots_pos[robot_id_has_ball][0] < their_robots_pos[robot_id][0] + (abs(their_robots_vel[robot_id][0]) * dt + robot_r) * 
+                                  their_robots_vel[robot_id][0] / math.sqrt(their_robots_vel[robot_id][0] ** 2 + their_robots_vel[robot_id][1] ** 2)]
+        return forward_their_robots_id
