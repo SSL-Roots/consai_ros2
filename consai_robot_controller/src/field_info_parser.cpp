@@ -720,7 +720,6 @@ bool FieldInfoParser::avoid_obstacles(
   // 相対的な回避位置
   const double AVOIDANCE_POS_X = 0.2;
   const double AVOIDANCE_POS_Y = 0.5;
-  double correction_flag = 0;  // 避ける位置を補正する変数
 
   auto my_robot_pose = tools::pose_state(my_robot);
   tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
@@ -788,7 +787,7 @@ bool FieldInfoParser::avoid_obstacles(
     }
     else{
       avoidance_pose = trans_MtoG.inverted_transform(
-        obstacle_pose_MtoG->x + AVOIDANCE_POS_X - correction_flag * AVOIDANCE_POS_X,
+        obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
         obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
         goal_pose_MtoG.theta
       );
