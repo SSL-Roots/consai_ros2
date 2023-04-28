@@ -34,7 +34,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-    def _zone_defense(self, robot_id, base_id, zone_id, without_mark=False):
+    def _zone_defense(self, robot_id, base_id, zone_id: ZoneDefenseID, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
