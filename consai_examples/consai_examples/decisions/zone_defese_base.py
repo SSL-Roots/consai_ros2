@@ -55,7 +55,6 @@ class ZoneDefenseDecisionBase(DecisionBase):
         # ボールを追いかける処理は行ってない（アタッカーと取り合いになるため）
         # FIXME: アタッカーと取り合いにならない程度にボールは追いかけてほしい
         ball_is_in_my_zone = self._ball_is_in_zone_x(zone_id)
-        # ここはそれぞれの関数を作る
 
         # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
         if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
@@ -75,6 +74,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
         return
 
     def _get_zone_trget_xy(self, zone_id):
+        # 待機場所をそれぞれの関数で算出する
         target_x = -2.0
         target_y = 0
         if zone_id == ZoneDefenseID.ZONE1:
@@ -118,6 +118,8 @@ class ZoneDefenseDecisionBase(DecisionBase):
         return target_x, target_y
 
     def _ball_is_in_zone_x(self, zone_id):
+        # 自分のzone_idと味方ゾーンDFの数によって
+        # 自分の担当ゾーンを決定して、ボールがあるか判定
         if zone_id == ZoneDefenseID.ZONE1:
             return self._ball_is_in_zone1()
         elif zone_id == ZoneDefenseID.ZONE2:
