@@ -712,17 +712,16 @@ class FieldObserver(Node):
         return robots_to_pass
 
     def _sort_by_from_robot_distance(self, my_robot_id, robots_id, robots_pos):
-        # 自ロボットから味方ロボットまでの距離を計算し近い順にソートする関数
+        # 自ロボットから各ロボットまでの距離を計算し近い順にソートする関数
 
         # 自ロボットの位置を格納
         my_robot_pos = robots_pos[my_robot_id]
-        # 自ロボットから味方ロボットまでの距離、IDをリストに格納
+        # 自ロボットから各ロボットまでの距離、IDをリストに格納
         robots_dist_and_id = [[tool.get_distance(robots_pos[_id], my_robot_pos), _id] for _id in robots_id]
 
-        # 距離が近い順に味方ロボットをソート
+        # 距離が近い順にロボットIDをソート
         sorted_robots_id = [_id for _, _id in sorted(robots_dist_and_id)]
 
-        # return receive_dist_robots
         return sorted_robots_id
 
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
