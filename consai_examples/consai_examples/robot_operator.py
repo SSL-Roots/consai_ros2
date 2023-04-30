@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from functools import partial
+import math
 
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
@@ -23,6 +24,8 @@ from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
+from consai_msgs.msg import NamedTargets
+from consai_msgs.msg import State2D
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -30,7 +33,7 @@ from rclpy.node import Node
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
 
-    STOP_GAME_VELOCITY = 1.0  # m/s
+    STOP_GAME_VELOCITY = 0.8  # m/s
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -48,6 +51,13 @@ class RobotOperator(Node):
         self._get_result_future = [None] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
+        self._avoid_obstacles_enabled = [True] * ROBOT_NUM
+        self._avoid_placement_enabled = [True] * ROBOT_NUM
+
+        # 名前付きターゲット格納用の辞書
+        # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
+        self._named_targets = {}
+        self._pub_named_targets = self.create_publisher(NamedTargets, 'named_targets', 1)
 
         if self._target_is_yellow:
             self.get_logger().info('yellowロボットを動かします')
@@ -60,6 +70,18 @@ class RobotOperator(Node):
     def disable_stop_game_velocity(self, robot_id):
         self._stop_game_velocity_has_enabled[robot_id] = False
 
+    def enable_avoid_obstacles(self, robot_id):
+        self._avoid_obstacles_enabled[robot_id] = True
+
+    def disable_avoid_obstacles(self, robot_id):
+        self._avoid_obstacles_enabled[robot_id] = False
+
+    def enable_avoid_placement(self, robot_id):
+        self._avoid_placement_enabled[robot_id] = True
+
+    def disable_avoid_placement(self, robot_id):
+        self._avoid_placement_enabled[robot_id] = False
+
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
         return self._target_is_yellow
@@ -71,6 +93,28 @@ class RobotOperator(Node):
     def all_robots_are_free(self):
         # チームの全てのロボットが行動を完了していたらtrue
         return all(self._robot_is_free)
+
+    def set_named_target(self, name, x, y, theta=0.0):
+        # 名前付きターゲットをセットする
+        # すでに同じ名前のターゲットが用意されていても上書きする
+        self._named_targets[name] = State2D(x=x, y=y, theta=theta)
+
+    def remove_named_target(self, name):
+        # 指定した名前付きターゲットを削除する
+        if name in self._named_targets:
+            self._named_targets.pop(name)
+
+    def clear_named_targets(self):
+        # 名前付きターゲットを初期化する
+        self._named_targets.clear()
+
+    def publish_named_targets(self):
+        # 名前付きターゲットを送信する
+        msg = NamedTargets()
+        for name, pose in self._named_targets.items():
+            msg.name.append(name)
+            msg.pose.append(pose)
+        self._pub_named_targets.publish(msg)
 
     def stop(self, robot_id):
         # 指定されたIDの制御を停止する
@@ -264,67 +308,73 @@ class RobotOperator(Node):
         line.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
+    def move_to_named_target(self, robot_id, name, keep=False):
+        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
+        pose = ConstraintPose()
+        pose.xy = self._xy_object_named_target(name)
+        pose.theta = self._theta_object_named_target(name)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = keep
+
+        return self._set_goal(robot_id, goal_msg)
+
+    def move_to_named_target_with_reflect_pass_to_named_target(
+        self, robot_id, name_to_move, name_to_pass):
+        # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
+        # ボールが来たらリフレクトパスを実施する
+
+        pose = ConstraintPose()
+        pose.xy = self._xy_object_named_target(name_to_move)
+        pose.theta = self._theta_object_named_target(name_to_move)
+
+        goal_msg = RobotControl.Goal()
+        goal_msg.pose.append(pose)
+        goal_msg.keep_control = True
+
+        goal_msg = self._with_receive(
+            self._with_reflect_and_normal_kick(
+                goal_msg, self._xy_object_named_target(name_to_pass), kick_pass=True))
+
+        return self._set_goal(robot_id, goal_msg)
+
     def pass_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってパスする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_kick(
-            self._line_goal(line, keep=True), target, kick_pass=True))
+        # ボールの後ろに移動し、指定位置に向かってパスする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
 
     def shoot_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_kick(
-            self._line_goal(line, keep=True), target, kick_pass=False))
+        # ボールの後ろに移動し、指定位置に向かってシュートする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_shoot=True)
 
     def shoot_to_their_goal(self, robot_id):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy_their_goal()
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False)))
+        # ボールの後ろに移動し、相手ゴールに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_shoot=True)
+
+    def shoot_to_named_target(self, robot_id, name):
+        # ボールの後ろに移動し、名前付きターゲットに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_object_named_target(name), do_shoot=True)
+
+    def shoot_to_their_goal_with_reflect(self, robot_id):
+        # ボールの後ろに移動し、相手ゴールに向かってシュートする
+        # ボールが自分に向かって転がってきた場合はリフレクトシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_reflect_shoot=True)
+
+    def shoot_to_their_corner(self, robot_id, target_is_top_corner=True, set_play=False):
+        # ボールの後ろに移動し、相手コーナーに向かってシュートする
+        xy_target = self._xy_their_bottom_corner()
+        if target_is_top_corner:
+            xy_target = self._xy_their_top_corner()
+
+        return self._act_to_ball(robot_id, xy_target, do_shoot=True, as_setplay=set_play)
 
     def setplay_shoot_to_their_goal(self, robot_id):
-        # ボールと相手ゴールを結ぶ直線上で、ボールの後ろに移動し、
-        # 相手ゴールに向かってシュートする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy_their_goal()
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_receive(
-            self._with_kick(
-                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=True)))
+        # ボールの後ろに移動し、セットプレイのように慎重に、相手ゴールに向かってシュートする
+        return self._act_to_ball(robot_id, self._xy_their_goal(), do_shoot=True, as_setplay=True)
 
     def dribble_to(self, robot_id, x, y):
-        # ボールと指定位置(x, y)を結ぶ直線上で、ボールの後ろに移動し、
-        # 指定位置に向かってドリブルする
-        line = ConstraintLine()
-        line.p1.object.append(self._object_ball())
-        line.p2 = self._xy(x, y)
-        line.distance = -0.3
-        line.theta = self._theta_look_ball()
-        target = self._xy(x, y)
-        return self._set_goal(robot_id, self._with_dribble(
-            self._line_goal(line, keep=True), target))
+        # ボールの後ろに移動し、指定位置に向かってドリブルする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_dribble=True)
 
     def receive_from(self, robot_id, x, y, offset, dynamic_receive=True):
         # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
@@ -480,6 +530,14 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
+    def pass_to(self, robot_id, x, y):
+        # ボールの後ろに移動し、指定位置に向かってパスする
+        return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
+
+    def pass_to_our_robot(self, robot_id, target_id):
+        # ボールの後ろに移動し、指定したIDのロボットが、指定したIDの目標ロボットに対してボールをパスする
+        return self._act_to_ball(robot_id, self._xy_object_our_robot(target_id), do_pass=True)
+
     def _object_ball(self):
         # ConstraintObjectのBallを返す
         obj_ball = ConstraintObject()
@@ -491,6 +549,32 @@ class RobotOperator(Node):
         xy = ConstraintXY()
         xy.object.append(self._object_ball())
         return xy
+
+    def _xy_object_our_robot(self, robot_id):
+        # ConstraintObjectのBallを返す
+        xy = ConstraintXY()
+        xy.object.append(self._object_our_robot(robot_id))
+        return xy
+
+    def _object_named_target(self, name):
+        # ConstraintObjectのNamedTargetを返す
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.NAMED_TARGET
+        obj.name = name
+        return obj
+
+    def _xy_object_named_target(self, name):
+        # NamedTargetを適用したConstraintXYを返す
+        xy = ConstraintXY()
+        xy.object.append(self._object_named_target(name))
+        return xy
+
+    def _theta_object_named_target(self, name):
+        # NamedTargetを適用したConstraintThetaを返す
+        theta = ConstraintTheta()
+        theta.object.append(self._object_named_target(name))
+        theta.param = ConstraintTheta.PARAM_THETA
+        return theta
 
     def _object_our_robot(self, robot_id):
         # ConstraintObjectの自チームのRobotを返す
@@ -534,6 +618,22 @@ class RobotOperator(Node):
         our_goal.value_y.append(0.0)
         return our_goal
 
+    def _xy_their_top_corner(self):
+        # ConstraintXYの相手サイドのコーナー上側座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(1.0)
+        our_goal.value_y.append(1.0)
+        return our_goal
+
+    def _xy_their_bottom_corner(self):
+        # ConstraintXYの相手サイドのコーナー上側座標を返す
+        our_goal = ConstraintXY()
+        our_goal.normalized = True
+        our_goal.value_x.append(1.0)
+        our_goal.value_y.append(-1.0)
+        return our_goal
+
     def _xy_their_side_center(self):
         # ConstraintXYの相手サイドの中央を返す
         their_center = ConstraintXY()
@@ -569,8 +669,15 @@ class RobotOperator(Node):
         return goal_msg
 
     def _with_reflect_kick(self, goal_msg, target, kick_pass=False):
-        goal_msg.receive_ball = True
+        goal_msg.reflect_shoot = True
+        goal_msg.kick_pass = kick_pass
+        goal_msg.kick_target = target
+        goal_msg.kick_setplay = False
+        return goal_msg
+
+    def _with_reflect_and_normal_kick(self, goal_msg, target, kick_pass=False):
         goal_msg.kick_enable = True
+        goal_msg.reflect_shoot = True
         goal_msg.kick_pass = kick_pass
         goal_msg.kick_target = target
         goal_msg.kick_setplay = False
@@ -585,6 +692,40 @@ class RobotOperator(Node):
         goal_msg.receive_ball = True
         return goal_msg
 
+    def _act_to_ball(self, robot_id, target_xy_object,
+                     do_shoot=False, do_pass=False, do_dribble=False,
+                     do_reflect_shoot=False,
+                     as_setplay=False):
+        # ボールとobjectを結ぶ直線上で、ボールの後ろに移動し、
+        # objectに向かってshoot/pass/dribbleする
+        if not any([do_shoot, do_pass, do_dribble, do_reflect_shoot]):
+            self.get_logger().warn('do_***のいずれかをセットしてください')
+            return
+
+        line = ConstraintLine()
+        line.p1.object.append(self._object_ball())
+        line.p2 = target_xy_object
+        line.distance = -0.3
+        line.theta = self._theta_look_ball()
+        target = target_xy_object
+
+        goal = None
+        if do_shoot:
+            goal = self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=False, kick_setplay=as_setplay)
+        elif do_pass:
+            goal = self._with_kick(
+                self._line_goal(line, keep=True), target, kick_pass=True)
+        elif do_dribble:
+            goal = self._with_dribble(
+                self._line_goal(line, keep=True), target)
+        elif do_reflect_shoot:
+            goal = self._with_receive(
+                self._with_reflect_and_normal_kick(
+                    self._line_goal(line, keep=True), target, kick_pass=False))
+
+        self._set_goal(robot_id, goal)
+
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
         if not self._action_clients[robot_id].wait_for_server(5):
@@ -593,6 +734,9 @@ class RobotOperator(Node):
 
         if self._stop_game_velocity_has_enabled[robot_id]:
             goal_msg.max_velocity_xy.append(self.STOP_GAME_VELOCITY)
+
+        goal_msg.avoid_obstacles = self._avoid_obstacles_enabled[robot_id]
+        goal_msg.avoid_placement = self._avoid_placement_enabled[robot_id]
 
         self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
             goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))
@@ -606,7 +750,7 @@ class RobotOperator(Node):
         goal_handle = future.result()
 
         if not goal_handle.accepted:
-            self.get_logger().debug('Goal rejected')
+            self.get_logger().info('Goal rejected')
             self._robot_is_free[robot_id] = True
             return
 
@@ -623,6 +767,6 @@ class RobotOperator(Node):
     def _get_result_callback(self, future, robot_id):
         # アクションサーバからの行動完了通知を受信したら実行される関数
         result = future.result().result
-        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(
-            robot_id, result.success, result.message))
+        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(robot_id, result.success, result.message))
         self._robot_is_free[robot_id] = True
+

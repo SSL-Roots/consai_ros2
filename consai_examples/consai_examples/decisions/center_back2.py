@@ -20,22 +20,45 @@ from field_observer import FieldObserver
 
 class CenterBack2Decision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
+
+    def _defend_lower_defense_area(self, robot_id, base_id):
+        # ディフェンスエリアの下半分を守る
+        ID_LOWER = base_id + 100
+        ID_FRONT = base_id + 200
+
+        # ボールが左下にあれば下側をまもる
+        if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_BOTTOM:
+            if self._act_id != ID_LOWER:
+                self._defend_lower_bottom_defense_area(robot_id)
+                self._act_id = ID_LOWER
+        else:
+            if self._act_id != ID_FRONT:
+                self._defend_lower_front_defense_area(robot_id)
+                self._act_id = ID_FRONT
 
     def _defend_lower_front_defense_area(self, robot_id):
         # ディフェンスエリアの前側下半分を守る
-        p1_x = -6.0 + 1.8 + 0.3
+        p1_x = -6.0 + 1.8 + 0.5
         p1_y = -0.1
-        p2_x = -6.0 + 1.8 + 0.3
+        p2_x = -6.0 + 1.8 + 0.5
         p2_y = -1.8
-        self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+
+    def _defend_lower_bottom_defense_area(self, robot_id):
+        # ディフェンスエリアの下側を守る
+        p1_x = -6.0 + 0.3
+        p1_y = -1.8 - 0.5
+        p2_x = -6.0 + 1.8 + 0.3
+        p2_y = -1.8 - 0.5
+        self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_lower_front_defense_area_with_kick(self, robot_id):
         # ディフェンスエリアの前側下半分を守る
-        p1_x = -6.0 + 1.8 + 0.3
+        p1_x = -6.0 + 1.8 + 0.5
         p1_y = -0.1
-        p2_x = -6.0 + 1.8 + 0.3
+        p2_x = -6.0 + 1.8 + 0.5
         p2_y = -1.8
         self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
@@ -45,17 +68,7 @@ class CenterBack2Decision(DecisionBase):
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY + 0:
-            self._defend_lower_front_defense_area(robot_id)
-            self._act_id = self.ACT_ID_INPLAY + 0
-        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
-        #     if self._act_id != self.ACT_ID_INPLAY + 0:
-        #         self._defend_lower_front_defense_area(robot_id)
-        #         self._act_id = self.ACT_ID_INPLAY + 0
-        # else:
-        #     if self._act_id != self.ACT_ID_INPLAY + 1:
-        #         self._defend_lower_front_defense_area_with_kick(robot_id)
-        #         self._act_id = self.ACT_ID_INPLAY + 1
+        self._defend_lower_defense_area(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
@@ -79,23 +92,33 @@ class CenterBack2Decision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._defend_lower_front_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 2.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._defend_lower_front_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 2.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._defend_lower_front_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 2.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._defend_lower_front_defense_area(robot_id)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 2.0)
             self._act_id = self.ACT_ID_PENALTY
+
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:

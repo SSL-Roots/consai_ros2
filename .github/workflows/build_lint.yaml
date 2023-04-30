@@ -1,6 +1,19 @@
 name: build_and_lint
 
-on: workflow_dispatch # 手動トリガー
+on:
+  push:
+    branches:
+      - main 
+      - '**-devel'
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
 
 jobs:
   industrial_ci:
@@ -8,6 +21,11 @@ jobs:
       matrix:
         env:
           - { ROS_DISTRO: foxy, ROS_REPO: ros }
+          - { ROS_DISTRO: humble, ROS_REPO: ros }
+    env:
+      UPSTREAM_WORKSPACE: .ci.rosinstall
+      # テストがworkspace内のパッケージに依存しているため、setup.bashを読み込む
+      BEFORE_RUN_TARGET_TEST_EMBED: "ici_with_unset_variables source /root/target_ws/install/setup.bash"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

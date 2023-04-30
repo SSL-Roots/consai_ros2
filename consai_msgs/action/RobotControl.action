@@ -31,8 +31,12 @@ ConstraintXY dribble_target
 # 転がっているボールを受け取るときはtrue
 bool receive_ball false
 
+# リフレクトシュート
+bool reflect_shoot false
+
 # 衝突回避は安全のためデフォルトでtrue
 bool avoid_obstacles true
+bool avoid_placement true
 
 ---
 bool success

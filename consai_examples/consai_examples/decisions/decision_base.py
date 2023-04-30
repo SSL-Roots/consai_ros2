@@ -33,8 +33,9 @@ class DecisionBase(object):
     ACT_ID_OUR_PLACEMENT = 110
     ACT_ID_THEIR_PLACEMENT = 120
 
-    def __init__(self, robot_operator):
+    def __init__(self, robot_operator, field_observer):
         self._operator = robot_operator
+        self._field_observer = field_observer
         self._ball_state = FieldObserver.BALL_NONE
         self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
         self._ball_zone_state = FieldObserver.BALL_ZONE_NONE
@@ -47,6 +48,12 @@ class DecisionBase(object):
 
     def disable_stop_game_velocity(self, robot_id):
         self._operator.disable_stop_game_velocity(robot_id)
+
+    def enable_avoid_placement(self, robot_id):
+        self._operator.enable_avoid_placement(robot_id)
+
+    def disable_avoid_placement(self, robot_id):
+        self._operator.disable_avoid_placement(robot_id)
 
     def set_ball_state(self, ball_state):
         self._ball_state = ball_state
@@ -80,6 +87,18 @@ class DecisionBase(object):
     def inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
             print("INPLAY:{}".format(robot_id))
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            print("OUR PENALTY_INPLAY:{}".format(robot_id))
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            print("THEIR PENALTY_INPLAY:{}".format(robot_id))
             self._operator.stop(robot_id)
             self._act_id = self.ACT_ID_INPLAY
 

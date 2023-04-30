@@ -46,6 +46,8 @@ class RefereeParser(Node):
     }
 
     _COMMAND_INPLAY = 99
+    _COMMAND_OUR_PENALTY_INPLAY = 199
+    _COMMAND_THEIR_PENALTY_INPLAY = 200
 
     def __init__(self, our_team_is_yellow=False, invert_placement_pos=False, division_a=True):
         super().__init__('referee_parser')
@@ -96,6 +98,7 @@ class RefereeParser(Node):
         self._current_command = 0
         self._prev_command = 0
         self._placement_pos = Point()
+        self._max_allowed_our_bots = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._sub_detection_tracked = self.create_subscription(
@@ -129,6 +132,14 @@ class RefereeParser(Node):
             if self._invert_placement_pos:
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
+        
+        # フィールドに出せるロボットの台数
+        if self._our_team_is_yellow:
+            if msg.yellow.max_allowed_bots:
+                self._max_allowed_our_bots = msg.yellow.max_allowed_bots[0]
+        else:
+            if msg.blue.max_allowed_bots:
+                self._max_allowed_our_bots = msg.blue.max_allowed_bots[0]
 
         # 解釈したレフェリー情報をpublishする
         self._publish_parsed_referee()
@@ -141,9 +152,11 @@ class RefereeParser(Node):
         referee.is_placement = self.our_ball_placement() or self.their_ball_placement()
         referee.is_inplay = self.inplay()
         referee.is_our_setplay = self.our_direct() or self.our_indirect() or self.our_kickoff() or\
-                                 self.our_penalty() or self.our_ball_placement() or self.our_pre_kickoff() or self.our_pre_penalty()
+                                 self.our_penalty() or self.our_ball_placement() or self.our_pre_kickoff() or\
+                                 self.our_pre_penalty() or self.our_penalty_inplay()
         referee.is_their_setplay = self.their_direct() or self.their_indirect() or self.their_kickoff() or\
-                                 self.their_penalty() or self.their_ball_placement() or self.their_pre_kickoff() or self.their_pre_penalty()
+                                   self.their_penalty() or self.their_ball_placement() or self.their_pre_kickoff() or\
+                                   self.their_pre_penalty() or self.their_penalty_inplay()
         self._pub_parsed_referee.publish(referee)
 
     def _check_inplay(self, msg):
@@ -167,7 +180,13 @@ class RefereeParser(Node):
 
             if math.hypot(diff_x, diff_y) > 0.05:
                 self.get_logger().info('ボールが0.05 meter動いたためinplayに変わります')
-                self._current_command = self._COMMAND_INPLAY
+                # ペナルティキック時のインプレイではロボットが自由に動けないため、別のコマンドフラグを用意する
+                if self.our_penalty():
+                    self._current_command = self._COMMAND_OUR_PENALTY_INPLAY
+                elif self.their_penalty():
+                    self._current_command = self._COMMAND_THEIR_PENALTY_INPLAY
+                else:
+                    self._current_command = self._COMMAND_INPLAY
 
         # 10 seconds passed following a kick-off.
         elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * \
@@ -204,6 +223,12 @@ class RefereeParser(Node):
 
     def inplay(self):
         return self._current_command == self._COMMAND_INPLAY
+
+    def our_penalty_inplay(self):
+        return self._current_command == self._COMMAND_OUR_PENALTY_INPLAY
+
+    def their_penalty_inplay(self):
+        return self._current_command == self._COMMAND_THEIR_PENALTY_INPLAY
 
     def our_pre_kickoff(self):
         return self._current_command == self._COMMAND_OUR_PREPARE_KICKOFF
@@ -259,3 +284,6 @@ class RefereeParser(Node):
 
     def placement_position(self):
         return self._placement_pos
+
+    def max_allowed_our_bots(self):
+        return self._max_allowed_our_bots

@@ -20,8 +20,8 @@ from field_observer import FieldObserver
 
 class AttackerDecision(DecisionBase):
 
-    def __init__(self, robot_operator):
-        super().__init__(robot_operator)
+    def __init__(self, robot_operator, field_observer):
+        super().__init__(robot_operator, field_observer)
 
     def stop(self, robot_id):
         ID_CHASE = self.ACT_ID_STOP + 0
@@ -68,7 +68,7 @@ class AttackerDecision(DecisionBase):
 
         # ゴールに向かってシュートする
         if self._act_id != ID_INPLAY:
-            self._operator.shoot_to_their_goal(robot_id)
+            self._operator.shoot_to_their_goal_with_reflect(robot_id)
             self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
@@ -103,13 +103,23 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PENALTY
+
+    def their_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.setplay_shoot_to_their_goal(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
@@ -118,7 +128,8 @@ class AttackerDecision(DecisionBase):
 
     def their_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
+            # self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_DIRECT
 
     def our_indirect(self, robot_id):
@@ -140,6 +151,9 @@ class AttackerDecision(DecisionBase):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
         ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
         ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+
+        # プレースメントを回避しない
+        self._operator.disable_avoid_placement(robot_id)
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする

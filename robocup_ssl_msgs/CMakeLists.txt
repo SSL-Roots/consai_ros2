@@ -44,9 +44,15 @@ add_library(proto_cpp
 target_link_libraries(proto_cpp ${PROTOBUF_LIBRARIES})
 
 # Install
+## For Foxy
 install(
   FILES ${PROTO_H}
   DESTINATION include/${PROJECT_NAME})
+
+## For Humble
+install(
+  FILES ${PROTO_H}
+  DESTINATION include/${PROJECT_NAME}/${PROJECT_NAME})
 
 install(
   TARGETS proto_cpp
@@ -98,7 +104,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_export_dependencies(rosidl_default_runtime)

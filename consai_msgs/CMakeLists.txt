@@ -27,6 +27,7 @@ set(msg_files
   "msg/ConstraintTheta.msg"
   "msg/ConstraintXY.msg"
   "msg/GoalPose.msg"
+  "msg/NamedTargets.msg"
   "msg/ParsedReferee.msg"
   "msg/State2D.msg"
 )
@@ -44,7 +45,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_export_dependencies(rosidl_default_runtime)

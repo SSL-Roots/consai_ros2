@@ -6,28 +6,38 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 
 **CON-SAI** stands for **CON**tribution to *S*occer **AI**.
 
+![](./resources/consai_visualizer.png)
+
 ## Requirements
 
 - Linux OS
     - Ubuntu 20.04 tested and is recommended
 - ROS 2
+    - [Humble Hawksbill](https://docs.ros.org/en/humble/Installation.html)
     - [Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation.html)
-    - [colcon build tool](https://docs.ros.org/en/foxy/Tutorials/Colcon-Tutorial.html)
-- RoboCup SSL Official Softwares
+    - [colcon build tool](https://docs.ros.org/en/humble/Tutorials/Colcon-Tutorial.html)
+- [consai_frootspi_msgs](https://github.com/SSL-Roots/consai_frootspi_msgs)
+    - CON-SAIと[FrootsPi](https://github.com/SSL-Roots/FrootsPi)が通信するために必要なパッケージです
+- RoboCup SSL Official Softwares (Optional)
     - [grSim](https://github.com/RoboCup-SSL/grSim)
     - [ssl-game-controller](https://github.com/RoboCup-SSL/ssl-game-controller)
 
+
 ## Installation
 
-### Binary installation
+### Docker
 
-TBD
+```sh
+$ docker pull ghcr.io/ssl-roots/consai_ros2:main
+```
+
+Dockerを用いたCON-SAIの開発方法については[.docker/README.md](.docker/README.md)を参照してください
 
 ### Source build
 
 ```sh
 # Setup ROS environment
-$ source /opt/ros/foxy/setup.bash
+$ source /opt/ros/humble/setup.bash
 
 # Create working directory
 $ mkdir -p ~/ros2_ws/src
@@ -55,7 +65,7 @@ $ ros2 launch consai_examples start.launch.py
 
 # anothor terminal
 $ source ~/ros2_ws/install/setup.bash
-$ ros2 run consai_examples control_by_referee.py
+$ ros2 run consai_examples game.py
 ```
 
 CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を参照してください。
@@ -96,7 +106,7 @@ CON-SAIを開発する際にこの項目を読んでください。
 ### 開発方針について
 
 - 本ソフトウェアはオープンソースですが、開発はオープンではありません
-- Issue、Pull Requestは常に受け付けていますが、チームの開発方針を優先するため、提案が受け入れられない場合があります
+- チームの開発方針を優先するため、外部からのIssue、Pull Requestには対応できない場合があります
 
 ### Lint
 
@@ -131,7 +141,7 @@ $ ament_flake8 consai_examples/consai_examples/control.py
 ```
 
 外部ツール（例：autopep8）を使えば自動整形できます。
-[ROS 2のPythonコードスタイル](https://docs.ros.org/en/foxy/Contributing/Code-Style-Language-Versions.html#python)
+[ROS 2のPythonコードスタイル](https://docs.ros.org/en/humble/Contributing/Code-Style-Language-Versions.html#python)
 に沿うようにパラメータを設定してください。
 
 ```sh

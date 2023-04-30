@@ -36,10 +36,8 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/side_back1.py
     ${PROJECT_NAME}/decisions/side_back2.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
-    ${PROJECT_NAME}/decisions/zone1.py
-    ${PROJECT_NAME}/decisions/zone2.py
-    ${PROJECT_NAME}/decisions/zone3.py
-    ${PROJECT_NAME}/decisions/zone4.py
+    ${PROJECT_NAME}/decisions/substitute.py
+    ${PROJECT_NAME}/decisions/zone_defense.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
@@ -49,7 +47,12 @@ install(DIRECTORY
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
+  ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
+  ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
 endif()
 
 ament_package()

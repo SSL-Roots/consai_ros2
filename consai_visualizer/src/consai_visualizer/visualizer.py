@@ -21,6 +21,7 @@ import time
 
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPose
+from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
 import consai_visualizer.referee_parser as ref_parser
 from python_qt_binding import loadUi
@@ -77,6 +78,9 @@ class Visualizer(Plugin):
         self._sub_referee = self._node.create_subscription(
             Referee, 'referee',
             self._callback_referee, 10)
+        self._sub_named_targets = self._node.create_subscription(
+            NamedTargets, 'named_targets',
+            self._widget.field_widget.set_named_targets, 10)
 
         self._sub_battery_voltage = []
         for i in range(16):
@@ -162,14 +166,21 @@ class Visualizer(Plugin):
     def _callback_referee(self, msg):
         self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
         self._widget.label_ref_command.setText(ref_parser.parse_command(msg.command))
-        if len(msg.stage_time_left) > 0:
+        if msg.stage_time_left:
             self._widget.label_ref_stage_time_left.setText(
                 ref_parser.parse_stage_time_left(msg.stage_time_left[0]))
-        if len(msg.current_action_time_remaining) > 0:
+        if msg.current_action_time_remaining:
             self._widget.label_ref_action_time_remaining.setText(
                 ref_parser.parse_action_time_remaining(msg.current_action_time_remaining[0]))
 
         # チーム情報の解析
+        if msg.blue.max_allowed_bots:
+            self._widget.label_ref_b_allowed_bots.setText(
+                ref_parser.parse_allowed_bots(msg.blue.max_allowed_bots[0]))
+        if msg.yellow.max_allowed_bots:
+            self._widget.label_ref_y_allowed_bots.setText(
+                ref_parser.parse_allowed_bots(msg.yellow.max_allowed_bots[0]))
+
         self._widget.label_ref_b_team_red_num.setText(
             ref_parser.parse_red_cards(msg.blue.red_cards))
         self._widget.label_ref_y_team_red_num.setText(

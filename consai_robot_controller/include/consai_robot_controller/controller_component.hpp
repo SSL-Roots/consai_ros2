@@ -23,6 +23,7 @@
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/goal_pose.hpp"
+#include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
@@ -37,6 +38,7 @@
 namespace consai_robot_controller
 {
 using GoalPose = consai_msgs::msg::GoalPose;
+using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControl = consai_msgs::action::RobotControl;
@@ -63,6 +65,7 @@ private:
   void callback_geometry(const GeometryData::SharedPtr msg);
   void callback_referee(const Referee::SharedPtr msg);
   void callback_parsed_referee(const ParsedReferee::SharedPtr msg);
+  void callback_named_targets(const NamedTargets::SharedPtr msg);
   bool update_pid_gain_from_param(
     const rclcpp::Parameter & param,
     const std::string & prefix,
@@ -102,6 +105,7 @@ private:
   consai_robot_controller::FieldInfoParser parser_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
+  rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
   rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
   rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
   bool team_is_yellow_;
