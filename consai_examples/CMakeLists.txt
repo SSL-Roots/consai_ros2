@@ -55,7 +55,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
   ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
-  ament_add_pytest_test(test_geometory_tools tests/test_geometory_tools.py)
+  ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
 endif()
 
 ament_package()
