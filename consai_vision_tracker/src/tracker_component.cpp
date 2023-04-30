@@ -50,6 +50,7 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
+  pub_robot_velocities_ = create_publisher<RobotLocalVelocities>("robot_local_velocities", 10);
 
   declare_parameter("invert", false);
 
@@ -65,18 +66,22 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 void Tracker::on_timer()
 {
   auto tracked_msg = std::make_unique<TrackedFrame>();
+  auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
 
   tracked_msg->balls.push_back(ball_tracker_->update());
 
   for (auto && tracker : blue_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
+    robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
   }
 
   for (auto && tracker : yellow_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
+    robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
   }
 
   pub_tracked_->publish(std::move(tracked_msg));
+  pub_robot_velocities_->publish(std::move(robot_vel_msg));
 }
 
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)

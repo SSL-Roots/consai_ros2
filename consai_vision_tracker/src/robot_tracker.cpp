@@ -238,6 +238,27 @@ TrackedRobot RobotTracker::update()
   return prev_tracked_robot_;
 }
 
+RobotLocalVelocity RobotTracker::calc_local_velocity()
+{
+  // ロボット座標系でのロボット速度を計算する
+  auto local_velocity = RobotLocalVelocity();
+  local_velocity.robot_id = prev_tracked_robot_.robot_id;
+
+  if (prev_tracked_robot_.vel.size() > 0) {
+    auto theta = prev_tracked_robot_.orientation;
+    auto world_vel = prev_tracked_robot_.vel[0];
+    auto local_vel = world_vel;
+    local_vel.x = world_vel.x * std::cos(theta) + world_vel.y * std::sin(theta);
+    local_vel.y = -(world_vel.x * std::sin(theta) - world_vel.y * std::cos(theta));
+    local_velocity.velocity.x = local_vel.x;
+    local_velocity.velocity.y = local_vel.y;
+  }
+  if (prev_tracked_robot_.vel_angular.size() > 0) {
+    local_velocity.velocity.theta = prev_tracked_robot_.vel_angular[0];
+  }
+  return local_velocity;
+}
+
 void RobotTracker::reset_prior()
 {
   // 事前分布を初期化する
