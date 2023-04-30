@@ -25,6 +25,8 @@ from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import DetectionRobot
 from robocup_ssl_msgs.msg import TrackedRobot
 
+import geometry_tools as tool
+
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
 class FieldObserver(Node):
@@ -639,31 +641,33 @@ class FieldObserver(Node):
         our_robots_vel = self.our_robots_vel
         their_robots_vel = self.their_robots_vel
 
+        # パサーの位置
+        my_robot_pos = our_robots_pos[my_robot_id]
         # エラー対策
         # TODO: 時々Vector2形式でデータが混入するので対策が必要
         if type(our_robots_vel[0]) is not list:
             return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos[my_robot_id], our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        forward_our_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
         # パサーよりも前にいる敵ロボットIDリストを取得
-        forward_their_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos[my_robot_id], their_robots_pos, their_robots_vel, robot_r, dt)
+        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
         if len(forward_our_robots_id) == 0:
             return forward_our_robots_id
 
-        # 自分と各ロボットまでの距離を計測し近い順にソート
-        dist_our_robot = self._sort_passer_from_our_robot_distance(my_robot_id, forward_our_robots_id, our_robots_pos)
+        # 自分と各ロボットまでの距離を基にロボットIDをソート
+        our_robots_id = self._sort_by_from_robot_distance(my_robot_id, forward_our_robots_id, our_robots_pos)
 
         # ロボットの位置と長半径（移動距離）をロボットごとに格納
         their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * abs(their_robots_vel[i][0]) + robot_r] for i in forward_their_robots_id]
 
         # 各レシーバー候補ロボットに対してパス可能か判定
-        for i in range(len(dist_our_robot)):
+        for _id in our_robots_id:
             # パサーと味方ロボットの位置の差分
-            dx = our_robots_pos[dist_our_robot[i][1]][0] - our_robots_pos[my_robot_id][0]
-            dy = our_robots_pos[dist_our_robot[i][1]][1] - our_robots_pos[my_robot_id][1]
+            dx = our_robots_pos[_id][0] - my_robot_pos[0]
+            dy = our_robots_pos[_id][1] - my_robot_pos[1]
 
             # パサーとレシーバー候補ロボットを結ぶ直線の傾き
             if dx == 0:
@@ -672,11 +676,11 @@ class FieldObserver(Node):
                 slope_from_passer_to_our_robot = dy / dx
 
             # パサーとレシーバー候補となる味方ロボットを結ぶ直線の切片
-            intercept_from_passer_to_our_robot = our_robots_pos[my_robot_id][1] - slope_from_passer_to_our_robot * our_robots_pos[my_robot_id][0]
+            intercept_from_passer_to_our_robot = my_robot_pos[1] - slope_from_passer_to_our_robot * my_robot_pos[0]
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
-                target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[dist_our_robot[i][1]][0] > their_robots_pos[robot_id][0]]
+                target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[_id][0] > their_robots_pos[robot_id][0]]
             # パサーより前方にいる相手ロボットを計算対象とするときの処理
             else:
                 target_their_robots_id = forward_their_robots_id
@@ -700,7 +704,7 @@ class FieldObserver(Node):
                             # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                             check_count = 0
                             # パスできる味方ロボットとしてリストに格納
-                            robots_to_pass.append(dist_our_robot[i][1])
+                            robots_to_pass.append(_id)
                         # まだすべてのロボットに対して計算を行っていない場合の処理
                         else:
                             # 何台の相手ロボットに妨害されないかをカウントする変数をインクリメント
@@ -710,27 +714,27 @@ class FieldObserver(Node):
                         # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                         check_count = 0
                         # どの相手ロボットがパスコースに影響していたか（1台のみ出力）
-                        #     このときの味方ロボットはパスの候補から除外する
-                        # print(dist_our_robot[i][1], "番の味方ロボットへのパスは", robot_id, "番の相手ロボットに防がれる可能性あり")
                         break
             # 計算対象とする相手ロボットが存在しないとき（邪魔する相手ロボットがいないとき）
             else:
                 # パスができる味方ロボットとしてリストに格納
-                robots_to_pass.append(dist_our_robot[i][1])
+                robots_to_pass.append(_id)
         
         return robots_to_pass
 
-    def _sort_passer_from_our_robot_distance(self, my_robot_id, robots_id, robots_pos):
-        # パサーからレシーバー候補となる味方ロボットまでの距離を計算し近い順にソートする関数
+    def _sort_by_from_robot_distance(self, my_robot_id, robots_id, robots_pos):
+        # 自ロボットから味方ロボットまでの距離を計算し近い順にソートする関数
 
-        # パサーからレシーバー候補となる味方ロボットまでの距離、レシーバー候補となる味方ロボットのIDをリストに格納
-        diff_passer_to_robots = [[robots_pos[i][0] - robots_pos[my_robot_id][0], robots_pos[i][1] - robots_pos[my_robot_id][1]] for i in robots_id]
-        receive_dist_robots = [[math.sqrt((diff_passer_to_robots[i][0]) ** 2 + (diff_passer_to_robots[i][1]) ** 2), robots_id[i]] for i in range(len(robots_id))]
+        # 自ロボットの位置を格納
+        my_robot_pos = robots_pos[my_robot_id]
+        # 自ロボットから味方ロボットまでの距離、IDをリストに格納
+        robots_dist_and_id = [[tool.get_distance(robots_pos[_id], my_robot_pos), _id] for _id in robots_id]
 
-        # パサーに近い順に味方ロボットをソート
-        receive_dist_robots = sorted(receive_dist_robots)
+        # 距離が近い順に味方ロボットをソート
+        sorted_robots_id = [_id for _, _id in sorted(robots_dist_and_id)]
 
-        return receive_dist_robots
+        # return receive_dist_robots
+        return sorted_robots_id
 
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
