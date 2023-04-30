@@ -437,14 +437,14 @@ bool FieldInfoParser::parse_kick(
   bool need_dribble = false;
 
   auto robot_pose = tools::pose_state(my_robot);
-  double distance = tools::distance(robot_pose, parsed_pose);
+  double distance = tools::distance(robot_pose, kick_target);
 
   // パス速度を設定
   double KICK_POWER_PASS = 6.5;
-  if (distance < 2.0){
-    KICK_POWER_PASS = 4.0;
+  if (distance < 1.0){
+    KICK_POWER_PASS = 3.0;
   }
-  else if (2.0 <= distance && distance < 4.5){
+  else if (1.0 <= distance && distance < 4.5){
     KICK_POWER_PASS = distance + 2;
   }
 
