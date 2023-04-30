@@ -137,6 +137,12 @@ class FieldObserver(Node):
     def get_our_robot_pos(self, our_robot_id):
         return self.our_robots_pos[our_robot_id]
 
+    def get_robots_id(self, robots_pos):
+        # フィールド上にいるロボットのIDをリスト化
+        robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != "None"]
+        return robots_id
+
+
     # 相手ロボットの位置座標 [x,y] 取得
     def _update_their_robots_pos(self, their_robots):
         self.their_robots_pos = [
@@ -726,14 +732,9 @@ class FieldObserver(Node):
 
         return receive_dist_robots
 
-    def _get_robots_in_field(self, robots_pos):
-        # フィールド上にいるロボットのIDのみリスト化
-        robots_in_field = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != "None"]
-        return robots_in_field
-
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = self._get_robots_in_field(robots_pos)
+        robots_id = self.get_robots_id(robots_pos)
         
         if is_delete_my_id:
             # 自身のIDを削除
