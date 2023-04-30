@@ -36,3 +36,16 @@ def test_get_angle():
     angle = tool.get_angle([0, 0], [-1, -1])
     assert math.isclose(angle, float(-math.pi * 3 / 4), abs_tol=0.01)
 
+def test_angle_normalize():
+    angle = tool.angle_normalize(math.pi / 2)
+    assert math.isclose(angle, float(math.pi / 2), abs_tol=0.01)
+
+    angle = tool.angle_normalize(-math.pi / 2)
+    assert math.isclose(angle, float(-math.pi / 2), abs_tol=0.01)
+
+    angle = tool.angle_normalize(3 * math.pi)
+    assert math.isclose(angle, float(math.pi), abs_tol=0.01)
+    
+    angle = tool.angle_normalize(-3 * math.pi)
+    assert math.isclose(angle, float(-math.pi), abs_tol=0.01)
+
