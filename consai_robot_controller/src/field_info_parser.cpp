@@ -719,7 +719,7 @@ bool FieldInfoParser::avoid_obstacles(
   const double OBSTACLE_DETECTION_Y = 0.5;
   // 相対的な回避位置
   const double AVOIDANCE_POS_X = 0.2;
-  const double AVOIDANCE_POS_Y = 0.5;
+  const double AVOIDANCE_POS_Y = 0.4;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
@@ -779,18 +779,18 @@ bool FieldInfoParser::avoid_obstacles(
   // 障害物が存在すれば、回避位置を生成する
   if (obstacle_pose_MtoG) {
     // 障害物と距離が近い場合
-    if (robot_pose_MtoG.x < 0.5){
-      if (drobot_pose_MtoG.y < 0.2){
+    if (obstacle_pose_MtoG->x < 0.5){
+      if (obstacle_pose_MtoG->y < 0.2){
         avoidance_pose = trans_MtoG.inverted_transform(
           obstacle_pose_MtoG->x,
-          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y * 1.2, obstacle_pose_MtoG->y),
+          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
           goal_pose_MtoG.theta
         );
       }
       else {
         avoidance_pose = trans_MtoG.inverted_transform(
-          obstacle_pose_MtoG->x,
-          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y * 1.2, obstacle_pose_MtoG->y),
+          obstacle_pose_MtoG->x + AVOIDANCE_POS_X / 2,
+          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
           goal_pose_MtoG.theta
         );
       }
