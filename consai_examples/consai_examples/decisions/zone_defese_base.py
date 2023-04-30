@@ -34,6 +34,12 @@ class ZoneDefenseDecisionBase(DecisionBase):
     def __init__(self, robot_operator, field_observer, zone_id: ZoneDefenseID):
         super().__init__(robot_operator, field_observer)
         self._zone_id = zone_id
+        self._our_penalty_pos_x = -6.0 + 0.5
+        self._our_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
+        self._their_penalty_pos_x = 6.0 - 0.5
+        self._their_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
+        self._ball_placement_pos_x = -6.0 + 2.0
+        self._ball_placement_pos_y = 1.8 - 0.3 * (4.0 + self._zone_id.value)
 
     def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
@@ -55,7 +61,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
         # ゾーン内にボールがあるか判定
         # ボールを追いかける処理は行ってない（アタッカーと取り合いになるため）
         # FIXME: アタッカーと取り合いにならない程度にボールは追いかけてほしい
-        ball_is_in_my_zone = self._ball_is_in_zone_x(self._zone_id)
+        ball_is_in_my_zone = self._ball_is_in_zone()
 
         # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
         if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
@@ -67,7 +73,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
 
         # ゾーン内で待機する
         if self._act_id != ID_IN_ZONE:
-            target_x, target_y = self._get_zone_trget_xy(self._zone_id)
+            target_x, target_y = self._get_zone_trget_xy()
             # self._operator.move_to_receive(robot_id, target_x, target_y)
             self._operator.move_to_reflect_shoot_to_their_goal(
                 robot_id, target_x, target_y)
@@ -118,7 +124,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
         target_y = -4.5 * 0.75
         return target_x, target_y
 
-    def _ball_is_in_zone_x(self):
+    def _ball_is_in_zone(self):
         # 自分のzone_idと味方ゾーンDFの数によって
         # 自分の担当ゾーンを決定して、ボールがあるか判定
         if self._zone_id == ZoneDefenseID.ZONE1:
@@ -174,3 +180,73 @@ class ZoneDefenseDecisionBase(DecisionBase):
             if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                 return True
         return False
+    
+    def stop(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_STOP, without_mark=True)
+
+    def inplay(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_INPLAY)
+
+    def our_pre_kickoff(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
+
+    def our_kickoff(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
+
+    def their_pre_kickoff(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_PRE_KICKOFF, without_mark=True)
+
+    def their_kickoff(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_KICKOFF, without_mark=True)
+
+    def our_pre_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def our_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def their_pre_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def their_penalty(self, robot_id):
+        if self._act_id != self.ACT_ID_PRE_PENALTY:
+            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._act_id = self.ACT_ID_PRE_PENALTY
+
+    def our_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def their_penalty_inplay(self, robot_id):
+        if self._act_id != self.ACT_ID_INPLAY:
+            self._operator.stop(robot_id)
+            self._act_id = self.ACT_ID_INPLAY
+
+    def our_direct(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
+
+    def their_direct(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_DIRECT, without_mark=False)
+
+    def our_indirect(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_INDIRECT)
+
+    def their_indirect(self, robot_id):
+        self._zone_defense(robot_id, self.ACT_ID_INDIRECT)
+
+    def our_ball_placement(self, robot_id, placement_pos):
+        if self._act_id != self.ACT_ID_OUR_PLACEMENT:
+            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._act_id = self.ACT_ID_OUR_PLACEMENT
+
+    def their_ball_placement(self, robot_id, placement_pos):
+        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
+            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._act_id = self.ACT_ID_THEIR_PLACEMENT
