@@ -19,13 +19,34 @@ import math
 import cmath
 import numpy
 
-def get_distance(pose1, pose2):
-    # 2点間の距離を取る関数
-
+def get_diff_xy(pose1, pose2):
+    # 2点間の距離(xとy)を取る関数
     diff_pose_x = pose1[0] - pose2[0]
     diff_pose_y = pose1[1] - pose2[1]
 
-    return math.hypot(diff_pose_x, diff_pose_y)
+    return [diff_pose_x, diff_pose_y]
+
+def get_distance(pose1, pose2):
+    # 2点間の距離を取る関数
+    diff = get_diff_xy(pose1, pose2)
+
+    return math.hypot(diff[0], diff[1])
+
+def get_line_parameter(pose1, pose2):
+    # 2点間を結ぶ直線の傾きと切片を求める関数
+    diff = get_diff_xy(pose1, pose2)
+   
+    # 直線の傾き
+    if diff[0] == 0:
+        slope = diff[1]
+    else:
+        slope = diff[1] / diff[0]
+
+    # 直線の切片
+    intercept = pose2[1] - slope * pose2[0]
+
+    return slope, intercept
+
 
 def get_angle(from_pose, to_pose):
     # ワールド座標系でfrom_poseからto_poseを結ぶ直線の角度を得る
