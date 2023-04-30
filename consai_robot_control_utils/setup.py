@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'talker = consai_robot_control_utils.consai_robot_control_utils:main',
         ],
     },
 )
