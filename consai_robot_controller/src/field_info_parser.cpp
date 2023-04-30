@@ -433,9 +433,20 @@ bool FieldInfoParser::parse_kick(
   const double DRIBBLE_DISTANCE = 0.3;
   const double DRIBBLE_POWER = 1.0;
   const double KICK_POWER_SHOOT = 6.5;
-  const double KICK_POWER_PASS = 1.5;
   bool need_kick = false;
   bool need_dribble = false;
+
+  auto robot_pose = tools::pose_state(my_robot);
+  double distance = tools::distance(robot_pose, parsed_pose);
+
+  // パス速度を設定
+  double KICK_POWER_PASS = 6.5;
+  if (distance < 2.0){
+    KICK_POWER_PASS = 4.0;
+  }
+  else if (2.0 <= distance && distance < 4.5){
+    KICK_POWER_PASS = distance + 2;
+  }
 
   if (kick_setplay) {
     control_ball_at_setplay(kick_target, my_robot, ball, parsed_pose, need_kick, need_dribble);
