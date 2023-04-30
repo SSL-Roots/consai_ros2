@@ -639,9 +639,9 @@ class FieldObserver(Node):
             return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        forward_our_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos[my_robot_id], our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
         # パサーよりも前にいる敵ロボットIDリストを取得
-        forward_their_robots_id = self._forward_robots_id(my_robot_id, their_robots_pos, their_robots_vel, robot_r, dt)
+        forward_their_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos[my_robot_id], their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
         if len(forward_our_robots_id) == 0:
@@ -731,7 +731,7 @@ class FieldObserver(Node):
         robots_in_field = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != "None"]
         return robots_in_field
 
-    def _forward_robots_id(self, my_robot_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
+    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
         robots_id = self._get_robots_in_field(robots_pos)
         
@@ -741,7 +741,7 @@ class FieldObserver(Node):
 
         # パサーより前に存在するロボットIDをリスト化
         forward_robots_id = [_id for _id in robots_id
-                            if robots_pos[my_robot_id][0] < robots_pos[_id][0] + (abs(robots_vel[_id][0]) * dt + robot_r) * 
+                            if my_robot_pos[0] < robots_pos[_id][0] + (abs(robots_vel[_id][0]) * dt + robot_r) * 
                             robots_vel[_id][0] / math.sqrt(robots_vel[_id][0] ** 2 + robots_vel[_id][1] ** 2)]
 
         return forward_robots_id
