@@ -31,17 +31,18 @@ class ZoneDefenseID(Enum):
 
 class ZoneDefenseDecisionBase(DecisionBase):
 
-    def __init__(self, robot_operator, field_observer):
+    def __init__(self, robot_operator, field_observer, zone_id: ZoneDefenseID):
         super().__init__(robot_operator, field_observer)
+        self._zone_id = zone_id
 
-    def _zone_defense(self, robot_id, base_id, zone_id: ZoneDefenseID, without_mark=False):
+    def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
         ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
         ID_IN_OUR_DEFENSE = base_id + self._num_of_zone_roles + 300
 
-        ZONE_TARGET = zone_id.value
+        ZONE_TARGET = self._zone_id.value
 
         # FIXME: ここはあとで直す
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
@@ -54,7 +55,7 @@ class ZoneDefenseDecisionBase(DecisionBase):
         # ゾーン内にボールがあるか判定
         # ボールを追いかける処理は行ってない（アタッカーと取り合いになるため）
         # FIXME: アタッカーと取り合いにならない程度にボールは追いかけてほしい
-        ball_is_in_my_zone = self._ball_is_in_zone_x(zone_id)
+        ball_is_in_my_zone = self._ball_is_in_zone_x(self._zone_id)
 
         # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
         if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
@@ -66,24 +67,24 @@ class ZoneDefenseDecisionBase(DecisionBase):
 
         # ゾーン内で待機する
         if self._act_id != ID_IN_ZONE:
-            target_x, target_y = self._get_zone_trget_xy(zone_id)
+            target_x, target_y = self._get_zone_trget_xy(self._zone_id)
             # self._operator.move_to_receive(robot_id, target_x, target_y)
             self._operator.move_to_reflect_shoot_to_their_goal(
                 robot_id, target_x, target_y)
             self._act_id = ID_IN_ZONE
         return
 
-    def _get_zone_trget_xy(self, zone_id):
+    def _get_zone_trget_xy(self):
         # 待機場所をそれぞれの関数で算出する
         target_x = -2.0
         target_y = 0
-        if zone_id == ZoneDefenseID.ZONE1:
+        if self._zone_id == ZoneDefenseID.ZONE1:
             return self._get_zone1_target_xy()
-        elif zone_id == ZoneDefenseID.ZONE2:
+        elif self._zone_id == ZoneDefenseID.ZONE2:
             return self._get_zone2_target_xy()
-        elif zone_id == ZoneDefenseID.ZONE3:
+        elif self._zone_id == ZoneDefenseID.ZONE3:
             return self._get_zone3_target_xy()
-        elif zone_id == ZoneDefenseID.ZONE4:
+        elif self._zone_id == ZoneDefenseID.ZONE4:
             return self._get_zone4_target_xy()
         return target_x, target_y
 
@@ -117,16 +118,16 @@ class ZoneDefenseDecisionBase(DecisionBase):
         target_y = -4.5 * 0.75
         return target_x, target_y
 
-    def _ball_is_in_zone_x(self, zone_id):
+    def _ball_is_in_zone_x(self):
         # 自分のzone_idと味方ゾーンDFの数によって
         # 自分の担当ゾーンを決定して、ボールがあるか判定
-        if zone_id == ZoneDefenseID.ZONE1:
+        if self._zone_id == ZoneDefenseID.ZONE1:
             return self._ball_is_in_zone1()
-        elif zone_id == ZoneDefenseID.ZONE2:
+        elif self._zone_id == ZoneDefenseID.ZONE2:
             return self._ball_is_in_zone2()
-        elif zone_id == ZoneDefenseID.ZONE3:
+        elif self._zone_id == ZoneDefenseID.ZONE3:
             return self._ball_is_in_zone3()
-        elif zone_id == ZoneDefenseID.ZONE4:
+        elif self._zone_id == ZoneDefenseID.ZONE4:
             return self._ball_is_in_zone4()
         return False
 
