@@ -18,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include "consai_msgs/msg/robot_local_velocities.hpp"
+#include "consai_msgs/msg/robot_local_velocity.hpp"
 #include "consai_vision_tracker/visibility_control.h"
 #include "consai_vision_tracker/ball_tracker.hpp"
 #include "consai_vision_tracker/robot_tracker.hpp"
@@ -31,6 +33,8 @@
 namespace consai_vision_tracker
 {
 
+using RobotLocalVelocity = consai_msgs::msg::RobotLocalVelocity;
+using RobotLocalVelocities = consai_msgs::msg::RobotLocalVelocities;
 using DetectionBall = robocup_ssl_msgs::msg::DetectionBall;
 using DetectionFrame = robocup_ssl_msgs::msg::DetectionFrame;
 using DetectionRobot = robocup_ssl_msgs::msg::DetectionRobot;
@@ -54,6 +58,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<DetectionFrame>::SharedPtr sub_detection_;
   rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
+  rclcpp::Publisher<RobotLocalVelocities>::SharedPtr pub_robot_velocities_;
   std::shared_ptr<BallTracker> ball_tracker_;
   std::vector<std::shared_ptr<RobotTracker>> blue_robot_tracker_;
   std::vector<std::shared_ptr<RobotTracker>> yellow_robot_tracker_;
