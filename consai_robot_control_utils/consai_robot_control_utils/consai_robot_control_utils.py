@@ -17,6 +17,9 @@ class MinimalPublisher(Node):
         self.csv_path = self.get_parameter('csv_path').get_parameter_value().string_value
         self.declare_parameter('robot_id', 0)
         self.robot_id = self.get_parameter('robot_id').get_parameter_value().integer_value
+        self.declare_parameter('loop', False)
+        self.loop = self.get_parameter('loop').get_parameter_value().bool_value
+
 
         self.profile = self.load_profile(self.csv_path)
         self.latest_pub_time = self.get_clock().now()
@@ -50,10 +53,12 @@ class MinimalPublisher(Node):
 
         # self.profileが末尾まで達したらプログラム終了
         if self.read_index >= len(self.profile):
-            self.read_index = 0
-            # self.get_logger().info('finished')
-            # self.destroy_node()
-            # rclpy.shutdown()
+            if self.loop:
+                self.read_index = 0
+            else:
+                self.get_logger().info('finished')
+                self.destroy_node()
+                rclpy.shutdown()
 
     def load_profile(self, csv_path):
         """CSVファイルから移動プロファイルを読み込む
