@@ -29,11 +29,8 @@ from decisions.side_back1 import SideBack1Decision
 from decisions.side_back2 import SideBack2Decision
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
-from decisions.zone1 import Zone1Decision
-from decisions.zone2 import Zone2Decision
-from decisions.zone3 import Zone3Decision
-from decisions.zone4 import Zone4Decision
-from decisions.zone_defese_base import ZoneDefenseID
+from decisions.zone_defense import ZoneDefenseDecision
+from decisions.zone_defense import ZoneDefenseID
 from field_observer import FieldObserver
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -210,10 +207,10 @@ if __name__ == '__main__':
         RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
         RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
         RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
-        RoleName.ZONE1: Zone1Decision(operator, observer, ZoneDefenseID.ZONE1),
-        RoleName.ZONE2: Zone2Decision(operator, observer, ZoneDefenseID.ZONE2),
-        RoleName.ZONE3: Zone3Decision(operator, observer, ZoneDefenseID.ZONE3),
-        RoleName.ZONE4: Zone4Decision(operator, observer, ZoneDefenseID.ZONE4),
+        RoleName.ZONE1: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE1),
+        RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),
+        RoleName.ZONE3: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE3),
+        RoleName.ZONE4: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE4),
         RoleName.SIDE_BACK1: SideBack1Decision(operator, observer),
         RoleName.SIDE_BACK2: SideBack2Decision(operator, observer),
         RoleName.SUBSTITUTE: SubstituteDecision(operator, observer, args.invert),
