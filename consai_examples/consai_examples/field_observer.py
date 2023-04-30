@@ -638,10 +638,10 @@ class FieldObserver(Node):
         if type(our_robots_vel[0]) is not list:
             return []
 
-        # パサーよりも前にいる味方ロボットIDをリストにまとめる
-        forward_our_robots_id = self._forward_our_robots_id(my_robot_id, our_robots_pos, our_robots_vel, robot_r, dt)
-        # パサーよりも前にいる敵ロボットIDをリストにまとめる
-        forward_their_robots_id = self._forward_their_robots_id(my_robot_id, our_robots_pos, their_robots_pos, their_robots_vel, robot_r, dt)
+        # パサーよりも前にいる味方ロボットIDのリストを取得
+        forward_our_robots_id = self._forward_robots_id(my_robot_id, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        # パサーよりも前にいる敵ロボットIDリストを取得
+        forward_their_robots_id = self._forward_robots_id(my_robot_id, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
         if len(forward_our_robots_id) == 0:
@@ -714,37 +714,35 @@ class FieldObserver(Node):
         
         return robots_to_pass
 
-    def _sort_passer_from_our_robot_distance(self, my_robot_id, our_robot_id, our_robots_pos):
+    def _sort_passer_from_our_robot_distance(self, my_robot_id, robots_id, robots_pos):
         # パサーからレシーバー候補となる味方ロボットまでの距離を計算し近い順にソートする関数
 
         # パサーからレシーバー候補となる味方ロボットまでの距離、レシーバー候補となる味方ロボットのIDをリストに格納
-        diff_passer_to_our_robot = [[our_robots_pos[i][0] - our_robots_pos[my_robot_id][0], our_robots_pos[i][1] - our_robots_pos[my_robot_id][1]] for i in our_robot_id]
-        receive_dist_our_robot = [[math.sqrt((diff_passer_to_our_robot[i][0]) ** 2 + (diff_passer_to_our_robot[i][1]) ** 2), our_robot_id[i]] for i in range(len(our_robot_id))]
+        diff_passer_to_robots = [[robots_pos[i][0] - robots_pos[my_robot_id][0], robots_pos[i][1] - robots_pos[my_robot_id][1]] for i in robots_id]
+        receive_dist_robots = [[math.sqrt((diff_passer_to_robots[i][0]) ** 2 + (diff_passer_to_robots[i][1]) ** 2), robots_id[i]] for i in range(len(robots_id))]
 
         # パサーに近い順に味方ロボットをソート
-        receive_dist_our_robot = sorted(receive_dist_our_robot)
+        receive_dist_robots = sorted(receive_dist_robots)
 
-        return receive_dist_our_robot
+        return receive_dist_robots
 
     def _get_robots_in_field(self, robots_pos):
         # フィールド上にいるロボットのIDのみリスト化
         robots_in_field = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != "None"]
         return robots_in_field
 
-    def _forward_our_robots_id(self, robot_id_has_ball, our_robots_pos, our_robots_vel, robot_r, dt):
+    def _forward_robots_id(self, my_robot_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        our_robots_in_field = self._get_robots_in_field(our_robots_pos)
-        # パサーよりも前にいる味方ロボットのIDをリスト化
-        forward_our_robots_id = [robot_id for robot_id in our_robots_in_field 
-                                if robot_id != robot_id_has_ball and our_robots_pos[robot_id_has_ball][0] < our_robots_pos[robot_id][0] + (abs(our_robots_vel[robot_id][0]) * dt + robot_r) * 
-                                our_robots_vel[robot_id][0] / math.sqrt(our_robots_vel[robot_id][0] ** 2 + our_robots_vel[robot_id][1] ** 2)]
-        return forward_our_robots_id
+        robots_id = self._get_robots_in_field(robots_pos)
+        
+        if is_delete_my_id:
+            # 自身のIDを削除
+            robots_id.remove(my_robot_id)
 
-    def _forward_their_robots_id(self, robot_id_has_ball, our_robots_pos, their_robots_pos, their_robots_vel, robot_r, dt):
-        # フィールド上にいる相手ロボットのidのみリスト化
-        their_robots_in_field = self._get_robots_in_field(their_robots_pos)
-        # パサーよりも前にいる相手ロボットのIDをリスト化
-        forward_their_robots_id = [robot_id for robot_id in their_robots_in_field 
-                                  if our_robots_pos[robot_id_has_ball][0] < their_robots_pos[robot_id][0] + (abs(their_robots_vel[robot_id][0]) * dt + robot_r) * 
-                                  their_robots_vel[robot_id][0] / math.sqrt(their_robots_vel[robot_id][0] ** 2 + their_robots_vel[robot_id][1] ** 2)]
-        return forward_their_robots_id
+        # パサーより前に存在するロボットIDをリスト化
+        forward_robots_id = [_id for _id in robots_id
+                            if robots_pos[my_robot_id][0] < robots_pos[_id][0] + (abs(robots_vel[_id][0]) * dt + robot_r) * 
+                            robots_vel[_id][0] / math.sqrt(robots_vel[_id][0] ** 2 + robots_vel[_id][1] ** 2)]
+
+        return forward_robots_id
+
