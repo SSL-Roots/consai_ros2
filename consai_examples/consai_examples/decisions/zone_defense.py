@@ -23,13 +23,14 @@ from field_observer import FieldObserver
 
 
 class ZoneDefenseID(Enum):
+    # ゾーンディフェンスは最大4台まで
     ZONE1 = 0
     ZONE2 = 1
     ZONE3 = 2
     ZONE4 = 3
 
 
-class ZoneDefenseDecisionBase(DecisionBase):
+class ZoneDefenseDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer, zone_id: ZoneDefenseID):
         super().__init__(robot_operator, field_observer)
