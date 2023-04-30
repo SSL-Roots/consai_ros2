@@ -23,12 +23,14 @@
 #include <memory>
 #include <vector>
 
+#include "consai_msgs/msg/robot_local_velocity.hpp"
 #include "robocup_ssl_msgs/msg/detection_robot.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 namespace consai_vision_tracker
 {
 
+using RobotLocalVelocity = consai_msgs::msg::RobotLocalVelocity;
 using DetectionRobot = robocup_ssl_msgs::msg::DetectionRobot;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using ConditionalGaussian = BFL::LinearAnalyticConditionalGaussian;
@@ -44,6 +46,7 @@ public:
 
   void push_back_observation(const DetectionRobot & robot);
   TrackedRobot update();
+  RobotLocalVelocity calc_local_velocity();
 
 private:
   void reset_prior();

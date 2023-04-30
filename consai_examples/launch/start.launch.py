@@ -46,12 +46,35 @@ def generate_launch_description():
         description=('Set goalie id for game script.')
     )
 
+    declare_arg_vision_addr = DeclareLaunchArgument(
+        'vision_addr', default_value='224.5.23.2',
+        description=('Set multicast address to connect SSL-Vision.')
+    )
+
+    declare_arg_vision_port = DeclareLaunchArgument(
+        'vision_port', default_value='10006',
+        description=('Set multicast port to connect SSL-Vision.')
+    )
+
+    declare_arg_referee_addr = DeclareLaunchArgument(
+        'referee_addr', default_value='224.5.23.1',
+        description=('Set multicast address to connect Game Controller.')
+    )
+
+    declare_arg_referee_port = DeclareLaunchArgument(
+        'referee_port', default_value='10003',
+        description=('Set multicast port to connect Game Controller.')
+    )
+
     controller = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 get_package_share_directory('consai_robot_controller'),
                 '/launch/test.launch.py']),
             launch_arguments={'invert': LaunchConfiguration('invert'),
-                              'yellow': LaunchConfiguration('yellow')}.items(),
+                              'yellow': LaunchConfiguration('yellow'),
+                              'vision_addr': LaunchConfiguration('vision_addr'),
+                              'vision_port': LaunchConfiguration('vision_port'),
+                              }.items(),
         )
 
     container = ComposableNodeContainer(
@@ -64,7 +87,8 @@ def generate_launch_description():
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::GameController',
                     parameters=[{
-                        'multicast_port': 10003,
+                        'multicast_address': LaunchConfiguration('referee_addr'),
+                        'multicast_port': LaunchConfiguration('referee_port'),
                         }],
                     name='game_controller')
             ])
@@ -87,6 +111,10 @@ def generate_launch_description():
         declare_arg_yellow,
         declare_arg_game,
         declare_arg_goalie,
+        declare_arg_vision_addr,
+        declare_arg_vision_port,
+        declare_arg_referee_addr,
+        declare_arg_referee_port,
         controller,
         container,
         game_node
