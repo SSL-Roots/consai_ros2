@@ -249,7 +249,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // double range_theta = 0.1;
     // 最大速度調整用の係数(a < 1)
     double a_xy = 1.0;
-    double a_theta = 0.7;
+    double a_theta = 0.5;
 
     // tanh関数を用いた速度制御
     world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy * max_velocity_xy_);
