@@ -665,18 +665,8 @@ class FieldObserver(Node):
 
         # 各レシーバー候補ロボットに対してパス可能か判定
         for _id in our_robots_id:
-            # パサーと味方ロボットの位置の差分
-            dx = our_robots_pos[_id][0] - my_robot_pos[0]
-            dy = our_robots_pos[_id][1] - my_robot_pos[1]
-
-            # パサーとレシーバー候補ロボットを結ぶ直線の傾き
-            if dx == 0:
-                slope_from_passer_to_our_robot = dy
-            else:
-                slope_from_passer_to_our_robot = dy / dx
-
-            # パサーとレシーバー候補となる味方ロボットを結ぶ直線の切片
-            intercept_from_passer_to_our_robot = my_robot_pos[1] - slope_from_passer_to_our_robot * my_robot_pos[0]
+            # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
+            slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot = tool.get_line_parameter(our_robots_pos[_id], my_robot_pos)
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
@@ -713,7 +703,6 @@ class FieldObserver(Node):
                     else:
                         # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                         check_count = 0
-                        # どの相手ロボットがパスコースに影響していたか（1台のみ出力）
                         break
             # 計算対象とする相手ロボットが存在しないとき（邪魔する相手ロボットがいないとき）
             else:
