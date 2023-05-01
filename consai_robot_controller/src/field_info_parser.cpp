@@ -501,7 +501,7 @@ bool FieldInfoParser::control_ball(
   const double LOOKING_BALL_THETA = tools::to_radians(180 - 45);
   const double LOOKING_TARGET_THETA = tools::to_radians(15);
   const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(15);
+  const double CAN_SHOOT_THETA = tools::to_radians(5);
   // const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
   const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
   const double THETA_TO_ROTATE = tools::to_radians(60);  // meters
@@ -530,7 +530,7 @@ bool FieldInfoParser::control_ball(
   auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
   auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
   bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA &&
-    std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(15);
+    std::fabs(angle_robot_to_ball_BtoT) < LOOKING_TARGET_THETA;
 
   double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
 
