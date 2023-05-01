@@ -504,7 +504,7 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
   // 目的地に到着したかどうか判定する
   // my_robotが速度データを持っていたら、速度が一定値以下に低下していることも判定する
   const double DISTANCE_THRESHOLD = 0.01;  // meters
-  const double THETA_THRESHOLD = 3.0 * M_PI / 180.0;  // radians
+  const double THETA_THRESHOLD = 2.0 * M_PI / 180.0;  // radians
   const double VELOCITY_THRESHOLD = 0.1;  // m/s
   const double OMEGA_THRESHOLD = 0.1 * M_PI;  // rad/s
 
