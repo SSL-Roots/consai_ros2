@@ -737,10 +737,13 @@ bool FieldInfoParser::avoid_obstacles(
 
   auto my_robot_pose = tools::pose_state(my_robot);
   tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
+  auto my_robot_pose_MtoG = std::make_shared<State>(trans_MtoG.transform(my_robot_pose));
   auto goal_pose_MtoG = trans_MtoG.transform(goal_pose);
 
   double distance_to_obstacle = 10000;  // 適当な大きい数字を設定
   std::shared_ptr<State> obstacle_pose_MtoG;
+
+  double distance_to_goal = std::hypot(goal_pose_MtoG.x, goal_pose_MtoG.y);
 
   for (const auto & robot : detection_tracked_->robots) {
     if (robot.visibility.size() == 0) {
@@ -778,13 +781,10 @@ bool FieldInfoParser::avoid_obstacles(
     auto ball_pose = tools::pose_state(ball);
     auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
 
-    // if (ball_pose_MtoG.x > OBSTACLE_DETECTION_X &&
-      // ball_pose_MtoG.x < goal_pose_MtoG.x &&
-      // std::fabs(ball_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
-    if (std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y) < 0.7 &&
-      std::hypot(goal_pose_MtoG.x, goal_pose_MtoG.y) > 0.8)
+    double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
+    // 進路上にボールエリアがある場合
+    if (distance < 0.8 && std::fabs(ball_pose_MtoG.y) < 0.7)
     {
-      double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
       if (distance < distance_to_obstacle) {
         obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
         distance_to_obstacle = distance;
@@ -795,12 +795,25 @@ bool FieldInfoParser::avoid_obstacles(
 
   // 障害物が存在すれば、回避位置を生成する
   if (obstacle_pose_MtoG) {
+    // STOPゲーム中でボールが進路上にある場合
     if (is_avoid_ball) {
+      if (distance_to_obstacle < 0.7) {
+        if (distance_to_obstacle < distance_to_goal) {
+          avoidance_pose = trans_MtoG.inverted_transform(
+            obstacle_pose_MtoG->x,
+            obstacle_pose_MtoG->y - std::copysign(0.7, obstacle_pose_MtoG->y),
+            goal_pose_MtoG.theta
+          );
+        }
+      }
+      else {
         avoidance_pose = trans_MtoG.inverted_transform(
-          obstacle_pose_MtoG->x,
-          obstacle_pose_MtoG->y - std::copysign(0.7, obstacle_pose_MtoG->y),
+          obstacle_pose_MtoG->x + 0.2,
+          obstacle_pose_MtoG->y + std::copysign(0.2, obstacle_pose_MtoG->y),
           goal_pose_MtoG.theta
         );
+      }
+
     }
     // 障害物と距離が近い場合
     else if (obstacle_pose_MtoG->x < OBSTACLE_DETECTION_X) {
