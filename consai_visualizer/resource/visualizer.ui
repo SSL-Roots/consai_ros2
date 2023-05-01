@@ -3273,7 +3273,7 @@
      <item>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="1" column="5">
-        <widget class="QCheckBox" name="chbox_onoff_yellow3">
+        <widget class="QCheckBox" name="chbox_turnon_yellow3">
          <property name="palette">
           <palette>
            <active>
@@ -3725,7 +3725,7 @@
         </widget>
        </item>
        <item row="0" column="4">
-        <widget class="QCheckBox" name="chbox_onoff_blue2">
+        <widget class="QCheckBox" name="chbox_turnon_blue2">
          <property name="palette">
           <palette>
            <active>
@@ -4177,7 +4177,7 @@
         </widget>
        </item>
        <item row="0" column="5">
-        <widget class="QCheckBox" name="chbox_onoff_blue3">
+        <widget class="QCheckBox" name="chbox_turnon_blue3">
          <property name="palette">
           <palette>
            <active>
@@ -4629,7 +4629,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QCheckBox" name="chbox_onoff_yellow0">
+        <widget class="QCheckBox" name="chbox_turnon_yellow0">
          <property name="palette">
           <palette>
            <active>
@@ -5530,7 +5530,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QCheckBox" name="chbox_onoff_blue1">
+        <widget class="QCheckBox" name="chbox_turnon_blue1">
          <property name="palette">
           <palette>
            <active>
@@ -6431,7 +6431,7 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QCheckBox" name="chbox_onoff_blue0">
+        <widget class="QCheckBox" name="chbox_turnon_blue0">
          <property name="palette">
           <palette>
            <active>
@@ -7784,7 +7784,7 @@
         </widget>
        </item>
        <item row="1" column="4">
-        <widget class="QCheckBox" name="chbox_onoff_yellow2">
+        <widget class="QCheckBox" name="chbox_turnon_yellow2">
          <property name="palette">
           <palette>
            <active>
@@ -8236,7 +8236,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QCheckBox" name="chbox_onoff_yellow1">
+        <widget class="QCheckBox" name="chbox_turnon_yellow1">
          <property name="palette">
           <palette>
            <active>

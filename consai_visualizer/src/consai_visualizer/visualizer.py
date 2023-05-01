@@ -96,6 +96,14 @@ class Visualizer(Plugin):
             self._clicked_detection_tracked)
         self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
 
+        # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
+        for team in ["blue", "yellow"]:
+            for robot_id in range(4):
+                method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
+                eval(method)(
+                    partial(self._clicked_robot_turnon, team=="yellow", robot_id )
+                )
+
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
         self._widget.check_box_detection.setCheckState(Qt.Unchecked)
@@ -134,6 +142,9 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(True)
         else:
             self._widget.field_widget.set_can_draw_replacement(False)
+
+    def _clicked_robot_turnon(self, is_yellow, robot_id, state):
+        self._logger.info("is_yellow:{}, robot_id:{}, turnon:{}".format(is_yellow, robot_id, state==Qt.Checked))
 
     def _callback_referee(self, msg):
         self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
