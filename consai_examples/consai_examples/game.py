@@ -49,8 +49,9 @@ def num_of_active_zone_roles(active_roles):
 
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
-    # ボールが動いてたり、ディフェンスエリアにあるときは役割を更新しない
+    # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
     return not observer.ball_is_in_our_defense_area() and \
+        not observer.ball_is_outside_back_x() and \
         not observer.ball_is_moving() and \
         not referee.our_ball_placement() and \
         not referee.our_pre_penalty() and \
