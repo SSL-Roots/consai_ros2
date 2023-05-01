@@ -29,6 +29,7 @@ from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotId
+from robocup_ssl_msgs.msg import RobotReplacement
 from robocup_ssl_msgs.msg import TrackedFrame
 
 
@@ -85,6 +86,7 @@ class FieldWidget(QWidget):
         self._goal_poses = {}
         self._designated_position = {}  # ball placementの目標位置
         self._named_targets = {}
+        self._robot_replacements = []
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -136,6 +138,21 @@ class FieldWidget(QWidget):
         self._named_targets = {}
         for i in range(len(msg.name)):
             self._named_targets[msg.name[i]] = msg.pose[i]
+
+    def append_robot_replacement(self, is_yellow, robot_id, turnon):
+        # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
+        ID_OFFSET_X = 0.2
+        team_offset_x = -3.0 if is_yellow else 0.0
+        turnon_offset_y = -4.6 if turnon else -6.0
+        
+        replacement = RobotReplacement()
+        replacement.x = team_offset_x + ID_OFFSET_X * robot_id
+        replacement.y = turnon_offset_y
+        replacement.dir = 90.0
+        replacement.id = robot_id
+        replacement.yellowteam = is_yellow
+        replacement.turnon.append(turnon)
+        self._robot_replacements.append(replacement)
 
     def reset_topics(self):
         # 取得したトピックをリセットする
@@ -236,6 +253,13 @@ class FieldWidget(QWidget):
 
         if self._can_draw_detection_tracked:
             self._draw_detection_tracked(painter)
+
+        # ロボットのreplacementをpublishする
+        if self._robot_replacements:
+            replacement = Replacement()
+            replacement.robots = self._robot_replacements
+            self._pub_replacement.publish(replacement)
+            replacement.robots = []
 
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する
