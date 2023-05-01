@@ -31,11 +31,14 @@ import geometry_tools as tool
 # ロボットに一番近いロボットを判定する
 class FieldObserver(Node):
     BALL_NONE = 0
-    BALL_IS_OUTSIDE = 1
-    BALL_IS_IN_OUR_DEFENSE_AREA = 2
-    BALL_IS_IN_OUR_SIDE = 3
-    BALL_IS_IN_THEIR_SIDE = 4
-    BALL_IS_IN_THEIR_DEFENSE_AREA = 5
+    BALL_IS_OUTSIDE_FRONT_X = 1
+    BALL_IS_OUTSIDE_BACK_X = 2
+    BALL_IS_OUTSIDE_RIGHT_Y = 3
+    BALL_IS_OUTSIDE_LEFT_Y = 4
+    BALL_IS_IN_OUR_DEFENSE_AREA = 5
+    BALL_IS_IN_OUR_SIDE = 6
+    BALL_IS_IN_THEIR_SIDE = 7
+    BALL_IS_IN_THEIR_DEFENSE_AREA = 8
 
     BALL_PLACEMENT_NONE = 0
     BALL_PLACEMENT_FAR_FROM_TARGET = 1
@@ -203,9 +206,20 @@ class FieldObserver(Node):
         return self.their_robots_vel_angle
 
     def _update_ball_state(self, ball):
-        # フィールド場外判定
-        if self._check_is_ball_outside(ball.pos):
-            self._ball_state = self.BALL_IS_OUTSIDE
+        # フィールド場外判定(Goal-to-Goal方向)
+        if self._check_is_ball_outside_front_x(ball.pos):
+            self._ball_state = self.BALL_IS_OUTSIDE_FRONT_X
+            return
+        if self._check_is_ball_outside_back_x(ball.pos):
+            self._ball_state = self.BALL_IS_OUTSIDE_BACK_X
+            return
+        
+        # フィールド場外判定(Halfway方向)
+        if self._check_is_ball_outside_right_y(ball.pos):
+            self._ball_state = self.BALL_IS_OUTSIDE_RIGHT_Y
+            return
+        if self._check_is_ball_outside_left_y(ball.pos):
+            self._ball_state = self.BALL_IS_OUTSIDE_LEFT_Y
             return
 
         # 自チームディフェンスエリア侵入判定
@@ -226,15 +240,51 @@ class FieldObserver(Node):
         # 条件に入らなければ、相手チームエリアに侵入したと判定
         self._ball_state = self.BALL_IS_IN_THEIR_SIDE
 
-    def _check_is_ball_outside(self, ball_pos):
+    def _check_is_ball_outside_front_x(self, ball_pos):
         # ボールがフィールド外に出たか判定
+        # xはGoal-to-Goalの方向
+        # 相手ゴール方向
         threshold_x = self._field_half_x
-        threshold_y = self._field_half_y
-        if self.ball_is_outside():
+        if self.ball_is_outside_front_x():
             threshold_x -= self.THRESHOLD_MARGIN
+
+        if ball_pos.x > threshold_x:
+            return True
+        return False
+
+    def _check_is_ball_outside_back_x(self, ball_pos):
+        # ボールがフィールド外に出たか判定
+        # xはGoal-to-Goalの方向
+        # 自ゴール方向
+        threshold_x = self._field_half_x
+        if self.ball_is_outside_back_x():
+            threshold_x += self.THRESHOLD_MARGIN
+
+        if ball_pos.x < -threshold_x:
+            return True
+        return False
+    
+    def _check_is_ball_outside_right_y(self, ball_pos):
+        # ボールがフィールド外に出たか判定
+        # yはHalfwayの方向
+        # 相手ゴールに対して右側
+        threshold_y = self._field_half_y
+        if self.ball_is_outside_right_y():
             threshold_y -= self.THRESHOLD_MARGIN
 
-        if math.fabs(ball_pos.x) > threshold_x or math.fabs(ball_pos.y) > threshold_y:
+        if ball_pos.y > threshold_y:
+            return True
+        return False
+    
+    def _check_is_ball_outside_left_y(self, ball_pos):
+        # ボールがフィールド外に出たか判定
+        # yはHalfwayの方向
+        # 相手ゴールに対して左側
+        threshold_y = self._field_half_y
+        if self.ball_is_outside_left_y():
+            threshold_y += self.THRESHOLD_MARGIN
+
+        if ball_pos.y < -threshold_y:
             return True
         return False
 
@@ -543,8 +593,17 @@ class FieldObserver(Node):
     def get_ball_state(self):
         return self._ball_state
 
-    def ball_is_outside(self):
-        return self._ball_state == self.BALL_IS_OUTSIDE
+    def ball_is_outside_front_x(self):
+        return self._ball_state == self.BALL_IS_OUTSIDE_FRONT_X
+    
+    def ball_is_outside_back_x(self):
+        return self._ball_state == self.BALL_IS_OUTSIDE_BACK_X
+    
+    def ball_is_outside_right_y(self):
+        return self._ball_state == self.BALL_IS_OUTSIDE_RIGHT_Y
+
+    def ball_is_outside_left_y(self):
+        return self._ball_state == self.BALL_IS_OUTSIDE_LEFT_Y
 
     def ball_is_in_our_defense_area(self):
         return self._ball_state == self.BALL_IS_IN_OUR_DEFENSE_AREA
@@ -767,8 +826,6 @@ class FieldObserver(Node):
         if len(forward_their_robots_id) == 0:
             # 相手ゴールの中央の座標を返す
             return goal_center_target
-        
-        print(forward_their_robots_id)
 
         for robot_id in forward_their_robots_id:
             # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
@@ -782,12 +839,11 @@ class FieldObserver(Node):
                 goal_post[0][1] = edge_of_goal_possible_area
             elif abs(goal_post[0][1] - edge_of_goal_possible_area) > abs(goal_post[1][1] - edge_of_goal_possible_area) and abs(edge_of_goal_possible_area) < goal_post_y:
                 goal_post[1][1] = edge_of_goal_possible_area
-            print(goal_post)
 
         # シュート可能なゴールの幅
         goal_width = goal_post[0][1] - goal_post[1][1]
 
-        # ロボットの直径よりもゴールできる幅が広いときはその範囲の中心座標を返す
+        # ロボット2台分の直径よりもゴールできる幅が広いときはその範囲の中心座標を返す
         if goal_width > robot_diameter * 2:
             goal_center_target[1] = goal_width / 2 - goal_post_y
         # ロボットの直径よりもゴールできる幅が小さければ空のリストを返す
