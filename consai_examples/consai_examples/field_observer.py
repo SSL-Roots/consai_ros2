@@ -701,7 +701,10 @@ class FieldObserver(Node):
         their_robots_vel = self.their_robots_vel
 
         # パサーの位置
+        if my_robot_id >= len(our_robots_pos):
+            return []
         my_robot_pos = our_robots_pos[my_robot_id]
+
         # エラー対策
         # TODO: 時々Vector2形式でデータが混入するので対策が必要
         if type(our_robots_vel[0]) is not list:
