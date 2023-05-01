@@ -143,7 +143,7 @@ class FieldWidget(QWidget):
         # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
         ID_OFFSET_X = 0.2
         team_offset_x = -3.0 if is_yellow else 0.0
-        turnon_offset_y = -4.6 if turnon else -6.0
+        turnon_offset_y = -4.6 if turnon else -5.6
         
         replacement = RobotReplacement()
         replacement.x = team_offset_x + ID_OFFSET_X * robot_id
@@ -259,7 +259,7 @@ class FieldWidget(QWidget):
             replacement = Replacement()
             replacement.robots = self._robot_replacements
             self._pub_replacement.publish(replacement)
-            replacement.robots = []
+            self._robot_replacements = []
 
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する

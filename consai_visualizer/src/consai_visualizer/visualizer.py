@@ -98,7 +98,7 @@ class Visualizer(Plugin):
 
         # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
         for team in ["blue", "yellow"]:
-            for robot_id in range(4):
+            for robot_id in range(11):
                 method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
                 eval(method)(
                     partial(self._clicked_robot_turnon, team=="yellow", robot_id )
@@ -155,7 +155,7 @@ class Visualizer(Plugin):
     def _set_all_robot_turnon(self, is_yellow, turnon):
         team = "yellow" if is_yellow else "blue"
         checked = Qt.Checked if turnon else Qt.Unchecked
-        for robot_id in range(4):
+        for robot_id in range(11):
             method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
             eval(method)(checked)
 
