@@ -727,76 +727,92 @@ bool FieldInfoParser::avoid_obstacles(
   // 自身から直進方向に何m離れたロボットを障害物と判定するか
   const double OBSTACLE_DETECTION_X = 0.5;
   // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y = 0.3;
+  const double OBSTACLE_DETECTION_Y = 0.2;
   // 相対的な回避位置
   const double AVOIDANCE_POS_X = 0.2;
-  const double AVOIDANCE_POS_Y = 0.5;
+  const double AVOIDANCE_POS_Y = 0.4;
 
   // ボール回避判定フラグ
   bool is_avoid_ball = false;
+  bool is_avoid_robot = false;
 
   auto my_robot_pose = tools::pose_state(my_robot);
   tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
   auto my_robot_pose_MtoG = std::make_shared<State>(trans_MtoG.transform(my_robot_pose));
   auto goal_pose_MtoG = trans_MtoG.transform(goal_pose);
 
-  double distance_to_obstacle = 10000;  // 適当な大きい数字を設定
+  double distance = 0.0; // 距離を格納する変数
+  double distance_to_obstacle = 10000; // 適当な大きい数字を設定
   std::shared_ptr<State> obstacle_pose_MtoG;
 
   double distance_to_goal = std::hypot(goal_pose_MtoG.x, goal_pose_MtoG.y);
 
-  for (const auto & robot : detection_tracked_->robots) {
-    if (robot.visibility.size() == 0) {
-      continue;
-    }
-    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-      continue;
-    }
 
-    // 自身の情報は除外する
-    if (robot.robot_id.id == my_robot.robot_id.id &&
-      robot.robot_id.team_color == my_robot.robot_id.team_color)
-    {
-      continue;
-    }
+  int count = 0;
+  int i;
+  for (i = 0; i < 6; i++) {
+    count ++;
 
-    // ロボットの位置が自己位置と目標位置の間に存在するか判定
-    auto robot_pose = tools::pose_state(robot);
-    auto robot_pose_MtoG = trans_MtoG.transform(robot_pose);
+    // ロボットに対して回避位置を生成
+    for (const auto & robot : detection_tracked_->robots) {
+      if (robot.visibility.size() == 0) {
+        continue;
+      }
+      if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+        continue;
+      }
 
-    if (robot_pose_MtoG.x > OBSTACLE_DETECTION_X &&
-      robot_pose_MtoG.x < goal_pose_MtoG.x &&
-      std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
-    {
-      // 最も自身に近いロボットを障害物とする
-      double distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
-      if (distance < distance_to_obstacle) {
-        obstacle_pose_MtoG = std::make_shared<State>(robot_pose_MtoG);
-        distance_to_obstacle = distance;
+      // 自身の情報は除外する
+      if (robot.robot_id.id == my_robot.robot_id.id &&
+        robot.robot_id.team_color == my_robot.robot_id.team_color)
+      {
+        continue;
+      }
+
+      // ロボットの位置が自己位置と目標位置の間に存在するか判定
+      auto robot_pose = tools::pose_state(robot);
+      auto robot_pose_MtoG = trans_MtoG.transform(robot_pose);
+
+      distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
+      if (OBSTACLE_DETECTION_X < robot_pose_MtoG.x &&
+        robot_pose_MtoG.x < goal_pose_MtoG.x &&
+        std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
+      {
+        // if ((robot_pose_MtoG.x < goal_pose_MtoG.x && count == 1) || 1 < count) {
+          // 最も自身に近いロボットを障害物とする
+          if (distance < distance_to_obstacle) {
+            obstacle_pose_MtoG = std::make_shared<State>(robot_pose_MtoG);
+            distance_to_obstacle = distance;
+            is_avoid_robot = true;  
+          // }
+        }
       }
     }
-  }
 
-  if (avoid_ball) {
-    auto ball_pose = tools::pose_state(ball);
-    auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
+    // STOPゲーム中の対応
+    if (avoid_ball) {
+      auto ball_pose = tools::pose_state(ball);
+      auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
 
-    double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
-    // 進路上にボールエリアがある場合
-    if (distance < 0.8 && std::fabs(ball_pose_MtoG.y) < 0.7)
-    {
-      if (distance < distance_to_obstacle) {
-        obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
-        distance_to_obstacle = distance;
-        is_avoid_ball = true;
+      distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
+      // 進路上にボールエリアがある場合
+      if (distance < 0.8 && std::fabs(ball_pose_MtoG.y) < 0.7)
+      {
+        if (distance < distance_to_obstacle) {
+          obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
+          distance_to_obstacle = distance;
+          is_avoid_ball = true;  
+        }
       }
     }
-  }
 
-  // 障害物が存在すれば、回避位置を生成する
-  if (obstacle_pose_MtoG) {
-    // STOPゲーム中でボールが進路上にある場合
-    if (is_avoid_ball) {
+    // 障害物が無い場合
+    if (is_avoid_ball == false && is_avoid_robot == false) {
+      // ループを抜ける
+      break;
+    }
+
+    else if (is_avoid_ball) {
       if (distance_to_obstacle < 0.7) {
         if (distance_to_obstacle < distance_to_goal) {
           avoidance_pose = trans_MtoG.inverted_transform(
@@ -813,11 +829,10 @@ bool FieldInfoParser::avoid_obstacles(
           goal_pose_MtoG.theta
         );
       }
-
     }
     // 障害物と距離が近い場合
     else if (obstacle_pose_MtoG->x < OBSTACLE_DETECTION_X) {
-      if (std::fabs(obstacle_pose_MtoG->y) < 0.2) {
+      if (std::fabs(obstacle_pose_MtoG->y) < 0.3) {
         avoidance_pose = trans_MtoG.inverted_transform(
           obstacle_pose_MtoG->x,
           obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
@@ -832,15 +847,122 @@ bool FieldInfoParser::avoid_obstacles(
         );
       }
     }
-    // 障害物と距離が近い場合
-    else{
+    else {
       avoidance_pose = trans_MtoG.inverted_transform(
         obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
         obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
         goal_pose_MtoG.theta
       );
     }
+
+    is_avoid_ball = false;
+    is_avoid_robot = false;
+    tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, avoidance_pose));
+    my_robot_pose_MtoG = std::make_shared<State>(trans_MtoG.transform(my_robot_pose));
+    goal_pose_MtoG = trans_MtoG.transform(avoidance_pose);
+
+    distance = 0.0;
+    distance_to_obstacle = 10000;
+    distance_to_goal = std::hypot(goal_pose_MtoG.x, goal_pose_MtoG.y);
   }
+
+  // for (const auto & robot : detection_tracked_->robots) {
+  //   if (robot.visibility.size() == 0) {
+  //     continue;
+  //   }
+  //   if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+  //     continue;
+  //   }
+  // 
+  //   // 自身の情報は除外する
+  //   if (robot.robot_id.id == my_robot.robot_id.id &&
+  //     robot.robot_id.team_color == my_robot.robot_id.team_color)
+  //   {
+  //     continue;
+  //   }
+  // 
+  //   // ロボットの位置が自己位置と目標位置の間に存在するか判定
+  //   auto robot_pose = tools::pose_state(robot);
+  //   auto robot_pose_MtoG = trans_MtoG.transform(robot_pose);
+  // 
+  //   if (robot_pose_MtoG.x > OBSTACLE_DETECTION_X &&
+  //     robot_pose_MtoG.x < goal_pose_MtoG.x &&
+  //     std::fabs(robot_pose_MtoG.y) < OBSTACLE_DETECTION_Y)
+  //   {
+  //     // 最も自身に近いロボットを障害物とする
+  //     double distance = std::hypot(robot_pose_MtoG.x, robot_pose_MtoG.y);
+  //     if (distance < distance_to_obstacle) {
+  //       obstacle_pose_MtoG = std::make_shared<State>(robot_pose_MtoG);
+  //       distance_to_obstacle = distance;
+  //     }
+  //   }
+  // }
+  // 
+  // if (avoid_ball) {
+  //   auto ball_pose = tools::pose_state(ball);
+  //   auto ball_pose_MtoG = trans_MtoG.transform(ball_pose);
+  // 
+  //   double distance = std::hypot(ball_pose_MtoG.x, ball_pose_MtoG.y);
+  //   // 進路上にボールエリアがある場合
+  //   if (distance < 0.8 && std::fabs(ball_pose_MtoG.y) < 0.7)
+  //   {
+  //     if (distance < distance_to_obstacle) {
+  //       obstacle_pose_MtoG = std::make_shared<State>(ball_pose_MtoG);
+  //       distance_to_obstacle = distance;
+  //       is_avoid_ball = true;
+  //     }
+  //   }
+  // }
+  // 
+  // // 障害物が存在すれば、回避位置を生成する
+  // if (obstacle_pose_MtoG) {
+  //   // STOPゲーム中でボールが進路上にある場合
+  //   if (is_avoid_ball) {
+  //     if (distance_to_obstacle < 0.7) {
+  //       if (distance_to_obstacle < distance_to_goal) {
+  //         avoidance_pose = trans_MtoG.inverted_transform(
+  //           obstacle_pose_MtoG->x,
+  //           obstacle_pose_MtoG->y - std::copysign(0.7, obstacle_pose_MtoG->y),
+  //           goal_pose_MtoG.theta
+  //         );
+  //       }
+  //     }
+  //     else {
+  //       avoidance_pose = trans_MtoG.inverted_transform(
+  //         obstacle_pose_MtoG->x + 0.2,
+  //         obstacle_pose_MtoG->y + std::copysign(0.2, obstacle_pose_MtoG->y),
+  //         goal_pose_MtoG.theta
+  //       );
+  //     }
+  // 
+  //   }
+  //   // 障害物と距離が近い場合
+  //   else if (obstacle_pose_MtoG->x < OBSTACLE_DETECTION_X) {
+  //     if (std::fabs(obstacle_pose_MtoG->y) < 0.2) {
+  //       avoidance_pose = trans_MtoG.inverted_transform(
+  //         obstacle_pose_MtoG->x,
+  //         obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
+  //         goal_pose_MtoG.theta
+  //       );
+  //     }
+  //     else {
+  //       avoidance_pose = trans_MtoG.inverted_transform(
+  //         obstacle_pose_MtoG->x + AVOIDANCE_POS_X / 2,
+  //         obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
+  //         goal_pose_MtoG.theta
+  //       );
+  //     }
+  //   }
+  //   // 障害物と距離が近い場合
+  //   else{
+  //     avoidance_pose = trans_MtoG.inverted_transform(
+  //       obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
+  //       obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
+  //       goal_pose_MtoG.theta
+  //     );
+  //   }
+  // }
+
 
   return true;
 }
