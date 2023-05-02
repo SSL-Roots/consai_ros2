@@ -55,8 +55,9 @@ class GoaleDecision(DecisionBase):
         ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
         ID_IN_PLAY = self.ACT_ID_INPLAY + 1
 
-        if self._field_observer.ball_is_moving():
+        if self._field_observer.ball_is_moving() and self._field_observer.ball_to_our_field():
             self._defend_goal(robot_id)
+            self._act_id = ID_IN_PLAY
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         elif self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
             if self._act_id != ID_IN_DEFENSE:
