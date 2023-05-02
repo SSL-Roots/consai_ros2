@@ -56,6 +56,7 @@ class FieldObserver(Node):
     BALL_ZONE_RIGHT_BOTTOM = 8
 
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
+    MAX_ROBOT_NUM = 16
 
     def __init__(self, our_team_is_yellow=False):
         super().__init__('field_observer')
@@ -73,17 +74,18 @@ class FieldObserver(Node):
         self._their_robot = TrackedRobot()
         self.robots = TrackedRobot()
 
-        self.our_robots_pos = []
-        self.our_robots_angle = []
-        self.our_robots_vel = []
-        self.our_robots_speed = []
-        self.our_robots_vel_angle = []
+        # TODO: 変数が多いので、posとvelの2つにしたい。consai_msgsのState2D型を使用するとx, y, thetaを表現できる
+        self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
+        self.our_robots_angle = [None] * self.MAX_ROBOT_NUM
+        self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
+        self.our_robots_speed = [None] * self.MAX_ROBOT_NUM
+        self.our_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
-        self.their_robots_pos = []
-        self.their_robots_angle = []
-        self.their_robots_vel = []
-        self.their_robots_speed = []
-        self.their_robots_vel_angle = []
+        self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
+        self.their_robots_angle = [None] * self.MAX_ROBOT_NUM
+        self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
+        self.their_robots_speed = [None] * self.MAX_ROBOT_NUM
+        self.their_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
         self._field_x = 12.0  # meters
         self._field_half_x = self._field_x * 0.5
@@ -103,30 +105,36 @@ class FieldObserver(Node):
             self._update_ball_moving_state(msg.balls[0])
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
-        if len(msg.robots) > 0:
-            self.robots = msg.robots
-            if self._our_team_is_yellow:
-                self._update_our_robots_pos([msg.robots[our_robot] for our_robot in range(16, 32)])
-                self._update_their_robots_pos([msg.robots[their_robot] for their_robot in range(16)])
-                self._update_our_robots_vel([msg.robots[our_robot] for our_robot in range(16, 32)])
-                self._update_their_robots_vel([msg.robots[their_robot] for their_robot in range(16)])
-                self._update_our_robots_thita([msg.robots[our_robot] for our_robot in range(16, 32)])
-                self._update_their_robots_thita([msg.robots[their_robot] for their_robot in range(16)])
-                self._update_our_robots_vel_angle([msg.robots[our_robot] for our_robot in range(16, 32)])
-                self._update_their_robots_vel_angle([msg.robots[their_robot] for their_robot in range(16)])
-                self._our_robot = [msg.robots[robot] for robot in range(16, 32)]
-                self._their_robot = [msg.robots[robot] for robot in range(16)]
-            elif not self._our_team_is_yellow:
-                self._update_our_robots_pos([msg.robots[our_robot] for our_robot in range(16)])
-                self._update_their_robots_pos([msg.robots[their_robot] for their_robot in range(16, 32)])
-                self._update_our_robots_vel([msg.robots[our_robot] for our_robot in range(16)])
-                self._update_their_robots_vel([msg.robots[their_robot] for their_robot in range(16, 32)])
-                self._update_our_robots_thita([msg.robots[our_robot] for our_robot in range(16)])
-                self._update_their_robots_thita([msg.robots[their_robot] for their_robot in range(16, 32)])
-                self._update_our_robots_vel_angle([msg.robots[our_robot] for our_robot in range(16)])
-                self._update_their_robots_vel_angle([msg.robots[their_robot] for their_robot in range(16, 32)])
-                self._our_robot = [msg.robots[robot] for robot in range(16)]
-                self._their_robot = [msg.robots[robot] for robot in range(16, 32)]
+
+        # リストを初期化する
+        set_none = lambda a_list : [None] * len(a_list)
+        self.our_robots_pos = set_none(self.our_robots_pos)
+        self.our_robots_angle = set_none(self.our_robots_angle)
+        self.our_robots_vel = set_none(self.our_robots_vel)
+        self.our_robots_vel_angle = set_none(self.our_robots_vel_angle)
+
+        self.their_robots_pos = set_none(self.their_robots_pos)
+        self.their_robots_angle = set_none(self.their_robots_angle)
+        self.their_robots_vel = set_none(self.their_robots_vel)
+        self.their_robots_vel_angle = set_none(self.their_robots_vel_angle)
+
+        for robot in msg.robots:
+            # visibilityが小さいときはロボットが消えたと判断する
+            if len(robot.visibility) <= 0:
+                continue
+            if robot.visibility[0] <= 0.2:
+                continue
+            robot_id = robot.robot_id.id
+            robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
+            # TODO: ロボットの座標表現はリストではなくState2Dを使用する
+            team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
+            object_str = "self." + team_str + "_robots_"
+            eval(object_str + "pos")[robot_id] = [robot.pos.x, robot.pos.y]
+            eval(object_str + "angle")[robot_id] = robot.orientation
+            if robot.vel:
+                eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
+            if robot.vel_angular:
+                eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
     def update_robot_state(self):
         return self.robots
