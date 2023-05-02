@@ -728,14 +728,13 @@ bool FieldInfoParser::avoid_obstacles(
   const double OBSTACLE_DETECTION_X = 0.5;
   const double OBSTACLE_DETECTION_X_LONG = 1.0;
   // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y = 0.5;
+  const double OBSTACLE_DETECTION_Y = 0.3;
   const double OBSTACLE_DETECTION_Y_SHORT = 0.3;
   const double OBSTACLE_DETECTION_Y_BALL = 0.2;
   // 回避の相対位置
-  const double AVOIDANCE_POS_X_SHORT = 0.05;
-  const double AVOIDANCE_POS_X_MIDDLE = 0.1;
+  const double AVOIDANCE_POS_X_SHORT = 0.1;
   const double AVOIDANCE_POS_X_LONG = 0.2;
-  const double AVOIDANCE_POS_Y = 0.5;
+  const double AVOIDANCE_POS_Y = 0.4;
 
   // 相対的な回避位置
   double avoidance_pos_x = 0.0;
@@ -828,12 +827,7 @@ bool FieldInfoParser::avoid_obstacles(
       avoidance_pos_y = - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoA->y);
       // 障害物と距離が近い場合
       if (obstacle_pose_MtoA->x < OBSTACLE_DETECTION_X) {
-        if (std::fabs(obstacle_pose_MtoA->y) < OBSTACLE_DETECTION_Y_SHORT) {
-          avoidance_pos_x = AVOIDANCE_POS_X_SHORT;
-        }
-        else {
-          avoidance_pos_x = AVOIDANCE_POS_X_MIDDLE;
-        }
+        avoidance_pos_x = AVOIDANCE_POS_X_SHORT;
       }
       else {
         avoidance_pos_x = AVOIDANCE_POS_X_LONG;
