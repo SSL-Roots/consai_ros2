@@ -135,9 +135,8 @@ class SubAttackerDecision(DecisionBase):
         self._offend(robot_id, self.ACT_ID_INDIRECT)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
-        ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
-        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+        ID_BALL_RECEIVE = self.ACT_ID_OUR_PLACEMENT + 0
+        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 1
 
         # プレースメントを回避しない
         self._operator.disable_avoid_placement(robot_id)
@@ -145,9 +144,9 @@ class SubAttackerDecision(DecisionBase):
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
            self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボールを受け取る
-            if self._act_id != ID_FAR_FROM:
+            if self._act_id != ID_BALL_RECEIVE:
                 self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
-                self._act_id = ID_FAR_FROM
+                self._act_id = ID_BALL_RECEIVE
             return
         
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
