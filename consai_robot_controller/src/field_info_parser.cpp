@@ -732,6 +732,8 @@ bool FieldInfoParser::avoid_obstacles(
   const double AVOIDANCE_POS_X = 0.2;
   const double AVOIDANCE_POS_Y = 0.4;
 
+  double avoidance_pos_x = 0.0;
+
   // ボール回避判定フラグ
   bool is_avoid_ball = false;
   bool is_avoid_robot = false;
@@ -827,27 +829,22 @@ bool FieldInfoParser::avoid_obstacles(
       }
     }
     // 障害物と距離が近い場合
-    else if (is_avoid_robot && obstacle_pose_MtoG->x < OBSTACLE_DETECTION_X) {
-      if (std::fabs(obstacle_pose_MtoG->y) < 0.3) {
-        avoidance_pose = trans_MtoG.inverted_transform(
-          obstacle_pose_MtoG->x,
-          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
-          goal_pose_MtoG.theta
-        );
+    else if (is_avoid_robot) {
+      if (obstacle_pose_MtoG->x < OBSTACLE_DETECTION_X) {
+        if (std::fabs(obstacle_pose_MtoG->y) < 0.3) {
+          avoidance_pos_x = 0.05;
+        }
+        else {
+          avoidance_pos_x = 0.1;
+        }
       }
       else {
-        avoidance_pose = trans_MtoG.inverted_transform(
-          obstacle_pose_MtoG->x + AVOIDANCE_POS_X / 2,
-          obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
-          goal_pose_MtoG.theta
-        );
+        avoidance_pos_x = 0.2;
       }
-    }
-    else {
       avoidance_pose = trans_MtoG.inverted_transform(
-        obstacle_pose_MtoG->x + AVOIDANCE_POS_X,
+        obstacle_pose_MtoG->x + avoidance_pos_x,
         obstacle_pose_MtoG->y - std::copysign(AVOIDANCE_POS_Y, obstacle_pose_MtoG->y),
-        goal_pose_MtoG.theta
+          goal_pose_MtoG.theta
       );
     }
 
