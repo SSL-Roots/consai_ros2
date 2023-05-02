@@ -96,6 +96,20 @@ class Visualizer(Plugin):
             self._clicked_detection_tracked)
         self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
 
+        # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
+        for team in ["blue", "yellow"]:
+            for robot_id in range(11):
+                method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
+                eval(method)(
+                    partial(self._clicked_robot_turnon, team=="yellow", robot_id )
+                )
+
+            for turnon in ["on", "off"]:
+                method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
+                eval(method)(
+                    partial(self._set_all_robot_turnon, team=="yellow", turnon=="on")
+                )
+
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
         self._widget.check_box_detection.setCheckState(Qt.Unchecked)
@@ -134,6 +148,16 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(True)
         else:
             self._widget.field_widget.set_can_draw_replacement(False)
+
+    def _clicked_robot_turnon(self, is_yellow, robot_id, state):
+        self._widget.field_widget.append_robot_replacement(is_yellow, robot_id, state==Qt.Checked)
+
+    def _set_all_robot_turnon(self, is_yellow, turnon):
+        team = "yellow" if is_yellow else "blue"
+        checked = Qt.Checked if turnon else Qt.Unchecked
+        for robot_id in range(11):
+            method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
+            eval(method)(checked)
 
     def _callback_referee(self, msg):
         self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
