@@ -210,7 +210,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>11</pointsize>
+               <pointsize>14</pointsize>
                <weight>75</weight>
                <italic>true</italic>
                <bold>true</bold>
@@ -265,6 +265,7 @@
              </property>
              <property name="font">
               <font>
+               <pointsize>18</pointsize>
                <weight>75</weight>
                <bold>true</bold>
               </font>
@@ -729,6 +730,7 @@
              </property>
              <property name="font">
               <font>
+               <pointsize>14</pointsize>
                <weight>75</weight>
                <bold>true</bold>
               </font>
@@ -1195,6 +1197,7 @@
                </property>
                <property name="font">
                 <font>
+                 <pointsize>12</pointsize>
                  <weight>75</weight>
                  <bold>true</bold>
                 </font>
@@ -1659,6 +1662,7 @@
                </property>
                <property name="font">
                 <font>
+                 <pointsize>12</pointsize>
                  <weight>75</weight>
                  <bold>true</bold>
                 </font>
@@ -1760,7 +1764,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>11</pointsize>
+               <pointsize>14</pointsize>
                <weight>75</weight>
                <italic>true</italic>
                <bold>true</bold>
@@ -1817,6 +1821,7 @@
              </property>
              <property name="font">
               <font>
+               <pointsize>18</pointsize>
                <weight>75</weight>
                <bold>true</bold>
               </font>
@@ -2281,6 +2286,7 @@
              </property>
              <property name="font">
               <font>
+               <pointsize>14</pointsize>
                <weight>75</weight>
                <bold>true</bold>
               </font>
@@ -2747,6 +2753,7 @@
                </property>
                <property name="font">
                 <font>
+                 <pointsize>12</pointsize>
                  <weight>75</weight>
                  <bold>true</bold>
                 </font>
@@ -3211,6 +3218,7 @@
                </property>
                <property name="font">
                 <font>
+                 <pointsize>12</pointsize>
                  <weight>75</weight>
                  <bold>true</bold>
                 </font>
