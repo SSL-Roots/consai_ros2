@@ -8,9 +8,6 @@ from consai_frootspi_msgs.msg import RobotCommand
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(RobotCommand, 'topic', 10)
-        timer_period = 0.01  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
 
         # parameters
         self.declare_parameter('csv_path', '')
@@ -20,6 +17,10 @@ class MinimalPublisher(Node):
         self.declare_parameter('loop', False)
         self.loop = self.get_parameter('loop').get_parameter_value().bool_value
 
+        # publishers
+        self.publisher_ = self.create_publisher(RobotCommand, f"/robot{self.robot_id}/command", 10)
+        timer_period = 0.01  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.profile = self.load_profile(self.csv_path)
         self.latest_pub_time = self.get_clock().now()
