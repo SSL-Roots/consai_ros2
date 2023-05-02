@@ -142,20 +142,14 @@ class SubAttackerDecision(DecisionBase):
         # プレースメントを回避しない
         self._operator.disable_avoid_placement(robot_id)
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
+        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
+           self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボールを受け取る
             if self._act_id != ID_FAR_FROM:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
                 self._act_id = ID_FAR_FROM
             return
         
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
-            # 目標位置に近づきボールを支える
-            if self._act_id != ID_NEAR:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1, dynamic_receive=False)
-                self._act_id = ID_NEAR
-            return
-
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:
