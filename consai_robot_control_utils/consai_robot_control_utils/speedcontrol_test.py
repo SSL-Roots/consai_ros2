@@ -7,7 +7,7 @@ from consai_frootspi_msgs.msg import RobotCommand
 
 class MinimalPublisher(Node):
     def __init__(self):
-        super().__init__('minimal_publisher')
+        super().__init__('speedcontrol_test')
 
         # parameters
         self.declare_parameter('csv_path', '')
