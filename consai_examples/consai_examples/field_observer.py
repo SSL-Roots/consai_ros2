@@ -78,13 +78,11 @@ class FieldObserver(Node):
         self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.our_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.our_robots_speed = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.their_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.their_robots_speed = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
         self._field_x = 12.0  # meters
@@ -136,82 +134,10 @@ class FieldObserver(Node):
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
-    def update_robot_state(self):
-        return self.robots
-    
-    # 味方ロボットの位置座標 [x,y] 取得
-    def _update_our_robots_pos(self, our_robots):
-        self.our_robots_pos = [
-            "None" if our_robots[robot].visibility[0] <= 0.2 else [our_robots[robot].pos.x, our_robots[robot].pos.y] for robot in range(len(our_robots))]
-
-    def get_our_robots_pos(self):
-        return self.our_robots_pos
-
-    def get_our_robot_pos(self, our_robot_id):
-        return self.our_robots_pos[our_robot_id]
-
     def get_robots_id(self, robots_pos):
         # フィールド上にいるロボットのIDをリスト化
         robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != None]
         return robots_id
-
-
-    # 相手ロボットの位置座標 [x,y] 取得
-    def _update_their_robots_pos(self, their_robots):
-        self.their_robots_pos = [
-            "None" if their_robots[robot].visibility[0] <= 0.2 else [their_robots[robot].pos.x, their_robots[robot].pos.y] for robot in range(len(their_robots))]
-
-    def get_their_robots_pos(self):
-        return self.their_robots_pos
-
-    def get_their_robot_pos(self, their_robot_id):
-        return self.their_robots_pos[their_robot_id]
-
-    # 味方ロボットの速度 [x,y] 取得
-    def _update_our_robots_vel(self, our_robots):
-        self.our_robots_vel = [our_robots[robot].vel for robot in range(len(our_robots))]
-        self.our_robots_vel = sum(self.our_robots_vel, [])
-        self.our_robots_vel = ["None" if our_robots[robot].visibility[0] <= 0.2 else [self.our_robots_vel[robot].x, self.our_robots_vel[robot].y] for robot in range(len(self.our_robots_vel))]
-
-    def get_our_robots_vel(self):
-        return self.our_robots_vel
-
-    # 相手ロボットの速度 [x,y] 取得
-    def _update_their_robots_vel(self, their_robots):
-        self.their_robots_vel = [their_robots[robot].vel for robot in range(len(their_robots))]
-        self.their_robots_vel = sum(self.their_robots_vel, [])
-        self.their_robots_vel = ["None" if their_robots[robot].visibility[0] <= 0.2 else [self.their_robots_vel[robot].x, self.their_robots_vel[robot].y] for robot in range(len(self.their_robots_vel))]
-
-    def get_their_robots_vel(self):
-        return self.their_robots_vel
-
-    # 味方ロボットの向いている角度（rad）取得
-    def _update_our_robots_thita(self, our_robots):
-        self.our_robots_angle = [our_robots[robot].orientation for robot in range(len(our_robots))]
-    
-    def get_our_robots_thita(self):
-        return self.our_robots_angle
-    
-    # 相手ロボットの向いている角度（rad）取得
-    def _update_their_robots_thita(self, their_robots):
-        self.our_robots_angle = [their_robots[robot].orientation for robot in range(len(their_robots))]
-    
-    def get_their_robots_thita(self):
-        return self.their_robots_angle
-
-    # 味方ロボットの角速度（rad/s）取得
-    def _update_our_robots_vel_angle(self, our_robots):
-        self.our_robots_vel_angle = [our_robots[robot].vel_angular[0] for robot in range(len(our_robots))]
-
-    def get_our_robots_vel_angle(self):
-        return self.our_robots_vel_angle
-    
-    # 相手ロボットの角速度（rad/s）取得
-    def _update_their_robots_vel_angle(self, their_robots):
-        self.their_robots_vel_angle = [their_robots[robot].vel_angular[0] for robot in range(len(their_robots))]
-
-    def get_their_robots_vel_angle(self):
-        return self.their_robots_vel_angle
 
     def _update_ball_state(self, ball):
         # フィールド場外判定(Goal-to-Goal方向)
