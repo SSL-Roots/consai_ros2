@@ -732,9 +732,6 @@ class FieldObserver(Node):
         # 自分と各ロボットまでの距離を基にロボットIDをソート
         our_robots_id = self._sort_by_from_robot_distance(my_robot_id, forward_our_robots_id, our_robots_pos)
 
-        # ロボットの位置と長半径（移動距離）をロボットごとに格納
-        their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * abs(their_robots_vel[i][0]) + robot_r] for i in forward_their_robots_id]
-
         # 各レシーバー候補ロボットに対してパス可能か判定
         for _id in our_robots_id:
             # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
@@ -747,14 +744,17 @@ class FieldObserver(Node):
             else:
                 target_their_robots_id = forward_their_robots_id
 
+            # ロボットの位置と長半径（移動距離）をロボットごとに格納
+            their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * abs(their_robots_vel[i][0]) + robot_r] for i in target_their_robots_id]
+
             # 相手ロボットが存在するときの処理
             if len(target_their_robots_id) != 0:
                 # 対象となる相手ロボット全てに対してパスコースを妨げるような動きをしているか計算
-                for robot_id in target_their_robots_id:
+                for their_index in range(len(target_their_robots_id)):
                     # 判別式を解くための変数
                     a_kai = slope_from_passer_to_our_robot ** 2 + 1
-                    b_kai = 2 * ((intercept_from_passer_to_our_robot - their_robot_state[robot_id][1]) * slope_from_passer_to_our_robot - their_robot_state[robot_id][0])
-                    c_kai = their_robot_state[robot_id][0] ** 2 + (intercept_from_passer_to_our_robot - their_robot_state[robot_id][1]) ** 2 - their_robot_state[robot_id][2] ** 2
+                    b_kai = 2 * ((intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) * slope_from_passer_to_our_robot - their_robot_state[their_index][0])
+                    c_kai = their_robot_state[their_index][0] ** 2 + (intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) ** 2 - their_robot_state[their_index][2] ** 2
 
                     # 共有点を持つか判定
                     common_point = b_kai ** 2 - 4 * a_kai * c_kai

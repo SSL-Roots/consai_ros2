@@ -82,7 +82,7 @@ def test_パサーと味方ロボットの間に敵ロボットがいるときge
     frame_publisher.set_robot(False, 3, 0.0, 0.0, 0.0)
     frame_publisher.set_robot(False, 1, 2.0, 0.0, math.radians(30))
     frame_publisher.set_robot(False, 4, 4.0, 4.0, math.radians(-120))
-    # 1番ロボットの間に敵ロボットを置く
+    # パサーと味方ロボットの間に敵ロボットを置く
     frame_publisher.set_robot(True, 0, 1.0, 0.0, math.radians(0))
     # 関係ない位置に敵ロボットを置く
     frame_publisher.set_robot(True, 1, 2.0, -2.0, math.radians(0))
@@ -91,3 +91,20 @@ def test_パサーと味方ロボットの間に敵ロボットがいるときge
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(observer, timeout_sec=1.0)
     assert observer.get_receiver_robots_id(my_robot_id=3) == [4]
+
+def test_ID15付近のロボットでもget_receiver_robots_idが正常動作すること(rclpy_init_shutdown):
+    observer = FieldObserver(our_team_is_yellow=False)
+    frame_publisher = TrackedFramePublisher()
+    # 右を向いたパサーの右にロボットを置く
+    frame_publisher.set_robot(False, 15, 0.0, 0.0, 0.0)
+    frame_publisher.set_robot(False, 14, 2.0, 0.0, math.radians(30))
+    frame_publisher.set_robot(False, 13, 4.0, 4.0, math.radians(-120))
+    # パサーと味方ロボットの間に敵ロボットを置く
+    frame_publisher.set_robot(True, 12, 1.0, 0.0, math.radians(0))
+    # 関係ない位置に敵ロボットを置く
+    frame_publisher.set_robot(True, 11, 2.0, -2.0, math.radians(0))
+
+    frame_publisher.publish_preset_frame()
+    # トピックをsubscribeするためspine_once()を実行
+    rclpy.spin_once(observer, timeout_sec=1.0)
+    assert observer.get_receiver_robots_id(my_robot_id=15) == [13]
