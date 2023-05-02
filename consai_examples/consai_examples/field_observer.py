@@ -152,7 +152,7 @@ class FieldObserver(Node):
 
     def get_robots_id(self, robots_pos):
         # フィールド上にいるロボットのIDをリスト化
-        robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != "None"]
+        robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != None]
         return robots_id
 
 
@@ -712,10 +712,12 @@ class FieldObserver(Node):
         if my_robot_id >= len(our_robots_pos):
             return []
         my_robot_pos = our_robots_pos[my_robot_id]
+        if my_robot_pos is None:
+            return []
 
         # エラー対策
         # TODO: 時々Vector2形式でデータが混入するので対策が必要
-        if type(our_robots_vel[0]) is not list:
+        if type(our_robots_vel[my_robot_id]) is not list:
             return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
@@ -803,9 +805,25 @@ class FieldObserver(Node):
             robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
-        forward_robots_id = [_id for _id in robots_id
-                            if my_robot_pos[0] < robots_pos[_id][0] + (abs(robots_vel[_id][0]) * dt + robot_r) * 
-                            robots_vel[_id][0] / math.sqrt(robots_vel[_id][0] ** 2 + robots_vel[_id][1] ** 2)]
+        # TODO: ここ、geometry_toolsのTrans使えばきれいに書けそう
+        # TODO: x座標でしか評価されていないので、自チーム側へのパスに対応できない
+        forward_robots_id = []
+        for robot_id in robots_id:
+            target_robot_pos = robots_pos[robot_id]
+            target_robot_vel = robots_vel[robot_id]
+            estimated_displacement = 0.0
+            vel_norm = math.sqrt(target_robot_vel[0] ** 2 + target_robot_vel[1] ** 2)
+
+            # dt時間後の移動距離を加算する
+            if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
+                estimated_displacement = (abs(target_robot_vel[0]) * dt + robot_r) * target_robot_vel[0] / vel_norm
+
+            if my_robot_pos[0] < target_robot_pos[0] + estimated_displacement:
+                forward_robots_id.append(robot_id)
+
+        # forward_robots_id = [_id for _id in robots_id
+        #                     if my_robot_pos[0] < robots_pos[_id][0] + (abs(robots_vel[_id][0]) * dt + robot_r) * 
+        #                     robots_vel[_id][0] / math.sqrt(robots_vel[_id][0] ** 2 + robots_vel[_id][1] ** 2)]
 
         return forward_robots_id
 

@@ -3,6 +3,7 @@ from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import TrackedRobot
+from robocup_ssl_msgs.msg import Vector2
 
 # TrackedFrameトピックをpublishするためのクラス
 class TrackedFramePublisher(Node):
@@ -47,6 +48,18 @@ class TrackedFramePublisher(Node):
         robot.visibility.append(1.0)
         self._preset_frame.robots.append(robot)
 
+    def set_robot(self, is_yellow, robot_id, pos_x, pos_y, orientation, vel_x=0.0, vel_y=0.0, vel_angular=0.0):
+        robot = TrackedRobot()
+        robot.robot_id.id = robot_id
+        robot.robot_id.team_color = RobotId.TEAM_COLOR_YELLOW if is_yellow else RobotId.TEAM_COLOR_BLUE
+        robot.pos.x = pos_x
+        robot.pos.y = pos_y
+        robot.orientation = orientation
+        robot.vel.append(Vector2(x=vel_x, y=vel_y))
+        robot.vel_angular.append(vel_angular)
+        robot.visibility.append(1.0)
+        self._preset_frame.robots.append(robot)
+
     def set_ball_pos(self, pos_x, pos_y):
         ball = TrackedBall()
         ball.pos.x = pos_x
@@ -56,3 +69,6 @@ class TrackedFramePublisher(Node):
 
     def publish_preset_frame(self):
         self._publish(self._preset_frame)
+
+    def clear_preset_frame(self):
+        self._preset_frame = TrackedFrame()
