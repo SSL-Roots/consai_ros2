@@ -726,10 +726,8 @@ bool FieldInfoParser::avoid_obstacles(
   const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
   // 自身から直進方向に何m離れたロボットを障害物と判定するか
   const double OBSTACLE_DETECTION_X = 0.5;
-  const double OBSTACLE_DETECTION_X_LONG = 1.0;
   // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y = 0.3;
-  const double OBSTACLE_DETECTION_Y_SHORT = 0.3;
+  const double OBSTACLE_DETECTION_Y_ROBOT = 0.3;
   const double OBSTACLE_DETECTION_Y_BALL = 0.2;
   // 回避の相対位置
   const double AVOIDANCE_POS_X_SHORT = 0.1;
@@ -748,8 +746,6 @@ bool FieldInfoParser::avoid_obstacles(
   // 回避位置の初期値を目標位置にする
   avoidance_pose = goal_pose;
 
-  tools::Trans trans_MtoG(my_robot_pose, tools::calc_angle(my_robot_pose, goal_pose));
-  auto goal_pose_MtoG = trans_MtoG.transform(goal_pose);
   std::shared_ptr<State> obstacle_pose_MtoA;
 
   // 回避位置生成と回避位置-自己位置間の障害物を検索するためのループ
@@ -786,8 +782,8 @@ bool FieldInfoParser::avoid_obstacles(
 
       distance = std::hypot(robot_pose_MtoA.x, robot_pose_MtoA.y);
       if (0 < robot_pose_MtoA.x &&
-        robot_pose_MtoA.x < goal_pose_MtoG.x &&
-        std::fabs(robot_pose_MtoA.y) < OBSTACLE_DETECTION_Y)
+        robot_pose_MtoA.x < avoidance_pose_MtoA.x &&
+        std::fabs(robot_pose_MtoA.y) < OBSTACLE_DETECTION_Y_ROBOT)
       {
         if (distance < distance_to_obstacle) {
           obstacle_pose_MtoA = std::make_shared<State>(robot_pose_MtoA);
@@ -805,7 +801,7 @@ bool FieldInfoParser::avoid_obstacles(
       distance = std::hypot(ball_pose_MtoA.x, ball_pose_MtoA.y);
       // 進路上にボールエリアがある場合
       if (0 < ball_pose_MtoA.x &&
-        ball_pose_MtoA.x < goal_pose_MtoG.x &&
+        ball_pose_MtoA.x < avoidance_pose_MtoA.x &&
         std::fabs(ball_pose_MtoA.y) < OBSTACLE_DETECTION_Y_BALL)
       {
         if (distance < distance_to_obstacle) {
