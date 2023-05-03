@@ -799,7 +799,7 @@ class FieldObserver(Node):
         return forward_robots_id
 
     # シューターが相手ゴールに向かってシュートできるかを判定する関数
-    def judge_robot_can_shoot(self, my_robot_id):
+    def get_shoot_point(self, my_robot_id):
         # ゴールポストのx座標
         goal_post_x = 6
         # ゴールポストのy座標
