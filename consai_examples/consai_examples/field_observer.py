@@ -131,6 +131,9 @@ class FieldObserver(Node):
             eval(object_str + "angle")[robot_id] = robot.orientation
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
+            else:
+                # TODO: 速度がNoneになる場合があるため，エラー処理のため(0.0, 0.0)を代入
+                eval(object_str + "vel")[robot_id] = [0.0, 0.0]
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
@@ -265,6 +268,11 @@ class FieldObserver(Node):
             self._ball_is_moving = True
         else:
             self._ball_is_moving = False
+
+        if ball.vel[0].x < 0:
+            self._ball_to_our_field = True
+        else:
+            self._ball_to_our_field = False
 
     def _update_ball_zone_state(self, ball_pos):
         ZONE_THRESHOLD = 0.2  # meters
@@ -550,6 +558,9 @@ class FieldObserver(Node):
 
     def ball_is_moving(self):
         return self._ball_is_moving
+
+    def ball_to_our_field(self):
+        return self._ball_to_our_field
 
     def get_ball_zone_state(self):
         return self._ball_zone_state
