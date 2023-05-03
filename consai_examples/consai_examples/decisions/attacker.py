@@ -23,7 +23,7 @@ class AttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._PENALTY_WAIT_X = 4.5  # ペナルティキック待機位置のX座標
+        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
     def stop(self, robot_id):
         ID_CHASE = self.ACT_ID_STOP + 0

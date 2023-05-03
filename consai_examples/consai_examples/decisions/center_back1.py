@@ -23,7 +23,7 @@ class CenterBack1Decision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._PENALTY_WAIT_X = 4.5  # ペナルティキック待機位置のX座標
+        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
     def _defend_upper_defense_area(self, robot_id, base_id):
         # ディフェンスエリアの上半分を守る
