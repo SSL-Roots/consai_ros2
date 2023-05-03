@@ -23,6 +23,8 @@ class SideBack1Decision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
+        self._PENALTY_WAIT_X = 4.5  # ペナルティキック待機位置のX座標
+
     def _defend_upper_defense_area(self, robot_id):
         # ディフェンスエリアの上側を守る
         p1_x = -6.0 + 0.3
@@ -72,22 +74,22 @@ class SideBack1Decision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 3.0)
+            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 3.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 3.0)
+            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 3.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 3.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 3.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 3.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 3.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def our_penalty_inplay(self, robot_id):
