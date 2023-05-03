@@ -52,6 +52,7 @@ class AttackerDecision(DecisionBase):
         ID_IN_OUR_DEFENSE = self.ACT_ID_INPLAY + 1
         ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
         ID_SHOOT = self.ACT_ID_INPLAY + 3
+        ID_PASS = self.ACT_ID_INPLAY + 4
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
@@ -73,9 +74,14 @@ class AttackerDecision(DecisionBase):
                 shoot_point = FieldObserver.get_shoot_point(robot_id)
                 if len(shoot_point) > 0:
                     self._operator.shoot_to(robot_id, shoot_point[0], shoot_point[1])
-                    self._act_id = ID_SHOOT
-                else:
-                    self._act_id = ID_INPLAY
+                self._act_id = ID_SHOOT
+
+        if self._act_id != ID_PASS:
+            # レシーバ候補のロボットIDリストを取得
+            receiver_robots_id = self._field_observer.get_receiver_robots_id(robot_id)
+            if len(receiver_robots_id) > 0:
+                self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+            self._act_id = ID_PASS
 
         # ゴールに向かってシュートする
         if self._act_id != ID_INPLAY:
