@@ -130,14 +130,16 @@ class FieldObserver(Node):
             object_str = "self." + team_str + "_robots_"
             eval(object_str + "pos")[robot_id] = [robot.pos.x, robot.pos.y]
             eval(object_str + "angle")[robot_id] = robot.orientation
+
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
-    def get_robots_id(self, robots_pos):
+    def get_robots_id(self, robots_info):
         # フィールド上にいるロボットのIDをリスト化
-        robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != None]
+        # robots_infoはロボットの位置か速度を渡す
+        robots_id = [robot_id for robot_id in range(len(robots_info)) if robots_info[robot_id] != None]
         return robots_id
 
     def _update_ball_state(self, ball):
@@ -733,14 +735,11 @@ class FieldObserver(Node):
 
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = []
-        for robot_id, robot_pos in enumerate(robots_pos):
-            if robot_pos is not None:
-                robots_id.append(robot_id)
+        robots_id = self.get_robots_id(robots_vel)
         
+        # 自身のIDを削除
         if is_delete_my_id:
             if is_delete_my_id in robots_id:
-                # 自身のIDを削除
                 robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
