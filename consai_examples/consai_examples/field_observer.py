@@ -131,6 +131,9 @@ class FieldObserver(Node):
             eval(object_str + "angle")[robot_id] = robot.orientation
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
+            else:
+                # TODO: 速度がNoneになる場合があるため，エラー処理のため(0.0, 0.0)を代入
+                eval(object_str + "vel")[robot_id] = [0.0, 0.0]
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
