@@ -55,16 +55,8 @@ class GoaleDecision(DecisionBase):
         ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
         ID_IN_PLAY = self.ACT_ID_INPLAY + 1
 
-        # ボールが動いている場合
-        if self._field_observer.ball_is_moving():
-            if self._act_id != ID_IN_PLAY:
-                # ボールとゴールを結ぶ直線上を守る
-                self._defend_goal(robot_id)
-                # ACT IDを更新
-                self._act_id = ID_IN_PLAY
-
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
-        elif self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA and not self._field_observer.ball_is_moving():
             if self._act_id != ID_IN_DEFENSE:
                 # レシーバ候補のロボットIDリストを取得
                 receiver_robots_id = self._field_observer.get_receiver_robots_id(robot_id)
@@ -85,6 +77,12 @@ class GoaleDecision(DecisionBase):
                 # ACT IDを更新
                 self._act_id = ID_IN_DEFENSE
             return
+
+        if self._act_id != ID_IN_PLAY:
+            # ボールとゴールを結ぶ直線上を守る
+            self._defend_goal(robot_id)
+            # ACT IDを更新
+            self._act_id = ID_IN_PLAY
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
