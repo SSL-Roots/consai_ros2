@@ -23,8 +23,6 @@ class SideBack1Decision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
-
     def _defend_upper_defense_area(self, robot_id):
         # ディフェンスエリアの上側を守る
         p1_x = -6.0 + 0.3

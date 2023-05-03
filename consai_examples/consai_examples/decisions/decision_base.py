@@ -42,6 +42,7 @@ class DecisionBase(object):
         self._num_of_zone_roles = 0
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._act_id = self.ACT_ID_INIT
+        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
     def enable_stop_game_velocity(self, robot_id):
         self._operator.enable_stop_game_velocity(robot_id)

@@ -23,8 +23,6 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
-
         self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_RIGHT_TOP,
                            FieldObserver.BALL_ZONE_LEFT_MID_TOP, FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
 
