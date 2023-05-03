@@ -781,8 +781,6 @@ class FieldObserver(Node):
         if len(forward_their_robots_id) == 0:
             # 相手ゴールの中央の座標を返す
             return goal_center_target
-        
-        print(forward_their_robots_id)
 
         for robot_id in forward_their_robots_id:
             # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
@@ -796,12 +794,11 @@ class FieldObserver(Node):
                 goal_post[0][1] = edge_of_goal_possible_area
             elif abs(goal_post[0][1] - edge_of_goal_possible_area) > abs(goal_post[1][1] - edge_of_goal_possible_area) and abs(edge_of_goal_possible_area) < goal_post_y:
                 goal_post[1][1] = edge_of_goal_possible_area
-            print(goal_post)
 
         # シュート可能なゴールの幅
         goal_width = goal_post[0][1] - goal_post[1][1]
 
-        # ロボットの直径よりもゴールできる幅が広いときはその範囲の中心座標を返す
+        # ロボット2台分の直径よりもゴールできる幅が広いときはその範囲の中心座標を返す
         if goal_width > robot_diameter * 2:
             goal_center_target[1] = goal_width / 2 - goal_post_y
         # ロボットの直径よりもゴールできる幅が小さければ空のリストを返す
