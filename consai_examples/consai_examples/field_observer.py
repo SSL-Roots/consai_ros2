@@ -132,9 +132,6 @@ class FieldObserver(Node):
             eval(object_str + "angle")[robot_id] = robot.orientation
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
-            else:
-                # TODO: 速度がNoneになる場合があるため，エラー処理のため(0.0, 0.0)を代入
-                eval(object_str + "vel")[robot_id] = [0.0, 0.0]
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
@@ -736,11 +733,15 @@ class FieldObserver(Node):
 
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = self.get_robots_id(robots_pos)
+        robots_id = []
+        for robot_id, robot_pos in enumerate(robots_pos):
+            if robot_pos is not None:
+                robots_id.append(robot_id)
         
         if is_delete_my_id:
-            # 自身のIDを削除
-            robots_id.remove(my_robot_id)
+            if is_delete_my_id in robots_id:
+                # 自身のIDを削除
+                robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
         # TODO: ここ、geometry_toolsのTrans使えばきれいに書けそう
