@@ -400,8 +400,18 @@ class FieldWidget(QWidget):
             span_angle = end_angle - start_angle
             painter.drawArc(rect, start_angle, span_angle)
 
+        # ペナルティポイントを描画
+        painter.setBrush(self._COLOR_FIELD_LINE)
+        PENALTY_X =  self._field.field_length * 0.5 - 8000  # ルールの2.1.3 Field Markingsを参照
+        PENALTY_DRAW_SIZE = 50 * self._scale_field_to_draw
+        point = self._convert_field_to_draw_point(PENALTY_X, 0.0)
+        painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
+        point = self._convert_field_to_draw_point(-PENALTY_X, 0.0)
+        painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
+
         # ゴールを描画
         painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
+        painter.setBrush(self._COLOR_FIELD_CARPET)
         rect = QRectF(
             self._convert_field_to_draw_point(
                 self._field.field_length * 0.5, self._field.goal_width*0.5),
