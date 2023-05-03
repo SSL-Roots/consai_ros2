@@ -240,9 +240,7 @@ bool FieldInfoParser::parse_goal(
     }
 
     // STOP_GAME中はボールから離れる
-    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
-    // if (parsed_referee_->is_placement == false && parsed_referee_->is_inplay == false) {
-    // if (referee_->command == Referee::COMMAND_STOP) {
+    if (avoid_ball) {
       avoid_ball_500mm(my_robot, parsed_pose, ball, avoidance_pose);
       parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
     }
