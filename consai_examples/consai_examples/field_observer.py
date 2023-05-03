@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import math
+import copy
 
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import TrackedBall
@@ -640,10 +641,10 @@ class FieldObserver(Node):
         dt = 0.5
 
         # 各ロボットの位置と速度を取得
-        our_robots_pos = self.our_robots_pos
-        their_robots_pos = self.their_robots_pos
-        our_robots_vel = self.our_robots_vel
-        their_robots_vel = self.their_robots_vel
+        our_robots_pos = copy.deepcopy(self.our_robots_pos)
+        their_robots_pos = copy.deepcopy(self.their_robots_pos)
+        our_robots_vel = copy.deepcopy(self.our_robots_vel)
+        their_robots_vel = copy.deepcopy(self.their_robots_vel)
 
         # パサーの位置
         if my_robot_id >= len(our_robots_pos):
