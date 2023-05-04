@@ -691,9 +691,6 @@ class FieldObserver(Node):
             our_robot_pos = our_robots_pos[our_robot_id]
             trans = tool.Trans(my_robot_pos, tool.get_angle(my_robot_pos, our_robot_pos))
 
-            # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
-            # slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot, flag = tool.get_line_parameter(our_robots_pos[our_robot_id], my_robot_pos)
-
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
                 target_their_robot_id_list = [_id for _id in forward_their_robot_id if our_robot_pos.x > their_robots_pos[_id].x]
@@ -701,22 +698,18 @@ class FieldObserver(Node):
             else:
                 target_their_robot_id_list = forward_their_robot_id
 
-            # ロボットの位置と長半径（移動距離）をロボットごとに格納
-            # their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robot_id_list]
-
             # 相手ロボットが存在するときの処理
             if 0 < len(target_their_robot_id_list):
                 # 対象となる相手ロボット全てに対してパスコースを妨げるような動きをしているか計算
-                # for their_index in range(len(target_their_robot_id_list)):
                 for their_robot_id in target_their_robot_id_list:
                     their_robot_pos = their_robots_pos[their_robot_id]
                     their_robot_pos_trans = trans.transform(their_robot_pos) 
                     their_robot_vel = their_robots_vel[their_robot_id]
 
                     # 共有点を持つか判定
-                    common_point = 1
+                    common_point = -1
                     if abs(their_robot_pos_trans.y) < robot_r + math.hypot(their_robot_vel.x, their_robot_vel.y) * dt:
-                        common_point = -1
+                        common_point = 1
 
                     # 共有点を持たないときの処理
                     if common_point < 0:
