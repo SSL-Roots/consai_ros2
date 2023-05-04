@@ -90,6 +90,7 @@ private:
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
   std::vector<rclcpp::Publisher<GoalPose>::SharedPtr> pub_goal_pose_;
+  std::vector<rclcpp::Publisher<GoalPose>::SharedPtr> pub_final_goal_pose_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;
