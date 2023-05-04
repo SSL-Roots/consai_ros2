@@ -622,6 +622,9 @@ class FieldObserver(Node):
     def get_ball_pos(self):
         ball_pos = [self._ball.pos.x, self._ball.pos.y]
         return ball_pos
+    
+    def get_goal_pos_list(self):
+        return self.goal_pos_list
 
     def get_open_path_id_list(self, my_robot_id, select_forward_between=1):
 
