@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "control_toolbox/pid.hpp"
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/goal_pose.hpp"
@@ -70,10 +69,6 @@ private:
   void callback_referee(const Referee::SharedPtr msg);
   void callback_parsed_referee(const ParsedReferee::SharedPtr msg);
   void callback_named_targets(const NamedTargets::SharedPtr msg);
-  bool update_pid_gain_from_param(
-    const rclcpp::Parameter & param,
-    const std::string & prefix,
-    std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller);
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,
@@ -95,9 +90,6 @@ private:
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
-  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vx_;
-  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vy_;
-  std::vector<std::shared_ptr<control_toolbox::Pid>> pid_vtheta_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_stop_command_;
   std::vector<bool> control_enable_;
@@ -123,6 +115,9 @@ private:
   double max_acceleration_theta_;
   double max_velocity_xy_;
   double max_velocity_theta_;
+  double param_control_range_xy_;
+  double param_control_a_xy_;
+  double param_control_a_theta_;
 };
 
 }  // namespace consai_robot_controller
