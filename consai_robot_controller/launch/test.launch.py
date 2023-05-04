@@ -28,7 +28,7 @@ def generate_launch_description():
     pid_gains = os.path.join(
         get_package_share_directory('consai_robot_controller'),
         'config',
-        'pid_gains.yaml'
+        'control_params.yaml'
         )
 
     declare_arg_gui = DeclareLaunchArgument(
