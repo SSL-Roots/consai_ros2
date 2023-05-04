@@ -687,31 +687,36 @@ class FieldObserver(Node):
         our_robot_id_list = self._sort_by_from_robot_distance(my_robot_id, my_robot_pos, forward_our_robot_id, our_robots_pos)
 
         # 各レシーバー候補ロボットに対してパス可能か判定
-        for _id in our_robot_id_list:
+        for our_robot_id in our_robot_id_list:
+            our_robot_pos = our_robots_pos[our_robot_id]
+            trans = tool.Trans(my_robot_pos, tool.get_angle(my_robot_pos, our_robot_pos))
+
             # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
-            slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot, flag = tool.get_line_parameter(our_robots_pos[_id], my_robot_pos)
+            # slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot, flag = tool.get_line_parameter(our_robots_pos[our_robot_id], my_robot_pos)
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
-                target_their_robot_id_list = [robot_id for robot_id in forward_their_robot_id if our_robots_pos[_id].x > their_robots_pos[robot_id].x]
+                target_their_robot_id_list = [_id for _id in forward_their_robot_id if our_robot_pos.x > their_robots_pos[_id].x]
             # パサーより前方にいる相手ロボットを計算対象とするときの処理
             else:
                 target_their_robot_id_list = forward_their_robot_id
 
             # ロボットの位置と長半径（移動距離）をロボットごとに格納
-            their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robot_id_list]
+            # their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robot_id_list]
 
             # 相手ロボットが存在するときの処理
-            if len(target_their_robot_id_list) != 0:
+            if 0 < len(target_their_robot_id_list):
                 # 対象となる相手ロボット全てに対してパスコースを妨げるような動きをしているか計算
-                for their_index in range(len(target_their_robot_id_list)):
-                    # 判別式を解くための変数
-                    a_kai = slope_from_passer_to_our_robot ** 2 + 1
-                    b_kai = 2 * ((intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) * slope_from_passer_to_our_robot - their_robot_state[their_index][0])
-                    c_kai = their_robot_state[their_index][0] ** 2 + (intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) ** 2 - their_robot_state[their_index][2] ** 2
+                # for their_index in range(len(target_their_robot_id_list)):
+                for their_robot_id in target_their_robot_id_list:
+                    their_robot_pos = their_robots_pos[their_robot_id]
+                    their_robot_pos_trans = trans.transform(their_robot_pos) 
+                    their_robot_vel = their_robots_vel[their_robot_id]
 
                     # 共有点を持つか判定
-                    common_point = b_kai ** 2 - 4 * a_kai * c_kai
+                    common_point = 1
+                    if abs(their_robot_pos_trans.y) < robot_r + math.hypot(their_robot_vel.x, their_robot_vel.y) * dt:
+                        common_point = -1
 
                     # 共有点を持たないときの処理
                     if common_point < 0:
@@ -720,7 +725,7 @@ class FieldObserver(Node):
                             # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                             check_count = 0
                             # パスできる味方ロボットとしてリストに格納
-                            robots_to_pass.append(_id)
+                            robots_to_pass.append(our_robot_id)
                         # まだすべてのロボットに対して計算を行っていない場合の処理
                         else:
                             # 何台の相手ロボットに妨害されないかをカウントする変数をインクリメント
@@ -733,7 +738,7 @@ class FieldObserver(Node):
             # 計算対象とする相手ロボットが存在しないとき（邪魔する相手ロボットがいないとき）
             else:
                 # パスができる味方ロボットとしてリストに格納
-                robots_to_pass.append(_id)
+                robots_to_pass.append(our_robot_id)
         
         return robots_to_pass
 
