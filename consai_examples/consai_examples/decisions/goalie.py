@@ -29,8 +29,20 @@ class GoaleDecision(DecisionBase):
         p1_y = 0.9
         p2_x = -6.0 + 0.3
         p2_y = -0.9
+
         self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
         # self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+    
+    def _defend_goal_with_move_ball(self, robot_id):
+        # _defend_goalより少しゴール側に下がって防御範囲を広げる
+        p1_x = -6.0 + 0.1
+        p1_y = 0.9 + 0.2
+        p2_x = -6.0 + 0.1
+        p2_y = -0.9 - 0.2
+        ball_pos = self._field_observer.get_ball_pos()
+        ball_move_pos = self._field_observer.get_ball_move_pos()
+
+        self._operator.move_to_line_to_intersection_with_any_line(robot_id, p1_x, p1_y, p2_x, p2_y, ball_pos[0], ball_pos[1], ball_move_pos[0], ball_move_pos[1])
 
     def _penalty_defend(self, robot_id):
         p1_x = -6.0 + 0.05
@@ -53,7 +65,8 @@ class GoaleDecision(DecisionBase):
 
     def inplay(self, robot_id):
         ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
-        ID_IN_PLAY = self.ACT_ID_INPLAY + 1
+        ID_IN_PLAY_BALL_STOP = self.ACT_ID_INPLAY + 1
+        ID_IN_PLAY_BALL_MOVE = self.ACT_ID_INPLAY + 2
 
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA and not self._field_observer.ball_is_moving():
@@ -77,12 +90,21 @@ class GoaleDecision(DecisionBase):
                 # ACT IDを更新
                 self._act_id = ID_IN_DEFENSE
             return
+        
+        # ボールが自分サイドにむかっている
+        if self._field_observer.ball_is_moving() and self._field_observer.ball_to_our_field():
+            if self._act_id != ID_IN_PLAY_BALL_MOVE:
+                # ボールの移動先に先回りする動作
+                self._defend_goal_with_move_ball(robot_id)
+                # ACT IDを更新
+                self._act_id = ID_IN_PLAY_BALL_MOVE
+            return
 
-        if self._act_id != ID_IN_PLAY:
+        if self._act_id != ID_IN_PLAY_BALL_STOP:
             # ボールとゴールを結ぶ直線上を守る
             self._defend_goal(robot_id)
             # ACT IDを更新
-            self._act_id = ID_IN_PLAY
+            self._act_id = ID_IN_PLAY_BALL_STOP
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
