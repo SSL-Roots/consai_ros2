@@ -27,10 +27,10 @@ from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
 from decisions.side_back1 import SideBack1Decision
 from decisions.side_back2 import SideBack2Decision
+from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
-from decisions.zone_defense import ZoneDefenseDecision
-from decisions.zone_defense import ZoneDefenseID
+from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
 from field_observer import FieldObserver
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -214,6 +214,8 @@ if __name__ == '__main__':
         RoleName.ZONE4: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE4),
         RoleName.SIDE_BACK1: SideBack1Decision(operator, observer),
         RoleName.SIDE_BACK2: SideBack2Decision(operator, observer),
+        RoleName.LEFT_WING: SideWingDecision(operator, observer, WingID.LEFT),
+        RoleName.RIGHT_WING: SideWingDecision(operator, observer, WingID.RIGHT),
         RoleName.SUBSTITUTE: SubstituteDecision(operator, observer, args.invert),
     }
 
