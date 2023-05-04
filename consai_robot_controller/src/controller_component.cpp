@@ -94,38 +94,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     last_update_time_.push_back(steady_clock_.now());
 
-    // PID制御器の初期化
-    pid_vx_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vx_p").get_value<double>(),
-        get_parameter("vx_i").get_value<double>(),
-        get_parameter("vx_d").get_value<double>(),
-        get_parameter("vx_i_max").get_value<double>(),
-        get_parameter("vx_i_min").get_value<double>(),
-        get_parameter("vx_antiwindup").get_value<bool>()
-      )
-    );
-    pid_vy_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vy_p").get_value<double>(),
-        get_parameter("vy_i").get_value<double>(),
-        get_parameter("vy_d").get_value<double>(),
-        get_parameter("vy_i_max").get_value<double>(),
-        get_parameter("vy_i_min").get_value<double>(),
-        get_parameter("vy_antiwindup").get_value<bool>()
-      )
-    );
-    pid_vtheta_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vtheta_p").get_value<double>(),
-        get_parameter("vtheta_i").get_value<double>(),
-        get_parameter("vtheta_d").get_value<double>(),
-        get_parameter("vtheta_i_max").get_value<double>(),
-        get_parameter("vtheta_i_min").get_value<double>(),
-        get_parameter("vtheta_antiwindup").get_value<bool>()
-      )
-    );
-
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
     timer_pub_control_command_.push_back(
@@ -167,14 +135,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       auto result = rcl_interfaces::msg::SetParametersResult();
       result.successful = true;
       for (const auto & parameter : parameters) {
-        if (update_pid_gain_from_param(parameter, "vx_", pid_vx_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vx_pid gains.");
-        } else if (update_pid_gain_from_param(parameter, "vy_", pid_vy_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vy_pid gains.");
-        } else if (update_pid_gain_from_param(parameter, "vtheta_", pid_vtheta_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vtheta_pid gains.");
-        }
-
         if (parameter.get_name() == "max_acceleration_xy") {
           max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_acceleration_xy.");
@@ -334,9 +294,6 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
   command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
 
-  pid_vx_[robot_id]->reset();
-  pid_vy_[robot_id]->reset();
-  pid_vtheta_[robot_id]->reset();
   last_update_time_[robot_id] = steady_clock_.now();
   pub_command_[robot_id]->publish(std::move(command_msg));
 
@@ -387,35 +344,6 @@ void Controller::callback_parsed_referee(const ParsedReferee::SharedPtr msg)
 void Controller::callback_named_targets(const NamedTargets::SharedPtr msg)
 {
   parser_.set_named_targets(msg);
-}
-
-bool Controller::update_pid_gain_from_param(
-  const rclcpp::Parameter & param,
-  const std::string & prefix,
-  std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller)
-{
-  // ROSパラメータ変更のcallback内で呼び出される関数
-  // PIDコントローラのゲインを更新する
-  if (param.get_name() == prefix + "p" ||
-    param.get_name() == prefix + "i" ||
-    param.get_name() == prefix + "d" ||
-    param.get_name() == prefix + "i_max" ||
-    param.get_name() == prefix + "i_min" ||
-    param.get_name() == prefix + "antiwindup")
-  {
-    for (auto && pid : pid_controller) {
-      pid->setGains(
-        get_parameter(prefix + "p").get_value<double>(),
-        get_parameter(prefix + "i").get_value<double>(),
-        get_parameter(prefix + "d").get_value<double>(),
-        get_parameter(prefix + "i_max").get_value<double>(),
-        get_parameter(prefix + "i_min").get_value<double>(),
-        get_parameter(prefix + "antiwindup").get_value<bool>()
-      );
-    }
-    return true;
-  }
-  return false;
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(

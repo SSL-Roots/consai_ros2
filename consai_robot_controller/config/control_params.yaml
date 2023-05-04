@@ -1,0 +1,6 @@
+
+max_acceleration_xy: 2.0  # m/s^2
+max_acceleration_theta: 5.0  # rad/s^2
+
+max_velocity_xy: 2.0  # m/s^2
+max_velocity_theta: 5.0  # rad/s^2
