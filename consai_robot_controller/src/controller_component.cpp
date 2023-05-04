@@ -78,15 +78,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       create_publisher<RobotCommand>(
         "robot" + std::to_string(i) + "/command", 10)
     );
-    pub_goal_pose_.push_back(
-      create_publisher<GoalPose>(
-        "robot" + std::to_string(i) + "/goal_pose", 10)
-    );
-
-    pub_final_goal_pose_.push_back(
-      create_publisher<GoalPose>(
-        "robot" + std::to_string(i) + "/final_goal_pose", 10)
-    );
 
     std::string name_space = team_color + std::to_string(i);
     server_control_.push_back(
@@ -154,6 +145,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     need_response_.push_back(false);
   }
   goal_handle_.resize(ROBOT_NUM);
+
+  pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
+  pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
+  timer_pub_goal_poses_ = create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
@@ -294,17 +289,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   last_world_vel_[robot_id] = world_vel;
 
   // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
-  auto goal_pose_msg = std::make_unique<GoalPose>();
-  auto final_goal_pose_msg = std::make_unique<GoalPose>();
-  goal_pose_msg->robot_id = robot_id;
-  goal_pose_msg->team_is_yellow = team_is_yellow_;
-  goal_pose_msg->pose = goal_pose;
-  pub_goal_pose_[robot_id]->publish(std::move(goal_pose_msg));
+  GoalPose goal_pose_msg;
+  goal_pose_msg.robot_id = robot_id;
+  goal_pose_msg.team_is_yellow = team_is_yellow_;
+  goal_pose_msg.pose = goal_pose;
+  goal_poses_map_[robot_id] = goal_pose_msg;
 
-  final_goal_pose_msg->robot_id = robot_id;
-  final_goal_pose_msg->team_is_yellow = team_is_yellow_;
-  final_goal_pose_msg->pose = final_goal_pose;
-  pub_final_goal_pose_[robot_id]->publish(std::move(final_goal_pose_msg));
+  GoalPose final_goal_pose_msg;
+  final_goal_pose_msg.robot_id = robot_id;
+  final_goal_pose_msg.team_is_yellow = team_is_yellow_;
+  final_goal_pose_msg.pose = final_goal_pose;
+  final_goal_poses_map_[robot_id] = final_goal_pose_msg;
 
   // 途中経過を報告する
   if (need_response_[robot_id]) {
@@ -350,6 +345,23 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
     timer_pub_stop_command_[robot_id]->cancel();
     timer_pub_control_command_[robot_id]->reset();
   }
+}
+
+void Controller::on_timer_pub_goal_poses()
+{
+  // goal_posesをpublishするタイマーコールバック関数
+  auto goal_poses = std::make_unique<GoalPoses>();
+  auto final_goal_poses = std::make_unique<GoalPoses>();
+  for(const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
+    if (goal_poses_map_.count(robot_id) > 0) {
+      goal_poses->poses.push_back(goal_poses_map_[robot_id]);
+    }
+    if (final_goal_poses_map_.count(robot_id) > 0) {
+      final_goal_poses->poses.push_back(final_goal_poses_map_[robot_id]);
+    }
+  }
+  pub_goal_poses_->publish(std::move(goal_poses));
+  pub_final_goal_poses_->publish(std::move(final_goal_poses));
 }
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)

@@ -23,6 +23,7 @@ namespace consai_robot_controller
 
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
+const double VISIBILITY_THRESHOLD = 0.01;
 
 FieldInfoParser::FieldInfoParser() : invert_(false), team_is_yellow_(false)
 {
@@ -71,7 +72,6 @@ bool FieldInfoParser::extract_robot(
 {
   // detection_trackedから指定された色とIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
-  const double VISIBILITY_THRESHOLD = 0.01;
   for (const auto & robot : detection_tracked_->robots) {
     if (robot_id != robot.robot_id.id) {
       continue;
@@ -102,7 +102,6 @@ bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
 {
   // detection_trackedからボール情報を抽出する
   // visibilityが低いときは情報が無いと判定する
-  const double VISIBILITY_THRESHOLD = 0.01;
   for (const auto & ball : detection_tracked_->balls) {
     if (ball.visibility.size() == 0) {
       return false;
@@ -250,6 +249,31 @@ bool FieldInfoParser::parse_goal(
   }
 
   return true;
+}
+
+std::vector<unsigned int> FieldInfoParser::active_robot_id_list(const bool team_is_yellow) const
+{
+  // 存在しているロボットのIDリストを返す
+  std::vector<unsigned int> id_list;
+  if (detection_tracked_) {
+    for (const auto & robot : detection_tracked_->robots) {
+      bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
+      bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
+      if (!is_yellow && !is_blue) {
+        continue;
+      }
+
+      if (robot.visibility.size() == 0) {
+        continue;
+      }
+      if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+        continue;
+      }
+
+      id_list.push_back(robot.robot_id.id);
+    }
+  }
+  return id_list;
 }
 
 bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
@@ -900,7 +924,6 @@ bool FieldInfoParser::avoid_robots(
   // 目標位置とロボットが重なっている場合は、
   // 自己位置方向に目標位置をずらす
   
-  const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
   const double ROBOT_DIAMETER = 0.18; // meters ロボットの直径
 
   // ロボットを全探索
