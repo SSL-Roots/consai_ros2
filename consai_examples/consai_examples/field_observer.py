@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import math
+import copy
 
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import TrackedBall
@@ -129,17 +130,16 @@ class FieldObserver(Node):
             object_str = "self." + team_str + "_robots_"
             eval(object_str + "pos")[robot_id] = [robot.pos.x, robot.pos.y]
             eval(object_str + "angle")[robot_id] = robot.orientation
+
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
-            else:
-                # TODO: 速度がNoneになる場合があるため，エラー処理のため(0.0, 0.0)を代入
-                eval(object_str + "vel")[robot_id] = [0.0, 0.0]
             if robot.vel_angular:
                 eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
 
-    def get_robots_id(self, robots_pos):
+    def get_robots_id(self, robots_info):
         # フィールド上にいるロボットのIDをリスト化
-        robots_id = [robot_id for robot_id in range(len(robots_pos)) if robots_pos[robot_id] != None]
+        # robots_infoはロボットの位置か速度を渡す
+        robots_id = [robot_id for robot_id in range(len(robots_info)) if robots_info[robot_id] != None]
         return robots_id
 
     def _update_ball_state(self, ball):
@@ -640,10 +640,10 @@ class FieldObserver(Node):
         dt = 0.5
 
         # 各ロボットの位置と速度を取得
-        our_robots_pos = self.our_robots_pos
-        their_robots_pos = self.their_robots_pos
-        our_robots_vel = self.our_robots_vel
-        their_robots_vel = self.their_robots_vel
+        our_robots_pos = copy.deepcopy(self.our_robots_pos)
+        their_robots_pos = copy.deepcopy(self.their_robots_pos)
+        our_robots_vel = copy.deepcopy(self.our_robots_vel)
+        their_robots_vel = copy.deepcopy(self.their_robots_vel)
 
         # パサーの位置
         if my_robot_id >= len(our_robots_pos):
@@ -735,11 +735,12 @@ class FieldObserver(Node):
 
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = self.get_robots_id(robots_pos)
+        robots_id = self.get_robots_id(robots_vel)
         
+        # 自身のIDを削除
         if is_delete_my_id:
-            # 自身のIDを削除
-            robots_id.remove(my_robot_id)
+            if is_delete_my_id in robots_id:
+                robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
         # TODO: ここ、geometry_toolsのTrans使えばきれいに書けそう
