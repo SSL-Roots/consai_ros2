@@ -140,12 +140,6 @@ class FieldObserver(Node):
             if robot.vel and robot.vel_angular:
                 eval(object_str + "vel")[robot_id] = State2D(x=robot.vel[0].x, y=robot.vel[0].y, theta=robot.vel_angular[0])
 
-    def get_robots_id(self, robots_info):
-        # フィールド上にいるロボットのIDをリスト化
-        # robots_infoはロボットの位置か速度を渡す
-        robots_id = [robot_id for robot_id in range(len(robots_info)) if robots_info[robot_id] != None]
-        return robots_id
-
     def _update_ball_state(self, ball):
         # フィールド場外判定(Goal-to-Goal方向)
         if self._check_is_ball_outside_front_x(ball.pos):
