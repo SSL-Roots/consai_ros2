@@ -631,14 +631,10 @@ class FieldObserver(Node):
 
     def get_open_path_id_list(self, my_robot_id, select_forward_between=1):
 
-        _id_lists = []
-        for i in range(2):
-            if i == 0:
-                _id_lists.append(self.get_receiver_robots_id(my_robot_id, need_pass=True))
-            else:
-                _id_lists.append(self.get_receiver_robots_id(my_robot_id, need_shoot=True))
+        can_pass_id_list = self.get_receiver_robots_id(my_robot_id, need_pass=True)
+        can_shoot_id_list = self.get_receiver_robots_id(my_robot_id, need_shoot=True)
 
-        return _id_lists[0], _id_lists[1]
+        return can_pass_id_list, can_shoot_id_list
 
     def get_receiver_robots_id(self, my_robot_id, need_pass=False, need_shoot=False, select_forward_between=1):
         # パス可能なロボットIDのリストを返す関数
@@ -672,9 +668,9 @@ class FieldObserver(Node):
         if my_robot_pos is None:
             return []
 
-        is_delete_my_id = True
+        skip_my_id = True
         if need_shoot:
-            is_delete_my_id = False
+            skip_my_id = False
             # ゴールのIDと位置
             # シュートのときは味方位置をゴールの位置と見立てる
             our_robot_id_list = copy.deepcopy(self.goal_id_list)
@@ -682,7 +678,7 @@ class FieldObserver(Node):
             our_robots_vel = copy.deepcopy(self.goal_vel_list)
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robot_id_list, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=is_delete_my_id)
+        forward_our_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robot_id_list, our_robots_pos, our_robots_vel, robot_r, dt, skip_my_id=skip_my_id)
         # パサーよりも前にいる敵ロボットIDリストを取得
         forward_their_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robot_id_list, their_robots_pos, their_robots_vel, robot_r, dt)
 
@@ -747,8 +743,6 @@ class FieldObserver(Node):
     def _sort_by_from_robot_distance(self, my_robot_id, my_robot_pos, robots_id, robots_pos):
         # 自ロボットから各ロボットまでの距離を計算し近い順にソートする関数
 
-        # 自ロボットの位置を格納
-        # my_robot_pos = robots_pos[my_robot_id]
         # 自ロボットから各ロボットまでの距離、IDをリストに格納
         robots_dist_and_id = [[tool.get_distance(robots_pos[_id], my_robot_pos), _id] for _id in robots_id]
 
@@ -757,18 +751,19 @@ class FieldObserver(Node):
 
         return sorted_robots_id
 
-    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
+    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, skip_my_id=False):
         
-        # 自身のIDを削除
-        if is_delete_my_id:
-            if my_robot_id in robots_id:
-                robots_id.remove(my_robot_id)
-
         # パサーより前に存在するロボットIDをリスト化
         # TODO: ここ、geometry_toolsのTrans使えばきれいに書けそう
         # TODO: x座標でしか評価されていないので、自チーム側へのパスに対応できない
         forward_robots_id = []
         for robot_id in robots_id:
+            # 自身のIDをスキップする場合
+            if skip_my_id:
+                if my_robot_id == robot_id: 
+                    # 自身のIDをスキップ
+                    continue
+
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
             estimated_displacement = 0.0
