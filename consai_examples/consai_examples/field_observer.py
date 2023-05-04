@@ -640,17 +640,18 @@ class FieldObserver(Node):
         our_robots_vel = copy.deepcopy(self.our_robots_vel)
         their_robots_vel = copy.deepcopy(self.their_robots_vel)
 
-        # パサーの位置
-        if my_robot_id >= len(our_robots_pos):
+        # パサーがフィールドにいない場合
+        if my_robot_id not in our_robots_id:
             return []
+        # パサーの位置が検出されていない場合
         my_robot_pos = our_robots_pos[my_robot_id]
         if my_robot_pos is None:
             return []
 
         # エラー対策
-        # TODO: 時々Vector2形式でデータが混入するので対策が必要
-        if type(our_robots_vel[my_robot_id]) is not list:
-            return []
+        # TODO: 時々Vector2形式でデータが混入する可能性がある
+        # if type(our_robots_vel[my_robot_id]) is not list:
+            # return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
         forward_our_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robots_id, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
@@ -728,13 +729,11 @@ class FieldObserver(Node):
 
         return sorted_robots_id
 
-    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=None):
-        # フィールド上にいる味方ロボットのIDのみリスト化
-        # robots_id = self.get_robots_id(robots_vel)
+    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         
         # 自身のIDを削除
         if is_delete_my_id:
-            if robots_id in robots_id:
+            if my_robot_id in robots_id:
                 robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
@@ -745,12 +744,14 @@ class FieldObserver(Node):
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
             estimated_displacement = 0.0
-            vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
+            if target_robot_vel is not None:
+                vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
+            else:
+                vel_norm = 0.0
 
             # dt時間後の移動距離を加算する
             if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
                 estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
-                # estimated_displacement = (abs(target_robot_vel[0]) * dt + robot_r) * target_robot_vel[0] / vel_norm
 
             if my_robot_pos.x < target_robot_pos.x + estimated_displacement:
                 forward_robots_id.append(robot_id)
