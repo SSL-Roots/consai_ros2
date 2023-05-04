@@ -83,6 +83,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/goal_pose", 10)
     );
 
+    pub_final_goal_pose_.push_back(
+      create_publisher<GoalPose>(
+        "robot" + std::to_string(i) + "/final_goal_pose", 10)
+    );
+
     std::string name_space = team_color + std::to_string(i);
     server_control_.push_back(
       rclcpp_action::create_server<RobotControl>(
@@ -227,13 +232,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 目標値を取得する
   // 目標値を取得できなければ速度0を目標値とする
   State goal_pose;
+  State final_goal_pose;
   double kick_power = 0.0;
   double dribble_power = 0.0;
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
   if (parser_.parse_goal(
-      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, kick_power,
+      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
 
@@ -287,12 +293,18 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   last_update_time_[robot_id] = current_time;
   last_world_vel_[robot_id] = world_vel;
 
-  // ビジュアライズ用に、目標姿勢を出力する
+  // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
   auto goal_pose_msg = std::make_unique<GoalPose>();
+  auto final_goal_pose_msg = std::make_unique<GoalPose>();
   goal_pose_msg->robot_id = robot_id;
   goal_pose_msg->team_is_yellow = team_is_yellow_;
   goal_pose_msg->pose = goal_pose;
   pub_goal_pose_[robot_id]->publish(std::move(goal_pose_msg));
+
+  final_goal_pose_msg->robot_id = robot_id;
+  final_goal_pose_msg->team_is_yellow = team_is_yellow_;
+  final_goal_pose_msg->pose = final_goal_pose;
+  pub_final_goal_pose_[robot_id]->publish(std::move(final_goal_pose_msg));
 
   // 途中経過を報告する
   if (need_response_[robot_id]) {
