@@ -259,6 +259,21 @@ class RobotOperator(Node):
 
         target = self._xy_their_goal()
         return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+    
+    def move_to_line_to_intersection_with_any_line(self, robot_id, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y, p4_x, p4_y):
+        # 任意の直線p3->p4と直線p1->p2の交点に移動する
+        # 移動するのは線分p1->p2上
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        # 自チームのゴールとボールを結ぶ直線p3->p4を作成
+        line.p3.append(self._xy(p3_x, p3_y))
+        line.p4.append(self._xy(p4_x, p4_y))
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._line_goal(line, keep=True))
 
     def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
         # 直線p1->p2と
