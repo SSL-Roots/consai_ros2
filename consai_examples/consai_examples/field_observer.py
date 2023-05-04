@@ -228,7 +228,7 @@ class FieldObserver(Node):
     def _check_is_ball_in_defense_area(self, ball_pos, our_area=True):
         # ボールがディフェンスエリアに入ったか判定
         threshold_x = self._field_half_x - self._field_defense_x
-        threshold_y = self._field_defense_half_y
+        threshold_y = self._field_defense_half_y + 0.1  # ロボットの半径分マージンをとる
         if self.ball_is_in_our_defense_area() or self.ball_is_in_their_defense_area():
             threshold_x -= self.THRESHOLD_MARGIN
             threshold_y += self.THRESHOLD_MARGIN
