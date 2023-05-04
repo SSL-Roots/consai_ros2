@@ -108,7 +108,7 @@ def main():
                 decisions[role].enable_stop_game_velocity(robot_id)
                 decisions[role].stop(robot_id)
                 decisions[role].disable_stop_game_velocity(robot_id)
-            elif referee.inplay():
+            elif referee.inplay() or referee.force_start():
                 decisions[role].inplay(robot_id)
             elif referee.our_pre_kickoff():
                 decisions[role].our_pre_kickoff(robot_id)
@@ -167,7 +167,7 @@ def main():
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
             else:
-                print("UNDEFINED REFEREE COMMAND!!!")
+                print("UNDEFINED REFEREE COMMAND!!! : {}".format(referee.get_command()))
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
