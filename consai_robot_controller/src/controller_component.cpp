@@ -42,23 +42,21 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
-  std::vector<std::string> prefix_list = {"vx_", "vy_", "vtheta_"};
-  for (const auto & prefix : prefix_list) {
-    declare_parameter(prefix + "p", 1.5);
-    declare_parameter(prefix + "i", 0.0);
-    declare_parameter(prefix + "d", 0.2);
-    declare_parameter(prefix + "i_max", 0.0);
-    declare_parameter(prefix + "i_min", 0.0);
-    declare_parameter(prefix + "antiwindup", true);
-  }
   declare_parameter("max_acceleration_xy", 2.0);
   declare_parameter("max_acceleration_theta", 2.0 * M_PI);
   declare_parameter("max_velocity_xy", 2.0);
   declare_parameter("max_velocity_theta", 2.0 * M_PI);
+  declare_parameter("control_range_xy", 1.0);
+  declare_parameter("control_a_xy", 1.0);
+  declare_parameter("control_a_theta", 0.5);
   max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
   max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
   max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
   max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
+
+  param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
+  param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
+  param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
 
   parser_.set_invert(get_parameter("invert").get_value<bool>());
   parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
@@ -78,15 +76,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       create_publisher<RobotCommand>(
         "robot" + std::to_string(i) + "/command", 10)
     );
-    pub_goal_pose_.push_back(
-      create_publisher<GoalPose>(
-        "robot" + std::to_string(i) + "/goal_pose", 10)
-    );
-
-    pub_final_goal_pose_.push_back(
-      create_publisher<GoalPose>(
-        "robot" + std::to_string(i) + "/final_goal_pose", 10)
-    );
 
     std::string name_space = team_color + std::to_string(i);
     server_control_.push_back(
@@ -102,38 +91,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     );
 
     last_update_time_.push_back(steady_clock_.now());
-
-    // PID制御器の初期化
-    pid_vx_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vx_p").get_value<double>(),
-        get_parameter("vx_i").get_value<double>(),
-        get_parameter("vx_d").get_value<double>(),
-        get_parameter("vx_i_max").get_value<double>(),
-        get_parameter("vx_i_min").get_value<double>(),
-        get_parameter("vx_antiwindup").get_value<bool>()
-      )
-    );
-    pid_vy_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vy_p").get_value<double>(),
-        get_parameter("vy_i").get_value<double>(),
-        get_parameter("vy_d").get_value<double>(),
-        get_parameter("vy_i_max").get_value<double>(),
-        get_parameter("vy_i_min").get_value<double>(),
-        get_parameter("vy_antiwindup").get_value<bool>()
-      )
-    );
-    pid_vtheta_.push_back(
-      std::make_shared<control_toolbox::Pid>(
-        get_parameter("vtheta_p").get_value<double>(),
-        get_parameter("vtheta_i").get_value<double>(),
-        get_parameter("vtheta_d").get_value<double>(),
-        get_parameter("vtheta_i_max").get_value<double>(),
-        get_parameter("vtheta_i_min").get_value<double>(),
-        get_parameter("vtheta_antiwindup").get_value<bool>()
-      )
-    );
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
@@ -155,6 +112,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   }
   goal_handle_.resize(ROBOT_NUM);
 
+  pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
+  pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
+  timer_pub_goal_poses_ = create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
+
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
   sub_geometry_ = create_subscription<GeometryData>(
@@ -172,14 +133,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       auto result = rcl_interfaces::msg::SetParametersResult();
       result.successful = true;
       for (const auto & parameter : parameters) {
-        if (update_pid_gain_from_param(parameter, "vx_", pid_vx_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vx_pid gains.");
-        } else if (update_pid_gain_from_param(parameter, "vy_", pid_vy_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vy_pid gains.");
-        } else if (update_pid_gain_from_param(parameter, "vtheta_", pid_vtheta_)) {
-          RCLCPP_INFO(this->get_logger(), "Update vtheta_pid gains.");
-        }
-
         if (parameter.get_name() == "max_acceleration_xy") {
           max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_acceleration_xy.");
@@ -195,6 +148,18 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         if (parameter.get_name() == "max_velocity_theta") {
           max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_velocity_theta.");
+        }
+        if (parameter.get_name() == "control_range_xy") {
+          param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_range_xy.");
+        }
+        if (parameter.get_name() == "control_a_xy") {
+          param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_a_xy.");
+        }
+        if (parameter.get_name() == "control_a_theta") {
+          param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_a_theta.");
         }
       }
       return result;
@@ -251,17 +216,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot.orientation);
 
     // tanhに反応する区間の係数
-    double range_xy = 1.0;
+    // double range_xy = 1.0;
     // double range_theta = 0.1;
     // 最大速度調整用の係数(a < 1)
-    double a_xy = 1.0;
-    double a_theta = 0.5;
+    // double a_xy = 1.0;
+    // double a_theta = 0.5;
 
     // tanh関数を用いた速度制御
-    world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy * max_velocity_xy_);
-    world_vel.y = ctools::velocity_contol_tanh(diff_y, range_xy, a_xy * max_velocity_xy_);
+    world_vel.x = ctools::velocity_contol_tanh(diff_x, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
+    world_vel.y = ctools::velocity_contol_tanh(diff_y, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
     // sin関数を用いた角速度制御
-    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, a_theta * max_velocity_theta_);
+    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, param_control_a_theta_ * max_velocity_theta_);
   }
 
   // 最大加速度リミットを適用
@@ -294,17 +259,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   last_world_vel_[robot_id] = world_vel;
 
   // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
-  auto goal_pose_msg = std::make_unique<GoalPose>();
-  auto final_goal_pose_msg = std::make_unique<GoalPose>();
-  goal_pose_msg->robot_id = robot_id;
-  goal_pose_msg->team_is_yellow = team_is_yellow_;
-  goal_pose_msg->pose = goal_pose;
-  pub_goal_pose_[robot_id]->publish(std::move(goal_pose_msg));
+  GoalPose goal_pose_msg;
+  goal_pose_msg.robot_id = robot_id;
+  goal_pose_msg.team_is_yellow = team_is_yellow_;
+  goal_pose_msg.pose = goal_pose;
+  goal_poses_map_[robot_id] = goal_pose_msg;
 
-  final_goal_pose_msg->robot_id = robot_id;
-  final_goal_pose_msg->team_is_yellow = team_is_yellow_;
-  final_goal_pose_msg->pose = final_goal_pose;
-  pub_final_goal_pose_[robot_id]->publish(std::move(final_goal_pose_msg));
+  GoalPose final_goal_pose_msg;
+  final_goal_pose_msg.robot_id = robot_id;
+  final_goal_pose_msg.team_is_yellow = team_is_yellow_;
+  final_goal_pose_msg.pose = final_goal_pose;
+  final_goal_poses_map_[robot_id] = final_goal_pose_msg;
 
   // 途中経過を報告する
   if (need_response_[robot_id]) {
@@ -339,9 +304,6 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
   command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
 
-  pid_vx_[robot_id]->reset();
-  pid_vy_[robot_id]->reset();
-  pid_vtheta_[robot_id]->reset();
   last_update_time_[robot_id] = steady_clock_.now();
   pub_command_[robot_id]->publish(std::move(command_msg));
 
@@ -350,6 +312,23 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
     timer_pub_stop_command_[robot_id]->cancel();
     timer_pub_control_command_[robot_id]->reset();
   }
+}
+
+void Controller::on_timer_pub_goal_poses()
+{
+  // goal_posesをpublishするタイマーコールバック関数
+  auto goal_poses = std::make_unique<GoalPoses>();
+  auto final_goal_poses = std::make_unique<GoalPoses>();
+  for(const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
+    if (goal_poses_map_.count(robot_id) > 0) {
+      goal_poses->poses.push_back(goal_poses_map_[robot_id]);
+    }
+    if (final_goal_poses_map_.count(robot_id) > 0) {
+      final_goal_poses->poses.push_back(final_goal_poses_map_[robot_id]);
+    }
+  }
+  pub_goal_poses_->publish(std::move(goal_poses));
+  pub_final_goal_poses_->publish(std::move(final_goal_poses));
 }
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
@@ -375,35 +354,6 @@ void Controller::callback_parsed_referee(const ParsedReferee::SharedPtr msg)
 void Controller::callback_named_targets(const NamedTargets::SharedPtr msg)
 {
   parser_.set_named_targets(msg);
-}
-
-bool Controller::update_pid_gain_from_param(
-  const rclcpp::Parameter & param,
-  const std::string & prefix,
-  std::vector<std::shared_ptr<control_toolbox::Pid>> & pid_controller)
-{
-  // ROSパラメータ変更のcallback内で呼び出される関数
-  // PIDコントローラのゲインを更新する
-  if (param.get_name() == prefix + "p" ||
-    param.get_name() == prefix + "i" ||
-    param.get_name() == prefix + "d" ||
-    param.get_name() == prefix + "i_max" ||
-    param.get_name() == prefix + "i_min" ||
-    param.get_name() == prefix + "antiwindup")
-  {
-    for (auto && pid : pid_controller) {
-      pid->setGains(
-        get_parameter(prefix + "p").get_value<double>(),
-        get_parameter(prefix + "i").get_value<double>(),
-        get_parameter(prefix + "d").get_value<double>(),
-        get_parameter(prefix + "i_max").get_value<double>(),
-        get_parameter(prefix + "i_min").get_value<double>(),
-        get_parameter(prefix + "antiwindup").get_value<bool>()
-      );
-    }
-    return true;
-  }
-  return false;
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(

@@ -28,6 +28,7 @@ set(msg_files
   "msg/ConstraintTheta.msg"
   "msg/ConstraintXY.msg"
   "msg/GoalPose.msg"
+  "msg/GoalPoses.msg"
   "msg/NamedTargets.msg"
   "msg/ParsedReferee.msg"
   "msg/RobotLocalVelocities.msg"

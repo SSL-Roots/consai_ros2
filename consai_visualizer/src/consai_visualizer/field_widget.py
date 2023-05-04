@@ -127,11 +127,15 @@ class FieldWidget(QWidget):
     def set_detection_tracked(self, msg):
         self._detection_tracked = msg
 
-    def set_goal_pose(self, msg, robot_id):
-        self._goal_poses[robot_id] = msg
+    def set_goal_poses(self, msg):
+        self._goal_poses.clear()
+        for goal_pose in msg.poses:
+            self._goal_poses[goal_pose.robot_id] = goal_pose
 
-    def set_final_goal_pose(self, msg, robot_id):
-        self._final_goal_poses[robot_id] = msg
+    def set_final_goal_poses(self, msg):
+        self._final_goal_poses.clear()
+        for goal_pose in msg.poses:
+            self._final_goal_poses[goal_pose.robot_id] = goal_pose
 
     def set_designated_position(self, msg):
         self._designated_position[0] = msg
@@ -303,6 +307,8 @@ class FieldWidget(QWidget):
         pos = self._convert_draw_to_field_pos(self._mouse_current_point)
         ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
         ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
+        ball_replacement.vx.append(0.0)
+        ball_replacement.vy.append(0.0)
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)

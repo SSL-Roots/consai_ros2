@@ -288,6 +288,35 @@ class RobotOperator(Node):
         line.theta = self._theta_look_ball()
         target = self._xy_their_goal()
         return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+    
+    def move_to_cross_line_our_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 直線p1->p2と
+        # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        line.p3.append(self._xy_our_side_center())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+        return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
+
+    def move_to_cross_line_our_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+        # 直線p1->p2と
+        # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
+        line = ConstraintLine()
+
+        # 直線p1->p2を作成
+        line.p1 = self._xy(p1_x, p1_y)
+        line.p2 = self._xy(p2_x, p2_y)
+
+        line.p3.append(self._xy_our_side_center())
+        line.p4.append(self._xy_object_ball())
+        line.theta = self._theta_look_ball()
+        target = self._xy_their_goal()
+        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
 
     def move_to_defend_our_goal_from_ball(self, robot_id, distance):
         # 自チームのゴールとボールを結び、ボールからdistanceだけ離れた位置に移動する
@@ -639,6 +668,14 @@ class RobotOperator(Node):
         their_center = ConstraintXY()
         their_center.normalized = True
         their_center.value_x.append(0.5)
+        their_center.value_y.append(0.0)
+        return their_center
+    
+    def _xy_our_side_center(self):
+        # ConstraintXYの自分サイドの中央を返す
+        their_center = ConstraintXY()
+        their_center.normalized = True
+        their_center.value_x.append(-0.5)
         their_center.value_y.append(0.0)
         return their_center
 
