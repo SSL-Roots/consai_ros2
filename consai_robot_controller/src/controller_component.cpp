@@ -42,23 +42,21 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
-  std::vector<std::string> prefix_list = {"vx_", "vy_", "vtheta_"};
-  for (const auto & prefix : prefix_list) {
-    declare_parameter(prefix + "p", 1.5);
-    declare_parameter(prefix + "i", 0.0);
-    declare_parameter(prefix + "d", 0.2);
-    declare_parameter(prefix + "i_max", 0.0);
-    declare_parameter(prefix + "i_min", 0.0);
-    declare_parameter(prefix + "antiwindup", true);
-  }
   declare_parameter("max_acceleration_xy", 2.0);
   declare_parameter("max_acceleration_theta", 2.0 * M_PI);
   declare_parameter("max_velocity_xy", 2.0);
   declare_parameter("max_velocity_theta", 2.0 * M_PI);
+  declare_parameter("control_range_xy", 1.0);
+  declare_parameter("control_a_xy", 1.0);
+  declare_parameter("control_a_theta", 0.5);
   max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
   max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
   max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
   max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
+
+  param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
+  param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
+  param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
 
   parser_.set_invert(get_parameter("invert").get_value<bool>());
   parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
@@ -151,6 +149,18 @@ Controller::Controller(const rclcpp::NodeOptions & options)
           max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_velocity_theta.");
         }
+        if (parameter.get_name() == "control_range_xy") {
+          param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_range_xy.");
+        }
+        if (parameter.get_name() == "control_a_xy") {
+          param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_a_xy.");
+        }
+        if (parameter.get_name() == "control_a_theta") {
+          param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
+          RCLCPP_INFO(this->get_logger(), "Update control_a_theta.");
+        }
       }
       return result;
     };
@@ -206,17 +216,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot.orientation);
 
     // tanhに反応する区間の係数
-    double range_xy = 1.0;
+    // double range_xy = 1.0;
     // double range_theta = 0.1;
     // 最大速度調整用の係数(a < 1)
-    double a_xy = 1.0;
-    double a_theta = 0.5;
+    // double a_xy = 1.0;
+    // double a_theta = 0.5;
 
     // tanh関数を用いた速度制御
-    world_vel.x = ctools::velocity_contol_tanh(diff_x, range_xy, a_xy * max_velocity_xy_);
-    world_vel.y = ctools::velocity_contol_tanh(diff_y, range_xy, a_xy * max_velocity_xy_);
+    world_vel.x = ctools::velocity_contol_tanh(diff_x, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
+    world_vel.y = ctools::velocity_contol_tanh(diff_y, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
     // sin関数を用いた角速度制御
-    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, a_theta * max_velocity_theta_);
+    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, param_control_a_theta_ * max_velocity_theta_);
   }
 
   // 最大加速度リミットを適用

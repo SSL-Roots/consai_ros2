@@ -115,6 +115,9 @@ private:
   double max_acceleration_theta_;
   double max_velocity_xy_;
   double max_velocity_theta_;
+  double param_control_range_xy_;
+  double param_control_a_xy_;
+  double param_control_a_theta_;
 };
 
 }  // namespace consai_robot_controller
