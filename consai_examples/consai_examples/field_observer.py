@@ -26,6 +26,7 @@ from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import DetectionRobot
 from robocup_ssl_msgs.msg import TrackedRobot
 
+from consai_msgs.msg import State2D
 import consai_examples.geometry_tools as tool
 
 # フィールド状況を観察し、ボールの位置を判断したり
@@ -75,16 +76,12 @@ class FieldObserver(Node):
         self._their_robot = TrackedRobot()
         self.robots = TrackedRobot()
 
-        # TODO: 変数が多いので、posとvelの2つにしたい。consai_msgsのState2D型を使用するとx, y, thetaを表現できる
+        # 味方ロボットの位置と速度を初期化
         self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
-        self.our_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.our_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
-
+        # 敵ロボットの位置と速度を初期化
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
-        self.their_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.their_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
         self._field_x = 12.0  # meters
         self._field_half_x = self._field_x * 0.5
@@ -108,14 +105,9 @@ class FieldObserver(Node):
         # リストを初期化する
         set_none = lambda a_list : [None] * len(a_list)
         self.our_robots_pos = set_none(self.our_robots_pos)
-        self.our_robots_angle = set_none(self.our_robots_angle)
         self.our_robots_vel = set_none(self.our_robots_vel)
-        self.our_robots_vel_angle = set_none(self.our_robots_vel_angle)
-
         self.their_robots_pos = set_none(self.their_robots_pos)
-        self.their_robots_angle = set_none(self.their_robots_angle)
         self.their_robots_vel = set_none(self.their_robots_vel)
-        self.their_robots_vel_angle = set_none(self.their_robots_vel_angle)
 
         for robot in msg.robots:
             # visibilityが小さいときはロボットが消えたと判断する
@@ -125,16 +117,12 @@ class FieldObserver(Node):
                 continue
             robot_id = robot.robot_id.id
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
-            # TODO: ロボットの座標表現はリストではなくState2Dを使用する
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
             object_str = "self." + team_str + "_robots_"
-            eval(object_str + "pos")[robot_id] = [robot.pos.x, robot.pos.y]
-            eval(object_str + "angle")[robot_id] = robot.orientation
+            eval(object_str + "pos")[robot_id] = robot.pos
 
             if robot.vel:
-                eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
-            if robot.vel_angular:
-                eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
+                eval(object_str + "vel")[robot_id] = robot.vel[0]
 
     def get_robots_id(self, robots_info):
         # フィールド上にいるロボットのIDをリスト化
@@ -676,13 +664,13 @@ class FieldObserver(Node):
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
-                target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[_id][0] > their_robots_pos[robot_id][0]]
+                target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[_id].x > their_robots_pos[robot_id].x]
             # パサーより前方にいる相手ロボットを計算対象とするときの処理
             else:
                 target_their_robots_id = forward_their_robots_id
 
             # ロボットの位置と長半径（移動距離）をロボットごとに格納
-            their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * abs(their_robots_vel[i][0]) + robot_r] for i in target_their_robots_id]
+            their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robots_id]
 
             # 相手ロボットが存在するときの処理
             if len(target_their_robots_id) != 0:
@@ -750,13 +738,14 @@ class FieldObserver(Node):
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
             estimated_displacement = 0.0
-            vel_norm = math.sqrt(target_robot_vel[0] ** 2 + target_robot_vel[1] ** 2)
+            vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
 
             # dt時間後の移動距離を加算する
             if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
-                estimated_displacement = (abs(target_robot_vel[0]) * dt + robot_r) * target_robot_vel[0] / vel_norm
+                estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
+                # estimated_displacement = (abs(target_robot_vel[0]) * dt + robot_r) * target_robot_vel[0] / vel_norm
 
-            if my_robot_pos[0] < target_robot_pos[0] + estimated_displacement:
+            if my_robot_pos.x < target_robot_pos.x + estimated_displacement:
                 forward_robots_id.append(robot_id)
 
         # forward_robots_id = [_id for _id in robots_id
