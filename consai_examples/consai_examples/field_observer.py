@@ -76,6 +76,9 @@ class FieldObserver(Node):
         self._their_robot = TrackedRobot()
         self.robots = TrackedRobot()
 
+        # ロボットのIDリストを初期化(存在するIDのみリストに格納)
+        self.our_robots_id = []
+        self.their_robots_id = []
         # 味方ロボットの位置と速度を初期化
         self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
@@ -103,6 +106,8 @@ class FieldObserver(Node):
             self._ball = msg.balls[0]
 
         # リストを初期化する
+        self.our_robots_id = []
+        self.their_robots_id = []
         set_none = lambda a_list : [None] * len(a_list)
         self.our_robots_pos = set_none(self.our_robots_pos)
         self.our_robots_vel = set_none(self.our_robots_vel)
@@ -119,8 +124,8 @@ class FieldObserver(Node):
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
             object_str = "self." + team_str + "_robots_"
+            eval(object_str + "id").append(robot_id)
             eval(object_str + "pos")[robot_id] = robot.pos
-
             if robot.vel:
                 eval(object_str + "vel")[robot_id] = robot.vel[0]
 
@@ -628,6 +633,8 @@ class FieldObserver(Node):
         dt = 0.5
 
         # 各ロボットの位置と速度を取得
+        our_robots_id = copy.deepcopy(self.our_robots_id)
+        their_robots_id = copy.deepcopy(self.their_robots_id)
         our_robots_pos = copy.deepcopy(self.our_robots_pos)
         their_robots_pos = copy.deepcopy(self.their_robots_pos)
         our_robots_vel = copy.deepcopy(self.our_robots_vel)
@@ -646,9 +653,9 @@ class FieldObserver(Node):
             return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        forward_our_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robots_id, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
         # パサーよりも前にいる敵ロボットIDリストを取得
-        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robots_pos, their_robots_vel, robot_r, dt)
+        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robots_id, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
         if len(forward_our_robots_id) == 0:
@@ -721,13 +728,13 @@ class FieldObserver(Node):
 
         return sorted_robots_id
 
-    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
+    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=None):
         # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = self.get_robots_id(robots_vel)
+        # robots_id = self.get_robots_id(robots_vel)
         
         # 自身のIDを削除
         if is_delete_my_id:
-            if is_delete_my_id in robots_id:
+            if robots_id in robots_id:
                 robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
