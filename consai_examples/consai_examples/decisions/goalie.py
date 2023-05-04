@@ -59,12 +59,12 @@ class GoaleDecision(DecisionBase):
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA and not self._field_observer.ball_is_moving():
             if self._act_id != ID_IN_DEFENSE:
                 # レシーバ候補のロボットIDリストを取得
-                receiver_robots_id = self._field_observer.get_receiver_robots_id(robot_id)
+                can_pass_id_list, can_shoot_id_list = self._field_observer.get_open_path_id_list(robot_id)
 
                 # リストが空でない場合
-                if 0 < len(receiver_robots_id):
+                if 0 < len(can_pass_id_list):
                     # リストの先頭のロボットにパス
-                    self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+                    self._operator.pass_to_our_robot(robot_id, can_pass_id_list[0])
                 # リストが空の場合
                 else:
                     # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
