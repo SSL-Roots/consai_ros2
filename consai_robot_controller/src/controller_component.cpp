@@ -351,15 +351,16 @@ void Controller::on_timer_pub_goal_poses()
 {
   // goal_posesをpublishするタイマーコールバック関数
   auto goal_poses = std::make_unique<GoalPoses>();
-  for (const auto & goal_pose : goal_poses_map_) {
-    goal_poses->poses.push_back(goal_pose.second);
+  auto final_goal_poses = std::make_unique<GoalPoses>();
+  for(const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
+    if (goal_poses_map_.count(robot_id) > 0) {
+      goal_poses->poses.push_back(goal_poses_map_[robot_id]);
+    }
+    if (final_goal_poses_map_.count(robot_id) > 0) {
+      final_goal_poses->poses.push_back(final_goal_poses_map_[robot_id]);
+    }
   }
   pub_goal_poses_->publish(std::move(goal_poses));
-
-  auto final_goal_poses = std::make_unique<GoalPoses>();
-  for (const auto & goal_pose : final_goal_poses_map_) {
-    final_goal_poses->poses.push_back(goal_pose.second);
-  }
   pub_final_goal_poses_->publish(std::move(final_goal_poses));
 }
 
