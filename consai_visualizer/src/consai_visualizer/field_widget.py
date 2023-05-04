@@ -307,6 +307,8 @@ class FieldWidget(QWidget):
         pos = self._convert_draw_to_field_pos(self._mouse_current_point)
         ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
         ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
+        ball_replacement.vx.append(0.0)
+        ball_replacement.vy.append(0.0)
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
