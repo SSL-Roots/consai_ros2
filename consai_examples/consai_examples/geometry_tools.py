@@ -41,16 +41,25 @@ def get_line_parameter(pose1, pose2):
     # 2点間を結ぶ直線の傾きと切片を求める関数
     diff = get_diff_xy(pose1, pose2)
    
-    # 直線の傾き
-    if diff.x == 0:
-        slope = diff.x
+    # 計算できた場合Ture
+    flag = True
+
+    # 2点が縦に並ぶ場合
+    if math.isclose(diff.x, 0.0):
+        slope = None
+        intercept = None
+        flag = False
+    # 2点が横に並ぶ場合
+    elif math.isclose(diff.y, 0.0):
+        slope = 0
+        intercept = pose1.y
     else:
+        # 直線の傾き
         slope = diff.y / diff.x
+        # 直線の切片
+        intercept = pose2.y - slope * pose2.x
 
-    # 直線の切片
-    intercept = pose2.y - slope * pose2.x
-
-    return slope, intercept
+    return slope, intercept, flag
 
 def get_angle(from_pose, to_pose):
     # ワールド座標系でfrom_poseからto_poseを結ぶ直線の角度を得る
