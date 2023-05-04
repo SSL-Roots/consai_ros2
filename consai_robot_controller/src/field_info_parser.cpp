@@ -148,7 +148,7 @@ bool FieldInfoParser::parse_goal(
 
 bool FieldInfoParser::parse_goal(
   const std::shared_ptr<const RobotControl::Goal> goal,
-  const TrackedRobot & my_robot, State & parsed_pose,
+  const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
   double & kick_power, double & dribble_power) const
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
@@ -159,6 +159,9 @@ bool FieldInfoParser::parse_goal(
   if (!parse_goal(goal, parsed_pose)) {
     return false;
   }
+
+  // ボール受取や、衝突回避に影響されない、最終目標姿勢を格納する
+  final_goal_pose = parsed_pose;
 
   // 以下、ボールが関わる処理のためボール情報を取得する
   TrackedBall ball;
