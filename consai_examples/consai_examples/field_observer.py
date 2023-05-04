@@ -26,6 +26,7 @@ from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import DetectionRobot
 from robocup_ssl_msgs.msg import TrackedRobot
 
+from consai_msgs.msg import State2D
 import consai_examples.geometry_tools as tool
 
 # フィールド状況を観察し、ボールの位置を判断したり
@@ -75,16 +76,15 @@ class FieldObserver(Node):
         self._their_robot = TrackedRobot()
         self.robots = TrackedRobot()
 
-        # TODO: 変数が多いので、posとvelの2つにしたい。consai_msgsのState2D型を使用するとx, y, thetaを表現できる
+        # ロボットのIDリストを初期化(存在するIDのみリストに格納)
+        self.our_robot_id_list = []
+        self.their_robot_id_list = []
+        # 味方ロボットの位置と速度を初期化
         self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
-        self.our_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.our_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
-
+        # 敵ロボットの位置と速度を初期化
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
-        self.their_robots_angle = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
-        self.their_robots_vel_angle = [None] * self.MAX_ROBOT_NUM
 
         self._field_x = 12.0  # meters
         self._field_half_x = self._field_x * 0.5
@@ -106,16 +106,13 @@ class FieldObserver(Node):
             self._ball = msg.balls[0]
 
         # リストを初期化する
+        self.our_robot_id_list = []
+        self.their_robot_id_list = []
         set_none = lambda a_list : [None] * len(a_list)
         self.our_robots_pos = set_none(self.our_robots_pos)
-        self.our_robots_angle = set_none(self.our_robots_angle)
         self.our_robots_vel = set_none(self.our_robots_vel)
-        self.our_robots_vel_angle = set_none(self.our_robots_vel_angle)
-
         self.their_robots_pos = set_none(self.their_robots_pos)
-        self.their_robots_angle = set_none(self.their_robots_angle)
         self.their_robots_vel = set_none(self.their_robots_vel)
-        self.their_robots_vel_angle = set_none(self.their_robots_vel_angle)
 
         for robot in msg.robots:
             # visibilityが小さいときはロボットが消えたと判断する
@@ -125,16 +122,13 @@ class FieldObserver(Node):
                 continue
             robot_id = robot.robot_id.id
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
-            # TODO: ロボットの座標表現はリストではなくState2Dを使用する
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
+            # TODO: robotとrobotsが混ざっているので直したい
             object_str = "self." + team_str + "_robots_"
-            eval(object_str + "pos")[robot_id] = [robot.pos.x, robot.pos.y]
-            eval(object_str + "angle")[robot_id] = robot.orientation
-
-            if robot.vel:
-                eval(object_str + "vel")[robot_id] = [robot.vel[0].x, robot.vel[0].y]
-            if robot.vel_angular:
-                eval(object_str + "vel_angle")[robot_id] = robot.vel_angular
+            eval("self." + team_str + "_robot_id_list").append(robot_id)
+            eval(object_str + "pos")[robot_id] = State2D(x=robot.pos.x, y=robot.pos.y, theta=robot.orientation)
+            if robot.vel and robot.vel_angular:
+                eval(object_str + "vel")[robot_id] = State2D(x=robot.vel[0].x, y=robot.vel[0].y, theta=robot.vel_angular[0])
 
     def get_robots_id(self, robots_info):
         # フィールド上にいるロボットのIDをリスト化
@@ -631,7 +625,7 @@ class FieldObserver(Node):
         # パス可能なロボットIDを格納するリスト
         robots_to_pass = []
         # 計算対象にする相手ロボットIDを格納するリスト
-        target_their_robots_id = []
+        target_their_robot_id_list = []
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
         robot_r = 0.4
         # 前方にいる相手ロボットの数と比較する用の変数
@@ -640,54 +634,52 @@ class FieldObserver(Node):
         dt = 0.5
 
         # 各ロボットの位置と速度を取得
+        our_robot_id_list = copy.deepcopy(self.our_robot_id_list)
+        their_robot_id_list = copy.deepcopy(self.their_robot_id_list)
         our_robots_pos = copy.deepcopy(self.our_robots_pos)
         their_robots_pos = copy.deepcopy(self.their_robots_pos)
         our_robots_vel = copy.deepcopy(self.our_robots_vel)
         their_robots_vel = copy.deepcopy(self.their_robots_vel)
 
-        # パサーの位置
-        if my_robot_id >= len(our_robots_pos):
+        # パサーがフィールドにいない場合
+        if my_robot_id not in our_robot_id_list:
             return []
+        # パサーの位置が検出されていない場合
         my_robot_pos = our_robots_pos[my_robot_id]
         if my_robot_pos is None:
             return []
 
-        # エラー対策
-        # TODO: 時々Vector2形式でデータが混入するので対策が必要
-        if type(our_robots_vel[my_robot_id]) is not list:
-            return []
-
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        forward_our_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robot_id_list, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
         # パサーよりも前にいる敵ロボットIDリストを取得
-        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robots_pos, their_robots_vel, robot_r, dt)
+        forward_their_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robot_id_list, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
-        if len(forward_our_robots_id) == 0:
-            return forward_our_robots_id
+        if len(forward_our_robot_id) == 0:
+            return forward_our_robot_id
 
         # 自分と各ロボットまでの距離を基にロボットIDをソート
-        our_robots_id = self._sort_by_from_robot_distance(my_robot_id, forward_our_robots_id, our_robots_pos)
+        our_robot_id_list = self._sort_by_from_robot_distance(my_robot_id, forward_our_robot_id, our_robots_pos)
 
         # 各レシーバー候補ロボットに対してパス可能か判定
-        for _id in our_robots_id:
+        for _id in our_robot_id_list:
             # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
-            slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot = tool.get_line_parameter(our_robots_pos[_id], my_robot_pos)
+            slope_from_passer_to_our_robot, intercept_from_passer_to_our_robot, flag = tool.get_line_parameter(our_robots_pos[_id], my_robot_pos)
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
-                target_their_robots_id = [robot_id for robot_id in forward_their_robots_id if our_robots_pos[_id][0] > their_robots_pos[robot_id][0]]
+                target_their_robot_id_list = [robot_id for robot_id in forward_their_robot_id if our_robots_pos[_id].x > their_robots_pos[robot_id].x]
             # パサーより前方にいる相手ロボットを計算対象とするときの処理
             else:
-                target_their_robots_id = forward_their_robots_id
+                target_their_robot_id_list = forward_their_robot_id
 
             # ロボットの位置と長半径（移動距離）をロボットごとに格納
-            their_robot_state = [[their_robots_pos[i][0], their_robots_pos[i][1], dt * abs(their_robots_vel[i][0]) + robot_r] for i in target_their_robots_id]
+            their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robot_id_list]
 
             # 相手ロボットが存在するときの処理
-            if len(target_their_robots_id) != 0:
+            if len(target_their_robot_id_list) != 0:
                 # 対象となる相手ロボット全てに対してパスコースを妨げるような動きをしているか計算
-                for their_index in range(len(target_their_robots_id)):
+                for their_index in range(len(target_their_robot_id_list)):
                     # 判別式を解くための変数
                     a_kai = slope_from_passer_to_our_robot ** 2 + 1
                     b_kai = 2 * ((intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) * slope_from_passer_to_our_robot - their_robot_state[their_index][0])
@@ -699,7 +691,7 @@ class FieldObserver(Node):
                     # 共有点を持たないときの処理
                     if common_point < 0:
                         # 対象としている相手ロボットすべてにパスコースが妨害されないときの処理
-                        if check_count >= len(target_their_robots_id) - 1:
+                        if check_count >= len(target_their_robot_id_list) - 1:
                             # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                             check_count = 0
                             # パスできる味方ロボットとしてリストに格納
@@ -733,13 +725,11 @@ class FieldObserver(Node):
 
         return sorted_robots_id
 
-    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
-        # フィールド上にいる味方ロボットのIDのみリスト化
-        robots_id = self.get_robots_id(robots_vel)
+    def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_id, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         
         # 自身のIDを削除
         if is_delete_my_id:
-            if is_delete_my_id in robots_id:
+            if my_robot_id in robots_id:
                 robots_id.remove(my_robot_id)
 
         # パサーより前に存在するロボットIDをリスト化
@@ -750,13 +740,16 @@ class FieldObserver(Node):
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
             estimated_displacement = 0.0
-            vel_norm = math.sqrt(target_robot_vel[0] ** 2 + target_robot_vel[1] ** 2)
+            if target_robot_vel is not None:
+                vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
+            else:
+                vel_norm = 0.0
 
             # dt時間後の移動距離を加算する
             if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
-                estimated_displacement = (abs(target_robot_vel[0]) * dt + robot_r) * target_robot_vel[0] / vel_norm
+                estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
 
-            if my_robot_pos[0] < target_robot_pos[0] + estimated_displacement:
+            if my_robot_pos.x < target_robot_pos.x + estimated_displacement:
                 forward_robots_id.append(robot_id)
 
         # forward_robots_id = [_id for _id in robots_id
