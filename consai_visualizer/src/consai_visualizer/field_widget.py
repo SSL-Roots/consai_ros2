@@ -127,11 +127,13 @@ class FieldWidget(QWidget):
     def set_detection_tracked(self, msg):
         self._detection_tracked = msg
 
-    def set_goal_pose(self, msg, robot_id):
-        self._goal_poses[robot_id] = msg
+    def set_goal_poses(self, msg):
+        for goal_pose in msg.poses:
+            self._goal_poses[goal_pose.robot_id] = goal_pose
 
-    def set_final_goal_pose(self, msg, robot_id):
-        self._final_goal_poses[robot_id] = msg
+    def set_final_goal_poses(self, msg):
+        for goal_pose in msg.poses:
+            self._final_goal_poses[goal_pose.robot_id] = goal_pose
 
     def set_designated_position(self, msg):
         self._designated_position[0] = msg

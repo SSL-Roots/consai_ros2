@@ -19,7 +19,7 @@ from functools import partial
 import os
 
 from ament_index_python.resources import get_resource
-from consai_msgs.msg import GoalPose
+from consai_msgs.msg import GoalPoses
 from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
 import consai_visualizer.referee_parser as ref_parser
@@ -79,17 +79,10 @@ class Visualizer(Plugin):
             NamedTargets, 'named_targets',
             self._widget.field_widget.set_named_targets, 10)
 
-        self._sub_goal_pose = []
-        self._sub_final_goal_pose = []
-        for i in range(16):
-            topic_name = 'robot' + str(i) + '/goal_pose'
-            self._sub_goal_pose.append(self._node.create_subscription(
-                GoalPose, topic_name,
-                partial(self._widget.field_widget.set_goal_pose, robot_id=i), 10))
-            topic_name = 'robot' + str(i) + '/final_goal_pose'
-            self._sub_final_goal_pose.append(self._node.create_subscription(
-                GoalPose, topic_name,
-                partial(self._widget.field_widget.set_final_goal_pose, robot_id=i), 10))
+        self._sub_goal_poses = self._node.create_subscription(
+                GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
+        self._sub_final_goal_poses = self._node.create_subscription(
+                GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
 
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
