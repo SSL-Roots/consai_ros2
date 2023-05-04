@@ -70,6 +70,7 @@ class FieldObserver(Node):
         self._ball_is_moving = False
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._ball = TrackedBall()
+        self._ball_move_point = TrackedBall()
         self._detection = TrackedFrame()
 
         self._our_robot = TrackedRobot()
@@ -104,6 +105,7 @@ class FieldObserver(Node):
             self._update_ball_moving_state(msg.balls[0])
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
+            self._update_ball_move_point(msg.balls[0])
 
         # リストを初期化する
         self.our_robot_id_list = []
@@ -267,7 +269,19 @@ class FieldObserver(Node):
             self._ball_to_our_field = True
         else:
             self._ball_to_our_field = False
-
+    
+    def _update_ball_move_point(self, ball):
+        self._ball_move_point = copy.deepcopy(self._ball)
+        
+        # 動いてないならボール位置と同じ
+        if not self._ball_is_moving:
+            return
+        
+        velocity = ball.vel[0]
+        direction = math.atan2(velocity.y, velocity.x)
+        self._ball_move_point.pos.x = math.cos(direction) + ball.pos.x
+        self._ball_move_point.pos.y = math.sin(direction) + ball.pos.y
+        
     def _update_ball_zone_state(self, ball_pos):
         ZONE_THRESHOLD = 0.2  # meters
         # ボールがどのZONEに存在するのかを判定する
@@ -618,6 +632,10 @@ class FieldObserver(Node):
     def get_ball_pos(self):
         ball_pos = [self._ball.pos.x, self._ball.pos.y]
         return ball_pos
+    
+    def get_ball_move_pos(self):
+        ball_move_pos = [self._ball_move_point.pos.x, self._ball_move_point.pos.y]
+        return ball_move_pos
 
     def get_receiver_robots_id(self, my_robot_id, select_forward_between=1):
         # パス可能なロボットIDのリストを返す関数
