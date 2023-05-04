@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import math
+import copy
 
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import TrackedBall
@@ -57,6 +58,22 @@ class FieldObserver(Node):
 
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
+
+    GOAL_POST_Y = 0.9 # meters
+    GOAL_POINT = 5 # ゴール候補のポイント
+    SHOOTS_POS = [[6.0, 0.9], [6.0, 0.45], [6.0, 0.0], [6.0, -0.45], [6.0, -0.9]]
+    GOAL_POST_TOP = [6, 0.9] # meters
+    GOAL_POST_BOTTOM = [6, -0.9] # meters
+    GOAL_CENTER = [6, 0] # meters
+    GOAL_TOP_CENTER = [6, 0.45] # meters
+    GOAL_CENTER_BOTTOM = [6, -0.45] # meters
+    GOAL_POST_WIDTH = 1.8 # meters
+    ROBOT_RADIUS  = 0.1 # meters
+    GOAL_POST_TOP_NUM = 0
+    GOAL_TOP_CENTER_NUM = 1
+    GOAL_CENTER_NUM = 2
+    GOAL_CENTER_BOTTOM_NUM = 3
+    GOAL_POST_BOTTOM_NUM = 4
 
     def __init__(self, our_team_is_yellow=False):
         super().__init__('field_observer')
@@ -736,7 +753,7 @@ class FieldObserver(Node):
     def _forward_robots_id(self, my_robot_id, my_robot_pos, robots_pos, robots_vel, robot_r, dt, is_delete_my_id=False):
         # フィールド上にいるロボットのIDのみリスト化
         robots_id = self.get_robots_id(robots_pos)
-        
+
         if is_delete_my_id:
             # 自身のIDを削除
             robots_id.remove(my_robot_id)
@@ -766,54 +783,68 @@ class FieldObserver(Node):
 
     # シューターが相手ゴールに向かってシュートできるかを判定する関数
     def get_shoot_point(self, my_robot_id):
-        # ゴールポストのx座標
-        goal_post_x = 6
-        # ゴールポストのy座標
-        goal_post_y = 0.9
-        # フィールド中央から見たゴールポストの座標
-        goal_post = [[goal_post_x, goal_post_y], [goal_post_x, - goal_post_y]]
-        # シュートを打つ目標点の座標
-        goal_center_target = [goal_post_x, 0]
-        # ロボットの実直径
-        robot_diameter = 0.2
         # ロボットの想定移動時間（移動しないものとして扱う）
         dt = 0
-
+        # 相手のゴーリーの座標
+        their_goalie = [0.0, 0.0]
+        # 前方にいる相手ロボットの数と比較する用の変数
+        check_count = 0
+        # シュートを打つ目標点の座標
+        goal_target_id = []
         # 味方ロボットの位置、相手ロボットの位置と速度を取得
-        our_robots_pos = self.our_robots_pos
-        their_robots_pos = self.their_robots_pos
-        their_robots_vel = self.their_robots_vel
+        OUR_ROBOTS_POS = copy.deepcopy(self.our_robots_pos)
+        THEIR_ROBOTS_POS = copy.deepcopy(self.their_robots_pos)
+        THEIR_ROBOTS_VEL = copy.deepcopy(self.their_robots_vel)
 
-        my_robot_pos = our_robots_pos[my_robot_id]
+        # シューターの位置を取得
+        my_robot_pos = OUR_ROBOTS_POS[my_robot_id]
 
         # ボールを持っている味方ロボットより前方にいる相手ロボットのIDをリストに格納する
-        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robots_pos, their_robots_vel, robot_diameter, dt)
+        forward_their_robots_id = self._forward_robots_id(my_robot_id, my_robot_pos, THEIR_ROBOTS_POS, THEIR_ROBOTS_VEL, self.ROBOT_RADIUS, dt)
         # シューターの前方に相手ロボットが存在しない場合
         if len(forward_their_robots_id) == 0:
             # 相手ゴールの中央の座標を返す
-            return goal_center_target
+            return [self.GOAL_CENTER_NUM]
 
+        # シューターとシュート候補点を結ぶ直線の傾きと切片を取得
+        # slope_shooter[self.GOAL_POST_TOP_NUM], intercept_shooter[self.GOAL_POST_TOP_NUM] = tool.get_line_parameter(self.GOAL_POST_TOP, my_robot_pos)
+        # slope_shooter[self.GOAL_CENTER_NUM], intercept_shooter[self.GOAL_CENTER_NUM] = tool.get_line_parameter(self.GOAL_CENTER, my_robot_pos)
+        # slope_shooter[self.GOAL_POST_BOTTOM_NUM], intercept_shooter[self.GOAL_POST_BOTTOM_NUM] = tool.get_line_parameter(self.GOAL_POST_BOTTOM, my_robot_pos)
+        # slope_shooter[self.GOAL_TOP_CENTER_NUM], intercept_shooter[self.GOAL_TOP_CENTER_NUM] = tool.get_line_parameter(self.GOAL_TOP_CENTER, my_robot_pos)
+        # slope_shooter[self.GOAL_CENTER_BOTTOM_NUM], intercept_shooter[self.GOAL_CENTER_BOTTOM_NUM] = tool.get_line_parameter(self.GOAL_CENTER_BOTTOM, my_robot_pos)
+        for shoot_pos in range(self.GOAL_POINT):
+            slope_shooter, intercept_shooter = tool.get_line_parameter(self.SHOOTS_POS[shoot_pos], my_robot_pos)
+            for robot_id in range(len(forward_their_robots_id)):
+                # 判別式を解くための変数
+                a_kai = slope_shooter ** 2 + 1
+                b_kai = 2 * ((intercept_shooter - THEIR_ROBOTS_POS[robot_id][1]) * slope_shooter - THEIR_ROBOTS_POS[robot_id][0])
+                c_kai = THEIR_ROBOTS_POS[robot_id][0] ** 2 + (intercept_shooter - THEIR_ROBOTS_POS[robot_id][1]) ** 2 - self.ROBOT_RADIUS ** 2
+
+                # 共有点を持つか判定
+                common_point = b_kai ** 2 - 4 * a_kai * c_kai
+
+                # 共有点を持たないときの処理
+                if common_point < 0:
+                    # 対象としている相手ロボットすべてにシュートコースが妨害されないときの処理
+                    if check_count >= len(forward_their_robots_id) - 1:
+                        # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
+                        check_count = 0
+                        # シュートできるゴール内のポイントIDをリストに格納
+                        goal_target_id.append(shoot_pos)
+                    # まだすべての相手ロボットに対して計算を行っていない場合の処理
+                    else:
+                        # 何台の相手ロボットに妨害されないかをカウントする変数をインクリメント
+                        check_count += 1
+                # 共有点を持つときの処理
+                else:
+                    # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
+                    check_count = 0
+                    break
+        
+        # ゴーリーと反対側をシュートの優先候補に設定し、戻り値に設定
         for robot_id in forward_their_robots_id:
-            # パサーとレシーバー候補ロボットを結ぶ直線の傾きと切片を取得
-            slope_from_shooter_to_goal, intercept_from_shooter_to_goal = tool.get_line_parameter(their_robots_pos[robot_id], our_robots_pos[my_robot_id])
-
-            # シューターから妨害する相手ロボットとの直線と相手ゴールのラインとの交点算出
-            edge_of_goal_possible_area = slope_from_shooter_to_goal * goal_post_x + intercept_from_shooter_to_goal
-
-            # ゴールポストに近い側をゴールできる範囲の端に設定
-            if abs(goal_post[0][1] - edge_of_goal_possible_area) < abs(goal_post[1][1] - edge_of_goal_possible_area) and abs(edge_of_goal_possible_area) < goal_post_y:
-                goal_post[0][1] = edge_of_goal_possible_area
-            elif abs(goal_post[0][1] - edge_of_goal_possible_area) > abs(goal_post[1][1] - edge_of_goal_possible_area) and abs(edge_of_goal_possible_area) < goal_post_y:
-                goal_post[1][1] = edge_of_goal_possible_area
-
-        # シュート可能なゴールの幅
-        goal_width = goal_post[0][1] - goal_post[1][1]
-
-        # ロボット2台分の直径よりもゴールできる幅が広いときはその範囲の中心座標を返す
-        if goal_width > robot_diameter * 2:
-            goal_center_target[1] = goal_width / 2 - goal_post_y
-        # ロボットの直径よりもゴールできる幅が小さければ空のリストを返す
-        else:
-            goal_center_target = []
-        return goal_center_target
-    
+            if their_goalie[0] < THEIR_ROBOTS_POS[robot_id][1] and -self._field_defense_half_y < THEIR_ROBOTS_POS[robot_id][1] and THEIR_ROBOTS_POS[robot_id][1] < self._field_defense_half_y:
+                their_goalie_id = robot_id
+        if THEIR_ROBOTS_POS[their_goalie_id][1] > 0:
+            goal_target_id = sorted(goal_target_id, reverse=True)
+        return goal_target_id

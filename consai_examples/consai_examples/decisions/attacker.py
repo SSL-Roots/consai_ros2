@@ -51,8 +51,8 @@ class AttackerDecision(DecisionBase):
         ID_INPLAY = self.ACT_ID_INPLAY + 0
         ID_IN_OUR_DEFENSE = self.ACT_ID_INPLAY + 1
         ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
-        ID_SHOOT = self.ACT_ID_INPLAY + 3
-        ID_PASS = self.ACT_ID_INPLAY + 4
+        ID_SHOOT_PASS = self.ACT_ID_INPLAY + 3
+        ID_NO_SHOOT_PASS = self.ACT_ID_INPLAY + 10
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
@@ -68,20 +68,25 @@ class AttackerDecision(DecisionBase):
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
-        # 指定座標に向けてシュートする
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
-            if self._act_id != ID_SHOOT:
+        # 指定座標に向けてシュートまたはパスをする
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE and self._act_id != ID_NO_SHOOT_PASS:
+            if self._act_id != ID_SHOOT_PASS:
                 shoot_point = FieldObserver.get_shoot_point(robot_id)
+                receiver_robots_id = FieldObserver.get_receiver_robots_id(robot_id)
+                # 指定座標に向けてシュートする
                 if len(shoot_point) > 0:
-                    self._operator.shoot_to(robot_id, shoot_point[0], shoot_point[1])
-                self._act_id = ID_SHOOT
-
-        if self._act_id != ID_PASS:
-            # レシーバ候補のロボットIDリストを取得
-            receiver_robots_id = self._field_observer.get_receiver_robots_id(robot_id)
-            if len(receiver_robots_id) > 0:
-                self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
-            self._act_id = ID_PASS
+                    self._operator.shoot_to(robot_id, FieldObserver.SHOOTS_POS[shoot_point][0], FieldObserver.SHOOTS_POS[shoot_point][1])
+                    self._act_id = ID_SHOOT_PASS
+                # 前方のパスが出せるロボットにパスを出す
+                elif len(receiver_robots_id) > 0:
+                    # レシーバ候補のロボットIDリストを取得
+                    self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+                # シュートもパスもできないときはこの条件に入らないように設定
+                else:
+                    self._act_id = ID_NO_SHOOT_PASS
+                    return
+                self._act_id = ID_SHOOT_PASS
+            return
 
         # ゴールに向かってシュートする
         if self._act_id != ID_INPLAY:

@@ -465,6 +465,13 @@ def test_star_pass():
     while operator_node.all_robots_are_free() is False:
         pass
 
+def test():
+    while(1):
+        if observer_node.our_robots_pos[0] != None:
+            break
+    ans = observer_node.get_shoot_point(4)
+    print(ans)
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
@@ -483,7 +490,8 @@ def main():
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # test_use_named_targets()
-    test_star_pass()
+    # test_star_pass()
+    test()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
