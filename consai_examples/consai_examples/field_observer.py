@@ -78,7 +78,7 @@ class FieldObserver(Node):
 
         # ロボットのIDリストを初期化(存在するIDのみリストに格納)
         self.our_robot_id_list = []
-        self.theit_robot_id_list = []
+        self.their_robot_id_list = []
         # 味方ロボットの位置と速度を初期化
         self.our_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.our_robots_vel = [None] * self.MAX_ROBOT_NUM
@@ -107,7 +107,7 @@ class FieldObserver(Node):
 
         # リストを初期化する
         self.our_robot_id_list = []
-        self.theit_robot_id_list = []
+        self.their_robot_id_list = []
         set_none = lambda a_list : [None] * len(a_list)
         self.our_robots_pos = set_none(self.our_robots_pos)
         self.our_robots_vel = set_none(self.our_robots_vel)
@@ -123,8 +123,9 @@ class FieldObserver(Node):
             robot_id = robot.robot_id.id
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
+            # TODO: robotとrobotsが混ざっているので直したい
             object_str = "self." + team_str + "_robots_"
-            eval(object_str + "id").append(robot_id)
+            eval("self." + team_str + "_robot_id_list").append(robot_id)
             eval(object_str + "pos")[robot_id] = State2D(x=robot.pos.x, y=robot.pos.y, theta=robot.orientation)
             if robot.vel and robot.vel_angular:
                 eval(object_str + "vel")[robot_id] = State2D(x=robot.vel[0].x, y=robot.vel[0].y, theta=robot.vel_angular[0])
@@ -624,7 +625,7 @@ class FieldObserver(Node):
         # パス可能なロボットIDを格納するリスト
         robots_to_pass = []
         # 計算対象にする相手ロボットIDを格納するリスト
-        target_theit_robot_id_list = []
+        target_their_robot_id_list = []
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
         robot_r = 0.4
         # 前方にいる相手ロボットの数と比較する用の変数
@@ -634,7 +635,7 @@ class FieldObserver(Node):
 
         # 各ロボットの位置と速度を取得
         our_robot_id_list = copy.deepcopy(self.our_robot_id_list)
-        theit_robot_id_list = copy.deepcopy(self.theit_robot_id_list)
+        their_robot_id_list = copy.deepcopy(self.their_robot_id_list)
         our_robots_pos = copy.deepcopy(self.our_robots_pos)
         their_robots_pos = copy.deepcopy(self.their_robots_pos)
         our_robots_vel = copy.deepcopy(self.our_robots_vel)
@@ -649,13 +650,13 @@ class FieldObserver(Node):
             return []
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
-        forward_our_robot_id_list = self._forward_robots_id(my_robot_id, my_robot_pos, our_robot_id_list, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
+        forward_our_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, our_robot_id_list, our_robots_pos, our_robots_vel, robot_r, dt, is_delete_my_id=True)
         # パサーよりも前にいる敵ロボットIDリストを取得
-        forward_theit_robot_id_list = self._forward_robots_id(my_robot_id, my_robot_pos, theit_robot_id_list, their_robots_pos, their_robots_vel, robot_r, dt)
+        forward_their_robot_id = self._forward_robots_id(my_robot_id, my_robot_pos, their_robot_id_list, their_robots_pos, their_robots_vel, robot_r, dt)
 
         # パサーよりも前にいるロボットがいなければ空のリストを返す
-        if len(forward_our_robot_id_list) == 0:
-            return forward_our_robot_id_list
+        if len(forward_our_robot_id) == 0:
+            return forward_our_robot_id
 
         # 自分と各ロボットまでの距離を基にロボットIDをソート
         our_robot_id_list = self._sort_by_from_robot_distance(my_robot_id, forward_our_robot_id, our_robots_pos)
@@ -667,18 +668,18 @@ class FieldObserver(Node):
 
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             if select_forward_between == 1:
-                target_theit_robot_id_list = [robot_id for robot_id in forward_theit_robot_id_list if our_robots_pos[_id].x > their_robots_pos[robot_id].x]
+                target_their_robot_id_list = [robot_id for robot_id in forward_their_robot_id if our_robots_pos[_id].x > their_robots_pos[robot_id].x]
             # パサーより前方にいる相手ロボットを計算対象とするときの処理
             else:
-                target_theit_robot_id_list = forward_theit_robot_id_list
+                target_their_robot_id_list = forward_their_robot_id
 
             # ロボットの位置と長半径（移動距離）をロボットごとに格納
-            their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_theit_robot_id_list]
+            their_robot_state = [[their_robots_pos[i].x, their_robots_pos[i].y, dt * abs(their_robots_vel[i].x) + robot_r] for i in target_their_robot_id_list]
 
             # 相手ロボットが存在するときの処理
-            if len(target_theit_robot_id_list) != 0:
+            if len(target_their_robot_id_list) != 0:
                 # 対象となる相手ロボット全てに対してパスコースを妨げるような動きをしているか計算
-                for their_index in range(len(target_theit_robot_id_list)):
+                for their_index in range(len(target_their_robot_id_list)):
                     # 判別式を解くための変数
                     a_kai = slope_from_passer_to_our_robot ** 2 + 1
                     b_kai = 2 * ((intercept_from_passer_to_our_robot - their_robot_state[their_index][1]) * slope_from_passer_to_our_robot - their_robot_state[their_index][0])
@@ -690,7 +691,7 @@ class FieldObserver(Node):
                     # 共有点を持たないときの処理
                     if common_point < 0:
                         # 対象としている相手ロボットすべてにパスコースが妨害されないときの処理
-                        if check_count >= len(target_theit_robot_id_list) - 1:
+                        if check_count >= len(target_their_robot_id_list) - 1:
                             # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                             check_count = 0
                             # パスできる味方ロボットとしてリストに格納
