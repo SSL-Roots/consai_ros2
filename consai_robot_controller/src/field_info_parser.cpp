@@ -995,16 +995,25 @@ bool FieldInfoParser::avoid_ball_500mm(
     // 目標位置とボールを結ぶ直線上で、目標位置をボールから離す
     avoidance_pose = trans_BtoG.inverted_transform(DISTANCE_TO_AVOID, 0.0, 0.0);
     avoidance_pose.theta = goal_pose.theta;
-  }
 
-  // ロボットがボールに近づいている、かつ、目標位置の裏側にロボットがいる場合
-  if (distance_BtoR < DISTANCE_TO_AVOID && std::fabs(angle_ball_to_robot_BtoG) > THETA_TO_ROTATE) {
-    // ロボットの現在位置に合わせて、ボールを中心に円を描くように目標位置を生成する
-    auto add_angle = -std::copysign(THETA_TO_ROTATE, angle_ball_to_robot_BtoG);
-    avoidance_pose = trans_BtoG.inverted_transform(
-        DISTANCE_TO_AVOID * std::cos(angle_ball_to_robot_BtoG + add_angle),
-        DISTANCE_TO_AVOID * std::sin(angle_ball_to_robot_BtoG + add_angle), 0.0);
-    avoidance_pose.theta = goal_pose.theta;
+    if (!geometry_) {
+      return true;
+    }
+
+    // フィールド外に目標位置が置かれた場合の処理
+    // TODO: X軸のはみ出しのみ評価しているが、これで問題が発生していない。必要があればY軸も評価する
+    const auto BOUNDARY_WIDTH = geometry_->field.boundary_width * 0.001;
+    const auto FIELD_HALF_X = geometry_->field.field_length * 0.5 * 0.001;
+    // どれだけフィールドからはみ出たかを、0.0 ~ 1.0に変換する
+    auto gain = std::min(1.0, std::max(0.0, (std::fabs(avoidance_pose.x) - FIELD_HALF_X) / BOUNDARY_WIDTH));
+    if (gain > 0.0) {
+      // はみ出た分だけ目標位置をボール周囲でずらす
+      auto add_angle = std::copysign(gain * M_PI * 0.5, avoidance_pose.y);
+      avoidance_pose = trans_BtoG.inverted_transform(
+        DISTANCE_TO_AVOID * std::cos(add_angle),
+        DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
+      avoidance_pose.theta = goal_pose.theta;
+    }
   }
   return true;
 }
