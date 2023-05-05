@@ -275,6 +275,9 @@ def test_move_to_line():
             pass
 
 def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
+    print("test_use_named_targets")
+    time.sleep(1.0)  # operatorの起動を待つ
+
     robot_harf_width = 0.09
     harf_width = 6.0
     defence_harf_width = 0.9
@@ -283,7 +286,7 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     # 0番はキーパの位置に
     x = harf_width - robot_harf_width
     y = goal_harf_height
-    operator_node.move_to_line_to_defend_our_goal(0, -x, y, -x, -y, True)
+    operator_node.move_to_line_to_defend_our_goal(0, -x, y, -x, -y)
     # 1番はディフェンスエリアの上左側に
     # 2番はディフェンスエリアの上右側に
     y = defence_harf_height + robot_harf_width
@@ -291,13 +294,14 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     end_x = harf_width - defence_harf_width
     middle_x = harf_width - defence_harf_width - robot_harf_width * 2.0
     middle_end_x = harf_width - defence_harf_width * 2.0 - robot_harf_width
-    operator_node.move_to_line_to_defend_our_goal(1, -x, y, -end_x, y, True)
-    operator_node.move_to_line_to_defend_our_goal(2, -middle_x, y, -middle_end_x, y, True)
+    # offset_to_p2をセットすると、交点からオフセットできる
+    operator_node.move_to_line_to_defend_our_goal(1, -x, y, -end_x, y, offset_to_p2=-0.5)
+    operator_node.move_to_line_to_defend_our_goal(2, -middle_x, y, -middle_end_x, y, offset_to_p2=-0.5)
 
     # 3番はディフェンスエリアの下左側に
     # 4番はディフェンスエリアの下右側に
-    operator_node.move_to_line_to_defend_our_goal(3, -x, -y, -end_x, -y, True)
-    operator_node.move_to_line_to_defend_our_goal(4, -middle_x, -y, -middle_end_x, -y, True)
+    operator_node.move_to_line_to_defend_our_goal(3, -x, -y, -end_x, -y)
+    operator_node.move_to_line_to_defend_our_goal(4, -middle_x, -y, -middle_end_x, -y)
 
     # 5番はディフェンスエリアの正面上側に
     # 6番はディフェンスエリアの正面上側に
@@ -308,10 +312,10 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     end_y = defence_harf_height * 0.5
     middle_y = defence_harf_height * 0.5 - robot_harf_width * 2.0
     middle_end_y = robot_harf_width
-    operator_node.move_to_line_to_defend_our_goal(5, -x, y, -x, end_y, True)
-    operator_node.move_to_line_to_defend_our_goal(6, -x, middle_y, -x, middle_end_y, True)
-    operator_node.move_to_line_to_defend_our_goal(7, -x, -y, -x, -end_y, True)
-    operator_node.move_to_line_to_defend_our_goal(8, -x, -middle_y, -x, -middle_end_y, True)
+    operator_node.move_to_line_to_defend_our_goal(5, -x, y, -x, end_y)
+    operator_node.move_to_line_to_defend_our_goal(6, -x, middle_y, -x, middle_end_y)
+    operator_node.move_to_line_to_defend_our_goal(7, -x, -y, -x, -end_y)
+    operator_node.move_to_line_to_defend_our_goal(8, -x, -middle_y, -x, -middle_end_y)
 
 def test_reflect_shoot(robot_id, x, y):
     operator_node.move_to_reflect_shoot_to_their_goal(robot_id, x, y)
@@ -486,12 +490,11 @@ def main():
     # test_pass_four_robots()
     # test_stop_robots()
     # test_move_to_line()
-    # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
+    test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # test_use_named_targets()
     # test_star_pass()
-    test()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
