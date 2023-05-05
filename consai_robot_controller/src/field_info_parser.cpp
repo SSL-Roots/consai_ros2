@@ -24,6 +24,9 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 const double VISIBILITY_THRESHOLD = 0.01;
+const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
+const double MAX_KICK_POWER_PASS = 4.0;  // m/s
+const double MIN_KICK_POWER_PASS = 1.0;  // m/s
 
 FieldInfoParser::FieldInfoParser() : invert_(false), team_is_yellow_(false)
 {
@@ -455,9 +458,8 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.3;
+  const double DRIBBLE_DISTANCE = 0.15;
   const double DRIBBLE_POWER = 1.0;
-  const double KICK_POWER_SHOOT = 6.5;
   bool need_kick = false;
   bool need_dribble = false;
 
@@ -465,12 +467,12 @@ bool FieldInfoParser::parse_kick(
   double distance = tools::distance(robot_pose, kick_target);
 
   // パス速度を設定
-  double KICK_POWER_PASS = 6.5;
+  double kick_power_pass = MAX_KICK_POWER_PASS;
   if (distance < 1.0){
-    KICK_POWER_PASS = 3.0;
-  }
-  else if (1.0 <= distance && distance < 4.5){
-    KICK_POWER_PASS = distance + 2;
+    kick_power_pass = MIN_KICK_POWER_PASS;
+  } else {
+    // 2.0m離れてたら 2.0 m/sでける
+    kick_power_pass = std::min(distance, MAX_KICK_POWER_PASS);
   }
 
   if (kick_setplay) {
@@ -488,9 +490,9 @@ bool FieldInfoParser::parse_kick(
 
   if (need_kick) {
     if (kick_pass) {
-      parsed_kick_power = KICK_POWER_PASS;
+      parsed_kick_power = kick_power_pass;
     } else {
-      parsed_kick_power = KICK_POWER_SHOOT;
+      parsed_kick_power = MAX_KICK_POWER_SHOOT;
     }
   } else {
     parsed_kick_power = 0.0;
@@ -522,15 +524,12 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = 0.20;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - 45);
-  const double LOOKING_TARGET_THETA = tools::to_radians(15);
-  const double CAN_DRIBBLE_DISTANCE = 0.7;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(5);
-  // const double CAN_SHOOT_OMEGA = 0.1;  // rad/s
-  const double DISTANCE_TO_LOOK_BALL = -0.05;  // meters
-  const double THETA_TO_ROTATE = tools::to_radians(60);  // meters
-  const double DISTANCE_TO_ROTATE = 0.12;  // meters
+  const double LOOKING_BALL_DISTANCE = param_threshold_looking_ball_distance;  // meters
+  const double LOOKING_BALL_THETA = tools::to_radians(180 - param_threshold_looking_ball_theta);
+  const double CAN_DRIBBLE_DISTANCE = param_can_dribble_distance;  // meters;
+  const double CAN_SHOOT_THETA = tools::to_radians(param_can_shoot_theta);
+  const double DISTANCE_TO_LOOK_BALL = param_distance_to_look_ball;  // meters
+  const double DISTANCE_TO_ROTATE = param_distance_to_rotate;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -552,14 +551,8 @@ bool FieldInfoParser::control_ball(
   bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
     std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
 
-  auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
-  auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
-  bool is_looking_target = std::fabs(robot_pose_BtoT.theta) < LOOKING_TARGET_THETA &&
-    std::fabs(angle_robot_to_ball_BtoT) < LOOKING_TARGET_THETA;
-
-  double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
-
   // ロボットがボールに近ければドリブルをON
+  double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
   bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
   // ロボットがキックターゲットに焦点を当てたらキックをON
   bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA;
@@ -567,22 +560,29 @@ bool FieldInfoParser::control_ball(
 
   if (!is_looking_ball) {
     // ドリブラーがボールに付くまで移動する
-    parsed_pose = trans_BtoR.inverted_transform(DISTANCE_TO_LOOK_BALL, 0, M_PI);
+    const double gain = std::fabs(robot_pose_BtoR.theta / M_PI);
+    const double distance = DISTANCE_TO_LOOK_BALL * gain + DISTANCE_TO_ROTATE * (1.0 - gain);
+
     if (can_dribble) { need_dribble = true;}
-  } else if (!is_looking_target) {
+    parsed_pose = trans_BtoR.inverted_transform(distance, 0, M_PI);
+  } else {
     // ターゲットを見るまで、ドリブラをボールに付けながら回転する
-    double add_angle = -std::copysign(THETA_TO_ROTATE, robot_pose_BtoT.theta);
+    auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
+    auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
+    const auto add_angle = -angle_robot_to_ball_BtoT * 0.5;  // ここの0.5は角度範囲を0 ~ pi/2にするもの
+    const auto gain = std::fabs(angle_robot_to_ball_BtoT / M_PI);
+    auto distance = DISTANCE_TO_ROTATE * gain;
+
+    if (can_dribble) { need_dribble = true;}
+    if (can_kick) {
+      need_kick = true;
+      distance = -dribble_distance;
+    }
 
     parsed_pose = trans_BtoR.inverted_transform(
-      DISTANCE_TO_ROTATE * std::cos(add_angle),
-      DISTANCE_TO_ROTATE * std::sin(add_angle), 0.0);
-    parsed_pose.theta = tools::calc_angle(parsed_pose, ball_pose);
-    if (can_dribble) { need_dribble = true;}
-  } else {
-    // ターゲットに向かって前進する
-    parsed_pose = trans_BtoT.inverted_transform(dribble_distance, 0.0, 0.0);
-    if (can_dribble) { need_dribble = true; }
-    if (can_kick) { need_kick = true; }
+      distance * std::cos(add_angle),
+      distance * std::sin(add_angle), 0.0);
+    parsed_pose.theta = angle_ball_to_target;
   }
   return true;
 }
@@ -669,8 +669,6 @@ bool FieldInfoParser::reflect_kick(
   const double MAX_DISTANCE_TO_RECEIVE = 1.0;  // meters ボールを受け取る最長距離
   const double DISTANCE_TO_DRIBBLER = 0.055;  // meters ロボットの中心からドリブラーまでの距離
   const double CAN_REFLECT_ANGLE = 60.0;  // degress リフレクトできる最大角度
-  const double KICK_POWER_SHOOT = 6.5;
-  const double KICK_POWER_PASS = 1.5;
 
   // パラメータを初期化
   parsed_dribble_power = 0.0;
@@ -731,9 +729,9 @@ bool FieldInfoParser::reflect_kick(
   parsed_pose = trans_DtoT.inverted_transform(-DISTANCE_TO_DRIBBLER, 0.0, target_angle_DtoT);
   // キックパワーをセット
   if (kick_pass) { 
-    parsed_kick_power = KICK_POWER_PASS;
+    parsed_kick_power = MAX_KICK_POWER_PASS;
   } else {
-    parsed_kick_power = KICK_POWER_SHOOT;
+    parsed_kick_power = MAX_KICK_POWER_SHOOT;
   }
 
   return true;

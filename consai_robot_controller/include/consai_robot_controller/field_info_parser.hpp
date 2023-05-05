@@ -75,6 +75,14 @@ public:
     double & kick_power, double & dribble_power) const;
   std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
 
+  // controller_componentからアクセスするためpublic変数で定義
+  double param_threshold_looking_ball_distance;
+  double param_threshold_looking_ball_theta;
+  double param_can_dribble_distance;
+  double param_can_shoot_theta;
+  double param_distance_to_look_ball;
+  double param_distance_to_rotate;
+
 private:
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
   bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
