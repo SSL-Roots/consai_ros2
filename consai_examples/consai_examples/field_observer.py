@@ -753,17 +753,17 @@ class FieldObserver(Node):
                         check_count = 0
                         break
 
-                    if need_shoot and their_goalie_x < their_robot_pos_trans.x and -self._field_defense_half_y < their_goalie_y and their_goalie_y < self._field_defense_half_y:
-                        their_goalie_id = their_robot_id
-                        their_goalie_x = their_robot_pos_trans.x
-                        their_goalie_y = their_robot_pos_trans.y
+                    # if need_shoot and their_goalie_x < their_robot_pos_trans.x and -self._field_defense_half_y < their_goalie_y and their_goalie_y < self._field_defense_half_y:
+                    #     their_goalie_id = their_robot_id
+                    #     their_goalie_x = their_robot_pos_trans.x
+                    #     their_goalie_y = their_robot_pos_trans.y
             # 計算対象とする相手ロボットが存在しないとき（邪魔する相手ロボットがいないとき）
             else:
                 # パスができる味方ロボットとしてリストに格納
                 robots_to_pass.append(our_robot_id)
                 
-            if their_goalie_id != 99 and their_robot_pos_trans.y > 0:
-                robots_to_pass[1] = sorted(robots_to_pass[1], reverse=True)
+            # if their_goalie_id != 99 and their_robot_pos_trans.y > 0:
+            #     robots_to_pass = sorted(robots_to_pass, reverse=True)
 
         return robots_to_pass
 
