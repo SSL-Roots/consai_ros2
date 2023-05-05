@@ -368,9 +368,9 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
-    def pass_to(self, robot_id, x, y):
+    # def pass_to(self, robot_id, x, y):
         # ボールの後ろに移動し、指定位置に向かってパスする
-        return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
+        # return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
 
     def shoot_to(self, robot_id, x, y):
         # ボールの後ろに移動し、指定位置に向かってシュートする
@@ -667,7 +667,7 @@ class RobotOperator(Node):
         # ConstraintXYの相手サイドの中央を返す
         their_center = ConstraintXY()
         their_center.normalized = True
-        their_center.value_x.append(0.5)
+        their_centeposer.value_x.append(0.5)
         their_center.value_y.append(0.0)
         return their_center
     

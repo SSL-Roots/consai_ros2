@@ -41,6 +41,13 @@ class FieldObserver(Node):
     BALL_IS_IN_OUR_SIDE = 6
     BALL_IS_IN_THEIR_SIDE = 7
     BALL_IS_IN_THEIR_DEFENSE_AREA = 8
+    BALL_IS_IN_THEIR_DEFENSE_AREA = 8
+    
+    # 壁際に近いか判定
+    BALL_IS_NEAR_OUTSIDE_FRONT_X = 21
+    BALL_IS_NEAR_OUTSIDE_BACK_X = 22
+    BALL_IS_NEAR_OUTSIDE_RIGHT_Y = 23
+    BALL_IS_NEAR_OUTSIDE_LEFT_Y = 24
 
     BALL_PLACEMENT_NONE = 0
     BALL_PLACEMENT_FAR_FROM_TARGET = 1
@@ -71,6 +78,9 @@ class FieldObserver(Node):
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
+
+        # ボールが壁際に近いときに蹴る位置
+        self._outside_kick_pos_in_ball_placement = None
 
         self._our_robot = TrackedRobot()
         self._their_robot = TrackedRobot()
@@ -143,6 +153,12 @@ class FieldObserver(Node):
             eval("self." + team_str + "_robot_id_list").append(robot_id)
 
     def _update_ball_state(self, ball):
+        # ball placement時に壁際かどうか判定
+        _is_near_outside = self._check_near_outside(ball.pos)
+        if _is_near_outside:
+            self._ball_state = _is_near_outside
+            return 
+
         # フィールド場外判定(Goal-to-Goal方向)
         if self._check_is_ball_outside_front_x(ball.pos):
             self._ball_state = self.BALL_IS_OUTSIDE_FRONT_X
@@ -174,7 +190,7 @@ class FieldObserver(Node):
             self._ball_state = self.BALL_IS_IN_OUR_SIDE
             return
 
-        # 条件に入らなければ、相手チームエリアに侵入したと判定
+                # 条件に入らなければ、相手チームエリアに侵入したと判定
         self._ball_state = self.BALL_IS_IN_THEIR_SIDE
 
     def _check_is_ball_outside_front_x(self, ball_pos):
@@ -248,6 +264,22 @@ class FieldObserver(Node):
         if ball_pos.x < threshold_x:
             return True
         return False
+
+    def _check_near_outside(self, ball_pos):
+        # ボールが壁際に近いか判定
+        flag = 0
+        # 壁際に近いと判定する距離
+        threshold = 0.6
+
+        if ball_pos.x < -self._field_half_x + threshold:
+            flag = self.BALL_IS_NEAR_OUTSIDE_BACK_X
+        elif self._field_half_x - threshold < ball_pos.x:
+            flag = self.BALL_IS_NEAR_OUTSIDE_FRONT_X
+        elif ball_pos.y < -self._field_half_y + threshold:
+            flag = self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y
+        elif self._field_half_y - threshold < ball_pos.y:
+            flag = self.BALL_IS_NEAR_OUTSIDE_LEFT_Y
+        return flag
 
     def _update_ball_moving_state(self, ball):
         BALL_MOVING_THRESHOLD = 1.0  # m/s
@@ -620,6 +652,24 @@ class FieldObserver(Node):
     def get_ball_placement_state(self, placement_position):
         self._update_ball_placement_state(placement_position)
         return self._ball_placement_state
+
+    # def get_ball_placement_pos_in_near_outside(self, placement_position):
+    #     self._update_ball_placement_state(placement_position)
+    #     
+    #     if self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_FRONT_X:
+    #         self._outside_kick_pos_in_ball_placement = \
+    #             State2D(x=self._field_half_x + 0.3, y=placement_position.y)
+    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_BACK_X:
+    #         self._outside_kick_pos_in_ball_placement = \
+    #             State2D(x=(-self._field_half_x + 0.3), y=placement_position.y)
+    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y:
+    #         self._outside_kick_pos_in_ball_placement = \
+    #             State2D(x=placement_position.x, y=self._field_half_y + 0.3)
+    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_LEFT_Y:
+    #         self._outside_kick_pos_in_ball_placement = \
+    #             State2D(x=placement_position.x, y=-(self._field_half_y + 0.3))
+    # 
+    #     return self._outside_kick_pos_in_ball_placement
 
     def get_ball_pos(self):
         ball_pos = [self._ball.pos.x, self._ball.pos.y]
