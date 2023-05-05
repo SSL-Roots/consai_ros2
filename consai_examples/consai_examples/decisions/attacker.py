@@ -158,7 +158,8 @@ class AttackerDecision(DecisionBase):
 
         ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
-        if 20 < ball_state:
+        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
+                FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y, FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
             if self._act_id != ID_NEAR_OUTSIDE:
                 # 壁際に蹴る位置を取得
                 outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)

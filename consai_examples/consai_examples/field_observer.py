@@ -41,7 +41,6 @@ class FieldObserver(Node):
     BALL_IS_IN_OUR_SIDE = 6
     BALL_IS_IN_THEIR_SIDE = 7
     BALL_IS_IN_THEIR_DEFENSE_AREA = 8
-    BALL_IS_IN_THEIR_DEFENSE_AREA = 8
     
     # 壁際に近いか判定
     BALL_IS_NEAR_OUTSIDE_FRONT_X = 21
@@ -78,9 +77,6 @@ class FieldObserver(Node):
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
-
-        # ボールが壁際に近いときに蹴る位置
-        # self._outside_kick_pos = None
 
         self._our_robot = TrackedRobot()
         self._their_robot = TrackedRobot()
@@ -190,7 +186,7 @@ class FieldObserver(Node):
             self._ball_state = self.BALL_IS_IN_OUR_SIDE
             return
 
-                # 条件に入らなければ、相手チームエリアに侵入したと判定
+        # 条件に入らなければ、相手チームエリアに侵入したと判定
         self._ball_state = self.BALL_IS_IN_THEIR_SIDE
 
     def _check_is_ball_outside_front_x(self, ball_pos):
