@@ -82,6 +82,8 @@ class FieldWidget(QWidget):
         self._field.field_width = 9000  # resize_draw_area()で0 divisionを防ぐための初期値
         self._detections = {}
         self._detection_tracked = TrackedFrame()
+        self._blue_robot_num = 0
+        self._yellow_robot_num = 0
         self._goal_poses = {}
         self._final_goal_poses = {}
         self._designated_position = {}  # ball placementの目標位置
@@ -127,6 +129,7 @@ class FieldWidget(QWidget):
 
     def set_detection_tracked(self, msg):
         self._detection_tracked = msg
+        self._update_robot_num()
 
     def set_goal_poses(self, msg):
         self._goal_poses.clear()
@@ -149,6 +152,12 @@ class FieldWidget(QWidget):
 
     def set_invert(self, param):
         self._invert = param
+
+    def get_blue_robot_num(self):
+        return self._blue_robot_num
+
+    def get_yellow_robot_num(self):
+        return self._yellow_robot_num
 
     def append_robot_replacement(self, is_yellow, robot_id, turnon):
         # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
@@ -353,6 +362,24 @@ class FieldWidget(QWidget):
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
+
+    def _update_robot_num(self):
+        # 存在するロボットの台数を計上する
+        blue_robot_num = 0
+        yellow_robot_num = 0
+        for robot in self._detection_tracked.robots:
+            if len(robot.visibility) <= 0:
+                continue
+
+            if robot.visibility[0] < 0.01:
+                continue
+
+            if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+                yellow_robot_num += 1
+            else:
+                blue_robot_num += 1
+        self._blue_robot_num = blue_robot_num
+        self._yellow_robot_num = yellow_robot_num
 
     def _reset_draw_area_offset_and_scale(self):
         # 描画領域の移動と拡大・縮小を初期化する

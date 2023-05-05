@@ -119,6 +119,7 @@ class Visualizer(Plugin):
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
         self._timer.timeout.connect(self._widget.field_widget.update)
+        self._timer.timeout.connect(self._update_label_bot_num)
         self._timer.start(16)
 
         # 5000 msec周期で描画情報をリセットする
@@ -159,6 +160,10 @@ class Visualizer(Plugin):
         for robot_id in range(11):
             method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
             eval(method)(checked)
+
+    def _update_label_bot_num(self):
+        self._widget.label_b_bot_num.setText(str(self._widget.field_widget.get_blue_robot_num()))
+        self._widget.label_y_bot_num.setText(str(self._widget.field_widget.get_yellow_robot_num()))
 
     def _callback_referee(self, msg):
         self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
