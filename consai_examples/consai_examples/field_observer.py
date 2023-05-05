@@ -135,10 +135,10 @@ class FieldObserver(Node):
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
             # TODO: robotとrobotsが混ざっているので直したい
             object_str = "self." + team_str + "_robots_"
-            eval("self." + team_str + "_robot_id_list").append(robot_id)
             eval(object_str + "pos")[robot_id] = State2D(x=robot.pos.x, y=robot.pos.y, theta=robot.orientation)
             if robot.vel and robot.vel_angular:
                 eval(object_str + "vel")[robot_id] = State2D(x=robot.vel[0].x, y=robot.vel[0].y, theta=robot.vel_angular[0])
+            eval("self." + team_str + "_robot_id_list").append(robot_id)
 
     def _update_ball_state(self, ball):
         # フィールド場外判定(Goal-to-Goal方向)
@@ -754,22 +754,21 @@ class FieldObserver(Node):
         forward_robots_id = []
         for robot_id in robots_id:
             # 自身のIDをスキップする場合
-            if skip_my_id:
-                if my_robot_id == robot_id: 
-                    # 自身のIDをスキップ
-                    continue
+            if skip_my_id and my_robot_id == robot_id:
+                # 自身のIDをスキップ
+                continue
 
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
-            estimated_displacement = 0.0
-            if target_robot_vel is not None:
-                vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
-            else:
-                vel_norm = 0.0
 
-            # dt時間後の移動距離を加算する
-            if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
-                estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
+            estimated_displacement = 0.0
+            vel_norm = 0.0
+            if target_robot_vel is not None:
+                vel_norm = math.hypot(target_robot_vel.x, target_robot_vel.y)
+
+                # dt時間後の移動距離を計算
+                if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
+                    estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
 
             if my_robot_pos.x < target_robot_pos.x + estimated_displacement:
                 forward_robots_id.append(robot_id)
