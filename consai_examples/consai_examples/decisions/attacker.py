@@ -156,13 +156,14 @@ class AttackerDecision(DecisionBase):
         # プレースメントを回避しない
         self._operator.disable_avoid_placement(robot_id)
 
-        flag = self._field_observer.get_ball_state()
-        
-        if 20 < flag:
+        ball_state = self._field_observer.get_ball_state()
+        # 壁際にあると判定した場合
+        if 20 < ball_state:
             if self._act_id != ID_NEAR_OUTSIDE:
-                # outside_placement_pos = self._field_observer.get_ball_placement_pos_in_near_outside(placement_pos)
-                ball_pos = self._field_observer.get_ball_pos()
-                self._operator.pass_to(robot_id, ball_pos[0], ball_pos[1])
+                # 壁際に蹴る位置を取得
+                outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)
+                # 壁際に蹴る
+                self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
                 self._act_id = ID_NEAR_OUTSIDE
             return
 

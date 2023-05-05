@@ -80,7 +80,7 @@ class FieldObserver(Node):
         self._detection = TrackedFrame()
 
         # ボールが壁際に近いときに蹴る位置
-        self._outside_kick_pos_in_ball_placement = None
+        # self._outside_kick_pos = None
 
         self._our_robot = TrackedRobot()
         self._their_robot = TrackedRobot()
@@ -269,7 +269,7 @@ class FieldObserver(Node):
         # ボールが壁際に近いか判定
         flag = 0
         # 壁際に近いと判定する距離
-        threshold = 0.6
+        threshold = 0.0
 
         if ball_pos.x < -self._field_half_x + threshold:
             flag = self.BALL_IS_NEAR_OUTSIDE_BACK_X
@@ -653,27 +653,45 @@ class FieldObserver(Node):
         self._update_ball_placement_state(placement_position)
         return self._ball_placement_state
 
-    # def get_ball_placement_pos_in_near_outside(self, placement_position):
-    #     self._update_ball_placement_state(placement_position)
-    #     
-    #     if self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_FRONT_X:
-    #         self._outside_kick_pos_in_ball_placement = \
-    #             State2D(x=self._field_half_x + 0.3, y=placement_position.y)
-    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_BACK_X:
-    #         self._outside_kick_pos_in_ball_placement = \
-    #             State2D(x=(-self._field_half_x + 0.3), y=placement_position.y)
-    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y:
-    #         self._outside_kick_pos_in_ball_placement = \
-    #             State2D(x=placement_position.x, y=self._field_half_y + 0.3)
-    #     elif self.get_ball_state == self.BALL_IS_NEAR_OUTSIDE_LEFT_Y:
-    #         self._outside_kick_pos_in_ball_placement = \
-    #             State2D(x=placement_position.x, y=-(self._field_half_y + 0.3))
-    # 
-    #     return self._outside_kick_pos_in_ball_placement
+    def get_near_outside_ball_placement(self, ball_state, placement_position):
+
+        margin = 0.5
+        ball_pos = self._ball.pos
+
+        if ball_state == self.BALL_IS_NEAR_OUTSIDE_FRONT_X:
+            x = self._field_half_x + margin
+            if ball_pos.y < placement_position.y:
+                y = ball_pos.y + margin
+            else:
+                y = ball_pos.y - margin
+
+        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_BACK_X:
+            x = -self._field_half_x - margin
+            if ball_pos.y < placement_position.y:
+                y = ball_pos.y + margin
+            else:
+                y = ball_pos.y - margin
+
+        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_LEFT_Y:
+            y = self._field_half_y + margin
+            if ball_pos.x < placement_position.x:
+                x = ball_pos.x + margin
+            else:
+                x = ball_pos.x - margin
+
+        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y:
+            y = -self._field_half_y - margin
+            if ball_pos.x < placement_position.x:
+                x = ball_pos.x + margin
+            else:
+                x = ball_pos.x - margin
+
+        outside_kick_pos = State2D(x=x, y=y)
+
+        return outside_kick_pos
 
     def get_ball_pos(self):
-        ball_pos = [self._ball.pos.x, self._ball.pos.y]
-        return ball_pos
+        return self._ball.pos
     
     def get_goal_pos_list(self):
         return self.goal_pos_list
