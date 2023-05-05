@@ -24,6 +24,9 @@ namespace consai_robot_controller
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 const double VISIBILITY_THRESHOLD = 0.01;
+const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
+const double MAX_KICK_POWER_PASS = 4.0;  // m/s
+const double MIN_KICK_POWER_PASS = 1.0;  // m/s
 
 FieldInfoParser::FieldInfoParser() : invert_(false), team_is_yellow_(false)
 {
@@ -457,7 +460,6 @@ bool FieldInfoParser::parse_kick(
 {
   const double DRIBBLE_DISTANCE = 0.15;
   const double DRIBBLE_POWER = 1.0;
-  const double KICK_POWER_SHOOT = 6.5;
   bool need_kick = false;
   bool need_dribble = false;
 
@@ -465,12 +467,12 @@ bool FieldInfoParser::parse_kick(
   double distance = tools::distance(robot_pose, kick_target);
 
   // パス速度を設定
-  double KICK_POWER_PASS = 6.5;
+  double kick_power_pass = MAX_KICK_POWER_PASS;
   if (distance < 1.0){
-    KICK_POWER_PASS = 3.0;
-  }
-  else if (1.0 <= distance && distance < 4.5){
-    KICK_POWER_PASS = distance + 2;
+    kick_power_pass = MIN_KICK_POWER_PASS;
+  } else {
+    // 2.0m離れてたら 2.0 m/sでける
+    kick_power_pass = std::min(distance, MAX_KICK_POWER_PASS);
   }
 
   if (kick_setplay) {
@@ -488,9 +490,9 @@ bool FieldInfoParser::parse_kick(
 
   if (need_kick) {
     if (kick_pass) {
-      parsed_kick_power = KICK_POWER_PASS;
+      parsed_kick_power = kick_power_pass;
     } else {
-      parsed_kick_power = KICK_POWER_SHOOT;
+      parsed_kick_power = MAX_KICK_POWER_SHOOT;
     }
   } else {
     parsed_kick_power = 0.0;
@@ -667,8 +669,6 @@ bool FieldInfoParser::reflect_kick(
   const double MAX_DISTANCE_TO_RECEIVE = 1.0;  // meters ボールを受け取る最長距離
   const double DISTANCE_TO_DRIBBLER = 0.055;  // meters ロボットの中心からドリブラーまでの距離
   const double CAN_REFLECT_ANGLE = 60.0;  // degress リフレクトできる最大角度
-  const double KICK_POWER_SHOOT = 6.5;
-  const double KICK_POWER_PASS = 1.5;
 
   // パラメータを初期化
   parsed_dribble_power = 0.0;
@@ -729,9 +729,9 @@ bool FieldInfoParser::reflect_kick(
   parsed_pose = trans_DtoT.inverted_transform(-DISTANCE_TO_DRIBBLER, 0.0, target_angle_DtoT);
   // キックパワーをセット
   if (kick_pass) { 
-    parsed_kick_power = KICK_POWER_PASS;
+    parsed_kick_power = MAX_KICK_POWER_PASS;
   } else {
-    parsed_kick_power = KICK_POWER_SHOOT;
+    parsed_kick_power = MAX_KICK_POWER_SHOOT;
   }
 
   return true;
