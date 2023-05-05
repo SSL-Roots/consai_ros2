@@ -71,10 +71,11 @@ class AttackerDecision(DecisionBase):
         # 指定座標に向けてシュートまたはパスをする
         if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE and self._act_id != ID_NO_SHOOT_PASS:
             if self._act_id != ID_SHOOT_PASS:
-                receiver_robots_id, shoot_point = FieldObserver.get_open_path_id_list(robot_id)
+                receiver_robots_id, shoot_point_list = self._field_observer.get_open_path_id_list(robot_id)
                 # 指定座標に向けてシュートする
-                if len(shoot_point) > 0:
-                    self._operator.shoot_to(robot_id, FieldObserver.SHOOTS_POS[shoot_point[0]], FieldObserver.SHOOTS_POS[shoot_point[1]])
+                if len(shoot_point_list) > 0:
+                    shoot_point = shoot_point_list[0]
+                    self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
                     self._act_id = ID_SHOOT_PASS
                 # 前方のパスが出せるロボットにパスを出す
                 elif len(receiver_robots_id) > 0:

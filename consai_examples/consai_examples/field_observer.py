@@ -68,7 +68,6 @@ class FieldObserver(Node):
 
     GOAL_POST_Y = 0.9 # meters
     GOAL_POINT = 5 # ゴール候補のポイント
-    SHOOTS_POS = [[6.0, 0.9], [6.0, 0.45], [6.0, 0.0], [6.0, -0.45], [6.0, -0.9]]
     GOAL_POST_TOP = [6, 0.9] # meters
     GOAL_POST_BOTTOM = [6, -0.9] # meters
     GOAL_CENTER = [6, 0] # meters
@@ -756,9 +755,9 @@ class FieldObserver(Node):
         skip_my_id = True
         if need_shoot:
             # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
-            robot_r = 0.1 #meters
-            # ロボットの位置座標取得から実際にパスを出すまでの想定時間
-            dt = 0.0 #sec
+            # robot_r = 0.1 #meters
+            # # ロボットの位置座標取得から実際にパスを出すまでの想定時間
+            # dt = 0.0 #sec
             skip_my_id = False
             # ゴールのIDと位置
             # シュートのときは味方位置をゴールの位置と見立てる
