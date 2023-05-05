@@ -8,3 +8,16 @@ max_velocity_theta: 5.0  # rad/s^2
 control_range_xy: 1.0
 control_a_xy: 1.0
 control_a_theta: 0.5
+
+# control_ball用のパラメータ
+# looking_ball_* を満たすとき、ボールに回り込んでターゲットを見る
+control_ball_threshold_looking_ball_distance_m: 0.4  # ボールまでの距離 meter
+control_ball_threshold_looking_ball_theta_deg: 30.0  # ボールに対するロボットの向き deg
+# ドリブラーを回し始めるロボット - ボール間の距離
+control_ball_threshold_can_dribble_distance_m: 0.7  # meters
+# シュート(またはドリブル前進)を開始するロボットの向き
+control_ball_threshold_can_shoot_theta_deg: 5.0  # degrees
+# ボールを見てないとき、どれだけボールに近づくかの最大値
+control_ball_distance_to_look_ball_m: -0.05  # meters
+# ボールに回り込むとき、どれだけボールに近づくかの最大値
+control_ball_distance_to_rotate_m: 0.3  # meters
