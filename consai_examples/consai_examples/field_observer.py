@@ -665,11 +665,11 @@ class FieldObserver(Node):
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
         # 相手ロボットのゴーリーのx座標
-        their_goalie_x = 0.0
-        # 相手ロボットのゴーリーのy座標
-        their_goalie_y = 0.0
-        # 相手ゴーリーのID
-        their_goalie_id = 99
+        # their_goalie_x = 0.0
+        # # 相手ロボットのゴーリーのy座標
+        # their_goalie_y = 0.0
+        # # 相手ゴーリーのID
+        # their_goalie_id = 99
 
         # 味方ロボットの位置と速度を取得
         our_robot_id_list = copy.deepcopy(self.our_robot_id_list)
