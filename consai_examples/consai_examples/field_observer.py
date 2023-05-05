@@ -686,7 +686,7 @@ class FieldObserver(Node):
             return forward_our_robot_id
 
         # 自分と各ロボットまでの距離を基にロボットIDをソート
-        our_robot_id_list = self._sort_by_from_robot_distance(my_robot_id, my_robot_pos, forward_our_robot_id, our_robots_pos)
+        our_robot_id_list = self._sort_by_from_robot_distance(my_robot_pos, forward_our_robot_id, our_robots_pos)
 
         # 各レシーバー候補ロボットに対してパス可能か判定
         for our_robot_id in our_robot_id_list:
@@ -737,7 +737,7 @@ class FieldObserver(Node):
         
         return robots_to_pass
 
-    def _sort_by_from_robot_distance(self, my_robot_id, my_robot_pos, robots_id, robots_pos):
+    def _sort_by_from_robot_distance(self, my_robot_pos, robots_id, robots_pos):
         # 自ロボットから各ロボットまでの距離を計算し近い順にソートする関数
 
         # 自ロボットから各ロボットまでの距離、IDをリストに格納
