@@ -31,6 +31,7 @@ from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
 from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
+from decisions.center_back import CenterBackDecision, CenterBackID
 from field_observer import FieldObserver
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -219,8 +220,8 @@ if __name__ == '__main__':
     decisions = {
         RoleName.GOALIE: GoaleDecision(operator, observer),
         RoleName.ATTACKER: AttackerDecision(operator, observer),
-        RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
-        RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
+        RoleName.CENTER_BACK1: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK1),
+        RoleName.CENTER_BACK2: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK2),
         RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
         RoleName.ZONE1: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE1),
         RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),
