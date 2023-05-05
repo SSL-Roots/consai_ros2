@@ -331,13 +331,19 @@ bool FieldInfoParser::parse_constraint_line(
     // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
     auto intersection_1to2 = trans_1to2.transform(intersection);
     auto p2_1to2 = trans_1to2.transform(p2);
+    auto parsed_pose_1to2 = intersection_1to2;
+
     if (intersection_1to2.x < 0.0) {
-      parsed_pose = p1;
+      parsed_pose_1to2.x = 0.0;
     } else if (intersection_1to2.x > p2_1to2.x) {
-      parsed_pose = p2;
-    } else {
-      parsed_pose = intersection;
+      parsed_pose_1to2.x = p2_1to2.x;
+    } 
+    // オフセットを加算する。オフセットによりp1, p2をはみ出ることが可能
+    if (line.offset_intersection_to_p2.size() > 0) {
+      parsed_pose_1to2.x += line.offset_intersection_to_p2[0];
     }
+    // 座標系をもとに戻す
+    parsed_pose = trans_1to2.inverted_transform(parsed_pose_1to2);
   }else {
     // 直線p1->p2上で、p1からdistanceだけ離れた位置を目標位置する
     parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);

@@ -230,7 +230,7 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
         return self._set_goal(robot_id, self._with_receive(self._pose_goal(pose, keep=True)))
 
-    def move_to_line_to_defend_our_goal(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_line_to_defend_our_goal(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 自チームのゴールをボールから守るように、直線p1->p2に移動する
         line = ConstraintLine()
 
@@ -242,9 +242,11 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_goal())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2 is not None:
+            line.offset_intersection_to_p2.append(offset_to_p2)
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_line_to_defend_our_goal_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_line_to_defend_our_goal_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 自チームのゴールをボールから守るように、直線p1->p2に移動する
         line = ConstraintLine()
 
@@ -256,11 +258,13 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_goal())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2:
+            line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
         return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
 
-    def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -272,9 +276,12 @@ class RobotOperator(Node):
         line.p3.append(self._xy_their_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2:
+            line.offset_intersection_to_p2.append(offset_to_p2)
+
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_cross_line_their_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_cross_line_their_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -286,10 +293,13 @@ class RobotOperator(Node):
         line.p3.append(self._xy_their_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2:
+            line.offset_intersection_to_p2.append(offset_to_p2)
+
         target = self._xy_their_goal()
         return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
     
-    def move_to_cross_line_our_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_cross_line_our_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -301,9 +311,12 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2:
+            line.offset_intersection_to_p2.append(offset_to_p2)
+
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_cross_line_our_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y):
+    def move_to_cross_line_our_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -315,6 +328,9 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
+        if offset_to_p2:
+            line.offset_intersection_to_p2.append(offset_to_p2)
+
         target = self._xy_their_goal()
         return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
 
