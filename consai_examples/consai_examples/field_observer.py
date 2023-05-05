@@ -751,6 +751,10 @@ class FieldObserver(Node):
         my_robot_pos = our_robots_pos[my_robot_id]
         if my_robot_pos is None:
             return []
+        
+        # ID数と位置情報の数が不一致の場合
+        if len(our_robot_id_list) != self.MAX_ROBOT_NUM - our_robots_pos.count(None):
+            return []
 
         skip_my_id = True
         if need_shoot:
