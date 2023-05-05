@@ -663,7 +663,7 @@ class RobotOperator(Node):
         # ConstraintXYの相手サイドの中央を返す
         their_center = ConstraintXY()
         their_center.normalized = True
-        their_centeposer.value_x.append(0.5)
+        their_center.value_x.append(0.5)
         their_center.value_y.append(0.0)
         return their_center
     
