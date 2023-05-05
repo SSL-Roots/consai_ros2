@@ -53,6 +53,8 @@ def enable_update_attacker_by_ball_pos():
     return not observer.ball_is_in_our_defense_area() and \
         not observer.ball_is_outside_back_x() and \
         not observer.ball_is_outside_front_x() and \
+        not observer.ball_is_outside_right_y() and \
+        not observer.ball_is_outside_left_y() and \
         not observer.ball_is_moving() and \
         not referee.our_ball_placement() and \
         not referee.our_pre_penalty() and \
