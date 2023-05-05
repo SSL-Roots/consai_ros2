@@ -224,6 +224,9 @@ class RefereeParser(Node):
     def inplay(self):
         return self._current_command == self._COMMAND_INPLAY
 
+    def force_start(self):
+        return self._current_command == Referee.COMMAND_FORCE_START
+
     def our_penalty_inplay(self):
         return self._current_command == self._COMMAND_OUR_PENALTY_INPLAY
 
