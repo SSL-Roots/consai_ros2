@@ -115,7 +115,7 @@ class FieldObserver(Node):
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
 
-        # リストを初期化する
+        # 位置・速度・IDのリストを初期化
         self.our_robot_id_list = []
         self.their_robot_id_list = []
         set_none = lambda a_list : [None] * len(a_list)
@@ -133,12 +133,14 @@ class FieldObserver(Node):
             robot_id = robot.robot_id.id
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
+
+            # 位置・速度・IDを更新
             # TODO: robotとrobotsが混ざっているので直したい
             object_str = "self." + team_str + "_robots_"
-            eval("self." + team_str + "_robot_id_list").append(robot_id)
             eval(object_str + "pos")[robot_id] = State2D(x=robot.pos.x, y=robot.pos.y, theta=robot.orientation)
             if robot.vel and robot.vel_angular:
                 eval(object_str + "vel")[robot_id] = State2D(x=robot.vel[0].x, y=robot.vel[0].y, theta=robot.vel_angular[0])
+            eval("self." + team_str + "_robot_id_list").append(robot_id)
 
     def _update_ball_state(self, ball):
         # フィールド場外判定(Goal-to-Goal方向)
@@ -684,7 +686,7 @@ class FieldObserver(Node):
             return forward_our_robot_id
 
         # 自分と各ロボットまでの距離を基にロボットIDをソート
-        our_robot_id_list = self._sort_by_from_robot_distance(my_robot_id, my_robot_pos, forward_our_robot_id, our_robots_pos)
+        our_robot_id_list = self._sort_by_from_robot_distance(my_robot_pos, forward_our_robot_id, our_robots_pos)
 
         # 各レシーバー候補ロボットに対してパス可能か判定
         for our_robot_id in our_robot_id_list:
@@ -735,7 +737,7 @@ class FieldObserver(Node):
         
         return robots_to_pass
 
-    def _sort_by_from_robot_distance(self, my_robot_id, my_robot_pos, robots_id, robots_pos):
+    def _sort_by_from_robot_distance(self, my_robot_pos, robots_id, robots_pos):
         # 自ロボットから各ロボットまでの距離を計算し近い順にソートする関数
 
         # 自ロボットから各ロボットまでの距離、IDをリストに格納
@@ -754,22 +756,21 @@ class FieldObserver(Node):
         forward_robots_id = []
         for robot_id in robots_id:
             # 自身のIDをスキップする場合
-            if skip_my_id:
-                if my_robot_id == robot_id: 
-                    # 自身のIDをスキップ
-                    continue
+            if skip_my_id and my_robot_id == robot_id:
+                # 自身のIDをスキップ
+                continue
 
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
-            estimated_displacement = 0.0
-            if target_robot_vel is not None:
-                vel_norm = math.sqrt(target_robot_vel.x ** 2 + target_robot_vel.y ** 2)
-            else:
-                vel_norm = 0.0
 
-            # dt時間後の移動距離を加算する
-            if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
-                estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
+            estimated_displacement = 0.0
+            vel_norm = 0.0
+            if target_robot_vel is not None:
+                vel_norm = math.hypot(target_robot_vel.x, target_robot_vel.y)
+
+                # dt時間後の移動距離を計算
+                if not math.isclose(vel_norm, 0.0, abs_tol=0.000001):  # ゼロ除算回避
+                    estimated_displacement = (abs(target_robot_vel.x) * dt + robot_r) * target_robot_vel.x / vel_norm
 
             if my_robot_pos.x < target_robot_pos.x + estimated_displacement:
                 forward_robots_id.append(robot_id)
