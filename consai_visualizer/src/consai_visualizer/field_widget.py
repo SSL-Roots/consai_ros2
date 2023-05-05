@@ -87,6 +87,7 @@ class FieldWidget(QWidget):
         self._designated_position = {}  # ball placementの目標位置
         self._named_targets = {}
         self._robot_replacements = []
+        self._invert = False
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -145,6 +146,9 @@ class FieldWidget(QWidget):
         self._named_targets = {}
         for i in range(len(msg.name)):
             self._named_targets[msg.name[i]] = msg.pose[i]
+
+    def set_invert(self, param):
+        self._invert = param
 
     def append_robot_replacement(self, is_yellow, robot_id, turnon):
         # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
@@ -274,6 +278,10 @@ class FieldWidget(QWidget):
         # 近ければreplacementと判定する
         field_clicked_pos = self._convert_draw_to_field_pos(clicked_point)
 
+        # サイド反転の処理
+        if self._invert:
+            field_clicked_pos *= -1.0
+
         clicked_object = ClickedObject.IS_NONE
         for detection in self._detections.values():
             for ball in detection.balls:
@@ -305,6 +313,9 @@ class FieldWidget(QWidget):
         # grSimのBall Replacementの位置をpublsihする
         ball_replacement = BallReplacement()
         pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+        # サイド反転
+        if self._invert:
+            pos *= -1.0
         ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
         ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
         ball_replacement.vx.append(0.0)
@@ -319,6 +330,11 @@ class FieldWidget(QWidget):
 
         start_pos = self._convert_draw_to_field_pos(self._mouse_clicked_point)
         end_pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+
+        # サイド反転
+        if self._invert:
+            start_pos *= -1.0
+            end_pos *= -1.0
 
         # ball_replacement.x.append(start_pos.x() * 0.001)  # mm に変換
         # ball_replacement.y.append(start_pos.y() * 0.001)  # mm に変換
@@ -645,13 +661,16 @@ class FieldWidget(QWidget):
 
         # ボール速度replacement判定エリアの描画
         point = self._convert_field_to_draw_point(ball.x, ball.y)
+        # サイド反転の処理
+        if self._invert:
+            point *= -1.0
+
         size = self._RADIUS_REPLACEMENT_BALL_VEL * self._scale_field_to_draw
         painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
         painter.setBrush(self._COLOR_REPLACEMENT_VEL_ANGLE)
         painter.drawEllipse(point, size, size)
 
         # ボール位置replacement判定エリアの描画
-        point = self._convert_field_to_draw_point(ball.x, ball.y)
         size = self._RADIUS_REPLACEMENT_BALL_POS * self._scale_field_to_draw
         painter.setPen(self._COLOR_REPLACEMENT_POS)
         painter.setBrush(self._COLOR_REPLACEMENT_POS)
@@ -679,6 +698,10 @@ class FieldWidget(QWidget):
         # 目標位置とボール位置を取得
         designated_point = self._convert_field_to_draw_point(
             self._designated_position[0].x, self._designated_position[0].y)
+        # サイド反転
+        if self._invert:
+            designated_point *= -1.0
+        
         ball = self._detection_tracked.balls[0]
         ball_point = self._convert_field_to_draw_point(
             ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm

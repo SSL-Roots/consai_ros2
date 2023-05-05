@@ -106,6 +106,7 @@ def generate_launch_description():
         package='consai_visualizer',
         executable='consai_visualizer',
         output='screen',
+        parameters=[{'invert': LaunchConfiguration('invert')}],
         condition=IfCondition(LaunchConfiguration('gui'))
     )
 

@@ -87,6 +87,9 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
 
+        # Parameterを設定する
+        self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
+
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
