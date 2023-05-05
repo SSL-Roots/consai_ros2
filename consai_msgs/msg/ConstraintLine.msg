@@ -12,3 +12,7 @@ ConstraintTheta theta
 # Line1to2上で、Line3to4と交わるところを目標位置とする
 ConstraintXY[<=1] p3
 ConstraintXY[<=1] p4 
+# Line1to2上での交点からp2へのオフセット距離
+# 負の値を入れるとp1側へオフセットする
+# このオフセット距離によって目標位置がp1, p2をはみ
+float64[<=1] offset_intersection_to_p2
