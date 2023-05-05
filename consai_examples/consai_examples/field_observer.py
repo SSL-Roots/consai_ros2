@@ -115,7 +115,7 @@ class FieldObserver(Node):
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
 
-        # リストを初期化する
+        # 位置・速度・IDのリストを初期化
         self.our_robot_id_list = []
         self.their_robot_id_list = []
         set_none = lambda a_list : [None] * len(a_list)
@@ -133,6 +133,8 @@ class FieldObserver(Node):
             robot_id = robot.robot_id.id
             robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
             team_str = "our" if self._our_team_is_yellow == robot_is_yellow else "their"
+
+            # 位置・速度・IDを更新
             # TODO: robotとrobotsが混ざっているので直したい
             object_str = "self." + team_str + "_robots_"
             eval(object_str + "pos")[robot_id] = State2D(x=robot.pos.x, y=robot.pos.y, theta=robot.orientation)
