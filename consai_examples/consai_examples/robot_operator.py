@@ -258,7 +258,7 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_goal())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
-        if offset_to_p2:
+        if offset_to_p2 is not None:
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
@@ -276,7 +276,7 @@ class RobotOperator(Node):
         line.p3.append(self._xy_their_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
-        if offset_to_p2:
+        if offset_to_p2 is not None:
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
@@ -293,7 +293,7 @@ class RobotOperator(Node):
         line.p3.append(self._xy_their_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
-        if offset_to_p2:
+        if offset_to_p2 is not None:
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
@@ -311,7 +311,7 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
-        if offset_to_p2:
+        if offset_to_p2 is not None:
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
@@ -328,7 +328,7 @@ class RobotOperator(Node):
         line.p3.append(self._xy_our_side_center())
         line.p4.append(self._xy_object_ball())
         line.theta = self._theta_look_ball()
-        if offset_to_p2:
+        if offset_to_p2 is not None:
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()

@@ -314,7 +314,7 @@ bool FieldInfoParser::parse_constraint_line(
 
   State p3, p4;
   bool has_p3_p4 = false;
-  if (line.p3.size() > 0 && line.p4.size()) {
+  if (line.p3.size() > 0 && line.p4.size() > 0) {
     if (parse_constraint_xy(line.p3[0], p3.x, p3.y) &&
         parse_constraint_xy(line.p4[0], p4.x, p4.y)) {
       has_p3_p4 = true;
@@ -328,22 +328,25 @@ bool FieldInfoParser::parse_constraint_line(
     // p1 ~ p4がセットされていれば、
     // 直線p1->p2上で、直線p3->p4と交わるところを目標位置とする
     State intersection = tools::intersection(p1, p2, p3, p4);
-    // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
-    auto intersection_1to2 = trans_1to2.transform(intersection);
-    auto p2_1to2 = trans_1to2.transform(p2);
-    auto parsed_pose_1to2 = intersection_1to2;
-
-    if (intersection_1to2.x < 0.0) {
-      parsed_pose_1to2.x = 0.0;
-    } else if (intersection_1to2.x > p2_1to2.x) {
-      parsed_pose_1to2.x = p2_1to2.x;
-    } 
-    // オフセットを加算する。オフセットによりp1, p2をはみ出ることが可能
-    if (line.offset_intersection_to_p2.size() > 0) {
-      parsed_pose_1to2.x += line.offset_intersection_to_p2[0];
+    // 交点が取れなければp1を目標位置とする
+    if (!std::isfinite(intersection.x) || !std::isfinite(intersection.y)) {
+      parsed_pose = p1;
+    } else {
+      auto parsed_pose_1to2 = trans_1to2.transform(intersection);
+      auto p2_1to2 = trans_1to2.transform(p2);
+      // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
+      if (parsed_pose_1to2.x < 0.0) {
+        parsed_pose_1to2.x = 0.0;
+      } else if (parsed_pose_1to2.x > p2_1to2.x) {
+        parsed_pose_1to2.x = p2_1to2.x;
+      } 
+      // オフセットを加算する。オフセットによりp1, p2をはみ出ることが可能
+      if (line.offset_intersection_to_p2.size() > 0) {
+        parsed_pose_1to2.x += line.offset_intersection_to_p2[0];
+      }
+      // 座標系をもとに戻す
+      parsed_pose = trans_1to2.inverted_transform(parsed_pose_1to2);
     }
-    // 座標系をもとに戻す
-    parsed_pose = trans_1to2.inverted_transform(parsed_pose_1to2);
   }else {
     // 直線p1->p2上で、p1からdistanceだけ離れた位置を目標位置する
     parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);
