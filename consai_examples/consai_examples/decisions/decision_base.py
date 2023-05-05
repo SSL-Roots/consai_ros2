@@ -65,6 +65,9 @@ class DecisionBase(object):
     def set_ball_zone_state(self, ball_zone_state):
         self._ball_zone_state = ball_zone_state
 
+    def set_num_of_center_back_roles(self, num_of_center_back_roles):
+        self._num_of_center_back_roles = num_of_center_back_roles
+
     def set_num_of_zone_roles(self, num_of_zone_roles):
         self._num_of_zone_roles = num_of_zone_roles
 

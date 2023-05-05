@@ -47,6 +47,13 @@ def num_of_active_zone_roles(active_roles):
         RoleName.ZONE4]
     return len(set(role_zone_list) & set(active_roles))
 
+def num_of_active_center_back_roles(active_roles):
+    # アクティブなセンターバック担当者の数を返す
+    role_center_back_list = [
+        RoleName.CENTER_BACK1,
+        RoleName.CENTER_BACK2]
+    return len(set(role_center_back_list) & set(active_roles))
+
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
     # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
@@ -77,6 +84,8 @@ def main():
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
+        # 担当者がいるroleの中から、センターバックの数を抽出する
+        num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [ t[0] for t in assignor.get_assigned_roles_and_ids() ]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
@@ -94,6 +103,8 @@ def main():
             decisions[role].set_ball_placement_state(ball_placement_state)
             # ボールゾーン状態をセットする
             decisions[role].set_ball_zone_state(ball_zone_state)
+            # センターバックの担当者数をセットする
+            decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
             # ゾーンディフェンスの担当者数をセットする
             decisions[role].set_num_of_zone_roles(num_of_zone_roles)
             # ゾーンディフェンスのターゲットをセットする
