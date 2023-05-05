@@ -87,12 +87,12 @@ def main():
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
-        # 担当者がいるroleの中から、センターバックの数を抽出する
-        num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [ t[0] for t in assignor.get_assigned_roles_and_ids() ]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
+        # 担当者がいるroleの中から、センターバックの数を抽出する
+        num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         
         for role, robot_id in assignor.get_assigned_roles_and_ids():
             # 役割が変わったロボットのみ、行動を更新する
