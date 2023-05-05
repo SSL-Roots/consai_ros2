@@ -384,10 +384,6 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, goal_msg)
 
-    def pass_to(self, robot_id, x, y):
-        # ボールの後ろに移動し、指定位置に向かってパスする
-        return self._act_to_ball(robot_id, self._xy(x, y), do_pass=True)
-
     def shoot_to(self, robot_id, x, y):
         # ボールの後ろに移動し、指定位置に向かってシュートする
         return self._act_to_ball(robot_id, self._xy(x, y), do_shoot=True)
