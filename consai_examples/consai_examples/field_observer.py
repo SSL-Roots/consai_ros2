@@ -60,6 +60,22 @@ class FieldObserver(Node):
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
 
+    GOAL_POST_Y = 0.9 # meters
+    GOAL_POINT = 5 # ゴール候補のポイント
+    SHOOTS_POS = [[6.0, 0.9], [6.0, 0.45], [6.0, 0.0], [6.0, -0.45], [6.0, -0.9]]
+    GOAL_POST_TOP = [6, 0.9] # meters
+    GOAL_POST_BOTTOM = [6, -0.9] # meters
+    GOAL_CENTER = [6, 0] # meters
+    GOAL_TOP_CENTER = [6, 0.45] # meters
+    GOAL_CENTER_BOTTOM = [6, -0.45] # meters
+    GOAL_POST_WIDTH = 1.8 # meters
+    ROBOT_RADIUS  = 0.1 # meters
+    GOAL_POST_TOP_NUM = 0
+    GOAL_TOP_CENTER_NUM = 1
+    GOAL_CENTER_NUM = 2
+    GOAL_CENTER_BOTTOM_NUM = 3
+    GOAL_POST_BOTTOM_NUM = 4
+
     def __init__(self, our_team_is_yellow=False):
         super().__init__('field_observer')
 
@@ -648,6 +664,12 @@ class FieldObserver(Node):
         check_count = 0
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
+        # 相手ロボットのゴーリーのx座標
+        # their_goalie_x = 0.0
+        # # 相手ロボットのゴーリーのy座標
+        # their_goalie_y = 0.0
+        # # 相手ゴーリーのID
+        # their_goalie_id = 99
 
         # 味方ロボットの位置と速度を取得
         our_robot_id_list = copy.deepcopy(self.our_robot_id_list)
@@ -669,6 +691,10 @@ class FieldObserver(Node):
 
         skip_my_id = True
         if need_shoot:
+            # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
+            robot_r = 0.1 #meters
+            # ロボットの位置座標取得から実際にパスを出すまでの想定時間
+            dt = 0.0 #sec
             skip_my_id = False
             # ゴールのIDと位置
             # シュートのときは味方位置をゴールの位置と見立てる
@@ -730,11 +756,19 @@ class FieldObserver(Node):
                         # 何台の相手ロボットに妨害されないかをカウントする変数をリセット
                         check_count = 0
                         break
+
+                    # if need_shoot and their_goalie_x < their_robot_pos_trans.x and -self._field_defense_half_y < their_goalie_y and their_goalie_y < self._field_defense_half_y:
+                    #     their_goalie_id = their_robot_id
+                    #     their_goalie_x = their_robot_pos_trans.x
+                    #     their_goalie_y = their_robot_pos_trans.y
             # 計算対象とする相手ロボットが存在しないとき（邪魔する相手ロボットがいないとき）
             else:
                 # パスができる味方ロボットとしてリストに格納
                 robots_to_pass.append(our_robot_id)
-        
+                
+            # if their_goalie_id != 99 and their_robot_pos_trans.y > 0:
+            #     robots_to_pass = sorted(robots_to_pass, reverse=True)
+
         return robots_to_pass
 
     def _sort_by_from_robot_distance(self, my_robot_pos, robots_id, robots_pos):
@@ -780,4 +814,3 @@ class FieldObserver(Node):
         #                     robots_vel[_id][0] / math.sqrt(robots_vel[_id][0] ** 2 + robots_vel[_id][1] ** 2)]
 
         return forward_robots_id
-

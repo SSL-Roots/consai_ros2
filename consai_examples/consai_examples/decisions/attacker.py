@@ -51,6 +51,8 @@ class AttackerDecision(DecisionBase):
         ID_INPLAY = self.ACT_ID_INPLAY + 0
         ID_IN_OUR_DEFENSE = self.ACT_ID_INPLAY + 1
         ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
+        ID_SHOOT_PASS = self.ACT_ID_INPLAY + 3
+        ID_NO_SHOOT_PASS = self.ACT_ID_INPLAY + 10
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
@@ -64,6 +66,25 @@ class AttackerDecision(DecisionBase):
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
+            return
+
+        # 指定座標に向けてシュートまたはパスをする
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE and self._act_id != ID_NO_SHOOT_PASS:
+            if self._act_id != ID_SHOOT_PASS:
+                receiver_robots_id, shoot_point = FieldObserver.get_open_path_id_list(robot_id)
+                # 指定座標に向けてシュートする
+                if len(shoot_point) > 0:
+                    self._operator.shoot_to(robot_id, FieldObserver.SHOOTS_POS[shoot_point[0]], FieldObserver.SHOOTS_POS[shoot_point[1]])
+                    self._act_id = ID_SHOOT_PASS
+                # 前方のパスが出せるロボットにパスを出す
+                elif len(receiver_robots_id) > 0:
+                    # レシーバ候補のロボットIDリストを取得
+                    self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+                # シュートもパスもできないときはこの条件に入らないように設定
+                else:
+                    self._act_id = ID_NO_SHOOT_PASS
+                    return
+                self._act_id = ID_SHOOT_PASS
             return
 
         # ゴールに向かってシュートする

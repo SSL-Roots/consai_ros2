@@ -130,7 +130,7 @@ def test_chase_robot():
         pass
 
 
-def test_for_config_pid(pattern=[0.1, 0.3, 0.5, 0.7, 0.9], test_x=False, test_y=False,
+def test_for_config_pid(pattern=[0.7, 0.7, 0.7], test_x=False, test_y=False,
                         test_theta=False):
     # PID調整用の関数
     # この関数を実行している裏で、consai_robot_controllerのPIDゲインを調整することを推奨する
@@ -465,6 +465,13 @@ def test_star_pass():
     while operator_node.all_robots_are_free() is False:
         pass
 
+def test():
+    while(1):
+        if observer_node.our_robots_pos[0] != None:
+            break
+    ans = observer_node.get_open_path_id_list(4)
+    print(ans)
+
 def main():
     # 実行したい関数のコメントを外してください
     # test_move_to()
@@ -472,7 +479,7 @@ def main():
     # test_move_to_normalized(3)
     # test_chase_ball()
     # test_chase_robot()
-    # test_for_config_pid(test_x=True)
+    # test_for_config_pid(test_theta=True)
     # test_shoot(1.0, 0.0)
     # test_shoot_to_their(6)
     # test_pass_two_robots()
@@ -483,7 +490,8 @@ def main():
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # test_use_named_targets()
-    test_star_pass()
+    # test_star_pass()
+    test()
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
