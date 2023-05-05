@@ -74,7 +74,7 @@ class AttackerDecision(DecisionBase):
                 receiver_robots_id, shoot_point = FieldObserver.get_open_path_id_list(robot_id)
                 # 指定座標に向けてシュートする
                 if len(shoot_point) > 0:
-                    self._operator.shoot_to(robot_id, FieldObserver.SHOOTS_POS[shoot_point][0], FieldObserver.SHOOTS_POS[shoot_point][1])
+                    self._operator.shoot_to(robot_id, FieldObserver.SHOOTS_POS[shoot_point[0]], FieldObserver.SHOOTS_POS[shoot_point[1]])
                     self._act_id = ID_SHOOT_PASS
                 # 前方のパスが出せるロボットにパスを出す
                 elif len(receiver_robots_id) > 0:
