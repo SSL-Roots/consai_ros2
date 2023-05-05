@@ -129,37 +129,3 @@ def test_ID15付近のロボットでもget_receiver_robots_idが正常動作す
     actual_can_pass_id_list, actual_can_shoot_id_list = observer.get_open_path_id_list(my_robot_id=15)
     assert actual_can_pass_id_list == [13]
     assert actual_can_shoot_id_list == []
-
-# @pytest.mark.parametrize("is_yellow", [(False), (True)])
-# def test_シューターよりも前に敵ロボットがいるときget_shoot_pointがシュートできるゴールポイントを返す(rclpy_init_shutdown, is_yellow):
-#     observer = FieldObserver(our_team_is_yellow=is_yellow)
-#     frame_publisher = TrackedFramePublisher()
-#     frame_publisher.set_robot(is_yellow, 4, 3.0, 4.0, math.radians(0))
-#     # 右を向いたシュターの右に敵ロボットを置く
-#     frame_publisher.set_robot(not is_yellow, 6, 5.0, 0.0, math.radians(0))
-#     frame_publisher.set_robot(not is_yellow, 7, 6.0, 2.0, math.radians(0))
-#     frame_publisher.set_robot(not is_yellow, 8, 5.0, 2.0, math.radians(0))
-#     # 関係ないロボットを置く
-#     frame_publisher.set_robot(not is_yellow, 2, 3.0, 3.0, math.radians(0))
-
-#     frame_publisher.publish_preset_frame()
-#     # トピックをsubscribeするためspine_once()を実行
-#     rclpy.spin_once(observer, timeout_sec=1.0)
-#     assert observer.get_shoot_point(my_robot_id=4) == 2
-
-# @pytest.mark.parametrize("is_yellow", [(False), (True)])
-# def test_(rclpy_init_shutdown, is_yellow):
-#     observer = FieldObserver(our_team_is_yellow=is_yellow)
-#     frame_publisher = TrackedFramePublisher()
-#     frame_publisher.set_robot(is_yellow, 4, 3.0, 4.0, math.radians(0))
-#     # 右を向いたシュターの右に敵ロボットを置く
-#     frame_publisher.set_robot(not is_yellow, 6, 5.0, 0.0, math.radians(0))
-#     frame_publisher.set_robot(not is_yellow, 7, 6.0, 2.0, math.radians(0))
-#     frame_publisher.set_robot(not is_yellow, 8, 5.0, 2.0, math.radians(0))
-#     # 関係ないロボットを置く
-#     frame_publisher.set_robot(not is_yellow, 2, 3.0, 3.0, math.radians(0))
-
-#     frame_publisher.publish_preset_frame()
-#     # トピックをsubscribeするためspine_once()を実行
-#     rclpy.spin_once(observer, timeout_sec=1.0)
-#     assert observer.get_shoot_point(my_robot_id=4) == 2
