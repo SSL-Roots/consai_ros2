@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(robocup_ssl_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
@@ -27,8 +28,11 @@ set(msg_files
   "msg/ConstraintTheta.msg"
   "msg/ConstraintXY.msg"
   "msg/GoalPose.msg"
+  "msg/GoalPoses.msg"
   "msg/NamedTargets.msg"
   "msg/ParsedReferee.msg"
+  "msg/RobotLocalVelocities.msg"
+  "msg/RobotLocalVelocity.msg"
   "msg/State2D.msg"
 )
 
@@ -39,7 +43,7 @@ set(action_files
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${action_files}
-  DEPENDENCIES std_msgs
+  DEPENDENCIES std_msgs robocup_ssl_msgs
   ADD_LINTER_TESTS
 )
 

@@ -29,6 +29,7 @@ from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotId
+from robocup_ssl_msgs.msg import RobotReplacement
 from robocup_ssl_msgs.msg import TrackedFrame
 
 
@@ -52,7 +53,6 @@ class FieldWidget(QWidget):
         self._COLOR_YELLOW_ROBOT = Qt.yellow
         self._COLOR_REPLACEMENT_POS = QColor('magenta')
         self._COLOR_REPLACEMENT_VEL_ANGLE = QColor('darkviolet')
-        self._COLOR_GOAL_POSE = QColor('silver')
         self._COLOR_DESIGNATED_POSITION = QColor('red')
         self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
@@ -83,8 +83,11 @@ class FieldWidget(QWidget):
         self._detections = {}
         self._detection_tracked = TrackedFrame()
         self._goal_poses = {}
+        self._final_goal_poses = {}
         self._designated_position = {}  # ball placementの目標位置
         self._named_targets = {}
+        self._robot_replacements = []
+        self._invert = False
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -125,8 +128,15 @@ class FieldWidget(QWidget):
     def set_detection_tracked(self, msg):
         self._detection_tracked = msg
 
-    def set_goal_pose(self, msg, robot_id):
-        self._goal_poses[robot_id] = msg
+    def set_goal_poses(self, msg):
+        self._goal_poses.clear()
+        for goal_pose in msg.poses:
+            self._goal_poses[goal_pose.robot_id] = goal_pose
+
+    def set_final_goal_poses(self, msg):
+        self._final_goal_poses.clear()
+        for goal_pose in msg.poses:
+            self._final_goal_poses[goal_pose.robot_id] = goal_pose
 
     def set_designated_position(self, msg):
         self._designated_position[0] = msg
@@ -137,10 +147,29 @@ class FieldWidget(QWidget):
         for i in range(len(msg.name)):
             self._named_targets[msg.name[i]] = msg.pose[i]
 
+    def set_invert(self, param):
+        self._invert = param
+
+    def append_robot_replacement(self, is_yellow, robot_id, turnon):
+        # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
+        ID_OFFSET_X = 0.2
+        team_offset_x = -3.0 if is_yellow else 0.0
+        turnon_offset_y = -4.6 if turnon else -5.6
+        
+        replacement = RobotReplacement()
+        replacement.x = team_offset_x + ID_OFFSET_X * robot_id
+        replacement.y = turnon_offset_y
+        replacement.dir = 90.0
+        replacement.id = robot_id
+        replacement.yellowteam = is_yellow
+        replacement.turnon.append(turnon)
+        self._robot_replacements.append(replacement)
+
     def reset_topics(self):
         # 取得したトピックをリセットする
         self._detections = {}
         self._goal_poses = {}
+        self._final_goal_poses = {}
         self._designated_position = {}
 
     def mousePressEvent(self, event):
@@ -237,10 +266,21 @@ class FieldWidget(QWidget):
         if self._can_draw_detection_tracked:
             self._draw_detection_tracked(painter)
 
+        # ロボットのreplacementをpublishする
+        if self._robot_replacements:
+            replacement = Replacement()
+            replacement.robots = self._robot_replacements
+            self._pub_replacement.publish(replacement)
+            self._robot_replacements = []
+
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する
         # 近ければreplacementと判定する
         field_clicked_pos = self._convert_draw_to_field_pos(clicked_point)
+
+        # サイド反転の処理
+        if self._invert:
+            field_clicked_pos *= -1.0
 
         clicked_object = ClickedObject.IS_NONE
         for detection in self._detections.values():
@@ -273,8 +313,13 @@ class FieldWidget(QWidget):
         # grSimのBall Replacementの位置をpublsihする
         ball_replacement = BallReplacement()
         pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+        # サイド反転
+        if self._invert:
+            pos *= -1.0
         ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
         ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
+        ball_replacement.vx.append(0.0)
+        ball_replacement.vy.append(0.0)
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
@@ -285,6 +330,11 @@ class FieldWidget(QWidget):
 
         start_pos = self._convert_draw_to_field_pos(self._mouse_clicked_point)
         end_pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+
+        # サイド反転
+        if self._invert:
+            start_pos *= -1.0
+            end_pos *= -1.0
 
         # ball_replacement.x.append(start_pos.x() * 0.001)  # mm に変換
         # ball_replacement.y.append(start_pos.y() * 0.001)  # mm に変換
@@ -376,8 +426,18 @@ class FieldWidget(QWidget):
             span_angle = end_angle - start_angle
             painter.drawArc(rect, start_angle, span_angle)
 
+        # ペナルティポイントを描画
+        painter.setBrush(self._COLOR_FIELD_LINE)
+        PENALTY_X =  self._field.field_length * 0.5 - 8000  # ルールの2.1.3 Field Markingsを参照
+        PENALTY_DRAW_SIZE = 50 * self._scale_field_to_draw
+        point = self._convert_field_to_draw_point(PENALTY_X, 0.0)
+        painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
+        point = self._convert_field_to_draw_point(-PENALTY_X, 0.0)
+        painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
+
         # ゴールを描画
         painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
+        painter.setBrush(self._COLOR_FIELD_CARPET)
         rect = QRectF(
             self._convert_field_to_draw_point(
                 self._field.field_length * 0.5, self._field.goal_width*0.5),
@@ -548,7 +608,8 @@ class FieldWidget(QWidget):
 
         # goal_poseが存在しなければ終了
         goal_pose = self._goal_poses.get(robot_id)
-        if goal_pose is None:
+        final_goal_pose = self._final_goal_poses.get(robot_id)
+        if goal_pose is None or final_goal_pose is None:
             return
 
         # team_colorが一致しなければ終了
@@ -556,12 +617,26 @@ class FieldWidget(QWidget):
         if robot_is_yellow is not goal_pose.team_is_yellow:
             return
 
+        brush_color = QColor('silver')
+        line_color = QColor('red')
+        self._draw_goal_pose_and_line_to_parent(
+            painter, goal_pose, robot.pos.x, robot.pos.y, robot_id,
+            self._RADIUS_ROBOT * self._scale_field_to_draw, brush_color, line_color)
+
+        brush_color.setAlphaF(0.5)
+        line_color.setAlphaF(0.5)
+        self._draw_goal_pose_and_line_to_parent(
+            painter, final_goal_pose, goal_pose.pose.x, goal_pose.pose.y, robot_id,
+            self._RADIUS_ROBOT * 0.7 * self._scale_field_to_draw, brush_color, line_color)
+
+    def _draw_goal_pose_and_line_to_parent(self, painter, goal_pose, parent_x, parent_y, robot_id, size, color_brush, color_line_to_parent):
+        # 目標位置を描画する
+        # parentはロボットだったり、回避位置だったりする
         painter.setPen(Qt.black)
-        painter.setBrush(self._COLOR_GOAL_POSE)
+        painter.setBrush(color_brush)
         # x,y座標
         point = self._convert_field_to_draw_point(
             goal_pose.pose.x * 1000, goal_pose.pose.y * 1000)  # meters to mm
-        size = self._RADIUS_ROBOT * self._scale_field_to_draw
         painter.drawEllipse(point, size, size)
 
         # 角度
@@ -574,24 +649,28 @@ class FieldWidget(QWidget):
         text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
         painter.drawText(text_point, str(robot_id))
 
-        # goal_poseとロボットを結ぶ直線を引く
-        painter.setPen(QPen(Qt.red, 2))
-        robot_point = self._convert_field_to_draw_point(
-            robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
-        painter.drawLine(point, robot_point)
+        # goal_poseとparent_poseを結ぶ直線を引く
+        painter.setPen(QPen(color_line_to_parent, 2))
+        parent_point = self._convert_field_to_draw_point(
+            parent_x * 1000, parent_y * 1000)  # meters to mm
+        painter.drawLine(point, parent_point)
+
 
     def _draw_replacement_ball(self, painter, ball):
         # ボールのreplacementを描画する
 
         # ボール速度replacement判定エリアの描画
         point = self._convert_field_to_draw_point(ball.x, ball.y)
+        # サイド反転の処理
+        if self._invert:
+            point *= -1.0
+
         size = self._RADIUS_REPLACEMENT_BALL_VEL * self._scale_field_to_draw
         painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
         painter.setBrush(self._COLOR_REPLACEMENT_VEL_ANGLE)
         painter.drawEllipse(point, size, size)
 
         # ボール位置replacement判定エリアの描画
-        point = self._convert_field_to_draw_point(ball.x, ball.y)
         size = self._RADIUS_REPLACEMENT_BALL_POS * self._scale_field_to_draw
         painter.setPen(self._COLOR_REPLACEMENT_POS)
         painter.setBrush(self._COLOR_REPLACEMENT_POS)
@@ -619,6 +698,10 @@ class FieldWidget(QWidget):
         # 目標位置とボール位置を取得
         designated_point = self._convert_field_to_draw_point(
             self._designated_position[0].x, self._designated_position[0].y)
+        # サイド反転
+        if self._invert:
+            designated_point *= -1.0
+        
         ball = self._detection_tracked.balls[0]
         ball_point = self._convert_field_to_draw_point(
             ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm

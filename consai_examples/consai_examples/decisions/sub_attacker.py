@@ -94,22 +94,22 @@ class SubAttackerDecision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 0.5, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty_inplay(self, robot_id):
@@ -135,27 +135,20 @@ class SubAttackerDecision(DecisionBase):
         self._offend(robot_id, self.ACT_ID_INDIRECT)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
-        ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
-        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+        ID_BALL_RECEIVE = self.ACT_ID_OUR_PLACEMENT + 0
+        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 1
 
         # プレースメントを回避しない
         self._operator.disable_avoid_placement(robot_id)
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
+        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
+           self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボールを受け取る
-            if self._act_id != ID_FAR_FROM:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.3)
-                self._act_id = ID_FAR_FROM
+            if self._act_id != ID_BALL_RECEIVE:
+                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
+                self._act_id = ID_BALL_RECEIVE
             return
         
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
-            # 目標位置に近づきボールを支える
-            if self._act_id != ID_NEAR:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1, dynamic_receive=False)
-                self._act_id = ID_NEAR
-            return
-
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:

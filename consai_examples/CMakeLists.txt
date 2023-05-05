@@ -38,6 +38,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/sub_attacker.py
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
+    ${PROJECT_NAME}/decisions/side_wing.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
@@ -53,6 +54,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
   ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
+  ament_add_pytest_test(test_field_observer tests/test_field_observer.py)
 endif()
 
 ament_package()

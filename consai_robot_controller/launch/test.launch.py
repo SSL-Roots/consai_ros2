@@ -28,7 +28,7 @@ def generate_launch_description():
     pid_gains = os.path.join(
         get_package_share_directory('consai_robot_controller'),
         'config',
-        'pid_gains.yaml'
+        'control_params.yaml'
         )
 
     declare_arg_gui = DeclareLaunchArgument(
@@ -44,6 +44,16 @@ def generate_launch_description():
     declare_arg_yellow = DeclareLaunchArgument(
         'yellow', default_value='false',
         description=('Set "true" to control yellow team robots.')
+    )
+
+    declare_arg_vision_addr = DeclareLaunchArgument(
+        'vision_addr', default_value='224.5.23.2',
+        description=('Set multicast address to connect SSL-Vision.')
+    )
+
+    declare_arg_vision_port = DeclareLaunchArgument(
+        'vision_port', default_value='10006',
+        description=('Set multicast port to connect SSL-Vision.')
     )
 
     container = ComposableNodeContainer(
@@ -79,6 +89,10 @@ def generate_launch_description():
                     plugin='robocup_ssl_comm::Vision',
                     name='vision',
                     extra_arguments=[{'use_intra_process_comms': True}],
+                    parameters=[{
+                        'multicast_address': LaunchConfiguration('vision_addr'),
+                        'multicast_port': LaunchConfiguration('vision_port'),
+                        }],
                     ),
                 ComposableNode(
                     package='robocup_ssl_comm',
@@ -92,6 +106,7 @@ def generate_launch_description():
         package='consai_visualizer',
         executable='consai_visualizer',
         output='screen',
+        parameters=[{'invert': LaunchConfiguration('invert')}],
         condition=IfCondition(LaunchConfiguration('gui'))
     )
 
@@ -99,6 +114,8 @@ def generate_launch_description():
         declare_arg_gui,
         declare_arg_invert,
         declare_arg_yellow,
+        declare_arg_vision_addr,
+        declare_arg_vision_port,
         container,
         visualizer
     ])

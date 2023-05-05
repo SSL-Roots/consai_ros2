@@ -29,14 +29,14 @@ class AttackerDecision(DecisionBase):
         ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
@@ -53,14 +53,14 @@ class AttackerDecision(DecisionBase):
         ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
@@ -103,17 +103,17 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.move_to_look_ball(robot_id, 6.0 - 0.5, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_INPLAY
 
     def our_penalty_inplay(self, robot_id):

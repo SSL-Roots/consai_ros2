@@ -19,21 +19,53 @@ import math
 import cmath
 import numpy
 
+from consai_msgs.msg import State2D
+
+def get_diff_xy(pose1, pose2):
+
+    diff_pose = State2D()
+
+    # 2点間の距離(xとy)を取る関数
+    diff_pose.x = pose1.x - pose2.x
+    diff_pose.y = pose1.y - pose2.y
+
+    return diff_pose
+
 def get_distance(pose1, pose2):
     # 2点間の距離を取る関数
+    diff = get_diff_xy(pose1, pose2)
 
-    diff_pose_x = pose1[0] - pose2[0]
-    diff_pose_y = pose1[1] - pose2[1]
+    return math.hypot(diff.x, diff.y)
 
-    return math.hypot(diff_pose_x, diff_pose_y)
+def get_line_parameter(pose1, pose2):
+    # 2点間を結ぶ直線の傾きと切片を求める関数
+    diff = get_diff_xy(pose1, pose2)
+   
+    # 計算できた場合Ture
+    flag = True
+
+    # 2点が縦に並ぶ場合
+    if math.isclose(diff.x, 0.0):
+        slope = None
+        intercept = None
+        flag = False
+    # 2点が横に並ぶ場合
+    elif math.isclose(diff.y, 0.0):
+        slope = 0
+        intercept = pose1.y
+    else:
+        # 直線の傾き
+        slope = diff.y / diff.x
+        # 直線の切片
+        intercept = pose2.y - slope * pose2.x
+
+    return slope, intercept, flag
 
 def get_angle(from_pose, to_pose):
     # ワールド座標系でfrom_poseからto_poseを結ぶ直線の角度を得る
+    diff_pose = get_diff_xy(to_pose, from_pose)
 
-    diff_pose_x = to_pose[0] - from_pose[0]
-    diff_pose_y = to_pose[1] - from_pose[1]
-
-    return math.atan2(diff_pose_y, diff_pose_x)
+    return math.atan2(diff_pose.y, diff_pose.x)
 
 def angle_normalize(angle):
     # 角度をpi  ~ -piの範囲に変換する関数
@@ -49,21 +81,27 @@ class Trans():
     # 座標系を移動、回転するクラス
     def __init__(self, center , theta):
         normalized_theta = angle_normalize(theta)
-        self._c_center = center[0] + center[1] * 1.0j
+        self._c_center = center.x + center.y * 1.0j
         self._c_rotate = cmath.rect(1.0, normalized_theta) 
         self._c_angle = normalized_theta
 
     def transform(self, pose):
-        c_point = pose[0] + pose[1] * 1.0j
+        c_point = pose.x + pose.y * 1.0j
         c_output = (c_point - self._c_center) * numpy.conj(self._c_rotate)
 
-        return [c_output.real, c_output.imag]
+        _pose = State2D()
+        _pose.x = c_output.real
+        _pose.y = c_output.imag
+        return _pose
 
     def inverted_transform(self, pose):
-        c_point = pose[0] + pose[1] * 1.0j
+        c_point = pose.x + pose.y * 1.0j
         c_output = c_point * self._c_rotate + self._c_center
 
-        return [c_output.real, c_output.imag]
+        _pose = State2D()
+        _pose.x = c_output.real
+        _pose.y = c_output.imag
+        return _pose
 
     def transform_angle(self, angle):
         return angle_normalize(angle - self._c_angle)

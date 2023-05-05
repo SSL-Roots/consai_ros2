@@ -20,7 +20,7 @@ import os
 import time
 
 from ament_index_python.resources import get_resource
-from consai_msgs.msg import GoalPose
+from consai_msgs.msg import GoalPoses
 from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
 import consai_visualizer.referee_parser as ref_parser
@@ -96,12 +96,10 @@ class Visualizer(Plugin):
                 BatteryVoltage, topic_name,
                 partial(self._callback_kicker_voltage, robot_id=i), 10))
 
-        self._sub_goal_pose = []
-        for i in range(16):
-            topic_name = 'robot' + str(i) + '/goal_pose'
-            self._sub_goal_pose.append(self._node.create_subscription(
-                GoalPose, topic_name,
-                partial(self._widget.field_widget.set_goal_pose, robot_id=i), 10))
+        self._sub_goal_poses = self._node.create_subscription(
+                GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
+        self._sub_final_goal_poses = self._node.create_subscription(
+                GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
 
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
@@ -236,7 +234,7 @@ class Visualizer(Plugin):
         return int(percentage)
 
     def _update_robot_synthetics(self):
-        # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
+        # n秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
         now = time.time()
 
         for i in range(16):
@@ -249,7 +247,7 @@ class Visualizer(Plugin):
                 # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                 pass
 
-            if diff_time > 1.0:
+            if diff_time > 3.0:  # 死んだ判定
                 # DEATH
                 try:
                     getattr(self._widget, f"robot{i}_connection_status").setText("❌")
