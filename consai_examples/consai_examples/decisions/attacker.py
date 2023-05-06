@@ -29,14 +29,16 @@ class AttackerDecision(DecisionBase):
         ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_BACK_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
+        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        # if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
