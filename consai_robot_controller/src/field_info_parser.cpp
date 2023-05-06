@@ -246,7 +246,7 @@ bool FieldInfoParser::parse_goal(
 
     // STOP_GAME中はボールから離れる
     if (avoid_ball) {
-      avoid_ball_500mm(my_robot, parsed_pose, ball, avoidance_pose);
+      avoid_ball_500mm(parsed_pose, ball, avoidance_pose);
       parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
     }
   }
@@ -968,24 +968,18 @@ bool FieldInfoParser::avoid_robots(
 }
 
 bool FieldInfoParser::avoid_ball_500mm(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const State & goal_pose, const TrackedBall & ball,
     State & avoidance_pose) const {
-  // ボールから500 mm以上離れるために、2つの回避処理を実行する
-  // 1つは目標位置の回避。目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
-  // もう1つはロボットの回避。ロボットがボールに近づいた場合は、ボールを中心に円を描くように回避する
+  // ボールから500 mm以上離れるために、回避処理を実行する
+  // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
+  // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
   const double DISTANCE_TO_AVOID_THRESHOLD = 0.65;
   const double AVOID_MARGIN = 0.05;
   const double DISTANCE_TO_AVOID = DISTANCE_TO_AVOID_THRESHOLD - AVOID_MARGIN;
-  const double THETA_TO_ROTATE = tools::to_radians(20);
   
-  auto robot_pose = tools::pose_state(my_robot);
   auto ball_pose = tools::pose_state(ball);
-  auto distance_BtoR = tools::distance(ball_pose, robot_pose);
   auto distance_BtoG = tools::distance(ball_pose, goal_pose);
   tools::Trans trans_BtoG(ball_pose, tools::calc_angle(ball_pose, goal_pose));
-  auto ball_pose_BtoG = trans_BtoG.transform(ball_pose);
-  auto robot_pose_BtoG = trans_BtoG.transform(robot_pose);
-  auto angle_ball_to_robot_BtoG = tools::calc_angle(ball_pose_BtoG, robot_pose_BtoG);
 
   // 障害物がなければ、目標位置を回避位置とする
   avoidance_pose = goal_pose;
@@ -1001,19 +995,26 @@ bool FieldInfoParser::avoid_ball_500mm(
     }
 
     // フィールド外に目標位置が置かれた場合の処理
-    // TODO: X軸のはみ出しのみ評価しているが、これで問題が発生していない。必要があればY軸も評価する
     const auto BOUNDARY_WIDTH = geometry_->field.boundary_width * 0.001;
     const auto FIELD_HALF_X = geometry_->field.field_length * 0.5 * 0.001;
+    const auto FIELD_HALF_Y = geometry_->field.field_width * 0.5 * 0.001;
     // どれだけフィールドからはみ出たかを、0.0 ~ 1.0に変換する
-    auto gain = std::min(1.0, std::max(0.0, (std::fabs(avoidance_pose.x) - FIELD_HALF_X) / BOUNDARY_WIDTH));
-    if (gain > 0.0) {
-      // はみ出た分だけ目標位置をボール周囲でずらす
-      auto add_angle = std::copysign(gain * M_PI * 0.5, avoidance_pose.y);
+    // はみ出た分だけ目標位置をボール周囲でずらす
+    auto gain_x = std::clamp((std::fabs(avoidance_pose.x) - FIELD_HALF_X) / BOUNDARY_WIDTH, 0.0, 1.0);
+    auto gain_y = std::clamp((std::fabs(avoidance_pose.y) - FIELD_HALF_Y) / BOUNDARY_WIDTH, 0.0, 1.0);
+    if (gain_x > 0.0) {
+      auto add_angle = std::copysign(gain_x * M_PI * 0.5, avoidance_pose.y);
       avoidance_pose = trans_BtoG.inverted_transform(
         DISTANCE_TO_AVOID * std::cos(add_angle),
         DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
-      avoidance_pose.theta = goal_pose.theta;
     }
+    if (gain_y > 0.0) {
+      auto add_angle = std::copysign(gain_y * M_PI * 0.5, avoidance_pose.x);
+      avoidance_pose = trans_BtoG.inverted_transform(
+        DISTANCE_TO_AVOID * std::cos(add_angle),
+        DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
+    }
+    avoidance_pose.theta = goal_pose.theta;
   }
   return true;
 }
