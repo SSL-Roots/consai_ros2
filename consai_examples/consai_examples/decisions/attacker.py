@@ -119,7 +119,7 @@ class AttackerDecision(DecisionBase):
     def our_penalty_inplay(self, robot_id):
         ID_INPLAY_BALL_IN_DEFENSE_AREA = self.ACT_ID_INPLAY + 1
         # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_INPLAY_BALL_IN_DEFENSE_AREA:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_INPLAY_BALL_IN_DEFENSE_AREA
