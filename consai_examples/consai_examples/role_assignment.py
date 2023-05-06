@@ -299,7 +299,9 @@ class RoleAssignment(Node):
     def _determine_next_attacker_id(self, our_active_robots, ball_pos):
         # ボールに最も近いロボットをアタッカー候補として出力する
         # アタッカーIDが頻繁に変わらないヒステリシスをもたせる
-        NEAREST_THRESHOLD = 0.5  # meter
+        NEAREST_DIFF_THRESHOLD = 0.5  # meter
+        NEAREST_VERY_CLOSE_DIFF_THRESHOLD = 0.1 # meter
+        NEAREST_VERY_CLOSE_THRESHOLD = 0.3 # meter
 
         nearest_id = None
         nearest_distance = 1000  # 適当な巨大な距離を初期値とする
@@ -329,10 +331,16 @@ class RoleAssignment(Node):
 
         # アタッカー以外のロボットが十分にボールに近ければ、
         # アタッカー候補としてIDを返す
-        if present_attacker_distance - nearest_distance > NEAREST_THRESHOLD:
+        if present_attacker_distance - nearest_distance > NEAREST_DIFF_THRESHOLD:
             return nearest_id
-        else:
-            return present_attacker_id
+
+        # アタッカーと次候補が両方ボールに近いとき
+        # 両者の距離の差とnearest_distanceそのものの距離をみることで
+        # 3台以上ボールに近いときでも切り替わりの連発を防ぐ
+        if present_attacker_distance - nearest_distance > NEAREST_VERY_CLOSE_DIFF_THRESHOLD and nearest_distance < NEAREST_VERY_CLOSE_THRESHOLD:
+            return nearest_id
+
+        return present_attacker_id
 
     def _overwrite_substite_to_present_role_list(self, num_of_substitute):
         # 指定した数だけ、presetn_role_listの後ろからSUBSTITUEロールを上書きする
