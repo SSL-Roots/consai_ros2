@@ -77,8 +77,8 @@ class SubAttackerDecision(DecisionBase):
         self._offend(robot_id, self.ACT_ID_STOP)
 
     def inplay(self, robot_id):
-        # self._offend(robot_id, self.ACT_ID_STOP)
-        self._offend_with_kick(robot_id, self.ACT_ID_INPLAY)
+        self._offend(robot_id, self.ACT_ID_STOP)
+        # self._offend_with_kick(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
         self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)
