@@ -140,9 +140,9 @@ class Visualizer(Plugin):
         self._timer.start(16)
 
         # 5000 msec周期で描画情報をリセットする
-        self._reset_timer = QTimer()
-        self._reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
-        self._reset_timer.start(5000)
+        self._draw_reset_timer = QTimer()
+        self._draw_reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
+        self._draw_reset_timer.start(5000)
 
         # ロボットの死活監視
         # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
