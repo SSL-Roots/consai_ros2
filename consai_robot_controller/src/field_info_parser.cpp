@@ -246,7 +246,7 @@ bool FieldInfoParser::parse_goal(
 
     // STOP_GAME中はボールから離れる
     if (avoid_ball) {
-      avoid_ball_500mm(parsed_pose, ball, avoidance_pose);
+      avoid_ball_500mm(final_goal_pose, parsed_pose, ball, avoidance_pose);
       parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
     }
   }
@@ -968,6 +968,7 @@ bool FieldInfoParser::avoid_robots(
 }
 
 bool FieldInfoParser::avoid_ball_500mm(
+    const State & final_goal_pose,
     const State & goal_pose, const TrackedBall & ball,
     State & avoidance_pose) const {
   // ボールから500 mm以上離れるために、回避処理を実行する
@@ -980,6 +981,7 @@ bool FieldInfoParser::avoid_ball_500mm(
   auto ball_pose = tools::pose_state(ball);
   auto distance_BtoG = tools::distance(ball_pose, goal_pose);
   tools::Trans trans_BtoG(ball_pose, tools::calc_angle(ball_pose, goal_pose));
+  auto final_goal_pose_BtoG = trans_BtoG.transform(final_goal_pose);
 
   // 障害物がなければ、目標位置を回避位置とする
   avoidance_pose = goal_pose;
@@ -987,7 +989,9 @@ bool FieldInfoParser::avoid_ball_500mm(
   // 目標位置がボールに近づいている場合
   if (distance_BtoG < DISTANCE_TO_AVOID_THRESHOLD) {
     // 目標位置とボールを結ぶ直線上で、目標位置をボールから離す
-    avoidance_pose = trans_BtoG.inverted_transform(DISTANCE_TO_AVOID, 0.0, 0.0);
+    // このとき、最終目標位置側に回避位置を置く
+    avoidance_pose = trans_BtoG.inverted_transform(
+      std::copysign(DISTANCE_TO_AVOID, final_goal_pose_BtoG.x), 0.0, 0.0);
     avoidance_pose.theta = goal_pose.theta;
 
     if (!geometry_) {
