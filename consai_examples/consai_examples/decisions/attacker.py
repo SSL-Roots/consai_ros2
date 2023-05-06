@@ -117,9 +117,16 @@ class AttackerDecision(DecisionBase):
             self._act_id = self.ACT_ID_INPLAY
 
     def our_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.setplay_shoot_to_their_goal(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+        ID_INPLAY_BALL_IN_DEFENSE_AREA = self.ACT_ID_INPLAY + 1
+        # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する
+        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA:
+            if self._act_id != ID_INPLAY_BALL_IN_DEFENSE_AREA:
+                self._operator.move_to_ball_y(robot_id, 3.0)
+                self._act_id = ID_INPLAY_BALL_IN_DEFENSE_AREA
+        else:
+            if self._act_id != self.ACT_ID_INPLAY:
+                self._operator.setplay_shoot_to_their_goal(robot_id)
+                self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
