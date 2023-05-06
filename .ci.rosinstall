@@ -2,3 +2,7 @@
     local-name: consai_frootspi_msgs
     uri: https://github.com/SSL-Roots/consai_frootspi_msgs.git
     version: main
+- git:
+    local-name: frootspi_msgs
+    uri: https://github.com/SSL-Roots/frootspi_msgs
+    version: main
