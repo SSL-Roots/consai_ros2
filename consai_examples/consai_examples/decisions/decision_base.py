@@ -56,6 +56,12 @@ class DecisionBase(object):
     def disable_avoid_placement(self, robot_id):
         self._operator.disable_avoid_placement(robot_id)
 
+    def enable_avoid_obstacles(self, robot_id):
+        self._operator.enable_avoid_obstacles(robot_id)
+
+    def disable_avoid_obstacles(self, robot_id):
+        self._operator.disable_avoid_obstacles(robot_id)
+
     def set_ball_state(self, ball_state):
         self._ball_state = ball_state
 

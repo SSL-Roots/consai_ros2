@@ -115,6 +115,8 @@ def main():
             decisions[role].set_zone_targets(zone_targets)
             # プレースメントを回避する
             decisions[role].enable_avoid_placement(robot_id)
+            # 障害物を回避する
+            decisions[role].enable_avoid_obstacles(robot_id)
 
             # レフェリーコマンドに合わせて行動を決定する
             if referee.halt():

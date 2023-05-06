@@ -53,14 +53,14 @@ class AttackerDecision(DecisionBase):
         ID_IN_THEIR_DEFENSE = self.ACT_ID_INPLAY + 2
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_BACK_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
@@ -151,9 +151,22 @@ class AttackerDecision(DecisionBase):
         ID_FAR_FROM = self.ACT_ID_OUR_PLACEMENT + 0
         ID_NEAR = self.ACT_ID_OUR_PLACEMENT + 1
         ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 2
+        ID_NEAR_OUTSIDE = self.ACT_ID_OUR_PLACEMENT + 3
 
         # プレースメントを回避しない
         self._operator.disable_avoid_placement(robot_id)
+
+        ball_state = self._field_observer.get_ball_state()
+        # 壁際にあると判定した場合
+        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
+                FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y, FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
+            if self._act_id != ID_NEAR_OUTSIDE:
+                # 壁際に蹴る位置を取得
+                outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)
+                # 壁際に蹴る
+                self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
+                self._act_id = ID_NEAR_OUTSIDE
+            return
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする
