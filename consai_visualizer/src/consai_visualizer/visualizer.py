@@ -17,6 +17,7 @@
 
 from functools import partial
 import os
+import time
 
 from ament_index_python.resources import get_resource
 from consai_msgs.msg import GoalPoses
@@ -32,6 +33,8 @@ from robocup_ssl_msgs.msg import GeometryData
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
+
+from frootspi_msgs.msg import BatteryVoltage
 
 
 class Visualizer(Plugin):
@@ -79,6 +82,20 @@ class Visualizer(Plugin):
             NamedTargets, 'named_targets',
             self._widget.field_widget.set_named_targets, 10)
 
+        self._sub_battery_voltage = []
+        for i in range(16):
+            topic_name = 'robot' + str(i) + '/battery_voltage'
+            self._sub_battery_voltage.append(self._node.create_subscription(
+                BatteryVoltage, topic_name,
+                partial(self._callback_battery_voltage, robot_id=i), 10))
+
+        self._sub_kicker_voltage = []
+        for i in range(16):
+            topic_name = 'robot' + str(i) + '/kicker_voltage'
+            self._sub_kicker_voltage.append(self._node.create_subscription(
+                BatteryVoltage, topic_name,
+                partial(self._callback_kicker_voltage, robot_id=i), 10))
+
         self._sub_goal_poses = self._node.create_subscription(
                 GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
         self._sub_final_goal_poses = self._node.create_subscription(
@@ -87,29 +104,12 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
 
-        # Parameterを設定する
-        self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
-
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
         self._widget.check_box_detection_tracked.stateChanged.connect(
             self._clicked_detection_tracked)
         self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
-
-        # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
-        for team in ["blue", "yellow"]:
-            for robot_id in range(11):
-                method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
-                eval(method)(
-                    partial(self._clicked_robot_turnon, team=="yellow", robot_id )
-                )
-
-            for turnon in ["on", "off"]:
-                method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
-                eval(method)(
-                    partial(self._set_all_robot_turnon, team=="yellow", turnon=="on")
-                )
 
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
@@ -126,6 +126,17 @@ class Visualizer(Plugin):
         self._reset_timer = QTimer()
         self._reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
         self._reset_timer.start(5000)
+
+        # ロボットの死活監視
+        # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
+        self.latest_update_time = [0] * 16
+        self._reset_timer = QTimer()
+        self._reset_timer.timeout.connect(self._update_robot_synthetics)
+        self._reset_timer.start(1000)
+
+        self.latest_battery_voltage = [0] * 16
+        self.latest_kicker_voltage = [0] * 16
+        
 
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
@@ -208,3 +219,62 @@ class Visualizer(Plugin):
         if ref_parser.is_ball_placement(msg.command):
             if len(msg.designated_position) > 0:
                 self._widget.field_widget.set_designated_position(msg.designated_position[0])
+
+    def _callback_battery_voltage(self, msg, robot_id):
+        self.latest_battery_voltage[robot_id] = msg.voltage
+        # for synthetics
+        self.latest_update_time[robot_id] = time.time()
+
+    def _callback_kicker_voltage(self, msg, robot_id):
+        self.latest_kicker_voltage[robot_id] = msg.voltage
+
+    def battery_voltage_to_percentage(self, voltage):
+        MAX_VOLTAGE = 16.8
+        MIN_VOLTAGE = 14.8
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
+        return int(percentage)
+
+    def kicker_voltage_to_percentage(self, voltage):
+        MAX_VOLTAGE = 200
+        MIN_VOLTAGE = 0
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
+        return int(percentage)
+
+    def _update_robot_synthetics(self):
+        # n秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
+        now = time.time()
+
+        for i in range(16):
+            diff_time = now - self.latest_update_time[i]
+
+            try: 
+                getattr(self._widget, f"robot{i}_battery_voltage").setValue(self.battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(self.kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+            except AttributeError:
+                # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                pass
+
+            if diff_time > 3.0:  # 死んだ判定
+                # DEATH
+                try:
+                    getattr(self._widget, f"robot{i}_connection_status").setText("❌")
+                    getattr(self._widget, f"robot{i}_battery_voltage").setValue(0)
+                    getattr(self._widget, f"robot{i}_kicker_voltage").setValue(0)
+                except AttributeError:
+                    # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                    pass
+            else:
+                # ALIVE
+                try:
+                    getattr(self._widget, f"robot{i}_connection_status").setText("👍")
+                except AttributeError:
+                    # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
+                    pass

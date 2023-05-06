@@ -45,6 +45,7 @@ $ mkdir -p ~/ros2_ws/src
 $ cd ~/ros2_ws/src
 $ git clone https://github.com/SSL-Roots/consai_ros2.git
 $ git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git
+$ git clone https://github.com/SSL-Roots/frootspi_msgs.git
 
 # Install dependencies
 $ rosdep install -r -y -i --from-paths .
