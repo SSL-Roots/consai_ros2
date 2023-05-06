@@ -94,13 +94,13 @@ class AttackerDecision(DecisionBase):
 
         # パス可能な場合
         elif len(receiver_robots_id) > 0:
-            # NamedTargetを更新
-            _pos = receiver_robots_pos[0]
-            pass_pos_x = _pos.x
-            pass_pos_y = _pos.y
-            self._operator.set_named_target("pass", pass_pos_x, pass_pos_y)
-            self._operator.publish_named_targets()
             if self._act_id != ID_PASS:
+                # NamedTargetを更新
+                _pos = receiver_robots_pos[0]
+                pass_pos_x = _pos.x
+                pass_pos_y = _pos.y
+                self._operator.set_named_target("pass", pass_pos_x, pass_pos_y)
+                self._operator.publish_named_targets()
                 # 前方のパスが出せるロボットにパスを出す
                 self._operator.pass_to_named_target(robot_id, "pass")
                 self._act_id = ID_PASS
