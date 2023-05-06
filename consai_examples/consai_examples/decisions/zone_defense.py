@@ -66,7 +66,9 @@ class ZoneDefenseDecision(DecisionBase):
         ball_is_in_my_zone = self._ball_is_in_zone()
 
         # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
-        if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
+        # if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
+        # ゾーン内の相手ロボットがいる、ボールとロボットの間に移動する
+        if self._zone_targets[ZONE_TARGET] is not None and without_mark is False:
             if self._act_id != ID_MAN_MARK:
                 self._operator.man_mark(
                     robot_id, self._zone_targets[ZONE_TARGET], 0.5)
