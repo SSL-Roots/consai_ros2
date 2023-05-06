@@ -23,7 +23,7 @@ def test_パサーロボットがいないときにget_receiver_robots_idは空�
     assert len(actual_can_shoot_id_list) == 0
 
 
-@pytest.mark.parametrize("is_yellow, expect_can_shoot_id_list", [(False, 5), (True, 0)])
+@pytest.mark.parametrize("is_yellow, expect_can_shoot_id_list", [(False, 3), (True, 0)])
 def test_パサー以外がいないときにget_receiver_robots_idは空リストを返す(rclpy_init_shutdown, is_yellow, expect_can_shoot_id_list):
     observer = FieldObserver(our_team_is_yellow=is_yellow)
     frame_publisher = TrackedFramePublisher()
@@ -47,7 +47,7 @@ def test_パサー以外に敵ロボットしかいないときにget_receiver_r
 
     actual_can_pass_id_list, actual_can_pass_pos_list, actual_can_shoot_id_list, actual_can_shoot_pos_list = observer.get_open_path_id_list(my_robot_id=3)
     assert actual_can_pass_id_list == []
-    assert len(actual_can_shoot_id_list) == 5
+    assert len(actual_can_shoot_id_list) == 3
 
 @pytest.mark.parametrize("is_yellow", [(False), (True)])
 def test_パサーより後ろにロボットがいるときget_receiver_robots_idは空リストを返す(rclpy_init_shutdown, is_yellow):
@@ -62,7 +62,10 @@ def test_パサーより後ろにロボットがいるときget_receiver_robots_
     rclpy.spin_once(observer, timeout_sec=1.0)
     actual_can_pass_id_list, actual_can_pass_pos_list, actual_can_shoot_id_list, actual_can_shoot_pos_list = observer.get_open_path_id_list(my_robot_id=3)
     assert actual_can_pass_id_list == []
-    assert len(actual_can_shoot_id_list) == 5
+    assert actual_can_pass_pos_list == []
+    assert len(actual_can_shoot_id_list) == 3
+    assert actual_can_shoot_pos_list[0].x == 6.0
+    assert actual_can_shoot_pos_list[0].y == 0.0
 
     # 左を向いたパサーの右側にロボットを置く
     # TODO: 後ろ向きのパス相手検索に対応できたらコメントを解除する
@@ -88,7 +91,7 @@ def test_パサーより前に味方ロボットだけがいるときget_receive
     rclpy.spin_once(observer, timeout_sec=1.0)
     actual_can_pass_id_list, actual_can_pass_pos_list, actual_can_shoot_id_list, actual_can_shoot_pos_list = observer.get_open_path_id_list(my_robot_id=3)
     assert actual_can_pass_id_list == [1, 4]
-    assert len(actual_can_shoot_id_list) == 5
+    assert len(actual_can_shoot_id_list) == 3
 
 @pytest.mark.parametrize("is_yellow", [(False), (True)])
 def test_パサーと味方ロボットの間に敵ロボットがいるときget_receiver_robots_idがパスできるidリストを返す(rclpy_init_shutdown, is_yellow):
