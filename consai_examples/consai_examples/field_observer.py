@@ -118,13 +118,11 @@ class FieldObserver(Node):
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
-        self.goal_id_list = [0, 1, 2, 3, 4]
+        self.goal_id_list = [0, 1, 2]
         self.goal_pos_list = [
-            State2D(x=self._field_half_x, y=0.8),
             State2D(x=self._field_half_x, y=0.45),
             State2D(x=self._field_half_x, y=0.0),
             State2D(x=self._field_half_x, y=-0.45),
-            State2D(x=self._field_half_x, y=-0.8)
             ]
         self.goal_vel_list = [None] * 5
 
