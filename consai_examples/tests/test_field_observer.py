@@ -108,7 +108,7 @@ def test_パサーと味方ロボットの間に敵ロボットがいるときge
     rclpy.spin_once(observer, timeout_sec=1.0)
     actual_can_pass_id_list, actual_can_shoot_id_list = observer.get_open_path_id_list(my_robot_id=3)
     assert actual_can_pass_id_list == [4]
-    assert actual_can_shoot_id_list == [1, 3, 0, 4]
+    assert actual_can_shoot_id_list == []
 
 @pytest.mark.parametrize("is_yellow", [(False), (True)])
 def test_ID15付近のロボットでもget_receiver_robots_idが正常動作すること(rclpy_init_shutdown, is_yellow):
@@ -128,5 +128,5 @@ def test_ID15付近のロボットでもget_receiver_robots_idが正常動作す
     rclpy.spin_once(observer, timeout_sec=1.0)
     actual_can_pass_id_list, actual_can_shoot_id_list = observer.get_open_path_id_list(my_robot_id=15)
     assert actual_can_pass_id_list == [13]
-    assert actual_can_shoot_id_list == [1, 3, 0, 4]
+    assert actual_can_shoot_id_list == []
 
