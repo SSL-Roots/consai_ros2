@@ -31,6 +31,10 @@ class CenterBackDecision(DecisionBase):
         super().__init__(robot_operator, field_observer)
         self._center_back_id = center_back_id
 
+        # 2台いるときの2台の隙間
+        # お互いがこの距離離れるので、この数値の2倍の隙間になる
+        self._offset_value = 0.1
+
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
         self._our_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
@@ -40,19 +44,21 @@ class CenterBackDecision(DecisionBase):
 
     def _defend_upper_defense_area(self, robot_id, base_id):
         # ディフェンスエリアの上半分を守る
-        ID_UPPER = base_id + 100
-        ID_FRONT = base_id + 200
-        ID_LOWER = base_id + 300
+        ID_UPPER = base_id + self._num_of_center_back_roles + 100
+        ID_FRONT = base_id + self._num_of_center_back_roles + 200
+        ID_LOWER = base_id + self._num_of_center_back_roles + 300
 
-        # ボールが左上にあれば上側をまもる
+        # ゴーリーからみて左側
         if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
             if self._act_id != ID_UPPER:
                 self._defend_upper_top_defense_area(robot_id)
                 self._act_id = ID_UPPER
+        # ゴーリーからみて右側
         elif self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_BOTTOM:
             if self._act_id != ID_LOWER:
                 self._defend_lower_bottom_defense_area(robot_id)
                 self._act_id = ID_LOWER
+        # 正面
         else:
             if self._act_id != ID_FRONT:
                 self._defend_upper_front_defense_area(robot_id)
@@ -65,6 +71,10 @@ class CenterBackDecision(DecisionBase):
         p2_x = -6.0 + 1.8 + 0.5
         p2_y = -1.8
         # self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        if self._num_of_center_back_roles > 1:
+            offset = self._offset_value * (-1 if self._center_back_id.value > 0 else 1)
+            self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y, offset)
+            return
         self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_upper_front_defense_area_with_kick(self, robot_id):
@@ -73,6 +83,10 @@ class CenterBackDecision(DecisionBase):
         p1_y = 1.8
         p2_x = -6.0 + 1.8 + 0.5
         p2_y = -1.8
+        if self._num_of_center_back_roles > 1:
+            offset = self._offset_value * (-1 if self._center_back_id.value > 0 else 1)
+            self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y, offset)
+            return
         self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_lower_bottom_defense_area(self, robot_id):
@@ -81,6 +95,10 @@ class CenterBackDecision(DecisionBase):
         p1_y = -1.8 - 0.5
         p2_x = -6.0 + 1.8 + 0.3
         p2_y = -1.8 - 0.5
+        if self._num_of_center_back_roles > 1:
+            offset = self._offset_value * (-1 if self._center_back_id.value > 0 else 1)
+            self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y, offset)
+            return
         self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_upper_top_defense_area(self, robot_id):
@@ -90,9 +108,11 @@ class CenterBackDecision(DecisionBase):
         p2_x = -6.0 + 1.8 + 0.3
         p2_y = 1.8 + 0.5
         # self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        if self._num_of_center_back_roles > 1:
+            offset = self._offset_value * (-1 if self._center_back_id.value > 0 else 1)
+            self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y, offset)
+            return
         self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
-
-    
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
@@ -100,6 +120,8 @@ class CenterBackDecision(DecisionBase):
             self._act_id = self.ACT_ID_STOP
 
     def inplay(self, robot_id):
+        # 障害物をを回避しない
+        self._operator.disable_avoid_obstacles(robot_id)
         self._defend_upper_defense_area(robot_id, self.ACT_ID_INPLAY)
 
     def our_pre_kickoff(self, robot_id):
