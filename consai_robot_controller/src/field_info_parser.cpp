@@ -533,12 +533,6 @@ bool FieldInfoParser::control_ball(
     const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const {
   // ボールを操作する関数
   // キック、パス、ドリブルの操作が可能
-  const double LOOKING_BALL_DISTANCE = param_threshold_looking_ball_distance;  // meters
-  const double LOOKING_BALL_THETA = tools::to_radians(180 - param_threshold_looking_ball_theta);
-  const double CAN_DRIBBLE_DISTANCE = param_can_dribble_distance;  // meters;
-  const double CAN_SHOOT_THETA = tools::to_radians(param_can_shoot_theta);
-  const double DISTANCE_TO_LOOK_BALL = param_distance_to_look_ball;  // meters
-  const double DISTANCE_TO_ROTATE = param_distance_to_rotate;  // meters
 
   // 変数の初期化
   need_kick = false;
@@ -547,52 +541,61 @@ bool FieldInfoParser::control_ball(
   auto ball_pose = tools::pose_state(ball);
   auto robot_pose = tools::pose_state(my_robot);
 
-  // ボールからロボットを見た座標系を生成
-  auto angle_ball_to_robot = tools::calc_angle(ball_pose, robot_pose);
-  tools::Trans trans_BtoR(ball_pose, angle_ball_to_robot);
-  auto robot_pose_BtoR = trans_BtoR.transform(robot_pose);
-
-  // ボールからターゲットを見た座標系を生成
+  // Ref: https://ssl.robocup.org/wp-content/uploads/2019/01/2014_ETDP_RoboDragons.pdf
+  // // ボールからターゲットを見た座標系を生成
+  const double BALL_RADIUS = 0.043 * 0.5;
+  const double ROBOT_RADIUS = 0.180 * 0.5;
+  const double MAX_X = BALL_RADIUS + 0.3;
+  const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.3;
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
 
-  bool is_looking_ball = robot_pose_BtoR.x < LOOKING_BALL_DISTANCE &&
-    std::fabs(robot_pose_BtoR.theta)> LOOKING_BALL_THETA;
-
-  // ロボットがボールに近ければドリブルをON
-  double distance_robot_to_ball = tools::distance(robot_pose, ball_pose);
-  bool can_dribble = distance_robot_to_ball < CAN_DRIBBLE_DISTANCE;
-  // ロボットがキックターゲットに焦点を当てたらキックをON
-  bool can_kick = std::fabs(robot_pose_BtoT.theta) < CAN_SHOOT_THETA;
-      // std::fabs(my_robot.vel_angular[0]) < CAN_SHOOT_OMEGA;
-
-  if (!is_looking_ball) {
-    // ドリブラーがボールに付くまで移動する
-    const double gain = std::fabs(robot_pose_BtoR.theta / M_PI);
-    const double distance = DISTANCE_TO_LOOK_BALL * gain + DISTANCE_TO_ROTATE * (1.0 - gain);
-
-    if (can_dribble) { need_dribble = true;}
-    parsed_pose = trans_BtoR.inverted_transform(distance, 0, M_PI);
-  } else {
-    // ターゲットを見るまで、ドリブラをボールに付けながら回転する
-    auto ball_pose_BtoT = trans_BtoT.transform(ball_pose);
-    auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, ball_pose_BtoT);
-    const auto add_angle = -angle_robot_to_ball_BtoT * 0.5;  // ここの0.5は角度範囲を0 ~ pi/2にするもの
-    const auto gain = std::fabs(angle_robot_to_ball_BtoT / M_PI);
-    auto distance = DISTANCE_TO_ROTATE * gain;
-
-    if (can_dribble) { need_dribble = true;}
-    if (can_kick) {
-      need_kick = true;
-      distance = -dribble_distance;
-    }
-
-    parsed_pose = trans_BtoR.inverted_transform(
-      distance * std::cos(add_angle),
-      distance * std::sin(add_angle), 0.0);
-    parsed_pose.theta = angle_ball_to_target;
+  // ボールの斜め後ろへ近づく
+  if (robot_pose_BtoT.x > 0.0) {
+    parsed_pose = trans_BtoT.inverted_transform(
+      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), 0.0);
+    return true;
   }
+
+  // ボールの裏へ回るためのピボットを生成
+  const double PIVOT_Y = 0.1;
+  State pivot_pose_BtoT;
+  pivot_pose_BtoT.x = 0.0;
+  pivot_pose_BtoT.y = PIVOT_Y;
+  const double PIVOT_THETA_DEG = 30.0;
+  double limit_angle = tools::to_radians(PIVOT_THETA_DEG) + M_PI_2;
+  // ロボットの位置に合わせてpivotを反転
+  if (robot_pose_BtoT.y < 0) {
+    pivot_pose_BtoT.y *= -1.0;
+  }
+
+  double angle_pivot_to_robot_BtoT = tools::calc_angle(
+    pivot_pose_BtoT, robot_pose_BtoT);
+
+  need_dribble = true;
+  if (std::fabs(angle_pivot_to_robot_BtoT) < limit_angle) {
+    double gain = std::clamp(
+      (limit_angle - std::fabs(angle_pivot_to_robot_BtoT))/PIVOT_Y, 0.0, 1.0);
+    parsed_pose = trans_BtoT.inverted_transform(
+      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y) * gain, 0.0);
+    return true;
+  }
+  
+  // ボールへ向かう
+  double gain = 1.0;
+  if (std::signbit(angle_pivot_to_robot_BtoT) == std::signbit(robot_pose_BtoT.y)) {
+    gain = std::clamp(
+      (std::fabs(angle_pivot_to_robot_BtoT) - limit_angle) / (M_PI_2 - tools::to_radians(PIVOT_THETA_DEG)), 0.0, 1.0);
+  }
+
+  double distance_x = (-2.0 * BALL_RADIUS + MAX_X) * gain - MAX_X;
+
+  if (std::fabs(robot_pose_BtoT.y) < 0.01) {
+    distance_x = dribble_distance;
+  }
+  parsed_pose = trans_BtoT.inverted_transform(distance_x, 0.0, 0.0);
+  need_kick = true;
   return true;
 }
 
