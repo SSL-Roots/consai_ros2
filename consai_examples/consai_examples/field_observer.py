@@ -120,13 +120,13 @@ class FieldObserver(Node):
 
         self.goal_id_list = [0, 1, 2, 3, 4]
         self.goal_pos_list = [
-            State2D(x=self._field_half_x, y=self._field_defense_half_y),
-            State2D(x=self._field_half_x, y=self._field_defense_half_y / 2),
+            State2D(x=self._field_half_x, y=0.8),
+            State2D(x=self._field_half_x, y=0.45),
             State2D(x=self._field_half_x, y=0.0),
-            State2D(x=self._field_half_x, y=-self._field_defense_half_y / 2),
-            State2D(x=self._field_half_x, y=-self._field_defense_half_y)
+            State2D(x=self._field_half_x, y=-0.45),
+            State2D(x=self._field_half_x, y=-0.8)
             ]
-        self.goal_vel_list = [None] * self.MAX_ROBOT_NUM
+        self.goal_vel_list = [None] * 5
 
     def _detection_tracked_callback(self, msg):
         self._detection = msg
@@ -709,16 +709,22 @@ class FieldObserver(Node):
 
     def get_open_path_id_list(self, my_robot_id, select_forward_between=1):
 
-        can_pass_id_list = self.get_receiver_robots_id(my_robot_id, need_pass=True)
-        can_shoot_id_list = self.get_receiver_robots_id(my_robot_id, need_shoot=True)
+        try:
+            can_pass_id_list, can_pass_pos_list = self.get_receiver_robots_id(my_robot_id, need_pass=True)
+        except:
+            can_pass_id_list = []
+            can_pass_pos_list = []
+        try:
+            can_shoot_id_list, can_shoot_pos_list = self.get_receiver_robots_id(my_robot_id, need_shoot=True)
+        except:
+            can_shoot_id_list = []
+            can_shoot_pos_list = []
 
-        return can_pass_id_list, can_shoot_id_list
+        return can_pass_id_list, can_pass_pos_list, can_shoot_id_list, can_shoot_pos_list
 
     def get_receiver_robots_id(self, my_robot_id, need_pass=False, need_shoot=False, select_forward_between=1):
         # パス可能なロボットIDのリストを返す関数
 
-        # パス可能なロボットIDを格納するリスト
-        robots_to_pass = []
         # 計算対象にする相手ロボットIDを格納するリスト
         target_their_robot_id_list = []
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
@@ -781,6 +787,11 @@ class FieldObserver(Node):
         # 自分と各ロボットまでの距離を基にロボットIDをソート
         our_robot_id_list = self._sort_by_from_robot_distance(my_robot_pos, forward_our_robot_id, our_robots_pos)
 
+
+        # パス可能なロボットIDを格納するリスト
+        robots_to_pass = []
+        pass_robots_pos_list = []
+
         # 各レシーバー候補ロボットに対してパス可能か判定
         for our_robot_id in our_robot_id_list:
             our_robot_pos = our_robots_pos[our_robot_id]
@@ -814,6 +825,7 @@ class FieldObserver(Node):
                             check_count = 0
                             # パスできる味方ロボットとしてリストに格納
                             robots_to_pass.append(our_robot_id)
+                            pass_robots_pos_list.append(our_robot_pos)
                         # まだすべてのロボットに対して計算を行っていない場合の処理
                         else:
                             # 何台の相手ロボットに妨害されないかをカウントする変数をインクリメント
@@ -832,11 +844,12 @@ class FieldObserver(Node):
             else:
                 # パスができる味方ロボットとしてリストに格納
                 robots_to_pass.append(our_robot_id)
+                pass_robots_pos_list.append(our_robot_pos)
                 
             # if their_goalie_id != 99 and their_robot_pos_trans.y > 0:
             #     robots_to_pass = sorted(robots_to_pass, reverse=True)
 
-        return robots_to_pass
+        return robots_to_pass, pass_robots_pos_list
 
     def _sort_by_from_robot_distance(self, my_robot_pos, robots_id, robots_pos):
         # 自ロボットから各ロボットまでの距離を計算し近い順にソートする関数

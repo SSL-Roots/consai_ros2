@@ -24,6 +24,7 @@ class AttackerDecision(DecisionBase):
         super().__init__(robot_operator, field_observer)
 
         self.goal_pos_list = self._field_observer.get_goal_pos_list()
+        self._old_reciever_robot_id = 0
 
     def stop(self, robot_id):
         ID_CHASE = self.ACT_ID_STOP + 0
@@ -70,29 +71,84 @@ class AttackerDecision(DecisionBase):
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
-        # 指定座標に向けてシュートまたはパスをする
-        if self._act_id != ID_INPLAY:
-            # パス・シュート可能なIDのリストを取得
-            receiver_robots_id, shoot_point_list = self._field_observer.get_open_path_id_list(robot_id)
-            # シュート可能かつ相手エリアにいる場合
-            if len(shoot_point_list) > 0 and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
-                # 指定座標に向けてシュートする
-                shoot_point = shoot_point_list[0]
-                self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
-            # パス可能な場合
-            elif len(receiver_robots_id) > 0:
-                # 前方のパスが出せるロボットにパスを出す
-                self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
-            # シュート可能かつ相手エリアにいる場合
-            elif len(shoot_point_list) > 0:
-                # 指定座標に向けてシュートする
-                shoot_point = shoot_point_list[0]
-                self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
-            else:
-                # 相手ゴールの中心に向かってシュートを打つ
-                self._operator.shoot_to_their_goal_with_reflect(robot_id)
-            self._act_id = ID_INPLAY
+        # パス・シュート可能なIDのリストと位置を取得
+        receiver_robots_id, receiver_robots_pos, shoot_point_list, shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
+        # NamedTargetを更新
+        if len(shoot_point_list) > 0:
+            shoot_point = shoot_point_list[0]
+            shoot_pos_x = self.goal_pos_list[shoot_point].x
+            shoot_pos_y = self.goal_pos_list[shoot_point].y
+            self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
+        else:
+            self._operator.set_named_target("shoot", 6.0, 0.0)
+        self._operator.publish_named_targets()
+
+        # シュート可能かつ相手エリアにいる場合
+        if len(shoot_point_list) > 0 and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
+            if self._act_id != 2000:
+                # 指定座標に向けてシュートする
+                self._operator.pass_to_named_target(robot_id, "shoot")
+                # self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
+                self._act_id = 2000
+
+        # パス可能な場合
+        elif len(receiver_robots_id) > 0:
+            # NamedTargetを更新
+            _pos = receiver_robots_pos[0]
+            pass_pos_x = _pos.x
+            pass_pos_y = _pos.y
+            self._operator.set_named_target("pass", pass_pos_x, pass_pos_y)
+            self._operator.publish_named_targets()
+            if self._act_id != 3000:
+                # 前方のパスが出せるロボットにパスを出す
+                self._operator.pass_to_named_target(robot_id, "pass")
+                # self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+                self._act_id = 3000
+            # else:
+                # self._operator.pass_to_named_target(robot_id, "pass")
+                # if receiver_robots_id[0] != self._old_reciever_robot_id:
+                    # self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+
+            # self._old_reciever_robot_id = receiver_robots_id[0]
+
+        # シュート可能かつ相手エリアにいる場合
+        elif len(shoot_point_list) > 0:
+            if self._act_id != 4000:
+                # 指定座標に向けてシュートする
+                # shoot_point = shoot_point_list[0]
+                self._operator.pass_to_named_target(robot_id, "shoot")
+                # self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
+                self._act_id != 4000
+        else:
+            if self._act_id != ID_INPLAY:
+                # 相手ゴールの中心に向かってシュートを打つ
+                # self._operator.shoot_to_their_goal_with_reflect(robot_id)
+                self._operator.pass_to_named_target(robot_id, "shoot")
+                self._act_id = ID_INPLAY
+
+
+        # 指定座標に向けてシュートまたはパスをする
+        # if self._act_id != ID_INPLAY:
+            # # シュート可能かつ相手エリアにいる場合
+            # if len(shoot_point_list) > 0 and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
+            #     # 指定座標に向けてシュートする
+            #     shoot_point = shoot_point_list[0]
+            #     self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
+            # # パス可能な場合
+            # elif len(receiver_robots_id) > 0:
+            #     # 前方のパスが出せるロボットにパスを出す
+            #     self._operator.pass_to_our_robot(robot_id, receiver_robots_id[0])
+            # # シュート可能かつ相手エリアにいる場合
+            # elif len(shoot_point_list) > 0:
+            #     # 指定座標に向けてシュートする
+            #     shoot_point = shoot_point_list[0]
+            #     self._operator.shoot_to(robot_id, self.goal_pos_list[shoot_point].x, self.goal_pos_list[shoot_point].y)
+            # else:
+            #     # 相手ゴールの中心に向かってシュートを打つ
+            #     self._operator.shoot_to_their_goal_with_reflect(robot_id)
+            # self._act_id = ID_INPLAY
+            # 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
             self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
