@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 #include "consai_vision_tracker/ball_tracker.hpp"
 #include "robocup_ssl_msgs/msg/vector3.hpp"
@@ -34,6 +35,9 @@ using Vector3 = robocup_ssl_msgs::msg::Vector3;
 // 例：trackerが100Hzで更新されるとき、操作量が0.002であれば、
 // 追跡対象が消失してから5秒かけてvisibilityが1.0から0.0になる
 static const double VISIBILITY_CONTROL_VALUE = 0.005;
+
+static constexpr auto FIELD_MAX_X = 6.5;
+static constexpr auto FIELD_MAX_Y = 5.0;
 
 BallTracker::BallTracker(const double dt)
 {
@@ -146,7 +150,8 @@ TrackedBall BallTracker::update()
   if (size == 0) {
     // 観測値が無い場合の処理
     // visibilityを下げる
-    prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
+    // prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
+    prev_tracked_ball_.visibility[0] = 1.0;
     if (prev_tracked_ball_.visibility[0] <= 0) {
       // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_ball_.visibility[0] = 0.0;
@@ -180,8 +185,10 @@ TrackedBall BallTracker::update()
 
   // 事後分布から予測値を取得
   auto expected_value = filter_->PostGet()->ExpectedValueGet();
-  prev_tracked_ball_.pos.x = expected_value(1);
-  prev_tracked_ball_.pos.y = expected_value(2);
+  // prev_tracked_ball_.pos.x = expected_value(1);
+  // prev_tracked_ball_.pos.y = expected_value(2);
+  prev_tracked_ball_.pos.x = std::clamp(expected_value(1), -FIELD_MAX_X, FIELD_MAX_X);
+  prev_tracked_ball_.pos.y = std::clamp(expected_value(2), -FIELD_MAX_Y, FIELD_MAX_Y);
   prev_tracked_ball_.vel[0].x = expected_value(3);
   prev_tracked_ball_.vel[0].y = expected_value(4);
 
