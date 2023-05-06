@@ -880,6 +880,7 @@ bool FieldInfoParser::avoid_placement_area(
   // プレースメント範囲を回避する
   const double THRESHOLD_Y = 1.0;
   const double THRESHOLD_X = 0.65;
+  const double AVOIDANCE_POS_X = 0.9;
   const double AVOIDANCE_POS_Y = 0.9;
 
   auto my_robot_pose = tools::pose_state(my_robot);
@@ -912,9 +913,32 @@ bool FieldInfoParser::avoid_placement_area(
     // デッドロック回避
     const double FIELD_HALF_X = 6.0;
     const double FIELD_HALF_Y = 4.5;
-    if (std::fabs(avoidance_pose.y) > FIELD_HALF_Y || std::fabs(avoidance_pose.x) > FIELD_HALF_X) {
-      avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, -avoid_y, 0.0);
+    const double FIELD_WALL_X = 6.3;
+    const double FIELD_WALL_Y = 4.8;
+
+    const double FIELD_NEAR_WALL_X = FIELD_HALF_X - 0.0;
+    const double FIELD_NEAR_WALL_Y = FIELD_HALF_Y - 0.0;
+    auto avoid_x = std::copysign(AVOIDANCE_POS_X + 0.7, avoidance_pose.x);
+    avoid_y = std::copysign(AVOIDANCE_POS_Y + 0.7, avoidance_pose.y);
+    
+    // フィールド外の場合，壁沿いに回避位置を生成
+    if (FIELD_NEAR_WALL_Y < std::fabs(avoidance_pose.y)) {
+        avoidance_pose.x = my_robot_pose.x - avoid_x;
     }
+    else if (FIELD_NEAR_WALL_X < std::fabs(avoidance_pose.x)) {
+        avoidance_pose.y = my_robot_pose.y - avoid_y;
+    }
+
+    // 壁の外に回避位置がある場合
+    if (FIELD_WALL_Y < std::fabs(avoidance_pose.y)) {
+        avoidance_pose.x = my_robot_pose.x;
+        avoidance_pose.y = my_robot_pose.y - std::copysign(1.0, avoidance_pose.y);;
+    }
+    else if (FIELD_WALL_X < std::fabs(avoidance_pose.x)) {
+        avoidance_pose.x = my_robot_pose.x - std::copysign(1.0, avoidance_pose.x);;
+        avoidance_pose.y = my_robot_pose.y;
+    }
+
     avoidance_pose.theta = my_robot_pose.theta;
   } else {
     avoidance_pose = goal_pose;
