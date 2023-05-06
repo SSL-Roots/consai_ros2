@@ -31,6 +31,7 @@ from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
 from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
+from decisions.center_back import CenterBackDecision, CenterBackID
 from field_observer import FieldObserver
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -46,6 +47,13 @@ def num_of_active_zone_roles(active_roles):
         RoleName.ZONE3,
         RoleName.ZONE4]
     return len(set(role_zone_list) & set(active_roles))
+
+def num_of_active_center_back_roles(active_roles):
+    # アクティブなセンターバック担当者の数を返す
+    role_center_back_list = [
+        RoleName.CENTER_BACK1,
+        RoleName.CENTER_BACK2]
+    return len(set(role_center_back_list) & set(active_roles))
 
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
@@ -84,6 +92,8 @@ def main():
         assigned_roles = [ t[0] for t in assignor.get_assigned_roles_and_ids() ]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
+        # 担当者がいるroleの中から、センターバックの数を抽出する
+        num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         
         for role, robot_id in assignor.get_assigned_roles_and_ids():
             # 役割が変わったロボットのみ、行動を更新する
@@ -97,6 +107,8 @@ def main():
             decisions[role].set_ball_placement_state(ball_placement_state)
             # ボールゾーン状態をセットする
             decisions[role].set_ball_zone_state(ball_zone_state)
+            # センターバックの担当者数をセットする
+            decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
             # ゾーンディフェンスの担当者数をセットする
             decisions[role].set_num_of_zone_roles(num_of_zone_roles)
             # ゾーンディフェンスのターゲットをセットする
@@ -210,8 +222,11 @@ if __name__ == '__main__':
     decisions = {
         RoleName.GOALIE: GoaleDecision(operator, observer),
         RoleName.ATTACKER: AttackerDecision(operator, observer),
-        RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
-        RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
+        # FIXME: 大会終わったらコメント部分消す
+        # RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
+        # RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
+        RoleName.CENTER_BACK1: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK1),
+        RoleName.CENTER_BACK2: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK2),
         RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
         RoleName.ZONE1: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE1),
         RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),
