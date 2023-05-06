@@ -222,6 +222,9 @@ if __name__ == '__main__':
     decisions = {
         RoleName.GOALIE: GoaleDecision(operator, observer),
         RoleName.ATTACKER: AttackerDecision(operator, observer),
+        # FIXME: 大会終わったらコメント部分消す
+        # RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
+        # RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
         RoleName.CENTER_BACK1: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK1),
         RoleName.CENTER_BACK2: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK2),
         RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
