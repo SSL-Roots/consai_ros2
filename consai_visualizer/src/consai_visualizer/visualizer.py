@@ -104,12 +104,29 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
 
+         # Parameterを設定する
+        self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
+
         # UIのイベントと関数を接続する
         self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
         self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
         self._widget.check_box_detection_tracked.stateChanged.connect(
             self._clicked_detection_tracked)
         self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
+
+        # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
+        for team in ["blue", "yellow"]:
+            for robot_id in range(11):
+                method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
+                eval(method)(
+                    partial(self._clicked_robot_turnon, team=="yellow", robot_id )
+                )
+
+            for turnon in ["on", "off"]:
+                method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
+                eval(method)(
+                    partial(self._set_all_robot_turnon, team=="yellow", turnon=="on")
+                )
 
         # チェックボックスを操作する
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
