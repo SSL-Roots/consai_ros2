@@ -96,7 +96,7 @@ private:
     const bool & kick_pass, const bool & kick_setplay,
     State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
   bool parse_dribble(
-    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball, const bool & invert,
     State & parsed_pose, double & parsed_dribble_power) const;
   bool control_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,

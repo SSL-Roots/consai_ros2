@@ -213,15 +213,45 @@ class AttackerDecision(DecisionBase):
 
         ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
-        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
-                FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y, FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
+        dribble_ball_pos = self._field_observer.get_ball_pos()
+        need_invert_dribble = False
+        if self._field_observer.ball_is_outside_back_x():
+            dribble_ball_pos.x += -1.0
+            need_invert_dribble = True
+        if self._field_observer.ball_is_outside_front_x():
+            dribble_ball_pos.x += 1.0
+            need_invert_dribble = True
+        if self._field_observer.ball_is_outside_left_y():
+            dribble_ball_pos.y += 1.0
+            need_invert_dribble = True
+        if self._field_observer.ball_is_outside_right_y():
+            dribble_ball_pos.y += -1.0
+            need_invert_dribble = True
+
+        if need_invert_dribble:
+            self._operator.set_named_target("dribble", dribble_ball_pos.x, dribble_ball_pos.y)
+            self._operator.publish_named_targets()
             if self._act_id != ID_NEAR_OUTSIDE:
-                # 壁際に蹴る位置を取得
-                outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)
-                # 壁際に蹴る
-                self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
+                # 後ろ向きにドリブルする
+                self._operator.dribble_to_named_target(robot_id, "dribble", invert=True)
                 self._act_id = ID_NEAR_OUTSIDE
             return
+
+        # if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
+        #         FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y, FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
+        #     ball_pos = self._field_observer.get_ball_pos()
+        #     self._operator.set_named_target("dribble", ball_pos.x, ball_pos.y + 1.0)
+        #     self._operator.publish_named_targets()
+        #     if self._act_id != ID_NEAR_OUTSIDE:
+        #         # 後ろ向きにドリブルする
+        #         self._operator.dribble_to_named_target(robot_id, "dribble", invert=True)
+
+        #         # # 壁際に蹴る位置を取得
+        #         # outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)
+        #         # # 壁際に蹴る
+        #         # self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
+        #         self._act_id = ID_NEAR_OUTSIDE
+        #     return
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする

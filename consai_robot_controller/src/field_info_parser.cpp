@@ -193,7 +193,7 @@ bool FieldInfoParser::parse_goal(
     } else if (goal->dribble_enable &&
                parse_constraint_xy(goal->dribble_target, target.x, target.y))
     {
-      parse_dribble(target, my_robot, ball, parsed_pose, dribble_power);
+      parse_dribble(target, my_robot, ball, goal->invert_dribble, parsed_pose, dribble_power);
     }
   }
 
@@ -510,7 +510,7 @@ bool FieldInfoParser::parse_kick(
 }
 
 bool FieldInfoParser::parse_dribble(
-  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball, const bool & invert,
   State & parsed_pose, double & parsed_dribble_power) const {
 
   const double DRIBBLE_DISTANCE = 0.15;
@@ -524,6 +524,11 @@ bool FieldInfoParser::parse_dribble(
     parsed_dribble_power = DRIBBLE_POWER;
   } else {
     parsed_dribble_power = 0.0;
+  }
+
+  // キックできる状態（ボール持った状態）になったら、ボールを後ろに引く
+  if (invert && need_kick) {
+    control_ball(dribble_target, my_robot, ball, -DRIBBLE_DISTANCE, parsed_pose, need_kick, need_dribble);
   }
   return true;
 }

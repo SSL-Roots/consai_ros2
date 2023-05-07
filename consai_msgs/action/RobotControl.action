@@ -27,6 +27,8 @@ ConstraintXY kick_target
 # dribble_enable = trueで、dribble_targetに向かってボールを運ぶ
 bool dribble_enable false
 ConstraintXY dribble_target
+# invert_dribble = trueで目標値までの距離分後ろ向きにドリブルする（目標位置には行かない）
+bool invert_dribble false
 
 # 転がっているボールを受け取るときはtrue
 bool receive_ball false

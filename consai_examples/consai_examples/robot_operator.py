@@ -421,6 +421,10 @@ class RobotOperator(Node):
         # ボールの後ろに移動し、指定位置に向かってドリブルする
         return self._act_to_ball(robot_id, self._xy(x, y), do_dribble=True)
 
+    def dribble_to_named_target(self, robot_id, name, invert=False):
+        # ボールの後ろに移動し、名前付きターゲットに向かってドリブルする
+        return self._act_to_ball(robot_id, self._xy_object_named_target(name), do_dribble=True, invert_dribble=invert)
+
     def receive_from(self, robot_id, x, y, offset, dynamic_receive=True):
         # ボールと指定位置(x, y)を結ぶ直線上で、指定位置からoffsetだけ後ろに下がり、
         # ボールを受け取る
@@ -748,7 +752,8 @@ class RobotOperator(Node):
     def _act_to_ball(self, robot_id, target_xy_object,
                      do_shoot=False, do_pass=False, do_dribble=False,
                      do_reflect_shoot=False,
-                     as_setplay=False):
+                     as_setplay=False,
+                     invert_dribble=False):
         # ボールとobjectを結ぶ直線上で、ボールの後ろに移動し、
         # objectに向かってshoot/pass/dribbleする
         if not any([do_shoot, do_pass, do_dribble, do_reflect_shoot]):
@@ -776,6 +781,7 @@ class RobotOperator(Node):
             goal = self._with_receive(
                 self._with_reflect_and_normal_kick(
                     self._line_goal(line, keep=True), target, kick_pass=False))
+        goal.invert_dribble = invert_dribble
 
         self._set_goal(robot_id, goal)
 
