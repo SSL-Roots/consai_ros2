@@ -9,8 +9,8 @@ COPY . consai_ros2
 
 # CON-SAIパッケージをクローンして
 # 依存関係をインストール
-ARG FROOTSPI_MSGS_BRANCH="main"
-RUN git clone -b $FROOTSPI_MSGS_BRANCH https://github.com/SSL-Roots/consai_frootspi_msgs.git && \
+RUN git clone -b main https://github.com/SSL-Roots/consai_frootspi_msgs.git && \
+    git clone -b main https://github.com/SSL-Roots/frootspi_msgs.git && \
     apt-get update && rosdep update && \
     rosdep install -iy --from-paths . && \
     rm -rf /var/lib/apt/lists/
