@@ -97,14 +97,14 @@ class Visualizer(Plugin):
                 partial(self._callback_kicker_voltage, robot_id=i), 10))
 
         self._sub_goal_poses = self._node.create_subscription(
-                GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
+            GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
         self._sub_final_goal_poses = self._node.create_subscription(
-                GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
+            GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
 
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))
 
-         # Parameterを設定する
+        # Parameterを設定する
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
 
         # UIのイベントと関数を接続する
@@ -117,15 +117,16 @@ class Visualizer(Plugin):
         # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
         for team in ["blue", "yellow"]:
             for robot_id in range(11):
-                method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".stateChanged.connect"
+                method = "self._widget.chbox_turnon_" + team + \
+                    str(robot_id) + ".stateChanged.connect"
                 eval(method)(
-                    partial(self._clicked_robot_turnon, team=="yellow", robot_id )
+                    partial(self._clicked_robot_turnon, team == "yellow", robot_id)
                 )
 
             for turnon in ["on", "off"]:
                 method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
                 eval(method)(
-                    partial(self._set_all_robot_turnon, team=="yellow", turnon=="on")
+                    partial(self._set_all_robot_turnon, team == "yellow", turnon == "on")
                 )
 
         # チェックボックスを操作する
@@ -153,7 +154,6 @@ class Visualizer(Plugin):
 
         self.latest_battery_voltage = [0] * 16
         self.latest_kicker_voltage = [0] * 16
-        
 
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
@@ -180,7 +180,8 @@ class Visualizer(Plugin):
             self._widget.field_widget.set_can_draw_replacement(False)
 
     def _clicked_robot_turnon(self, is_yellow, robot_id, state):
-        self._widget.field_widget.append_robot_replacement(is_yellow, robot_id, state==Qt.Checked)
+        self._widget.field_widget.append_robot_replacement(
+            is_yellow, robot_id, state == Qt.Checked)
 
     def _set_all_robot_turnon(self, is_yellow, turnon):
         team = "yellow" if is_yellow else "blue"
@@ -272,9 +273,11 @@ class Visualizer(Plugin):
         for i in range(16):
             diff_time = now - self.latest_update_time[i]
 
-            try: 
-                getattr(self._widget, f"robot{i}_battery_voltage").setValue(self.battery_voltage_to_percentage(self.latest_battery_voltage[i]))
-                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(self.kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+            try:
+                getattr(self._widget, f"robot{i}_battery_voltage").setValue(
+                    self.battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                getattr(self._widget, f"robot{i}_kicker_voltage").setValue(
+                    self.kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
             except AttributeError:
                 # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                 pass

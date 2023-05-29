@@ -164,7 +164,7 @@ class FieldWidget(QWidget):
         ID_OFFSET_X = 0.2
         team_offset_x = -3.0 if is_yellow else 0.0
         turnon_offset_y = -4.6 if turnon else -5.6
-        
+
         replacement = RobotReplacement()
         replacement.x = team_offset_x + ID_OFFSET_X * robot_id
         replacement.y = turnon_offset_y
@@ -455,7 +455,7 @@ class FieldWidget(QWidget):
 
         # ペナルティポイントを描画
         painter.setBrush(self._COLOR_FIELD_LINE)
-        PENALTY_X =  self._field.field_length * 0.5 - 8000  # ルールの2.1.3 Field Markingsを参照
+        PENALTY_X = self._field.field_length * 0.5 - 8000  # ルールの2.1.3 Field Markingsを参照
         PENALTY_DRAW_SIZE = 50 * self._scale_field_to_draw
         point = self._convert_field_to_draw_point(PENALTY_X, 0.0)
         painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
@@ -469,7 +469,7 @@ class FieldWidget(QWidget):
             self._convert_field_to_draw_point(
                 self._field.field_length * 0.5, self._field.goal_width*0.5),
             QSizeF(self._field.goal_depth * self._scale_field_to_draw,
-                  self._field.goal_width * self._scale_field_to_draw))
+                   self._field.goal_width * self._scale_field_to_draw))
         painter.drawRect(rect)
 
         painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
@@ -478,7 +478,7 @@ class FieldWidget(QWidget):
                 -self._field.field_length * 0.5 - self._field.goal_depth,
                 self._field.goal_width*0.5),
             QSizeF(self._field.goal_depth * self._scale_field_to_draw,
-                  self._field.goal_width * self._scale_field_to_draw))
+                   self._field.goal_width * self._scale_field_to_draw))
         painter.drawRect(rect)
 
     def _draw_detection(self, painter):
@@ -656,7 +656,9 @@ class FieldWidget(QWidget):
             painter, final_goal_pose, goal_pose.pose.x, goal_pose.pose.y, robot_id,
             self._RADIUS_ROBOT * 0.7 * self._scale_field_to_draw, brush_color, line_color)
 
-    def _draw_goal_pose_and_line_to_parent(self, painter, goal_pose, parent_x, parent_y, robot_id, size, color_brush, color_line_to_parent):
+    def _draw_goal_pose_and_line_to_parent(
+            self, painter, goal_pose, parent_x, parent_y, robot_id,
+            size, color_brush, color_line_to_parent):
         # 目標位置を描画する
         # parentはロボットだったり、回避位置だったりする
         painter.setPen(Qt.black)
@@ -681,7 +683,6 @@ class FieldWidget(QWidget):
         parent_point = self._convert_field_to_draw_point(
             parent_x * 1000, parent_y * 1000)  # meters to mm
         painter.drawLine(point, parent_point)
-
 
     def _draw_replacement_ball(self, painter, ball):
         # ボールのreplacementを描画する
@@ -728,7 +729,7 @@ class FieldWidget(QWidget):
         # サイド反転
         if self._invert:
             designated_point *= -1.0
-        
+
         ball = self._detection_tracked.balls[0]
         ball_point = self._convert_field_to_draw_point(
             ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
