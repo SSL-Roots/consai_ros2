@@ -15,13 +15,13 @@
 #ifndef ROBOCUP_SSL_COMM__UDP_SENDER_HPP_
 #define ROBOCUP_SSL_COMM__UDP_SENDER_HPP_
 
-#include <boost/asio.hpp>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include <boost/asio.hpp>
 
 namespace udp_sender
 {
