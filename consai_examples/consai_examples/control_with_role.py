@@ -36,60 +36,72 @@ ROLE_OFFENSE3 = 8
 ROLE_OFFENSE4 = 9
 ROLE_CENTER = 10
 
+
 def action_goalie(robot_id):
     # goalieの行動
     print("goalie {} はゴール前に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, -0.9, 0.0, 0.0, False)
+
 
 def action_attacker(robot_id):
     # attackerの行動
     print("attacker {} はボールを追いかけます".format(robot_id))
     operator_node.chase_ball(robot_id, -0.6, 0.0, 0.0, False, True)
 
+
 def action_defense1(robot_id):
     # defense1の行動
     print("defense1 {} は自チームサイドの左上に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, -0.8, 0.8, 0.0, True)
+
 
 def action_defense2(robot_id):
     # defense2の行動
     print("defense2 {} は自チームサイドの右上に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, -0.2, 0.8, 0.0, True)
 
+
 def action_defense3(robot_id):
     # defense3の行動
     print("defense3 {} は自チームサイドの右下に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, -0.2, -0.8, 0.0, True)
+
 
 def action_defense4(robot_id):
     # defense4の行動
     print("defense4 {} は自チームサイドの左下に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, -0.8, -0.8, 0.0, True)
 
+
 def action_offense1(robot_id):
     # offense1の行動
     print("offense1 {} は相手チームサイドの左上に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, 0.2, 0.8, 0.0, True)
+
 
 def action_offense2(robot_id):
     # offense2の行動
     print("offense1 {} は相手チームサイドの右上に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, 0.8, 0.8, 0.0, True)
 
+
 def action_offense3(robot_id):
     # offense3の行動
     print("offense3 {} は相手チームサイドの右下に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, 0.8, -0.8, 0.0, True)
+
 
 def action_offense4(robot_id):
     # offense4の行動
     print("offense4 {} は相手チームサイドの左下に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, 0.2, -0.8, 0.0, True)
 
+
 def action_center(robot_id):
     # centerの行動
     print("center {} はフィールド中央に移動します".format(robot_id))
     operator_node.move_to_normalized(robot_id, 0.0, 0.0, 0.0, True)
+
 
 actions = {
     ROLE_GOALIE: action_goalie,
@@ -105,6 +117,7 @@ actions = {
     ROLE_CENTER: action_center,
 }
 
+
 def main():
     while rclpy.ok():
         updated_roles = assignment_node.update_role()
@@ -113,6 +126,7 @@ def main():
             actions[role](robot_id)
 
         time.sleep(0.1)
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

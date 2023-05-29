@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from functools import partial
-import math
 
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
@@ -34,6 +33,7 @@ from rclpy.node import Node
 class RobotOperator(Node):
 
     STOP_GAME_VELOCITY = 0.8  # m/s
+
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')
 
@@ -220,7 +220,8 @@ class RobotOperator(Node):
         pose.theta = self._theta_look_ball()
 
         target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_reflect_kick(self._pose_goal(pose, keep=True), target, kick_pass=False))
+        return self._set_goal(robot_id, self._with_reflect_kick(
+            self._pose_goal(pose, keep=True), target, kick_pass=False))
 
     def move_to_ball_y(self, robot_id, x):
         # ボールと同じy軸上でxの位置に移動する
@@ -246,7 +247,8 @@ class RobotOperator(Node):
             line.offset_intersection_to_p2.append(offset_to_p2)
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_line_to_defend_our_goal_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
+    def move_to_line_to_defend_our_goal_with_reflect(
+            self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 自チームのゴールをボールから守るように、直線p1->p2に移動する
         line = ConstraintLine()
 
@@ -262,9 +264,11 @@ class RobotOperator(Node):
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+        return self._set_goal(robot_id, self._with_reflect_kick(
+            self._line_goal(line, keep=True), target, kick_pass=False))
 
-    def move_to_cross_line_their_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
+    def move_to_cross_line_their_center_and_ball(
+            self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -281,7 +285,8 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_cross_line_their_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
+    def move_to_cross_line_their_center_and_ball_with_reflect(
+            self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 相手サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -297,9 +302,11 @@ class RobotOperator(Node):
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
-    
-    def move_to_cross_line_our_center_and_ball(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
+        return self._set_goal(robot_id, self._with_reflect_kick(
+            self._line_goal(line, keep=True), target, kick_pass=False))
+
+    def move_to_cross_line_our_center_and_ball(
+            self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -316,7 +323,8 @@ class RobotOperator(Node):
 
         return self._set_goal(robot_id, self._with_receive(self._line_goal(line, keep=True)))
 
-    def move_to_cross_line_our_center_and_ball_with_reflect(self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
+    def move_to_cross_line_our_center_and_ball_with_reflect(
+            self, robot_id, p1_x, p1_y, p2_x, p2_y, offset_to_p2=None):
         # 直線p1->p2と
         # 自分サイドの中心とボールを結ぶ直線が交差する点で、ボールを見る
         line = ConstraintLine()
@@ -332,7 +340,8 @@ class RobotOperator(Node):
             line.offset_intersection_to_p2.append(offset_to_p2)
 
         target = self._xy_their_goal()
-        return self._set_goal(robot_id, self._with_reflect_kick(self._line_goal(line, keep=True), target, kick_pass=False))
+        return self._set_goal(robot_id, self._with_reflect_kick(
+            self._line_goal(line, keep=True), target, kick_pass=False))
 
     def move_to_defend_our_goal_from_ball(self, robot_id, distance):
         # 自チームのゴールとボールを結び、ボールからdistanceだけ離れた位置に移動する
@@ -366,7 +375,7 @@ class RobotOperator(Node):
         return self._set_goal(robot_id, goal_msg)
 
     def move_to_named_target_with_reflect_pass_to_named_target(
-        self, robot_id, name_to_move, name_to_pass):
+            self, robot_id, name_to_move, name_to_pass):
         # 指定したIDのロボットをnameで指定した名前付きターゲットへ移動させる
         # ボールが来たらリフレクトパスを実施する
 
@@ -686,7 +695,7 @@ class RobotOperator(Node):
         their_center.value_x.append(0.5)
         their_center.value_y.append(0.0)
         return their_center
-    
+
     def _xy_our_side_center(self):
         # ConstraintXYの自分サイドの中央を返す
         their_center = ConstraintXY()
@@ -820,6 +829,6 @@ class RobotOperator(Node):
     def _get_result_callback(self, future, robot_id):
         # アクションサーバからの行動完了通知を受信したら実行される関数
         result = future.result().result
-        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(robot_id, result.success, result.message))
+        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(
+            robot_id, result.success, result.message))
         self._robot_is_free[robot_id] = True
-

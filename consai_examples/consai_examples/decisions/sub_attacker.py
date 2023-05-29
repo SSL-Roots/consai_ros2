@@ -18,16 +18,21 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 
+
 class SubAttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_RIGHT_TOP,
-                           FieldObserver.BALL_ZONE_LEFT_MID_TOP, FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
+        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
+                           FieldObserver.BALL_ZONE_RIGHT_TOP,
+                           FieldObserver.BALL_ZONE_LEFT_MID_TOP,
+                           FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
 
-        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP, FieldObserver.BALL_ZONE_LEFT_MID_TOP]
-        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM, FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
+        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
+                               FieldObserver.BALL_ZONE_LEFT_MID_TOP]
+        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM,
+                                  FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
 
     def _offend(self, robot_id, base_id):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
@@ -94,22 +99,26 @@ class SubAttackerDecision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(
+                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(
+                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty_inplay(self, robot_id):
@@ -148,7 +157,7 @@ class SubAttackerDecision(DecisionBase):
                 self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
                 self._act_id = ID_BALL_RECEIVE
             return
-        
+
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:

@@ -195,8 +195,10 @@ def test_shoot(target_x, target_y):
     while operator_node.all_robots_are_free() is False:
         pass
 
+
 def test_shoot_to_their(robot_id):
     operator_node.shoot_to_their_goal(robot_id)
+
 
 def test_pass_two_robots():
     # 2台のロボットでパスし合う
@@ -257,6 +259,7 @@ def test_stop_robots():
     while operator_node.all_robots_are_free() is False:
         pass
 
+
 def test_move_to_line():
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
     p1_x = 0.0
@@ -273,6 +276,7 @@ def test_move_to_line():
         # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
         while operator_node.all_robots_are_free() is False:
             pass
+
 
 def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     print("test_use_named_targets")
@@ -296,7 +300,8 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     middle_end_x = harf_width - defence_harf_width * 2.0 - robot_harf_width
     # offset_to_p2をセットすると、交点からオフセットできる
     operator_node.move_to_line_to_defend_our_goal(1, -x, y, -end_x, y, offset_to_p2=-0.5)
-    operator_node.move_to_line_to_defend_our_goal(2, -middle_x, y, -middle_end_x, y, offset_to_p2=-0.5)
+    operator_node.move_to_line_to_defend_our_goal(
+        2, -middle_x, y, -middle_end_x, y, offset_to_p2=-0.5)
 
     # 3番はディフェンスエリアの下左側に
     # 4番はディフェンスエリアの下右側に
@@ -317,8 +322,10 @@ def test_defend_goal_on_line(p1_x, p1_y, p2_x, p2_y):
     operator_node.move_to_line_to_defend_our_goal(7, -x, -y, -x, -end_y)
     operator_node.move_to_line_to_defend_our_goal(8, -x, -middle_y, -x, -middle_end_y)
 
+
 def test_reflect_shoot(robot_id, x, y):
     operator_node.move_to_reflect_shoot_to_their_goal(robot_id, x, y)
+
 
 def test_refelect_shoot_four_robots(id1, id2, id3, id4):
     # 4台のロボットでパスし合う
@@ -329,6 +336,7 @@ def test_refelect_shoot_four_robots(id1, id2, id3, id4):
     operator_node.move_to_reflect_shoot_to_our_robot(id4, id1, -dist, -dist)
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 def test_use_named_targets():
     # 名前付きターゲットを用いてロボットを動かす
@@ -408,6 +416,7 @@ def test_use_named_targets():
     while operator_node.all_robots_are_free() is False:
         pass
 
+
 def test_star_pass():
     # 5台のロボットが互いにパスし続けるテスト
 
@@ -469,12 +478,14 @@ def test_star_pass():
     while operator_node.all_robots_are_free() is False:
         pass
 
+
 def test():
     while(1):
-        if observer_node.our_robots_pos[0] != None:
+        if observer_node.our_robots_pos[0] is not None:
             break
     ans = observer_node.get_open_path_id_list(4)
     print(ans)
+
 
 def main():
     # 実行したい関数のコメントを外してください
@@ -495,6 +506,7 @@ def main():
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # test_use_named_targets()
     # test_star_pass()
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

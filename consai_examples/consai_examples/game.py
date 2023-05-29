@@ -23,7 +23,6 @@ import rclpy
 from decisions.attacker import AttackerDecision
 from decisions.center_back1 import CenterBack1Decision
 from decisions.center_back2 import CenterBack2Decision
-from decisions.decision_base import DecisionBase
 from decisions.goalie import GoaleDecision
 from decisions.side_back1 import SideBack1Decision
 from decisions.side_back2 import SideBack2Decision
@@ -47,6 +46,7 @@ def num_of_active_zone_roles(active_roles):
         RoleName.ZONE4]
     return len(set(role_zone_list) & set(active_roles))
 
+
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
     # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
@@ -62,6 +62,7 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_pre_penalty() and \
         not referee.their_penalty() and \
         not referee.their_ball_placement()
+
 
 def main():
     while rclpy.ok():
@@ -81,10 +82,10 @@ def main():
             referee.max_allowed_our_bots())
 
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
-        assigned_roles = [ t[0] for t in assignor.get_assigned_roles_and_ids() ]
+        assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
-        
+
         for role, robot_id in assignor.get_assigned_roles_and_ids():
             # 役割が変わったロボットのみ、行動を更新する
             # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
@@ -173,6 +174,7 @@ def main():
                     robot_id, referee.placement_position())
             else:
                 print("UNDEFINED REFEREE COMMAND!!! : {}".format(referee.get_command()))
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

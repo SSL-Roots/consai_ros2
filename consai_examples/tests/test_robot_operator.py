@@ -1,3 +1,17 @@
+# Copyright 2023 Roots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from consai_examples.robot_operator import RobotOperator
 from consai_msgs.msg import NamedTargets
 import pytest
@@ -5,6 +19,8 @@ import rclpy
 from rclpy.node import Node
 
 # NamedTargetsトピックをsubscribeするためのクラス
+
+
 class NamedTargetsSubscriber(Node):
     def __init__(self):
         super().__init__('subscriber')
@@ -88,6 +104,7 @@ def test_セットしたnamed_targetを個別に削除できること(rclpy_init
     # トピックをsubscribeするためspine_once()を実行
     rclpy.spin_once(subscriber, timeout_sec=1.0)
     assert len(subscriber.named_targets.name) == 2
+
 
 def test_セットしたnamed_targetsを一括削除できること(rclpy_init_shutdown):
     operator = RobotOperator()

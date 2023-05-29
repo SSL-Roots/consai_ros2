@@ -16,7 +16,7 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
+
 
 class SideBack2Decision(DecisionBase):
 
@@ -29,7 +29,8 @@ class SideBack2Decision(DecisionBase):
         p1_y = -1.8 - 0.5
         p2_x = -6.0 + 1.8 + 0.3
         p2_y = -1.8 - 0.5
-        self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _offend_upper_defense_area(self, robot_id):
         # 相手フィールの上側を待機する
@@ -37,7 +38,8 @@ class SideBack2Decision(DecisionBase):
         p1_y = -4.0
         p2_x = 3.0
         p2_y = -4.0
-        self._operator.move_to_cross_line_their_center_and_ball_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_cross_line_their_center_and_ball_with_reflect(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
@@ -72,22 +74,26 @@ class SideBack2Decision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
+            self._operator.move_to_look_ball(
+                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
+            self._operator.move_to_look_ball(
+                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def our_penalty_inplay(self, robot_id):
@@ -122,10 +128,12 @@ class SideBack2Decision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
+            self._operator.move_to_look_ball(
+                robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
             self._act_id = self.ACT_ID_OUR_PLACEMENT
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
+            self._operator.move_to_look_ball(
+                robot_id, -6.0 + 2.0, 1.8 - 0.3 * 9.0)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT

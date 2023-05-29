@@ -21,6 +21,7 @@ import numpy
 
 from consai_msgs.msg import State2D
 
+
 def get_diff_xy(pose1, pose2):
 
     diff_pose = State2D()
@@ -31,16 +32,18 @@ def get_diff_xy(pose1, pose2):
 
     return diff_pose
 
+
 def get_distance(pose1, pose2):
     # 2点間の距離を取る関数
     diff = get_diff_xy(pose1, pose2)
 
     return math.hypot(diff.x, diff.y)
 
+
 def get_line_parameter(pose1, pose2):
     # 2点間を結ぶ直線の傾きと切片を求める関数
     diff = get_diff_xy(pose1, pose2)
-   
+
     # 計算できた場合Ture
     flag = True
 
@@ -61,11 +64,13 @@ def get_line_parameter(pose1, pose2):
 
     return slope, intercept, flag
 
+
 def get_angle(from_pose, to_pose):
     # ワールド座標系でfrom_poseからto_poseを結ぶ直線の角度を得る
     diff_pose = get_diff_xy(to_pose, from_pose)
 
     return math.atan2(diff_pose.y, diff_pose.x)
+
 
 def angle_normalize(angle):
     # 角度をpi  ~ -piの範囲に変換する関数
@@ -77,12 +82,13 @@ def angle_normalize(angle):
 
     return angle
 
+
 class Trans():
     # 座標系を移動、回転するクラス
-    def __init__(self, center , theta):
+    def __init__(self, center, theta):
         normalized_theta = angle_normalize(theta)
         self._c_center = center.x + center.y * 1.0j
-        self._c_rotate = cmath.rect(1.0, normalized_theta) 
+        self._c_rotate = cmath.rect(1.0, normalized_theta)
         self._c_angle = normalized_theta
 
     def transform(self, pose):
@@ -108,4 +114,3 @@ class Trans():
 
     def inverted_transform_angle(self, angle):
         return angle_normalize(angle + self._c_angle)
-

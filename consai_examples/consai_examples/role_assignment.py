@@ -20,16 +20,13 @@ from enum import Enum
 import math
 
 from rclpy.node import Node
-from robocup_ssl_msgs.msg import Point
-from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-from robocup_ssl_msgs.msg import Vector3
 
 # 設定可能なロボット役割一覧
 # ロボットの台数より多く定義してもOK
+
+
 class RoleName(Enum):
     GOALIE = 0
     ATTACKER = 1
@@ -62,7 +59,7 @@ class RoleAssignment(Node):
             self.get_logger().info('ourteamはyellowです')
         else:
             self.get_logger().info('ourteamはblueです')
-        
+
         # フィールド上のロボット役割一覧
         # フィールドに出せるロボットの数は11台
         # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
@@ -101,7 +98,8 @@ class RoleAssignment(Node):
         # roleへのロボットの割り当てを更新する
 
         # 優先度が高い順にロボットIDを並べる
-        prev_id_list_ordered_by_role_priority = copy.deepcopy(self._id_list_ordered_by_role_priority)
+        prev_id_list_ordered_by_role_priority = copy.deepcopy(
+            self._id_list_ordered_by_role_priority)
         self._update_role_list(update_attacker_by_ball_pos)
 
         # 役割リストを更新する
@@ -132,7 +130,6 @@ class RoleAssignment(Node):
 
     def get_assigned_roles_and_ids(self):
         # IDが割り当てられているroleとIDのペアのリストを返す
-        active_index = []
         role_and_id = []
         for i in range(len(self._id_list_ordered_by_role_priority)):
             role = self._present_role_list[i]
@@ -159,7 +156,8 @@ class RoleAssignment(Node):
 
     def _update_role_list(self, update_attacker_by_ball_pos=True):
         # 役割リストを更新する
-        our_active_robots, their_active_robots = self._extract_active_robots(self._detection.robots)
+        our_active_robots, their_active_robots = self._extract_active_robots(
+            self._detection.robots)
         our_active_ids = [robot.robot_id.id for robot in our_active_robots]
 
         self._reset_inactive_id(our_active_ids)
@@ -178,7 +176,7 @@ class RoleAssignment(Node):
         # visibilityがセットされていなければ消失と判定する
         if len(ball.visibility) == 0:
             return
-        
+
         if ball.visibility[0] < self.VISIBILITY_THRESHOLD:
             return
 
@@ -246,7 +244,7 @@ class RoleAssignment(Node):
             # 空きスペースの後にアクティブなIDがあればスワップする
             if priority < lowest_priority:
                 self._swap_robot_id_of_priority(priority, lowest_priority)
-        
+
     def _find_lowest_prioiry_from_assigned_roles(self):
         # 担当がいるroleの中で最も優先度が低いものを探し、優先度を返す
         # 担当が一人もいなければNoneを返す
@@ -266,11 +264,13 @@ class RoleAssignment(Node):
             if robot_id is None:
                 return priority
         return None
-            
+
     def _swap_robot_id_of_priority(self, priority1, priority2):
         # robot_id_of_priorityの指定されたpriorityの要素を入れ替える
-        self._id_list_ordered_by_role_priority[priority1], self._id_list_ordered_by_role_priority[priority2] \
-            = self._id_list_ordered_by_role_priority[priority2], self._id_list_ordered_by_role_priority[priority1]
+        self._id_list_ordered_by_role_priority[priority1], \
+            self._id_list_ordered_by_role_priority[priority2] \
+            = self._id_list_ordered_by_role_priority[priority2], \
+            self._id_list_ordered_by_role_priority[priority1]
 
     def _extract_active_robots(self, robots_msg):
         # TrackedFrame.robots からアクティブなロボットを抽出する
@@ -300,8 +300,8 @@ class RoleAssignment(Node):
         # ボールに最も近いロボットをアタッカー候補として出力する
         # アタッカーIDが頻繁に変わらないヒステリシスをもたせる
         NEAREST_DIFF_THRESHOLD = 0.5  # meter
-        NEAREST_VERY_CLOSE_DIFF_THRESHOLD = 0.1 # meter
-        NEAREST_VERY_CLOSE_THRESHOLD = 0.3 # meter
+        NEAREST_VERY_CLOSE_DIFF_THRESHOLD = 0.1  # meter
+        NEAREST_VERY_CLOSE_THRESHOLD = 0.3  # meter
 
         nearest_id = None
         nearest_distance = 1000  # 適当な巨大な距離を初期値とする
@@ -337,7 +337,8 @@ class RoleAssignment(Node):
         # アタッカーと次候補が両方ボールに近いとき
         # 両者の距離の差とnearest_distanceそのものの距離をみることで
         # 3台以上ボールに近いときでも切り替わりの連発を防ぐ
-        if present_attacker_distance - nearest_distance > NEAREST_VERY_CLOSE_DIFF_THRESHOLD and nearest_distance < NEAREST_VERY_CLOSE_THRESHOLD:
+        if present_attacker_distance - nearest_distance > NEAREST_VERY_CLOSE_DIFF_THRESHOLD \
+           and nearest_distance < NEAREST_VERY_CLOSE_THRESHOLD:
             return nearest_id
 
         return present_attacker_id
@@ -349,4 +350,3 @@ class RoleAssignment(Node):
 
         self._present_role_list[-num_of_substitute:] = \
             [RoleName.SUBSTITUTE] * min(num_of_substitute, len(self._present_role_list))
-        

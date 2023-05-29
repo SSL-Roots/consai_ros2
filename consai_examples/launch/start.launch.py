@@ -67,31 +67,31 @@ def generate_launch_description():
     )
 
     controller = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                get_package_share_directory('consai_robot_controller'),
-                '/launch/test.launch.py']),
-            launch_arguments={'invert': LaunchConfiguration('invert'),
-                              'yellow': LaunchConfiguration('yellow'),
-                              'vision_addr': LaunchConfiguration('vision_addr'),
-                              'vision_port': LaunchConfiguration('vision_port'),
-                              }.items(),
-        )
+        PythonLaunchDescriptionSource([
+            get_package_share_directory('consai_robot_controller'),
+            '/launch/test.launch.py']),
+        launch_arguments={'invert': LaunchConfiguration('invert'),
+                          'yellow': LaunchConfiguration('yellow'),
+                          'vision_addr': LaunchConfiguration('vision_addr'),
+                          'vision_port': LaunchConfiguration('vision_port'),
+                          }.items(),
+    )
 
     container = ComposableNodeContainer(
-            name='referee_container',
-            namespace='',
-            package='rclcpp_components',
-            executable='component_container_mt',
-            composable_node_descriptions=[
+        name='referee_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        composable_node_descriptions=[
                 ComposableNode(
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::GameController',
                     parameters=[{
                         'multicast_address': LaunchConfiguration('referee_addr'),
                         'multicast_port': LaunchConfiguration('referee_port'),
-                        }],
+                    }],
                     name='game_controller')
-            ])
+        ])
 
     cmd_arg_yellow = ['"--yellow" if "true" == "', LaunchConfiguration('yellow'), '" else ""']
     cmd_arg_invert = ['"--invert" if "true" == "', LaunchConfiguration('invert'), '" else ""']
@@ -99,12 +99,12 @@ def generate_launch_description():
                      executable='game.py',
                      output='screen',
                      arguments=[
-                        PythonExpression(cmd_arg_yellow),
-                        PythonExpression(cmd_arg_invert),
-                        '--goalie', LaunchConfiguration('goalie')
+                         PythonExpression(cmd_arg_yellow),
+                         PythonExpression(cmd_arg_invert),
+                         '--goalie', LaunchConfiguration('goalie')
                      ],
                      condition=IfCondition(LaunchConfiguration('game')),
-                    )
+                     )
 
     return launch.LaunchDescription([
         declare_arg_invert,

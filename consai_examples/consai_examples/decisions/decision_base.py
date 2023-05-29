@@ -17,6 +17,7 @@
 
 from field_observer import FieldObserver
 
+
 class DecisionBase(object):
     MAX_VELOCITY_AT_STOP_GAME = 1.5  # m/s
     ACT_ID_INIT = -1

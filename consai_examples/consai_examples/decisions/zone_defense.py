@@ -44,13 +44,13 @@ class ZoneDefenseDecision(DecisionBase):
 
     def _zone_defense(self, robot_id, base_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
-        ID_DEFEND_BALL = base_id + self._num_of_zone_roles
+        # ID_DEFEND_BALL = base_id + self._num_of_zone_roles
         ID_IN_ZONE = base_id + self._num_of_zone_roles + 100
         ID_MAN_MARK = base_id + self._num_of_zone_roles + 200
         ID_IN_OUR_DEFENSE = base_id + self._num_of_zone_roles + 300
 
         ZONE_TARGET = self._zone_id.value
-        
+
         # ボールが自分ディフェンスエリアにあるときは、ゾーン初期位置で待機
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA:
             if self._act_id != ID_IN_OUR_DEFENSE:
@@ -63,10 +63,12 @@ class ZoneDefenseDecision(DecisionBase):
         # ゾーン内にボールがあるか判定
         # ボールを追いかける処理は行ってない（アタッカーと取り合いになるため）
         # FIXME: アタッカーと取り合いにならない程度にボールは追いかけてほしい
-        ball_is_in_my_zone = self._ball_is_in_zone()
+        # ball_is_in_my_zone = self._ball_is_in_zone()
 
         # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
-        # if self._zone_targets[ZONE_TARGET] is not None and without_mark is False and ball_is_in_my_zone is False:
+        # if self._zone_targets[ZONE_TARGET] is not None \
+        #    and without_mark is False \
+        #    and ball_is_in_my_zone is False:
         # ゾーン内の相手ロボットがいる、ボールとロボットの間に移動する
         if self._zone_targets[ZONE_TARGET] is not None and without_mark is False:
             if self._act_id != ID_MAN_MARK:
@@ -184,7 +186,7 @@ class ZoneDefenseDecision(DecisionBase):
             if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                 return True
         return False
-    
+
     def stop(self, robot_id):
         self._zone_defense(robot_id, self.ACT_ID_STOP, without_mark=True)
 
@@ -205,22 +207,26 @@ class ZoneDefenseDecision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty_inplay(self, robot_id):
@@ -247,10 +253,12 @@ class ZoneDefenseDecision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
             self._act_id = self.ACT_ID_OUR_PLACEMENT
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT

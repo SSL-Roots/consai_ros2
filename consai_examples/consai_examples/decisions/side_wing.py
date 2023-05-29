@@ -19,7 +19,7 @@
 from enum import Enum
 
 from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
+
 
 class WingID(Enum):
     LEFT = 0
@@ -44,7 +44,8 @@ class SideWingDecision(DecisionBase):
         p1_y = (1.8 + 0.5) * (-1 if self._wing_id.value > 0 else 1)
         p2_x = -6.0 + 1.8 + 0.3
         p2_y = (1.8 + 0.5) * (-1 if self._wing_id.value > 0 else 1)
-        self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_our_half_way(self, robot_id):
         # Half-wayラインの自陣側で待機
@@ -59,8 +60,10 @@ class SideWingDecision(DecisionBase):
         p1_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
         p2_x = 5.0
         p2_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
-        # self._operator.move_to_cross_line_our_center_and_ball_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
-        self._operator.move_to_cross_line_our_center_and_ball(robot_id, p1_x, p1_y, p2_x, p2_y)
+        # self._operator.move_to_cross_line_our_center_and_ball_with_reflect(
+        # robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_cross_line_our_center_and_ball(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
@@ -96,22 +99,26 @@ class SideWingDecision(DecisionBase):
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
             self._act_id = self.ACT_ID_PENALTY
 
     def our_penalty_inplay(self, robot_id):
@@ -146,10 +153,12 @@ class SideWingDecision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
             self._act_id = self.ACT_ID_OUR_PLACEMENT
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
+            self._operator.move_to_look_ball(
+                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT
