@@ -27,17 +27,29 @@ TEST(TestControlTools, velocity_contol_tanh) {
   EXPECT_NEAR(control_tools::velocity_contol_tanh(1.0, range, MAX_VEL), 0.76 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::velocity_contol_tanh(2.0, range, MAX_VEL), 0.96 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::velocity_contol_tanh(5.0, range, MAX_VEL), 0.99 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-1.0, range, MAX_VEL), -0.76 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-2.0, range, MAX_VEL), -0.96 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-5.0, range, MAX_VEL), -0.99 * MAX_VEL, ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-1.0, range, MAX_VEL), -0.76 * MAX_VEL,
+    ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-2.0, range, MAX_VEL), -0.96 * MAX_VEL,
+    ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-5.0, range, MAX_VEL), -0.99 * MAX_VEL,
+    ABS_ERROR);
 
   range = 2.0;
   EXPECT_NEAR(control_tools::velocity_contol_tanh(0.5, range, MAX_VEL), 0.76 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::velocity_contol_tanh(1.0, range, MAX_VEL), 0.96 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::velocity_contol_tanh(2.5, range, MAX_VEL), 0.99 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-0.5, range, MAX_VEL), -0.76 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-1.0, range, MAX_VEL), -0.96 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::velocity_contol_tanh(-2.5, range, MAX_VEL), -0.99 * MAX_VEL, ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-0.5, range, MAX_VEL), -0.76 * MAX_VEL,
+    ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-1.0, range, MAX_VEL), -0.96 * MAX_VEL,
+    ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::velocity_contol_tanh(-2.5, range, MAX_VEL), -0.99 * MAX_VEL,
+    ABS_ERROR);
 }
 
 // sin関数を用いた角速度制御のテスト
@@ -49,11 +61,22 @@ TEST(TestControlTools, angular_velocity_contol_sin) {
 
   EXPECT_NEAR(control_tools::angular_velocity_contol_sin(M_PI, MAX_VEL), MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::angular_velocity_contol_sin(M_PI_2, MAX_VEL), MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::angular_velocity_contol_sin(M_PI_4, MAX_VEL), 0.71 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::angular_velocity_contol_sin(M_PI_4 / 2.0, MAX_VEL), 0.38 * MAX_VEL, ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::angular_velocity_contol_sin(M_PI_4, MAX_VEL), 0.71 * MAX_VEL,
+    ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::angular_velocity_contol_sin(
+      M_PI_4 / 2.0,
+      MAX_VEL), 0.38 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::angular_velocity_contol_sin(0, MAX_VEL), 0.0 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::angular_velocity_contol_sin(-M_PI_4 / 2.0, MAX_VEL), -0.38 * MAX_VEL, ABS_ERROR);
-  EXPECT_NEAR(control_tools::angular_velocity_contol_sin(-M_PI_4, MAX_VEL), -0.71 * MAX_VEL, ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::angular_velocity_contol_sin(
+      -M_PI_4 / 2.0,
+      MAX_VEL), -0.38 * MAX_VEL, ABS_ERROR);
+  EXPECT_NEAR(
+    control_tools::angular_velocity_contol_sin(
+      -M_PI_4,
+      MAX_VEL), -0.71 * MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::angular_velocity_contol_sin(-M_PI_2, MAX_VEL), -MAX_VEL, ABS_ERROR);
   EXPECT_NEAR(control_tools::angular_velocity_contol_sin(-M_PI, MAX_VEL), -MAX_VEL, ABS_ERROR);
 }

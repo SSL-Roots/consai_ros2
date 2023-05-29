@@ -34,12 +34,15 @@ namespace tools = geometry_tools;
 namespace ctools = control_tools;
 
 const int ROBOT_NUM = 16;
-const std::string PARAM_THRESHOLD_LOOKING_BALL_DISTANCE = "control_ball_threshold_looking_ball_distance_m";
-const std::string PARAM_THRESHOLD_LOOKING_BALL_THETA = "control_ball_threshold_looking_ball_theta_deg";
-const std::string PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE = "control_ball_threshold_can_dribble_distance_m";
-const std::string PARAM_THRESHOLD_CAN_SHOOT_THETA = "control_ball_threshold_can_shoot_theta_deg";
-const std::string PARAM_DISTANCE_TO_LOOK_BALL = "control_ball_distance_to_look_ball_m";
-const std::string PARAM_DISTANCE_TO_ROTATE = "control_ball_distance_to_rotate_m";
+const auto PARAM_THRESHOLD_LOOKING_BALL_DISTANCE =
+  "control_ball_threshold_looking_ball_distance_m";
+const auto PARAM_THRESHOLD_LOOKING_BALL_THETA =
+  "control_ball_threshold_looking_ball_theta_deg";
+const auto PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE =
+  "control_ball_threshold_can_dribble_distance_m";
+const auto PARAM_THRESHOLD_CAN_SHOOT_THETA = "control_ball_threshold_can_shoot_theta_deg";
+const auto PARAM_DISTANCE_TO_LOOK_BALL = "control_ball_distance_to_look_ball_m";
+const auto PARAM_DISTANCE_TO_ROTATE = "control_ball_distance_to_rotate_m";
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
@@ -139,7 +142,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
   pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
-  timer_pub_goal_poses_ = create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
+  timer_pub_goal_poses_ =
+    create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
@@ -161,62 +165,53 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         if (parameter.get_name() == "max_acceleration_xy") {
           max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_acceleration_xy.");
-        }
-        if (parameter.get_name() == "max_acceleration_theta") {
+        } else if (parameter.get_name() == "max_acceleration_theta") {
           max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_acceleration_theta.");
-        }
-        if (parameter.get_name() == "max_velocity_xy") {
+        } else if (parameter.get_name() == "max_velocity_xy") {
           max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_velocity_xy.");
-        }
-        if (parameter.get_name() == "max_velocity_theta") {
+        } else if (parameter.get_name() == "max_velocity_theta") {
           max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update max_velocity_theta.");
-        }
-        if (parameter.get_name() == "control_range_xy") {
+        } else if (parameter.get_name() == "control_range_xy") {
           param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update control_range_xy.");
-        }
-        if (parameter.get_name() == "control_a_xy") {
+        } else if (parameter.get_name() == "control_a_xy") {
           param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update control_a_xy.");
-        }
-        if (parameter.get_name() == "control_a_theta") {
+        } else if (parameter.get_name() == "control_a_theta") {
           param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update control_a_theta.");
-        }
-        if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_DISTANCE) {
+        } else if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_DISTANCE) {
           parser_.param_threshold_looking_ball_distance = get_parameter(
             PARAM_THRESHOLD_LOOKING_BALL_DISTANCE).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_LOOKING_BALL_DISTANCE.c_str());
-        }
-        if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_THETA) {
+          RCLCPP_INFO(
+            this->get_logger(), "Update %s",
+            PARAM_THRESHOLD_LOOKING_BALL_DISTANCE);
+        } else if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_THETA) {
           parser_.param_threshold_looking_ball_theta = get_parameter(
             PARAM_THRESHOLD_LOOKING_BALL_THETA).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_LOOKING_BALL_THETA.c_str());
-        }
-        if (parameter.get_name() == PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE) {
+          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_LOOKING_BALL_THETA);
+        } else if (parameter.get_name() == PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE) {
           parser_.param_can_dribble_distance = get_parameter(
             PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE.c_str());
-        }
-        if (parameter.get_name() == PARAM_THRESHOLD_CAN_SHOOT_THETA) {
+          RCLCPP_INFO(
+            this->get_logger(), "Update %s",
+            PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE);
+        } else if (parameter.get_name() == PARAM_THRESHOLD_CAN_SHOOT_THETA) {
           parser_.param_can_shoot_theta = get_parameter(
             PARAM_THRESHOLD_CAN_SHOOT_THETA).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_CAN_SHOOT_THETA.c_str());
-        }
-        if (parameter.get_name() == PARAM_DISTANCE_TO_LOOK_BALL) {
+          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_CAN_SHOOT_THETA);
+        } else if (parameter.get_name() == PARAM_DISTANCE_TO_LOOK_BALL) {
           parser_.param_distance_to_look_ball = get_parameter(
             PARAM_DISTANCE_TO_LOOK_BALL).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_LOOK_BALL.c_str());
-        }
-        if (parameter.get_name() == PARAM_DISTANCE_TO_ROTATE) {
+          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_LOOK_BALL);
+        } else if (parameter.get_name() == PARAM_DISTANCE_TO_ROTATE) {
           parser_.param_distance_to_rotate = get_parameter(
             PARAM_DISTANCE_TO_ROTATE).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_ROTATE.c_str());
+          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_ROTATE);
         }
-
       }
       return result;
     };
@@ -263,13 +258,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
-
     // 目標位置と現在位置の差分
     double diff_x = goal_pose.x - my_robot.pos.x;
     double diff_y = goal_pose.y - my_robot.pos.y;
     double diff_theta = tools::normalize_theta(
-        goal_pose.theta -
-        my_robot.orientation);
+      goal_pose.theta -
+      my_robot.orientation);
 
     // tanhに反応する区間の係数
     // double range_xy = 1.0;
@@ -279,10 +273,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // double a_theta = 0.5;
 
     // tanh関数を用いた速度制御
-    world_vel.x = ctools::velocity_contol_tanh(diff_x, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
-    world_vel.y = ctools::velocity_contol_tanh(diff_y, param_control_range_xy_, param_control_a_xy_ * max_velocity_xy_);
+    world_vel.x = ctools::velocity_contol_tanh(
+      diff_x, param_control_range_xy_,
+      param_control_a_xy_ * max_velocity_xy_);
+    world_vel.y = ctools::velocity_contol_tanh(
+      diff_y, param_control_range_xy_,
+      param_control_a_xy_ * max_velocity_xy_);
     // sin関数を用いた角速度制御
-    world_vel.theta = ctools::angular_velocity_contol_sin(diff_theta, param_control_a_theta_ * max_velocity_theta_);
+    world_vel.theta = ctools::angular_velocity_contol_sin(
+      diff_theta,
+      param_control_a_theta_ *
+      max_velocity_theta_);
   }
 
   // 最大加速度リミットを適用
@@ -375,7 +376,7 @@ void Controller::on_timer_pub_goal_poses()
   // goal_posesをpublishするタイマーコールバック関数
   auto goal_poses = std::make_unique<GoalPoses>();
   auto final_goal_poses = std::make_unique<GoalPoses>();
-  for(const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
+  for (const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
     if (goal_poses_map_.count(robot_id) > 0) {
       goal_poses->poses.push_back(goal_poses_map_[robot_id]);
     }
