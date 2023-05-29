@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <memory>
+#include <vector>
 
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/geometry_tools.hpp"
