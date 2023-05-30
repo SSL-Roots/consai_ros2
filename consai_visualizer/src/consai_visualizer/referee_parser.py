@@ -18,6 +18,7 @@ import math
 
 from robocup_ssl_msgs.msg import Referee
 
+
 def parse_stage(ref_stage):
     # レフェリーステージを文字列に変換する
     output = "STAGE"
@@ -52,6 +53,7 @@ def parse_stage(ref_stage):
         output = "POST_GAME"
 
     return output
+
 
 def parse_command(ref_command):
     # レフェリーコマンドを文字列に変換する
@@ -92,13 +94,16 @@ def parse_command(ref_command):
 
     return output
 
+
 def _microseconds_to_text(microseconds):
     minutes, seconds = divmod(math.ceil(microseconds * 1e-6), 60)  # ceilで小数点切り上げ
     return '{} : {:0=2}'.format(minutes, seconds)  # 秒はゼロで埋める
 
+
 def parse_stage_time_left(ref_stage_time_left):
     # レフェリーステージの残り時間(usec)を文字列に変換する
     return "STAGE: " + _microseconds_to_text(ref_stage_time_left)
+
 
 def parse_action_time_remaining(ref_action_time_remaining):
     # アクション残り時間(usec)を文字列に変換する
@@ -107,11 +112,14 @@ def parse_action_time_remaining(ref_action_time_remaining):
         text = _microseconds_to_text(ref_action_time_remaining)
     return "ACT: " + text
 
+
 def parse_red_cards(ref_team_red_cards):
     return str(ref_team_red_cards)
 
+
 def parse_yellow_cards(ref_team_yellow_cards):
     return str(ref_team_yellow_cards)
+
 
 def parse_yellow_card_times(yellow_card_times):
     text = ""
@@ -119,14 +127,18 @@ def parse_yellow_card_times(yellow_card_times):
         text += _microseconds_to_text(time) + ", "
     return text
 
+
 def parse_allowed_bots(allowed_bots):
     return str(allowed_bots)
+
 
 def parse_timeouts(timeouts):
     return 'Timeouts: ' + str(timeouts)
 
+
 def parse_timeout_time(timeout_time):
     return _microseconds_to_text(timeout_time)
+
 
 def is_ball_placement(ref_command):
     if ref_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:

@@ -32,7 +32,8 @@ Vision::Vision(const rclcpp::NodeOptions & options)
   declare_parameter("multicast_address", "224.5.23.2");
   declare_parameter("multicast_port", 10006);
   receiver_ = std::make_unique<multicast::MulticastReceiver>(
-    get_parameter("multicast_address").get_value<std::string>(), get_parameter("multicast_port").get_value<int>());
+    get_parameter("multicast_address").get_value<std::string>(), get_parameter(
+      "multicast_port").get_value<int>());
   pub_detection_ = create_publisher<robocup_ssl_msgs::msg::DetectionFrame>("detection", 10);
   pub_geometry_ = create_publisher<robocup_ssl_msgs::msg::GeometryData>("geometry", 10);
 

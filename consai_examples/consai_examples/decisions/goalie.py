@@ -19,6 +19,7 @@ from decisions.decision_base import DecisionBase
 
 from field_observer import FieldObserver
 
+
 class GoaleDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
@@ -29,22 +30,26 @@ class GoaleDecision(DecisionBase):
         p1_y = 0.9
         p2_x = -6.0 + 0.3
         p2_y = -0.9
-        self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
-        # self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
+        # self._operator.move_to_line_to_defend_our_goal_with_reflect(
+        # robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _penalty_defend(self, robot_id):
         p1_x = -6.0 + 0.05
         p1_y = 0.9
         p2_x = -6.0 + 0.05
         p2_y = -0.9
-        self._operator.move_to_line_to_defend_our_goal(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def _defend_goal_with_kick(self, robot_id):
         p1_x = -6.0 + 0.3
         p1_y = 0.9
         p2_x = -6.0 + 0.3
         p2_y = -0.9
-        self._operator.move_to_line_to_defend_our_goal_with_reflect(robot_id, p1_x, p1_y, p2_x, p2_y)
+        self._operator.move_to_line_to_defend_our_goal_with_reflect(
+            robot_id, p1_x, p1_y, p2_x, p2_y)
 
     def stop(self, robot_id):
         if self._act_id != self.ACT_ID_STOP:
@@ -56,10 +61,12 @@ class GoaleDecision(DecisionBase):
         ID_IN_PLAY = self.ACT_ID_INPLAY + 1
 
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA and not self._field_observer.ball_is_moving():
+        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA \
+           and not self._field_observer.ball_is_moving():
             if self._act_id != ID_IN_DEFENSE:
                 # レシーバ候補のロボットIDリストを取得
-                can_pass_id_list, can_pass_pos_list, can_shoot_id_list, can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
+                can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
+                    can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
                 # リストが空でない場合
                 if 0 < len(can_pass_id_list):
@@ -70,9 +77,11 @@ class GoaleDecision(DecisionBase):
                     # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
                     if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
                                                  FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-                        self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=True, set_play=False)
+                        self._operator.shoot_to_their_corner(
+                            robot_id, target_is_top_corner=True, set_play=False)
                     else:
-                        self._operator.shoot_to_their_corner(robot_id, target_is_top_corner=False, set_play=False)
+                        self._operator.shoot_to_their_corner(
+                            robot_id, target_is_top_corner=False, set_play=False)
 
                 # ACT IDを更新
                 self._act_id = ID_IN_DEFENSE

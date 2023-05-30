@@ -132,7 +132,7 @@ class RefereeParser(Node):
             if self._invert_placement_pos:
                 self._placement_pos.x *= -1.0
                 self._placement_pos.y *= -1.0
-        
+
         # フィールドに出せるロボットの台数
         if self._our_team_is_yellow:
             if msg.yellow.max_allowed_bots:
@@ -150,13 +150,23 @@ class RefereeParser(Node):
         referee.designated_position.x = self._placement_pos.x
         referee.designated_position.y = self._placement_pos.y
         referee.is_placement = self.our_ball_placement() or self.their_ball_placement()
-        referee.is_inplay = self.inplay() or self.our_penalty_inplay() or self.their_penalty_inplay()
-        referee.is_our_setplay = self.our_direct() or self.our_indirect() or self.our_kickoff() or\
-                                 self.our_penalty() or self.our_ball_placement() or self.our_pre_kickoff() or\
-                                 self.our_pre_penalty()
-        referee.is_their_setplay = self.their_direct() or self.their_indirect() or self.their_kickoff() or\
-                                   self.their_penalty() or self.their_ball_placement() or self.their_pre_kickoff() or\
-                                   self.their_pre_penalty()
+        referee.is_inplay = self.inplay() \
+            or self.our_penalty_inplay() \
+            or self.their_penalty_inplay()
+        referee.is_our_setplay = self.our_direct() \
+            or self.our_indirect() \
+            or self.our_kickoff() \
+            or self.our_penalty() \
+            or self.our_ball_placement() \
+            or self.our_pre_kickoff() \
+            or self.our_pre_penalty()
+        referee.is_their_setplay = self.their_direct() \
+            or self.their_indirect() \
+            or self.their_kickoff() \
+            or self.their_penalty() \
+            or self.their_ball_placement() \
+            or self.their_pre_kickoff() \
+            or self.their_pre_penalty()
         self._pub_parsed_referee.publish(referee)
 
     def _check_inplay(self, msg):

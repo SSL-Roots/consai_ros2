@@ -17,6 +17,7 @@
 
 from decisions.decision_base import DecisionBase
 
+
 class SubstituteDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer, invert=False):

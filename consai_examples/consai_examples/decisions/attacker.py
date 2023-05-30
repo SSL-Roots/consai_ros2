@@ -18,6 +18,7 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 
+
 class AttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
@@ -32,16 +33,20 @@ class AttackerDecision(DecisionBase):
         ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_BACK_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
-        # if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_BACK_X:
+        if self._ball_state in [
+           FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
+           FieldObserver.BALL_IS_OUTSIDE_BACK_X,
+           FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
-        # if self._ball_state == FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA or self._ball_state == FieldObserver.BALL_IS_OUTSIDE_FRONT_X:
+        if self._ball_state in [
+           FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
+           FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
+           FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
@@ -49,7 +54,8 @@ class AttackerDecision(DecisionBase):
 
         # ボールを追いかける
         if self._act_id != ID_CHASE:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = ID_CHASE
 
     def inplay(self, robot_id):
@@ -61,21 +67,29 @@ class AttackerDecision(DecisionBase):
         ID_SHOOT = self.ACT_ID_INPLAY + 3000
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_BACK_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
+        if self._ball_state in [
+           FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
+           FieldObserver.BALL_IS_OUTSIDE_BACK_X,
+           FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
+                                FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
+                                FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
         # パス・シュート可能なIDのリストと位置を取得
-        receiver_robots_id, receiver_robots_pos, shoot_point_list, shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
+        receiver_robots_id, \
+            receiver_robots_pos, \
+            shoot_point_list, \
+            shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
         # NamedTargetを更新
         if len(shoot_point_list) > 0:
@@ -88,7 +102,8 @@ class AttackerDecision(DecisionBase):
         self._operator.publish_named_targets()
 
         # シュート可能かつ相手エリアにいる場合
-        if len(shoot_point_list) > 0 and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
+        if len(shoot_point_list) > 0 \
+           and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
             if self._act_id != ID_SHOOT_THEIR_AREA:
                 # 指定座標に向けてシュートする
                 self._operator.pass_to_named_target(robot_id, "shoot")
@@ -121,7 +136,8 @@ class AttackerDecision(DecisionBase):
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
     def our_kickoff(self, robot_id):
@@ -131,17 +147,20 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
     def their_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_KICKOFF
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
@@ -151,23 +170,28 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.move_to_look_ball(robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            self._operator.move_to_look_ball(
+                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
             self._act_id = self.ACT_ID_INPLAY
 
     def our_penalty_inplay(self, robot_id):
         ID_INPLAY_BALL_IN_DEFENSE_AREA = self.ACT_ID_INPLAY + 1
         # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA, FieldObserver.BALL_IS_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
+                                FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
+                                FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_INPLAY_BALL_IN_DEFENSE_AREA:
                 self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_INPLAY_BALL_IN_DEFENSE_AREA
@@ -184,7 +208,8 @@ class AttackerDecision(DecisionBase):
     def their_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
             self._operator.move_to_defend_our_goal_from_ball(robot_id, 0.9)
-            # self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            # self._operator.chase_ball(
+            #     robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_DIRECT
 
     def our_indirect(self, robot_id):
@@ -194,7 +219,8 @@ class AttackerDecision(DecisionBase):
 
     def their_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
-            self._operator.chase_ball(robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            self._operator.chase_ball(
+                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = self.ACT_ID_INDIRECT
 
     def their_ball_placement(self, robot_id, placement_pos):
@@ -213,11 +239,14 @@ class AttackerDecision(DecisionBase):
 
         ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
-        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X, FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
-                FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y, FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
+        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X,
+                          FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
+                          FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y,
+                          FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
             if self._act_id != ID_NEAR_OUTSIDE:
                 # 壁際に蹴る位置を取得
-                outside_kick_pos = self._field_observer.get_near_outside_ball_placement(ball_state, placement_pos)
+                outside_kick_pos = self._field_observer.get_near_outside_ball_placement(
+                    ball_state, placement_pos)
                 # 壁際に蹴る
                 self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
                 self._act_id = ID_NEAR_OUTSIDE
@@ -229,7 +258,7 @@ class AttackerDecision(DecisionBase):
                 self._operator.pass_to(robot_id, placement_pos.x, placement_pos.y)
                 self._act_id = ID_FAR_FROM
             return
-        
+
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボール位置が配置目標位置に近づいたときはドリブルする
             if self._act_id != ID_NEAR:

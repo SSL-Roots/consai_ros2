@@ -1,3 +1,16 @@
+# Copyright 2023 Roots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from consai_examples.role_assignment import RoleAssignment
 from consai_examples.role_assignment import RoleName
@@ -96,13 +109,13 @@ def test_ロールの数よりロボットが多くてもエラーが発生し�
 def test_ロボットが消えても優先度の高いロールは空けないこと(rclpy_init_shutdown):
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
-    frame_publisher.publish_valid_robots(blue_ids=[0,3,4,5,6,7])
+    frame_publisher.publish_valid_robots(blue_ids=[0, 3, 4, 5, 6, 7])
 
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assignor.update_role()
 
     # 4番と5番を退場させる
-    frame_publisher.publish_valid_robots(blue_ids=[0,3,6,7])
+    frame_publisher.publish_valid_robots(blue_ids=[0, 3, 6, 7])
     rclpy.spin_once(assignor, timeout_sec=1.0)
     changed_ids = assignor.update_role()
     assert changed_ids == [7, 6]
@@ -171,8 +184,9 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
 
 
 @pytest.mark.parametrize("robot_num, expected_indexes",
-    [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
-def test_ロボットの出場可能台数が減った時には優先度の低いものからSUBSTITUEロールを割り当てること(rclpy_init_shutdown, robot_num, expected_indexes):
+                         [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
+def test_ロボットの出場可能台数が減ったら優先度の低い順にSUBSTITUEロールを割り当てること(
+        rclpy_init_shutdown, robot_num, expected_indexes):
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=list(range(11)))

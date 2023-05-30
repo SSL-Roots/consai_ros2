@@ -15,13 +15,13 @@
 #ifndef ROBOCUP_SSL_COMM__MULTICAST_HPP_
 #define ROBOCUP_SSL_COMM__MULTICAST_HPP_
 
-#include <boost/asio.hpp>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include <boost/asio.hpp>  // NOLINT
 
 namespace multicast
 {
