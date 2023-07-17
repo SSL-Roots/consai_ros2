@@ -106,7 +106,7 @@ class AttackerDecision(DecisionBase):
            and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
             if self._act_id != ID_SHOOT_THEIR_AREA:
                 # 指定座標に向けてシュートする
-                self._operator.pass_to_named_target(robot_id, "shoot")
+                self._operator.shoot_to_named_target(robot_id, "shoot")
                 self._act_id = ID_SHOOT_THEIR_AREA
 
         # パス可能な場合
@@ -126,12 +126,12 @@ class AttackerDecision(DecisionBase):
         elif len(shoot_point_list) > 0:
             if self._act_id != ID_SHOOT:
                 # 指定座標に向けてシュートする
-                self._operator.pass_to_named_target(robot_id, "shoot")
+                self._operator.shoot_to_named_target(robot_id, "shoot")
                 self._act_id != ID_SHOOT
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
-                self._operator.pass_to_named_target(robot_id, "shoot")
+                self._operator.shoot_to_named_target(robot_id, "shoot")
                 self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
