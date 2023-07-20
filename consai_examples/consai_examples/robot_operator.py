@@ -25,6 +25,7 @@ from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from consai_msgs.msg import NamedTargets
 from consai_msgs.msg import State2D
+from operation import Operation
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -787,6 +788,9 @@ class RobotOperator(Node):
                     self._line_goal(line, keep=True), target, kick_pass=False))
 
         self._set_goal(robot_id, goal)
+
+    def operate(self, robot_id, operation):
+        self._set_goal(robot_id, operation.get_goal())
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
