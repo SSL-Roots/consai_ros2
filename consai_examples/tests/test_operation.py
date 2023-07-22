@@ -39,6 +39,17 @@ def test_set_pose_x_y_theta():
     assert goal.pose[0].theta.value_theta[0] == 3.0
 
 
+def test_immutability():
+    operation = Operation().move_to_ball_position()
+    operation.set_pose_x(1.0)
+    operation.set_pose_y(2.0)
+    operation.set_pose_theta(3.0)
+    goal = operation.get_goal()
+    assert len(goal.pose[0].xy.value_x) == 0
+    assert len(goal.pose[0].xy.value_y) == 0
+    assert len(goal.pose[0].theta.value_theta) == 0
+
+
 def test_set_pose_theta_to_look_ball():
     operation = Operation().move_to_ball_position()
     operation = operation.set_pose_theta_to_look_ball()

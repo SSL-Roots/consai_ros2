@@ -14,13 +14,10 @@
 # limitations under the License.
 
 from consai_msgs.action import RobotControl
-from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
-from consai_msgs.msg import ConstraintXY
-from consai_msgs.msg import NamedTargets
-from consai_msgs.msg import State2D
+from copy import deepcopy
 
 
 class Operation():
@@ -36,49 +33,59 @@ class Operation():
 
     def move_to_ball_position(self):
         pose = ConstraintPose()
-        pose.xy.object.append(self._object_ball())
-        self._goal.pose.append(pose)
-        return Operation(self._goal)
+        pose.xy.object.insert(0, self._object_ball())
+
+        goal = deepcopy(self._goal)
+        goal.pose.insert(0, pose)
+        return Operation(goal)
 
     def set_pose_x(self, value: float):
-        if self._goal.pose:
-            self._goal.pose[0].xy.value_x.insert(0, value)
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].xy.value_x.insert(0, value)
+        return Operation(goal)
 
     def set_pose_y(self, value: float):
-        if self._goal.pose:
-            self._goal.pose[0].xy.value_y.insert(0, value)
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].xy.value_y.insert(0, value)
+        return Operation(goal)
 
     def set_pose_theta(self, value: float):
-        if self._goal.pose:
-            self._goal.pose[0].theta.value_theta.insert(0, value)
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].theta.value_theta.insert(0, value)
+        return Operation(goal)
 
     def offset_pose_x(self, offset: float):
-        if self._goal.pose:
-            self._goal.pose[0].offset.x = offset
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].offset.x = offset
+        return Operation(goal)
 
     def offset_pose_y(self, offset: float):
-        if self._goal.pose:
-            self._goal.pose[0].offset.y = offset
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].offset.y = offset
+        return Operation(goal)
 
     def offset_pose_theta(self, offset: float):
-        if self._goal.pose:
-            self._goal.pose[0].offset.theta = offset
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].offset.theta = offset
+        return Operation(goal)
 
     def with_ball_receiving(self):
-        self._goal.receive_ball = True
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        goal.receive_ball = True
+        return Operation(goal)
 
     def set_pose_theta_to_look_ball(self):
-        if self._goal.pose:
-            self._goal.pose[0].theta.object.append(self._object_ball())
-            self._goal.pose[0].theta.param = ConstraintTheta.PARAM_LOOK_TO
-        return Operation(self._goal)
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].theta.object.append(self._object_ball())
+            goal.pose[0].theta.param = ConstraintTheta.PARAM_LOOK_TO
+        return Operation(goal)
 
     def _object_ball(self):
         obj_ball = ConstraintObject()
