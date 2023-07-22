@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_examples.operation import Operation
+from consai_examples.operation import OneShotOperation
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintTheta
 import pytest
@@ -78,3 +79,20 @@ def test_with_ball_receiving():
     goal = operation.get_goal()
     assert goal.receive_ball is True
 
+
+def test_keep_control_operation():
+    goal = Operation().move_to_ball_position().get_goal()
+    assert len(goal.pose) == 1
+    assert len(goal.pose[0].xy.object) == 1
+    assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
+
+    assert goal.keep_control is True
+
+
+def test_oneshot_operation():
+    goal = OneShotOperation().move_to_ball_position().get_goal()
+    assert len(goal.pose) == 1
+    assert len(goal.pose[0].xy.object) == 1
+    assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
+
+    assert goal.keep_control is False

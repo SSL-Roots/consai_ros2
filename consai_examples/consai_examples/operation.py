@@ -22,11 +22,11 @@ from copy import deepcopy
 
 class Operation():
     def __init__(self, goal: RobotControl.Goal = None) -> None:
-        self._goal = RobotControl.Goal()
         if goal:
             self._goal = goal
-
-        self._goal.keep_control = True
+        else:
+            self._goal = RobotControl.Goal()
+            self._goal.keep_control = True
 
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
