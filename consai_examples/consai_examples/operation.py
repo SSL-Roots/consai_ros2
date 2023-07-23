@@ -129,6 +129,13 @@ class Operation():
         goal.kick_target = target.get()
         return Operation(goal)
 
+    def with_shooting_carefully_to(self, target: KickTarget):
+        goal = deepcopy(self._goal)
+        goal.kick_enable = True
+        goal.kick_setplay = True
+        goal.kick_target = target.get()
+        return Operation(goal)
+
     def with_passing_to(self, target: KickTarget):
         goal = deepcopy(self._goal)
         goal.kick_enable = True

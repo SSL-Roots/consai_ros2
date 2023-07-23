@@ -94,6 +94,18 @@ def test_with_shooting_to():
     assert goal.kick_target.value_y[0] == 0.0
 
 
+def test_with_shooting_carefully_to():
+    operation = Operation().move_to_ball_position()
+    operation = operation.with_shooting_carefully_to(KickTarget(TargetType.THEIR_GOAL))
+    goal = operation.get_goal()
+    assert goal.kick_enable is True
+    assert goal.kick_pass is False
+    assert goal.kick_setplay is True
+    assert goal.kick_target.normalized is True
+    assert goal.kick_target.value_x[0] == 1.0
+    assert goal.kick_target.value_y[0] == 0.0
+
+
 def test_with_passing_to():
     operation = Operation().move_to_ball_position()
     operation = operation.with_passing_to(KickTarget(TargetType.NAMED_TARGET, "target"))

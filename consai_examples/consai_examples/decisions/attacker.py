@@ -157,13 +157,19 @@ class AttackerDecision(DecisionBase):
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._operator.chase_ball(
-                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            move_to_ball = Operation().move_to_ball_position()
+            move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
+            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
     def our_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
-            self._operator.setplay_shoot_to_their_goal(robot_id)
+            move_to_ball = Operation().move_to_ball_position()
+            move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
+            setplay_shoot = move_to_ball.with_shooting_carefully_to(
+                KickTarget(TargetType.THEIR_GOAL))
+            self._operator.operate(robot_id, setplay_shoot)
             self._act_id = self.ACT_ID_KICKOFF
 
     def their_pre_kickoff(self, robot_id):
