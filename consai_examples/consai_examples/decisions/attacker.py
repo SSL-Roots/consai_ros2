@@ -17,7 +17,9 @@
 
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
+from operation import KickTarget
 from operation import Operation
+from operation import TargetType
 
 
 class AttackerDecision(DecisionBase):
@@ -115,7 +117,10 @@ class AttackerDecision(DecisionBase):
            and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
             if self._act_id != ID_SHOOT_THEIR_AREA:
                 # 指定座標に向けてシュートする
-                self._operator.shoot_to_named_target(robot_id, "shoot")
+                # self._operator.shoot_to_named_target(robot_id, "shoot")
+                shooting = move_to_ball.with_shooting_to(
+                    KickTarget(TargetType.NAMED_TARGET, "shoot"))
+                self._operator.operate(robot_id, shooting)
                 self._act_id = ID_SHOOT_THEIR_AREA
 
         # パス可能な場合
@@ -128,19 +133,27 @@ class AttackerDecision(DecisionBase):
                 self._operator.set_named_target("pass", pass_pos_x, pass_pos_y)
                 self._operator.publish_named_targets()
                 # 前方のパスが出せるロボットにパスを出す
-                self._operator.pass_to_named_target(robot_id, "pass")
+                passing = move_to_ball.with_passing_to(
+                    KickTarget(TargetType.NAMED_TARGET, "pass"))
+                self._operator.operate(robot_id, passing)
                 self._act_id = ID_PASS
 
         # シュート可能かつ相手エリアにいる場合
         elif len(shoot_point_list) > 0:
             if self._act_id != ID_SHOOT:
                 # 指定座標に向けてシュートする
-                self._operator.shoot_to_named_target(robot_id, "shoot")
+                # self._operator.shoot_to_named_target(robot_id, "shoot")
+                shooting = move_to_ball.with_shooting_to(
+                    KickTarget(TargetType.NAMED_TARGET, "shoot"))
+                self._operator.operate(robot_id, shooting)
                 self._act_id != ID_SHOOT
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
-                self._operator.shoot_to_named_target(robot_id, "shoot")
+                # self._operator.shoot_to_named_target(robot_id, "shoot")
+                shooting = move_to_ball.with_shooting_to(
+                    KickTarget(TargetType.NAMED_TARGET, "shoot"))
+                self._operator.operate(robot_id, shooting)
                 self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):

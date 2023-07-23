@@ -17,7 +17,43 @@ from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
+from consai_msgs.msg import ConstraintXY
 from copy import deepcopy
+from enum import Enum
+
+
+class TargetType(Enum):
+    THEIR_GOAL = 1
+    NAMED_TARGET = 2
+    OUR_ROBOT = 3
+
+
+class KickTarget():
+    def __init__(self, target_type: TargetType = TargetType.THEIR_GOAL, value="") -> None:
+        self._target_type = target_type
+        self._value = value
+
+        self._target = {TargetType.THEIR_GOAL: self._xy_their_goal(),
+                        TargetType.NAMED_TARGET: self._xy_named_target()}
+
+    def get(self) -> ConstraintXY:
+        return self._target[self._target_type]
+
+    def _xy_their_goal(self):
+        xy = ConstraintXY()
+        xy.normalized = True
+        xy.value_x.append(1.0)
+        xy.value_y.append(0.0)
+        return xy
+
+    def _xy_named_target(self):
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.NAMED_TARGET
+        obj.name = self._value
+
+        xy = ConstraintXY()
+        xy.object.append(obj)
+        return xy
 
 
 class Operation():
@@ -85,6 +121,19 @@ class Operation():
     def with_ball_receiving(self):
         goal = deepcopy(self._goal)
         goal.receive_ball = True
+        return Operation(goal)
+
+    def with_shooting_to(self, target: KickTarget):
+        goal = deepcopy(self._goal)
+        goal.kick_enable = True
+        goal.kick_target = target.get()
+        return Operation(goal)
+
+    def with_passing_to(self, target: KickTarget):
+        goal = deepcopy(self._goal)
+        goal.kick_enable = True
+        goal.kick_pass = True
+        goal.kick_target = target.get()
         return Operation(goal)
 
     def _object_ball(self):

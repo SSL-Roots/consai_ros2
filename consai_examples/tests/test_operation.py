@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+from consai_examples.operation import KickTarget
 from consai_examples.operation import Operation
 from consai_examples.operation import OneShotOperation
+from consai_examples.operation import TargetType
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintTheta
 import pytest
@@ -78,6 +81,27 @@ def test_with_ball_receiving():
     operation = operation.with_ball_receiving()
     goal = operation.get_goal()
     assert goal.receive_ball is True
+
+
+def test_with_shooting_to():
+    operation = Operation().move_to_ball_position()
+    operation = operation.with_shooting_to(KickTarget(TargetType.THEIR_GOAL))
+    goal = operation.get_goal()
+    assert goal.kick_enable is True
+    assert goal.kick_pass is False
+    assert goal.kick_target.normalized is True
+    assert goal.kick_target.value_x[0] == 1.0
+    assert goal.kick_target.value_y[0] == 0.0
+
+
+def test_with_passing_to():
+    operation = Operation().move_to_ball_position()
+    operation = operation.with_passing_to(KickTarget(TargetType.NAMED_TARGET, "target"))
+    goal = operation.get_goal()
+    assert goal.kick_enable is True
+    assert goal.kick_pass is True
+    assert goal.kick_target.object[0].type == ConstraintObject.NAMED_TARGET
+    assert goal.kick_target.object[0].name == "target"
 
 
 def test_keep_control_operation():
