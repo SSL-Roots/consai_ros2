@@ -33,17 +33,16 @@ class AttackerDecision(DecisionBase):
         ID_IN_OUR_DEFENSE = self.ACT_ID_STOP + 1
         ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
 
+        move_to_ball = Operation().move_to_ball_position()
+        move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
            FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
            FieldObserver.BALL_IS_OUTSIDE_BACK_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                move_to_ball = Operation().move_to_ball_position()
                 move_to_ball = move_to_ball.set_pose_x(-3.0)
-                move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
                 self._operator.operate(robot_id, move_to_ball)
-                # self._operator.move_to_ball_y(robot_id, -3.0)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
@@ -53,22 +52,15 @@ class AttackerDecision(DecisionBase):
            FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                move_to_ball = Operation().move_to_ball_position()
                 move_to_ball = move_to_ball.set_pose_x(3.0)
-                move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
                 self._operator.operate(robot_id, move_to_ball)
-                # self._operator.move_to_ball_y(robot_id, 3.0)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
         # ボールを追いかける
         if self._act_id != ID_CHASE:
-            chase_ball = Operation().move_to_ball()
-            chase_ball = chase_ball.offset_pose_x(-0.6)
-            chase_ball = chase_ball.set_pose_theta_to_look_ball()
+            chase_ball = move_to_ball.offset_pose_x(-0.6)
             self._operator.operate(robot_id, chase_ball)
-            # self._operator.chase_ball(
-            #     robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
             self._act_id = ID_CHASE
 
     def inplay(self, robot_id):
@@ -79,13 +71,16 @@ class AttackerDecision(DecisionBase):
         ID_PASS = self.ACT_ID_INPLAY + 2000
         ID_SHOOT = self.ACT_ID_INPLAY + 3000
 
+        move_to_ball = Operation().move_to_ball_position()
+        move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
            FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
            FieldObserver.BALL_IS_OUTSIDE_BACK_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                self._operator.move_to_ball_y(robot_id, -3.0)
+                move_to_ball = move_to_ball.set_pose_x(-3.0)
+                self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
 
@@ -94,7 +89,8 @@ class AttackerDecision(DecisionBase):
                                 FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
                                 FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                self._operator.move_to_ball_y(robot_id, 3.0)
+                move_to_ball = move_to_ball.set_pose_x(3.0)
+                self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 

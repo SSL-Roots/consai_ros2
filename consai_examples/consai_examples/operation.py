@@ -57,6 +57,13 @@ class Operation():
             goal.pose[0].theta.value_theta.insert(0, value)
         return Operation(goal)
 
+    def set_pose_theta_to_look_ball(self):
+        goal = deepcopy(self._goal)
+        if goal.pose:
+            goal.pose[0].theta.object.append(self._object_ball())
+            goal.pose[0].theta.param = ConstraintTheta.PARAM_LOOK_TO
+        return Operation(goal)
+
     def offset_pose_x(self, offset: float):
         goal = deepcopy(self._goal)
         if goal.pose:
@@ -78,13 +85,6 @@ class Operation():
     def with_ball_receiving(self):
         goal = deepcopy(self._goal)
         goal.receive_ball = True
-        return Operation(goal)
-
-    def set_pose_theta_to_look_ball(self):
-        goal = deepcopy(self._goal)
-        if goal.pose:
-            goal.pose[0].theta.object.append(self._object_ball())
-            goal.pose[0].theta.param = ConstraintTheta.PARAM_LOOK_TO
         return Operation(goal)
 
     def _object_ball(self):
