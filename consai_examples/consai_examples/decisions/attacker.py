@@ -75,6 +75,8 @@ class AttackerDecision(DecisionBase):
 
         move_to_ball = Operation().move_to_ball_position()
         move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
+        move_to_ball = move_to_ball.with_ball_receiving()
+        move_to_ball = move_to_ball.with_reflecting_kick()
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
            FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
@@ -117,7 +119,6 @@ class AttackerDecision(DecisionBase):
            and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
             if self._act_id != ID_SHOOT_THEIR_AREA:
                 # 指定座標に向けてシュートする
-                # self._operator.shoot_to_named_target(robot_id, "shoot")
                 shooting = move_to_ball.with_shooting_to(
                     KickTarget(TargetType.NAMED_TARGET, "shoot"))
                 self._operator.operate(robot_id, shooting)
@@ -142,7 +143,6 @@ class AttackerDecision(DecisionBase):
         elif len(shoot_point_list) > 0:
             if self._act_id != ID_SHOOT:
                 # 指定座標に向けてシュートする
-                # self._operator.shoot_to_named_target(robot_id, "shoot")
                 shooting = move_to_ball.with_shooting_to(
                     KickTarget(TargetType.NAMED_TARGET, "shoot"))
                 self._operator.operate(robot_id, shooting)
@@ -150,7 +150,6 @@ class AttackerDecision(DecisionBase):
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
-                # self._operator.shoot_to_named_target(robot_id, "shoot")
                 shooting = move_to_ball.with_shooting_to(
                     KickTarget(TargetType.NAMED_TARGET, "shoot"))
                 self._operator.operate(robot_id, shooting)

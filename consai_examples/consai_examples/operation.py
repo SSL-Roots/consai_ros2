@@ -136,6 +136,11 @@ class Operation():
         goal.kick_target = target.get()
         return Operation(goal)
 
+    def with_reflecting_kick(self):
+        goal = deepcopy(self._goal)
+        goal.reflect_shoot = True
+        return Operation(goal)
+
     def _object_ball(self):
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL

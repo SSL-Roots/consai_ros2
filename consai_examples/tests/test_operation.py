@@ -104,6 +104,13 @@ def test_with_passing_to():
     assert goal.kick_target.object[0].name == "target"
 
 
+def test_with_reflecting_kick():
+    operation = Operation().move_to_ball_position()
+    operation = operation.with_reflecting_kick()
+    goal = operation.get_goal()
+    assert goal.reflect_shoot is True
+
+
 def test_keep_control_operation():
     goal = Operation().move_to_ball_position().get_goal()
     assert len(goal.pose) == 1
