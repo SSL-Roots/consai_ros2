@@ -52,6 +52,19 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
 
+class TargetTheta(NamedTuple):
+    constraint: ConstraintTheta
+
+    @classmethod
+    def look_ball(cls) -> 'TargetTheta':
+        obj_ball = ConstraintObject()
+        obj_ball.type = ConstraintObject.BALL
+        constraint = ConstraintTheta()
+        constraint.object.append(obj_ball)
+        constraint.param = ConstraintTheta.PARAM_LOOK_TO
+        return cls(constraint)
+
+
 class Operation():
     def __init__(self, goal: RobotControl.Goal = None) -> None:
         if goal:
@@ -63,36 +76,30 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_to_position(self, point_xy: TargetXY):
+    def move_to_position(self, target_xy: TargetXY, target_theta: TargetTheta):
         pose = ConstraintPose()
-        pose.xy = point_xy.constraint
+        pose.xy = target_xy.constraint
+        pose.theta = target_theta.constraint
         goal = deepcopy(self._goal)
         goal.pose.insert(0, pose)
         return Operation(goal)
 
-    def set_pose_x(self, value: float):
+    def overwrite_pose_x(self, value: float):
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_x.insert(0, value)
         return Operation(goal)
 
-    def set_pose_y(self, value: float):
+    def overwrite_pose_y(self, value: float):
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_y.insert(0, value)
         return Operation(goal)
 
-    def set_pose_theta(self, value: float):
+    def overwrite_pose_theta(self, value: float):
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].theta.value_theta.insert(0, value)
-        return Operation(goal)
-
-    def set_pose_theta_to_look_ball(self):
-        goal = deepcopy(self._goal)
-        if goal.pose:
-            goal.pose[0].theta.object.append(self._object_ball())
-            goal.pose[0].theta.param = ConstraintTheta.PARAM_LOOK_TO
         return Operation(goal)
 
     def offset_pose_x(self, offset: float):
