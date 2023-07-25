@@ -19,41 +19,37 @@ from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from copy import deepcopy
-from enum import Enum
+from typing import NamedTuple
 
 
-class TargetType(Enum):
-    THEIR_GOAL = 1
-    NAMED_TARGET = 2
-    OUR_ROBOT = 3
+class PointXY(NamedTuple):
+    constraint: ConstraintXY
 
+    @classmethod
+    def ball(cls) -> 'PointXY':
+        obj_ball = ConstraintObject()
+        obj_ball.type = ConstraintObject.BALL
+        constraint = ConstraintXY()
+        constraint.object.append(obj_ball)
+        return cls(constraint)
 
-class KickTarget():
-    def __init__(self, target_type: TargetType = TargetType.THEIR_GOAL, value="") -> None:
-        self._target_type = target_type
-        self._value = value
+    @classmethod
+    def their_goal(cls) -> 'PointXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.append(1.0)
+        constraint.value_y.append(0.0)
+        return cls(constraint)
 
-        self._target = {TargetType.THEIR_GOAL: self._xy_their_goal(),
-                        TargetType.NAMED_TARGET: self._xy_named_target()}
-
-    def get(self) -> ConstraintXY:
-        return self._target[self._target_type]
-
-    def _xy_their_goal(self):
-        xy = ConstraintXY()
-        xy.normalized = True
-        xy.value_x.append(1.0)
-        xy.value_y.append(0.0)
-        return xy
-
-    def _xy_named_target(self):
+    @classmethod
+    def named_target(cls, name: str) -> 'PointXY':
         obj = ConstraintObject()
         obj.type = ConstraintObject.NAMED_TARGET
-        obj.name = self._value
+        obj.name = name
 
-        xy = ConstraintXY()
-        xy.object.append(obj)
-        return xy
+        constraint = ConstraintXY()
+        constraint.object.append(obj)
+        return cls(constraint)
 
 
 class Operation():
@@ -67,10 +63,9 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_to_ball_position(self):
+    def move_to_position(self, point_xy: PointXY):
         pose = ConstraintPose()
-        pose.xy.object.insert(0, self._object_ball())
-
+        pose.xy = point_xy.constraint
         goal = deepcopy(self._goal)
         goal.pose.insert(0, pose)
         return Operation(goal)
@@ -123,24 +118,24 @@ class Operation():
         goal.receive_ball = True
         return Operation(goal)
 
-    def with_shooting_to(self, target: KickTarget):
+    def with_shooting_to(self, target_xy: PointXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
-        goal.kick_target = target.get()
+        goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_shooting_carefully_to(self, target: KickTarget):
+    def with_shooting_carefully_to(self, target_xy: PointXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_setplay = True
-        goal.kick_target = target.get()
+        goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_passing_to(self, target: KickTarget):
+    def with_passing_to(self, target_xy: PointXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_pass = True
-        goal.kick_target = target.get()
+        goal.kick_target = target_xy.constraint
         return Operation(goal)
 
     def with_reflecting_kick(self):

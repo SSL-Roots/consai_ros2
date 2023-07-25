@@ -13,24 +13,23 @@
 # limitations under the License.
 
 
-from consai_examples.operation import KickTarget
 from consai_examples.operation import Operation
 from consai_examples.operation import OneShotOperation
-from consai_examples.operation import TargetType
+from consai_examples.operation import PointXY
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintTheta
 import pytest
 
 
 def test_move_to_ball_position():
-    goal = Operation().move_to_ball_position().get_goal()
+    goal = Operation().move_to_position(PointXY.ball()).get_goal()
     assert len(goal.pose) == 1
     assert len(goal.pose[0].xy.object) == 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
 
 
 def test_set_pose_x_y_theta():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation = operation.set_pose_x(1.0)
     operation = operation.set_pose_y(2.0)
     operation = operation.set_pose_theta(3.0)
@@ -44,7 +43,7 @@ def test_set_pose_x_y_theta():
 
 
 def test_immutability():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation.set_pose_x(1.0)
     operation.set_pose_y(2.0)
     operation.set_pose_theta(3.0)
@@ -55,7 +54,7 @@ def test_immutability():
 
 
 def test_set_pose_theta_to_look_ball():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation = operation.set_pose_theta_to_look_ball()
     goal = operation.get_goal()
 
@@ -66,7 +65,7 @@ def test_set_pose_theta_to_look_ball():
 
 
 def test_offset_pose_x_y_theta():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation = operation.offset_pose_x(1.0)
     operation = operation.offset_pose_y(2.0)
     operation = operation.offset_pose_theta(3.0)
@@ -77,15 +76,15 @@ def test_offset_pose_x_y_theta():
 
 
 def test_with_ball_receiving():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation = operation.with_ball_receiving()
     goal = operation.get_goal()
     assert goal.receive_ball is True
 
 
 def test_with_shooting_to():
-    operation = Operation().move_to_ball_position()
-    operation = operation.with_shooting_to(KickTarget(TargetType.THEIR_GOAL))
+    operation = Operation().move_to_position(PointXY.ball())
+    operation = operation.with_shooting_to(PointXY.their_goal())
     goal = operation.get_goal()
     assert goal.kick_enable is True
     assert goal.kick_pass is False
@@ -95,8 +94,8 @@ def test_with_shooting_to():
 
 
 def test_with_shooting_carefully_to():
-    operation = Operation().move_to_ball_position()
-    operation = operation.with_shooting_carefully_to(KickTarget(TargetType.THEIR_GOAL))
+    operation = Operation().move_to_position(PointXY.ball())
+    operation = operation.with_shooting_carefully_to(PointXY.their_goal())
     goal = operation.get_goal()
     assert goal.kick_enable is True
     assert goal.kick_pass is False
@@ -107,8 +106,8 @@ def test_with_shooting_carefully_to():
 
 
 def test_with_passing_to():
-    operation = Operation().move_to_ball_position()
-    operation = operation.with_passing_to(KickTarget(TargetType.NAMED_TARGET, "target"))
+    operation = Operation().move_to_position(PointXY.ball())
+    operation = operation.with_passing_to(PointXY.named_target("target"))
     goal = operation.get_goal()
     assert goal.kick_enable is True
     assert goal.kick_pass is True
@@ -117,14 +116,14 @@ def test_with_passing_to():
 
 
 def test_with_reflecting_kick():
-    operation = Operation().move_to_ball_position()
+    operation = Operation().move_to_position(PointXY.ball())
     operation = operation.with_reflecting_kick()
     goal = operation.get_goal()
     assert goal.reflect_shoot is True
 
 
 def test_keep_control_operation():
-    goal = Operation().move_to_ball_position().get_goal()
+    goal = Operation().move_to_position(PointXY.ball()).get_goal()
     assert len(goal.pose) == 1
     assert len(goal.pose[0].xy.object) == 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
@@ -133,7 +132,7 @@ def test_keep_control_operation():
 
 
 def test_oneshot_operation():
-    goal = OneShotOperation().move_to_ball_position().get_goal()
+    goal = OneShotOperation().move_to_position(PointXY.ball()).get_goal()
     assert len(goal.pose) == 1
     assert len(goal.pose[0].xy.object) == 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
