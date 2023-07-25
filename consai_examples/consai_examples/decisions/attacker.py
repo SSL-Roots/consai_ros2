@@ -165,43 +165,54 @@ class AttackerDecision(DecisionBase):
 
     def their_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._operator.chase_ball(
-                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
     def their_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
-            self._operator.chase_ball(
-                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_KICKOFF
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.chase_ball(
-                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def our_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.setplay_shoot_to_their_goal(robot_id)
+            move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+            setplay_shoot = move_to_ball.with_shooting_carefully_to(TargetXY.their_goal())
+            self._operator.operate(robot_id, setplay_shoot)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            operation = Operation().move_to_position(
+                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetTheta.look_ball())
+            self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            operation = Operation().move_to_position(
+                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetTheta.look_ball())
+            self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PENALTY
 
     def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.move_to_look_ball(
-                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0)
+            operation = Operation().move_to_position(
+                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetTheta.look_ball())
+            self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_INPLAY
 
     def our_penalty_inplay(self, robot_id):
@@ -211,16 +222,22 @@ class AttackerDecision(DecisionBase):
                                 FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
                                 FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_INPLAY_BALL_IN_DEFENSE_AREA:
-                self._operator.move_to_ball_y(robot_id, 3.0)
+                move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+                move_to_ball = move_to_ball.overwrite_pose_x(3.0)
+                self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_INPLAY_BALL_IN_DEFENSE_AREA
         else:
             if self._act_id != self.ACT_ID_INPLAY:
-                self._operator.setplay_shoot_to_their_goal(robot_id)
+                move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+                setplay_shoot = move_to_ball.with_shooting_carefully_to(TargetXY.their_goal())
+                self._operator.operate(robot_id, setplay_shoot)
                 self._act_id = self.ACT_ID_INPLAY
 
     def our_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
-            self._operator.setplay_shoot_to_their_goal(robot_id)
+            move_to_ball = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+            setplay_shoot = move_to_ball.with_shooting_carefully_to(TargetXY.their_goal())
+            self._operator.operate(robot_id, setplay_shoot)
             self._act_id = self.ACT_ID_DIRECT
 
     def their_direct(self, robot_id):

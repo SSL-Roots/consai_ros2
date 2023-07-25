@@ -26,6 +26,13 @@ class TargetXY(NamedTuple):
     constraint: ConstraintXY
 
     @classmethod
+    def value(cls, x: float, y: float) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.value_x.append(x)
+        constraint.value_y.append(y)
+        return cls(constraint)
+
+    @classmethod
     def ball(cls) -> 'TargetXY':
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL

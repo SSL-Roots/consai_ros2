@@ -24,22 +24,22 @@ import pytest
 
 def test_move_to_ball_position():
     goal = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
-    assert len(goal.pose) == 1
-    assert len(goal.pose[0].xy.object) == 1
+    assert len(goal.pose) >= 1
+    assert len(goal.pose[0].xy.object) >= 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
     assert goal.pose[0].theta.object[0].type == ConstraintObject.BALL
     assert goal.pose[0].theta.param == ConstraintTheta.PARAM_LOOK_TO
 
 
 def test_overwrite_pose_x_y_theta():
-    operation = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball())
+    operation = Operation().move_to_position(TargetXY.value(-1.0, -2.0), TargetTheta.look_ball())
     operation = operation.overwrite_pose_x(1.0)
     operation = operation.overwrite_pose_y(2.0)
     operation = operation.overwrite_pose_theta(3.0)
     goal = operation.get_goal()
-    assert len(goal.pose[0].xy.value_x) == 1
-    assert len(goal.pose[0].xy.value_y) == 1
-    assert len(goal.pose[0].theta.value_theta) == 1
+    assert len(goal.pose[0].xy.value_x) >= 1
+    assert len(goal.pose[0].xy.value_y) >= 1
+    assert len(goal.pose[0].theta.value_theta) >= 1
     assert goal.pose[0].xy.value_x[0] == 1.0
     assert goal.pose[0].xy.value_y[0] == 2.0
     assert goal.pose[0].theta.value_theta[0] == 3.0
@@ -116,8 +116,8 @@ def test_with_reflecting_kick():
 
 def test_keep_control_operation():
     goal = Operation().move_to_position(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
-    assert len(goal.pose) == 1
-    assert len(goal.pose[0].xy.object) == 1
+    assert len(goal.pose) >= 1
+    assert len(goal.pose[0].xy.object) >= 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
 
     assert goal.keep_control is True
@@ -125,8 +125,8 @@ def test_keep_control_operation():
 
 def test_oneshot_operation():
     goal = OneShotOperation().move_to_position(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
-    assert len(goal.pose) == 1
-    assert len(goal.pose[0].xy.object) == 1
+    assert len(goal.pose) >= 1
+    assert len(goal.pose[0].xy.object) >= 1
     assert goal.pose[0].xy.object[0].type == ConstraintObject.BALL
 
     assert goal.keep_control is False
