@@ -18,7 +18,7 @@
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 from operation import Operation
-from operation import PointXY
+from operation import TargetXY
 
 
 class AttackerDecision(DecisionBase):
@@ -34,7 +34,7 @@ class AttackerDecision(DecisionBase):
         ID_IN_OUR_DEFENSE = self.ACT_ID_STOP + 1
         ID_IN_THEIR_DEFENSE = self.ACT_ID_STOP + 2
 
-        move_to_ball = Operation().move_to_position(PointXY.ball())
+        move_to_ball = Operation().move_to_position(TargetXY.ball())
         move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
@@ -72,7 +72,7 @@ class AttackerDecision(DecisionBase):
         ID_PASS = self.ACT_ID_INPLAY + 2000
         ID_SHOOT = self.ACT_ID_INPLAY + 3000
 
-        move_to_ball = Operation().move_to_position(PointXY.ball())
+        move_to_ball = Operation().move_to_position(TargetXY.ball())
         move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_kick()
@@ -118,7 +118,7 @@ class AttackerDecision(DecisionBase):
            and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
             if self._act_id != ID_SHOOT_THEIR_AREA:
                 # 指定座標に向けてシュートする
-                shooting = move_to_ball.with_shooting_to(PointXY.named_target("shoot"))
+                shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_SHOOT_THEIR_AREA
 
@@ -132,7 +132,7 @@ class AttackerDecision(DecisionBase):
                 self._operator.set_named_target("pass", pass_pos_x, pass_pos_y)
                 self._operator.publish_named_targets()
                 # 前方のパスが出せるロボットにパスを出す
-                passing = move_to_ball.with_passing_to(PointXY.named_target("pass"))
+                passing = move_to_ball.with_passing_to(TargetXY.named_target("pass"))
                 self._operator.operate(robot_id, passing)
                 self._act_id = ID_PASS
 
@@ -140,19 +140,19 @@ class AttackerDecision(DecisionBase):
         elif len(shoot_point_list) > 0:
             if self._act_id != ID_SHOOT:
                 # 指定座標に向けてシュートする
-                shooting = move_to_ball.with_shooting_to(PointXY.named_target("shoot"))
+                shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id != ID_SHOOT
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
-                shooting = move_to_ball.with_shooting_to(PointXY.named_target("shoot"))
+                shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_INPLAY
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            move_to_ball = Operation().move_to_position(PointXY.ball())
+            move_to_ball = Operation().move_to_position(TargetXY.ball())
             move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
             chase_ball = move_to_ball.offset_pose_x(-0.6)
             self._operator.operate(robot_id, chase_ball)
@@ -160,9 +160,9 @@ class AttackerDecision(DecisionBase):
 
     def our_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
-            move_to_ball = Operation().move_to_position(PointXY.ball())
+            move_to_ball = Operation().move_to_position(TargetXY.ball())
             move_to_ball = move_to_ball.set_pose_theta_to_look_ball()
-            setplay_shoot = move_to_ball.with_shooting_carefully_to(PointXY.their_goal())
+            setplay_shoot = move_to_ball.with_shooting_carefully_to(TargetXY.their_goal())
             self._operator.operate(robot_id, setplay_shoot)
             self._act_id = self.ACT_ID_KICKOFF
 

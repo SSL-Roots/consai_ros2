@@ -22,11 +22,11 @@ from copy import deepcopy
 from typing import NamedTuple
 
 
-class PointXY(NamedTuple):
+class TargetXY(NamedTuple):
     constraint: ConstraintXY
 
     @classmethod
-    def ball(cls) -> 'PointXY':
+    def ball(cls) -> 'TargetXY':
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
         constraint = ConstraintXY()
@@ -34,7 +34,7 @@ class PointXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def their_goal(cls) -> 'PointXY':
+    def their_goal(cls) -> 'TargetXY':
         constraint = ConstraintXY()
         constraint.normalized = True
         constraint.value_x.append(1.0)
@@ -42,7 +42,7 @@ class PointXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def named_target(cls, name: str) -> 'PointXY':
+    def named_target(cls, name: str) -> 'TargetXY':
         obj = ConstraintObject()
         obj.type = ConstraintObject.NAMED_TARGET
         obj.name = name
@@ -63,7 +63,7 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_to_position(self, point_xy: PointXY):
+    def move_to_position(self, point_xy: TargetXY):
         pose = ConstraintPose()
         pose.xy = point_xy.constraint
         goal = deepcopy(self._goal)
@@ -118,20 +118,20 @@ class Operation():
         goal.receive_ball = True
         return Operation(goal)
 
-    def with_shooting_to(self, target_xy: PointXY):
+    def with_shooting_to(self, target_xy: TargetXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_shooting_carefully_to(self, target_xy: PointXY):
+    def with_shooting_carefully_to(self, target_xy: TargetXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_setplay = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_passing_to(self, target_xy: PointXY):
+    def with_passing_to(self, target_xy: TargetXY):
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_pass = True
