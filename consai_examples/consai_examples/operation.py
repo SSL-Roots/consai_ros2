@@ -83,7 +83,7 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_to_position(self, target_xy: TargetXY, target_theta: TargetTheta):
+    def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta):
         pose = ConstraintPose()
         pose.xy = target_xy.constraint
         pose.theta = target_theta.constraint
