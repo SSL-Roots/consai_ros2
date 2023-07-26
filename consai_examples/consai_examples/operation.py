@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from consai_msgs.action import RobotControl
+from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
@@ -38,6 +39,14 @@ class TargetXY(NamedTuple):
         obj_ball.type = ConstraintObject.BALL
         constraint = ConstraintXY()
         constraint.object.append(obj_ball)
+        return cls(constraint)
+
+    @classmethod
+    def our_goal(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.append(-1.0)
+        constraint.value_y.append(0.0)
         return cls(constraint)
 
     @classmethod
@@ -83,7 +92,18 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta):
+    def move_on_line(self, p1: TargetXY, p2: TargetTheta, distance_from_p1: float,
+                     target_theta: TargetTheta) -> 'Operation':
+        line = ConstraintLine()
+        line.p1 = p1.constraint
+        line.p2 = p2.constraint
+        line.distance = distance_from_p1
+        line.theta = target_theta.constraint
+        goal = deepcopy(self._goal)
+        goal.line.insert(0, line)
+        return Operation(goal)
+
+    def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta) -> 'Operation':
         pose = ConstraintPose()
         pose.xy = target_xy.constraint
         pose.theta = target_theta.constraint
@@ -91,73 +111,73 @@ class Operation():
         goal.pose.insert(0, pose)
         return Operation(goal)
 
-    def overwrite_pose_x(self, value: float):
+    def overwrite_pose_x(self, value: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_x.insert(0, value)
         return Operation(goal)
 
-    def overwrite_pose_y(self, value: float):
+    def overwrite_pose_y(self, value: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_y.insert(0, value)
         return Operation(goal)
 
-    def overwrite_pose_theta(self, value: float):
+    def overwrite_pose_theta(self, value: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].theta.value_theta.insert(0, value)
         return Operation(goal)
 
-    def offset_pose_x(self, offset: float):
+    def offset_pose_x(self, offset: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.x = offset
         return Operation(goal)
 
-    def offset_pose_y(self, offset: float):
+    def offset_pose_y(self, offset: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.y = offset
         return Operation(goal)
 
-    def offset_pose_theta(self, offset: float):
+    def offset_pose_theta(self, offset: float) -> 'Operation':
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.theta = offset
         return Operation(goal)
 
-    def with_ball_receiving(self):
+    def with_ball_receiving(self) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.receive_ball = True
         return Operation(goal)
 
-    def with_shooting_to(self, target_xy: TargetXY):
+    def with_shooting_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_shooting_carefully_to(self, target_xy: TargetXY):
+    def with_shooting_carefully_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_setplay = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_passing_to(self, target_xy: TargetXY):
+    def with_passing_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_pass = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_reflecting_kick(self):
+    def with_reflecting_kick(self) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.reflect_shoot = True
         return Operation(goal)
 
-    def _object_ball(self):
+    def _object_ball(self) -> ConstraintObject:
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
         return obj_ball

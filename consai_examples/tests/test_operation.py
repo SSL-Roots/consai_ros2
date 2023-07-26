@@ -22,6 +22,28 @@ from consai_msgs.msg import ConstraintTheta
 import pytest
 
 
+def test_immutability():
+    operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    operation.overwrite_pose_x(1.0)
+    operation.overwrite_pose_y(2.0)
+    operation.overwrite_pose_theta(3.0)
+    goal = operation.get_goal()
+    assert len(goal.pose[0].xy.value_x) == 0
+    assert len(goal.pose[0].xy.value_y) == 0
+    assert len(goal.pose[0].theta.value_theta) == 0
+
+
+def test_move_on_line():
+    goal = Operation().move_on_line(TargetXY.ball(), TargetXY.their_goal(), 0.5,
+                                    TargetTheta.look_ball()).get_goal()
+    assert len(goal.line) >= 1
+    assert goal.line[0].p1.object[0].type == ConstraintObject.BALL
+    assert len(goal.line[0].p2.value_x) >= 1
+    assert len(goal.line[0].p2.value_y) >= 1
+    assert goal.line[0].distance == 0.5
+    assert goal.line[0].theta.object[0].type == ConstraintObject.BALL
+
+
 def test_move_to_ball_pose():
     goal = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1
@@ -43,17 +65,6 @@ def test_overwrite_pose_x_y_theta():
     assert goal.pose[0].xy.value_x[0] == 1.0
     assert goal.pose[0].xy.value_y[0] == 2.0
     assert goal.pose[0].theta.value_theta[0] == 3.0
-
-
-def test_immutability():
-    operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-    operation.overwrite_pose_x(1.0)
-    operation.overwrite_pose_y(2.0)
-    operation.overwrite_pose_theta(3.0)
-    goal = operation.get_goal()
-    assert len(goal.pose[0].xy.value_x) == 0
-    assert len(goal.pose[0].xy.value_y) == 0
-    assert len(goal.pose[0].theta.value_theta) == 0
 
 
 def test_offset_pose_x_y_theta():
