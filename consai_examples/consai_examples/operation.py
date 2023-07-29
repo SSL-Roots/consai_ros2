@@ -168,7 +168,7 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_shooting_carefully_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_shooting_for_setplay_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_setplay = True

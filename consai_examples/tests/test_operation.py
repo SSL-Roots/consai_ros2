@@ -95,9 +95,9 @@ def test_with_shooting_to():
     assert goal.kick_target.value_y[0] == 0.0
 
 
-def test_with_shooting_carefully_to():
+def test_with_shooting_for_setplay_to():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-    operation = operation.with_shooting_carefully_to(TargetXY.their_goal())
+    operation = operation.with_shooting_for_setplay_to(TargetXY.their_goal())
     goal = operation.get_goal()
     assert goal.kick_enable is True
     assert goal.kick_pass is False
