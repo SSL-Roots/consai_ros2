@@ -90,6 +90,15 @@ class TargetTheta(NamedTuple):
         constraint.param = ConstraintTheta.PARAM_LOOK_TO
         return cls(constraint)
 
+    @classmethod
+    def look_their_goal(cls) -> 'TargetTheta':
+        obj_goal = ConstraintObject()
+        obj_goal.type = ConstraintObject.THEIR_GOAL
+        constraint = ConstraintTheta()
+        constraint.object.append(obj_goal)
+        constraint.param = ConstraintTheta.PARAM_LOOK_TO
+        return cls(constraint)
+
 
 class Operation():
     def __init__(self, goal: RobotControl.Goal = None) -> None:
