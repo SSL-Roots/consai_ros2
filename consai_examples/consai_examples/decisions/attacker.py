@@ -311,12 +311,19 @@ class AttackerDecision(DecisionBase):
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボール位置が配置目標位置に近づいたときはドリブルする
             if self._act_id != ID_NEAR:
-                self._operator.dribble_to(robot_id, placement_pos.x, placement_pos.y)
+                move_to_behind_ball = Operation().move_on_line(
+                    TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y), -0.3,
+                    TargetTheta.look_ball())
+                dribbling = move_to_behind_ball.with_dribbling_to(
+                    TargetXY.value(placement_pos.x, placement_pos.y))
+                self._operator.operate(robot_id, dribbling)
                 self._act_id = ID_NEAR
             return
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:
-                self._operator.approach_to_ball(robot_id, 0.6)
+                avoid_ball = Operation().move_on_line(
+                    TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+                self._operator.operate(robot_id, avoid_ball)
                 self._act_id = ID_ARRIVED

@@ -67,6 +67,16 @@ class TargetXY(NamedTuple):
         constraint.object.append(obj)
         return cls(constraint)
 
+    @classmethod
+    def our_robot(cls, robot_id: int) -> 'TargetXY':
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.OUR_ROBOT
+        obj.robot_id = robot_id
+
+        constraint = ConstraintXY()
+        constraint.object.append(obj)
+        return cls(constraint)
+
 
 class TargetTheta(NamedTuple):
     constraint: ConstraintTheta
@@ -170,6 +180,12 @@ class Operation():
         goal.kick_enable = True
         goal.kick_pass = True
         goal.kick_target = target_xy.constraint
+        return Operation(goal)
+
+    def with_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.dribble_enable = True
+        goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
     def with_reflecting_kick(self) -> 'Operation':

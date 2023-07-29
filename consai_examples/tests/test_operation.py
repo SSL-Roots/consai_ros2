@@ -118,6 +118,15 @@ def test_with_passing_to():
     assert goal.kick_target.object[0].name == "target"
 
 
+def test_with_dribbling_to():
+    operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    operation = operation.with_dribbling_to(TargetXY.our_robot(3))
+    goal = operation.get_goal()
+    assert goal.dribble_enable is True
+    assert goal.dribble_target.object[0].type == ConstraintObject.OUR_ROBOT
+    assert goal.dribble_target.object[0].robot_id == 3
+
+
 def test_with_reflecting_kick():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_reflecting_kick()
