@@ -43,18 +43,18 @@ class TargetXY(NamedTuple):
 
     @classmethod
     def our_goal(cls) -> 'TargetXY':
+        obj_goal = ConstraintObject()
+        obj_goal.type = ConstraintObject.OUR_GOAL
         constraint = ConstraintXY()
-        constraint.normalized = True
-        constraint.value_x.append(-1.0)
-        constraint.value_y.append(0.0)
+        constraint.object.append(obj_goal)
         return cls(constraint)
 
     @classmethod
     def their_goal(cls) -> 'TargetXY':
+        obj_goal = ConstraintObject()
+        obj_goal.type = ConstraintObject.THEIR_GOAL
         constraint = ConstraintXY()
-        constraint.normalized = True
-        constraint.value_x.append(1.0)
-        constraint.value_y.append(0.0)
+        constraint.object.append(obj_goal)
         return cls(constraint)
 
     @classmethod

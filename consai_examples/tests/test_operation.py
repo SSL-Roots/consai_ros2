@@ -37,8 +37,7 @@ def test_move_on_line():
                                     TargetTheta.look_ball()).get_goal()
     assert len(goal.line) >= 1
     assert goal.line[0].p1.object[0].type == ConstraintObject.BALL
-    assert len(goal.line[0].p2.value_x) >= 1
-    assert len(goal.line[0].p2.value_y) >= 1
+    assert goal.line[0].p2.object[0].type == ConstraintObject.THEIR_GOAL
     assert goal.line[0].distance == 0.5
     assert goal.line[0].theta.object[0].type == ConstraintObject.BALL
 
@@ -90,9 +89,7 @@ def test_with_shooting_to():
     goal = operation.get_goal()
     assert goal.kick_enable is True
     assert goal.kick_pass is False
-    assert goal.kick_target.normalized is True
-    assert goal.kick_target.value_x[0] == 1.0
-    assert goal.kick_target.value_y[0] == 0.0
+    assert goal.kick_target.object[0].type == ConstraintObject.THEIR_GOAL
 
 
 def test_with_shooting_for_setplay_to():
@@ -102,9 +99,7 @@ def test_with_shooting_for_setplay_to():
     assert goal.kick_enable is True
     assert goal.kick_pass is False
     assert goal.kick_setplay is True
-    assert goal.kick_target.normalized is True
-    assert goal.kick_target.value_x[0] == 1.0
-    assert goal.kick_target.value_y[0] == 0.0
+    assert goal.kick_target.object[0].type == ConstraintObject.THEIR_GOAL
 
 
 def test_with_passing_to():
