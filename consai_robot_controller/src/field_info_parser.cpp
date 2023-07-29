@@ -33,6 +33,13 @@ const double MIN_KICK_POWER_PASS = 2.0;  // m/s
 FieldInfoParser::FieldInfoParser()
 : invert_(false), team_is_yellow_(false)
 {
+  // 不正な値を参照しないように、フィールド情報の初期値をセットする
+  geometry_ = std::make_shared<GeometryData>();
+  geometry_->field.field_length = 12000;
+  geometry_->field.field_width = 9000;
+  geometry_->field.goal_width = 1800;
+  geometry_->field.goal_depth = 180;
+  geometry_->field.boundary_width = 300;
 }
 
 void FieldInfoParser::set_invert(const bool & invert)
@@ -466,9 +473,14 @@ bool FieldInfoParser::parse_constraint_object(
     object_pose.x = ball.pos.x;
     object_pose.y = ball.pos.y;
     return true;
-  } else if ((object.type == ConstraintObject::BLUE_ROBOT &&  // NOLINT
-    extract_robot(object.robot_id, false, robot)) ||
-    (object.type == ConstraintObject::YELLOW_ROBOT && extract_robot(object.robot_id, true, robot)))
+  } else if (  // NOLINT
+    (object.type == ConstraintObject::BLUE_ROBOT && extract_robot(object.robot_id, false, robot)) ||
+    (object.type == ConstraintObject::YELLOW_ROBOT &&
+    extract_robot(object.robot_id, true, robot)) ||
+    (object.type == ConstraintObject::OUR_ROBOT &&
+    extract_robot(object.robot_id, team_is_yellow_, robot)) ||
+    (object.type == ConstraintObject::THEIR_ROBOT &&
+    extract_robot(object.robot_id, !team_is_yellow_, robot)))
   {
     object_pose.x = robot.pos.x;
     object_pose.y = robot.pos.y;
@@ -478,6 +490,14 @@ bool FieldInfoParser::parse_constraint_object(
     named_targets_.find(object.name) != named_targets_.end())
   {
     object_pose = named_targets_.at(object.name);
+    return true;
+  } else if (object.type == ConstraintObject::OUR_GOAL) {
+    object_pose.x = -geometry_->field.field_length * 0.5 * 0.001;
+    object_pose.y = 0.0;
+    return true;
+  } else if (object.type == ConstraintObject::THEIR_GOAL) {
+    object_pose.x = geometry_->field.field_length * 0.5 * 0.001;
+    object_pose.y = 0.0;
     return true;
   }
 

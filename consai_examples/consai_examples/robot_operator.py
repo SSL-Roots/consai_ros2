@@ -17,6 +17,7 @@
 
 from functools import partial
 
+from consai_examples.operation import Operation
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
@@ -787,6 +788,9 @@ class RobotOperator(Node):
                     self._line_goal(line, keep=True), target, kick_pass=False))
 
         self._set_goal(robot_id, goal)
+
+    def operate(self, robot_id: int, operation: Operation):
+        self._set_goal(robot_id, operation.get_goal())
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する

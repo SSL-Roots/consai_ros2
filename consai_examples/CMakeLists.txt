@@ -25,6 +25,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/control_with_role.py
     ${PROJECT_NAME}/field_observer.py
     ${PROJECT_NAME}/game.py
+    ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
@@ -55,6 +56,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_field_observer tests/test_field_observer.py)
+  ament_add_pytest_test(test_operation tests/test_operation.py)
 endif()
 
 ament_package()
