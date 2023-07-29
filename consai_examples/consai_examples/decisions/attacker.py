@@ -250,18 +250,25 @@ class AttackerDecision(DecisionBase):
 
     def our_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
-            self._operator.setplay_shoot_to_their_goal(robot_id)
+            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+            setplay_shoot = move_to_ball.with_shooting_carefully_to(TargetXY.their_goal())
+            self._operator.operate(robot_id, setplay_shoot)
             self._act_id = self.ACT_ID_INDIRECT
 
     def their_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
-            self._operator.chase_ball(
-                robot_id, -0.6, 0.0, 0.0, look_from=False, keep=True)
+            prevent_direct_shooting = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
+            prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
+            self._operator.operate(robot_id, prevent_direct_shooting)
             self._act_id = self.ACT_ID_INDIRECT
 
     def their_ball_placement(self, robot_id, placement_pos):
         if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8)
+            operation = Operation().move_to_pose(
+                TargetXY.value(-6.0 + 2.0, 1.8),
+                TargetTheta.look_ball())
+            self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_THEIR_PLACEMENT
 
     def our_ball_placement(self, robot_id, placement_pos):
@@ -284,14 +291,20 @@ class AttackerDecision(DecisionBase):
                 outside_kick_pos = self._field_observer.get_near_outside_ball_placement(
                     ball_state, placement_pos)
                 # 壁際に蹴る
-                self._operator.pass_to(robot_id, outside_kick_pos.x, outside_kick_pos.y)
+                move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+                put_ball_back = move_to_ball.with_shooting_carefully_to(
+                    TargetXY.value(outside_kick_pos.x, outside_kick_pos.y))
+                self._operator.operate(robot_id, put_ball_back)
                 self._act_id = ID_NEAR_OUTSIDE
             return
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする
             if self._act_id != ID_FAR_FROM:
-                self._operator.pass_to(robot_id, placement_pos.x, placement_pos.y)
+                move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+                passing = move_to_ball.with_passing_to(TargetXY.value(
+                    placement_pos.x, placement_pos.y))
+                self._operator.operate(robot_id, passing)
                 self._act_id = ID_FAR_FROM
             return
 
