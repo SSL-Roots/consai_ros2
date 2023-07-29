@@ -466,12 +466,14 @@ bool FieldInfoParser::parse_constraint_object(
     object_pose.x = ball.pos.x;
     object_pose.y = ball.pos.y;
     return true;
-  } else if ((object.type == ConstraintObject::BLUE_ROBOT &&  // NOLINT
-    extract_robot(object.robot_id, false, robot)) ||
-    (object.type == ConstraintObject::YELLOW_ROBOT && extract_robot(object.robot_id, true, robot)) ||
-    (object.type == ConstraintObject::OUR_ROBOT && extract_robot(object.robot_id, team_is_yellow_, robot)) ||
-    (object.type == ConstraintObject::THEIR_ROBOT && extract_robot(object.robot_id, !team_is_yellow_, robot))
-    )
+  } else if (  // NOLINT
+    (object.type == ConstraintObject::BLUE_ROBOT && extract_robot(object.robot_id, false, robot)) ||
+    (object.type == ConstraintObject::YELLOW_ROBOT &&
+    extract_robot(object.robot_id, true, robot)) ||
+    (object.type == ConstraintObject::OUR_ROBOT &&
+    extract_robot(object.robot_id, team_is_yellow_, robot)) ||
+    (object.type == ConstraintObject::THEIR_ROBOT &&
+    extract_robot(object.robot_id, !team_is_yellow_, robot)))
   {
     object_pose.x = robot.pos.x;
     object_pose.y = robot.pos.y;

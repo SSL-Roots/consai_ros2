@@ -19,7 +19,6 @@ from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintTheta
-import pytest
 
 
 def test_immutability():

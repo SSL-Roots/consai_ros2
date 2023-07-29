@@ -17,6 +17,7 @@
 
 from functools import partial
 
+from consai_examples.operation import Operation
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
@@ -25,7 +26,6 @@ from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from consai_msgs.msg import NamedTargets
 from consai_msgs.msg import State2D
-from operation import Operation
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
@@ -789,7 +789,7 @@ class RobotOperator(Node):
 
         self._set_goal(robot_id, goal)
 
-    def operate(self, robot_id, operation):
+    def operate(self, robot_id: int, operation: Operation):
         self._set_goal(robot_id, operation.get_goal())
 
     def _set_goal(self, robot_id, goal_msg):
