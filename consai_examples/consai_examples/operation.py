@@ -77,6 +77,22 @@ class TargetXY(NamedTuple):
         constraint.object.append(obj)
         return cls(constraint)
 
+    @classmethod
+    def their_top_corner(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, 1.0)
+        constraint.value_y.insert(0, 1.0)
+        return cls(constraint)
+
+    @classmethod
+    def their_bottom_corner(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, 1.0)
+        constraint.value_y.insert(0, -1.0)
+        return cls(constraint)
+
 
 class TargetTheta(NamedTuple):
     constraint: ConstraintTheta
@@ -111,7 +127,7 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_on_line(self, p1: TargetXY, p2: TargetTheta, distance_from_p1: float,
+    def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':
         line = ConstraintLine()
         line.p1 = p1.constraint
