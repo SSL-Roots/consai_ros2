@@ -146,11 +146,12 @@ def test_with_dribbling_to():
     assert goal.dribble_target.object[0].robot_id == 3
 
 
-def test_with_reflecting_kick():
+def test_with_reflecting_to():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-    operation = operation.with_reflecting_kick()
+    operation = operation.with_reflecting_to(TargetXY.their_goal())
     goal = operation.get_goal()
     assert goal.reflect_shoot is True
+    assert goal.kick_target.object[0].type == ConstraintObject.THEIR_GOAL
 
 
 def test_keep_control_operation():

@@ -233,15 +233,11 @@ class Operation():
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
-    def with_reflecting_kick(self) -> 'Operation':
+    def with_reflecting_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.reflect_shoot = True
+        goal.kick_target = target_xy.constraint
         return Operation(goal)
-
-    def _object_ball(self) -> ConstraintObject:
-        obj_ball = ConstraintObject()
-        obj_ball.type = ConstraintObject.BALL
-        return obj_ball
 
 
 class OneShotOperation(Operation):
