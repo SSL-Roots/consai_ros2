@@ -99,6 +99,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
   find_package(ament_cmake_gtest)
   ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
+  ament_add_gtest(obstacle_environment_test test/obstacle_environment_test.cpp)
 endif()
 
 ament_package()
