@@ -12,37 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE_BALL_HPP_
-#define CONSAI_ROBOT_CONTROLLER__OBSTACLE_BALL_HPP_
-
-#include "obstacle_typedef.hpp"
+#ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE_TYPEDEF_HPP_
+#define CONSAI_ROBOT_CONTROLLER__OBSTACLE_TYPEDEF_HPP_
 
 namespace obstacle
 {
 
-class ObstacleBall
+class Point
 {
- public:
-  ObstacleBall(const Position & position, const Radius radius)
-  : position_(position), radius_(radius)
+public:
+  Point(const double x, const double y)
+  : x_(x), y_(y)
   {
   }
 
-  const Point & position() const
+  double x() const
   {
-    return position_;
+    return x_;
   }
 
-  Radius radius() const
+  double y() const
   {
-    return radius_;
+    return y_;
   }
 
- private:
-  Position position_;
-  Radius radius_;
+private:
+  double x_;
+  double y_;
 };
+
+using Radius = double;
+using Position = Point;
 
 }  // namespace obstacle
 
-#endif  // CONSAI_ROBOT_CONTROLLER__OBSTACLE_BALL_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__OBSTACLE_TYPEDEF_HPP_

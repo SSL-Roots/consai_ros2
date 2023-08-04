@@ -15,42 +15,32 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
 #define CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
 
+#include "obstacle_typedef.hpp"
+
 namespace obstacle
 {
 
 class ProhibitedArea
 {
 public:
-  ProhibitedArea(const double p1_x, const double p1_y, const double p2_x, const double p2_y)
-  : p1_x_(p1_x), p1_y_(p1_y), p2_x_(p2_x), p2_y_(p2_y)
+  ProhibitedArea(const Position & p1, const Position & p2)
+  : p1_(p1), p2_(p2)
   {
   }
 
-  double get_p1_x() const
+  const Position & p1() const
   {
-    return p1_x_;
+    return p1_;
   }
 
-  double get_p1_y() const
+  const Position & p2() const
   {
-    return p1_y_;
-  }
-
-  double get_p2_x() const
-  {
-    return p2_x_;
-  }
-
-  double get_p2_y() const
-  {
-    return p2_y_;
+    return p2_;
   }
 
 private:
-  double p1_x_;
-  double p1_y_;
-  double p2_x_;
-  double p2_y_;
+  Position p1_;
+  Position p2_;
 };
 
 }  // namespace obstacle

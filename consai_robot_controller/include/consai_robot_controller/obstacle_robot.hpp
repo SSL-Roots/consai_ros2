@@ -15,36 +15,32 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
 #define CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
 
+#include "obstacle_typedef.hpp"
+
 namespace obstacle
 {
 
 class ObstacleRobot
 {
 public:
-  ObstacleRobot(const double x, const double y, const double radius)
-  : x_(x), y_(y), radius_(radius)
+  ObstacleRobot(const Position & position, const Radius radius)
+  : position_(position), radius_(radius)
   {
   }
 
-  double get_x() const
+  const Point & position() const
   {
-    return x_;
+    return position_;
   }
 
-  double get_y() const
-  {
-    return y_;
-  }
-
-  double get_radius() const
+  Radius radius() const
   {
     return radius_;
   }
 
 private:
-  double x_;
-  double y_;
-  double radius_;
+  Position position_;
+  Radius radius_;
 };
 
 }  // namespace obstacle
