@@ -22,7 +22,7 @@ namespace obstacle
 
 class ObstacleBall
 {
- public:
+public:
   ObstacleBall(const Position & position, const Radius radius)
   : position_(position), radius_(radius)
   {
@@ -38,7 +38,7 @@ class ObstacleBall
     return radius_;
   }
 
- private:
+private:
   Position position_;
   Radius radius_;
 };

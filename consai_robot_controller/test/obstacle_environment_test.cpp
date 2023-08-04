@@ -55,6 +55,9 @@ TEST(TestObstacleEnvironment, handle_obstacle_balls) {
   ObstBall ball1(ObstPos(1.0, -2.0), ObstRadius(0.01));
   ObstBall ball2(ObstPos(-3.0, 4.0), ObstRadius(0.02));
 
+  obstacle_environment.append_obstacle_ball(ball1);
+  obstacle_environment.append_obstacle_ball(ball2);
+
   EXPECT_EQ(obstacle_environment.get_obstacle_balls().size(), 2);
   EXPECT_EQ(obstacle_environment.get_obstacle_balls()[0].position().x(), 1.0);
   EXPECT_EQ(obstacle_environment.get_obstacle_balls()[0].position().y(), -2.0);
