@@ -94,3 +94,22 @@ TEST(TestObstacleEnvironment, handle_prohibited_areas) {
   obstacle_environment.clear_prohibited_areas();
   EXPECT_EQ(obstacle_environment.get_prohibited_areas().size(), 0);
 }
+
+TEST(TestProhibitedArea, four_positions_area) {
+  ObstArea area1(ObstPos(1.0, -2.0), ObstPos(3.0, -4.0));
+
+  EXPECT_FALSE(area1.has_p3());
+  EXPECT_FALSE(area1.has_p4());
+
+  ObstArea area2(
+    ObstPos(1.0, -2.0), ObstPos(3.0, -4.0),
+    ObstPos(1.0, 2.0), ObstPos(-3.0, -4.0));
+
+  EXPECT_TRUE(area2.has_p3());
+  EXPECT_TRUE(area2.has_p4());
+
+  EXPECT_EQ(area2.p3().x(), 1.0);
+  EXPECT_EQ(area2.p3().y(), 2.0);
+  EXPECT_EQ(area2.p4().x(), -3.0);
+  EXPECT_EQ(area2.p4().y(), -4.0);
+}

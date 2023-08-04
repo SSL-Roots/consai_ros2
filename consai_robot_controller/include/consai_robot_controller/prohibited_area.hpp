@@ -15,6 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
 #define CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
 
+#include <memory>
 #include "obstacle_typedef.hpp"
 
 namespace obstacle
@@ -28,6 +29,15 @@ public:
   {
   }
 
+  ProhibitedArea(
+    const Position & p1, const Position & p2,
+    const Position & p3, const Position & p4)
+  : p1_(p1), p2_(p2)
+  {
+    p3_ = std::make_shared<Position>(p3);
+    p4_ = std::make_shared<Position>(p4);
+  }
+
   const Position & p1() const
   {
     return p1_;
@@ -38,9 +48,31 @@ public:
     return p2_;
   }
 
+  bool has_p3() const
+  {
+    return p3_ != nullptr;
+  }
+
+  bool has_p4() const
+  {
+    return p4_ != nullptr;
+  }
+
+  const Position & p3() const
+  {
+    return *p3_;
+  }
+
+  const Position & p4() const
+  {
+    return *p4_;
+  }
+
 private:
   Position p1_;
   Position p2_;
+  std::shared_ptr<Position> p3_;
+  std::shared_ptr<Position> p4_;
 };
 
 }  // namespace obstacle
