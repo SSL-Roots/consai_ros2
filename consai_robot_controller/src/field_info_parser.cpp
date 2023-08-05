@@ -320,11 +320,18 @@ obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
   const TrackedRobot & my_robot) const
 {
   constexpr ObstRadius BALL_RADIUS(0.0215);
+  constexpr ObstRadius ROBOT_RADIUS(0.09);
+
   // goalから障害物環境を作成する
   ObstEnv environment;
 
   // 衝突回避しない場合は空の環境を返す
   if (!goal->avoid_obstacles) {
+    return environment;
+  }
+
+  // ロボット、ボール情報がない場合は空の環境を返す
+  if (!detection_tracked_) {
     return environment;
   }
 
@@ -337,6 +344,26 @@ obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
         environment.append_obstacle_ball(ObstBall(ObstPos(ball.pos.x, ball.pos.y), BALL_RADIUS));
       }
     }
+  }
+
+  // ロボットを障害物として扱う
+  for (const auto & robot : detection_tracked_->robots) {
+    if (robot.visibility.size() == 0) {
+      continue;
+    }
+    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
+      continue;
+    }
+
+    // 自身の情報は除外する
+    if (robot.robot_id.id == my_robot.robot_id.id &&
+      robot.robot_id.team_color == my_robot.robot_id.team_color)
+    {
+      continue;
+    }
+
+    environment.append_obstacle_robot(
+      ObstRobot(ObstPos(robot.pos.x, robot.pos.y), ROBOT_RADIUS));
   }
 
   return environment;
