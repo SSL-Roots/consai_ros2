@@ -99,6 +99,15 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
   find_package(ament_cmake_gtest)
   ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
+  ament_add_gtest(field_info_parser_test
+    test/field_info_parser_test.cpp
+    src/geometry_tools.cpp
+    src/field_info_parser.cpp)
+  ament_target_dependencies(field_info_parser_test
+    consai_msgs
+    rclcpp
+    robocup_ssl_msgs
+  )
   ament_add_gtest(obstacle_environment_test test/obstacle_environment_test.cpp)
 endif()
 

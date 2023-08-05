@@ -18,11 +18,22 @@
 
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/geometry_tools.hpp"
+#include "consai_robot_controller/obstacle_ball.hpp"
+#include "consai_robot_controller/obstacle_environment.hpp"
+#include "consai_robot_controller/obstacle_robot.hpp"
+#include "consai_robot_controller/obstacle_typedef.hpp"
+#include "consai_robot_controller/prohibited_area.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 namespace consai_robot_controller
 {
 
+using ObstArea = obstacle::ProhibitedArea;
+using ObstBall = obstacle::ObstacleBall;
+using ObstEnv = obstacle::ObstacleEnvironment;
+using ObstPos = obstacle::Position;
+using ObstRadius = obstacle::Radius;
+using ObstRobot = obstacle::ObstacleRobot;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 const double VISIBILITY_THRESHOLD = 0.01;
@@ -302,6 +313,33 @@ std::vector<unsigned int> FieldInfoParser::active_robot_id_list(const bool team_
     }
   }
   return id_list;
+}
+
+obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
+  const std::shared_ptr<const RobotControl::Goal> goal,
+  const TrackedRobot & my_robot) const
+{
+  constexpr ObstRadius BALL_RADIUS(0.0215);
+  // goalから障害物環境を作成する
+  ObstEnv environment;
+
+  // 衝突回避しない場合は空の環境を返す
+  if (!goal->avoid_obstacles) {
+    return environment;
+  }
+
+  // インプレイと自チームセットプレイ以外ではボールから離れる
+  // TODO(ShotaAk): ここは戦略側で判断できそう
+  if (parsed_referee_) {
+    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+      TrackedBall ball;
+      if (extract_ball(ball)) {
+        environment.append_obstacle_ball(ObstBall(ObstPos(ball.pos.x, ball.pos.y), BALL_RADIUS));
+      }
+    }
+  }
+
+  return environment;
 }
 
 bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
