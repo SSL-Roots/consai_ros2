@@ -304,7 +304,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
       }
       if (goal->avoid_placement) {
         avoid_placement_area(
-          my_robot, goal_pose, ball, avoid_kick_receive_area,
+          my_robot, avoidance_pose, ball, avoid_kick_receive_area,
           designated_position, avoidance_pose);
       }
     }
@@ -315,12 +315,12 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
     referee_->command == Referee::COMMAND_STOP)
   {
-    avoid_robots(my_robot, goal_pose, avoidance_pose);
+    avoid_robots(my_robot, avoidance_pose, avoidance_pose);
   }
 
   // STOP_GAME中はボールから離れる
   if (avoid_ball) {
-    avoid_ball_500mm(final_goal_pose, goal_pose, ball, avoidance_pose);
+    avoid_ball_500mm(final_goal_pose, avoidance_pose, ball, avoidance_pose);
   }
 
   return avoidance_pose;
