@@ -254,10 +254,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
+
   if (parser_.parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
+    goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
+      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
+
     // 目標位置と現在位置の差分
     double diff_x = goal_pose.x - my_robot.pos.x;
     double diff_y = goal_pose.y - my_robot.pos.y;

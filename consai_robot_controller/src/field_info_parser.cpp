@@ -227,66 +227,6 @@ bool FieldInfoParser::parse_goal(
     }
   }
 
-  // 衝突を回避する
-  if (goal->avoid_obstacles) {
-    auto avoidance_pose = parsed_pose;
-    bool avoid_ball = false;
-    // STOP_GAME中はボールから離れる
-    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
-      avoid_ball = true;
-    }
-    avoid_obstacles(my_robot, parsed_pose, ball, avoid_ball, avoidance_pose);
-    parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
-
-    // ボールプレイスメントエリアを回避する
-    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-      referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE)
-    {
-      if (referee_->designated_position.size() > 0) {
-        State designated_position;
-        designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
-        designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
-
-        // サイド反転
-        if (invert_) {
-          designated_position.x *= -1.0;
-          designated_position.y *= -1.0;
-        }
-
-        bool is_our_placement =
-          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW &&
-          team_is_yellow_ == true) ||
-          (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
-        bool avoid_kick_receive_area = true;
-        // 自チームのプレースメント時は、キック、レシーブエリアを避けない
-        if (is_our_placement) {
-          avoid_kick_receive_area = false;
-        }
-        if (goal->avoid_placement) {
-          avoid_placement_area(
-            my_robot, parsed_pose, ball, avoid_kick_receive_area,
-            designated_position, avoidance_pose);
-          parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
-        }
-      }
-    }
-
-    // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
-    if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-      referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
-      referee_->command == Referee::COMMAND_STOP)
-    {
-      avoid_robots(my_robot, parsed_pose, avoidance_pose);
-      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
-    }
-
-    // STOP_GAME中はボールから離れる
-    if (avoid_ball) {
-      avoid_ball_500mm(final_goal_pose, parsed_pose, ball, avoidance_pose);
-      parsed_pose = avoidance_pose;  // 回避姿勢を目標姿勢にセット
-    }
-  }
-
   return true;
 }
 
@@ -313,6 +253,77 @@ std::vector<unsigned int> FieldInfoParser::active_robot_id_list(const bool team_
     }
   }
   return id_list;
+}
+
+State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
+  const std::shared_ptr<const RobotControl::Goal> goal,
+  const TrackedRobot & my_robot,
+  const State & goal_pose, const State & final_goal_pose) const
+{
+  State avoidance_pose = goal_pose;
+
+  if (!goal->avoid_obstacles) {
+    return avoidance_pose;
+  }
+
+  TrackedBall ball;
+  if (!extract_ball(ball)) {
+    return avoidance_pose;
+  }
+
+  bool avoid_ball = false;
+  // STOP_GAME中はボールから離れる
+  if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
+    avoid_ball = true;
+  }
+  avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+
+  // ボールプレイスメントエリアを回避する
+  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
+    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE)
+  {
+    if (referee_->designated_position.size() > 0) {
+      State designated_position;
+      designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
+      designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
+
+      // サイド反転
+      if (invert_) {
+        designated_position.x *= -1.0;
+        designated_position.y *= -1.0;
+      }
+
+      bool is_our_placement =
+        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW &&
+        team_is_yellow_ == true) ||
+        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
+      bool avoid_kick_receive_area = true;
+      // 自チームのプレースメント時は、キック、レシーブエリアを避けない
+      if (is_our_placement) {
+        avoid_kick_receive_area = false;
+      }
+      if (goal->avoid_placement) {
+        avoid_placement_area(
+          my_robot, goal_pose, ball, avoid_kick_receive_area,
+          designated_position, avoidance_pose);
+      }
+    }
+  }
+
+  // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
+  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
+    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
+    referee_->command == Referee::COMMAND_STOP)
+  {
+    avoid_robots(my_robot, goal_pose, avoidance_pose);
+  }
+
+  // STOP_GAME中はボールから離れる
+  if (avoid_ball) {
+    avoid_ball_500mm(final_goal_pose, goal_pose, ball, avoidance_pose);
+  }
+
+  return avoidance_pose;
 }
 
 obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
@@ -365,6 +376,8 @@ obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
     environment.append_obstacle_robot(
       ObstRobot(ObstPos(robot.pos.x, robot.pos.y), ROBOT_RADIUS));
   }
+
+  // TODO(ShotaAk): ボールプレースメント回避エリアとディフェンスエリアを障害物に追加する
 
   return environment;
 }

@@ -76,6 +76,10 @@ public:
     const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
     double & kick_power, double & dribble_power) const;
   std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
+  State modify_goal_pose_to_avoid_obstacles(
+    const std::shared_ptr<const RobotControl::Goal> goal,
+    const TrackedRobot & my_robot,
+    const State & goal_pose, const State & final_goal_pose) const;
   obstacle::ObstacleEnvironment get_obstacle_environment(
     const std::shared_ptr<const RobotControl::Goal> goal,
     const TrackedRobot & my_robot) const;
