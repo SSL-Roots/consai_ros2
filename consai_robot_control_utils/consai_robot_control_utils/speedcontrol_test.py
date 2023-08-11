@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# coding: UTF-8
+
+# Copyright 2023 Roots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import csv
 import rclpy
 from rclpy.node import Node
@@ -46,7 +63,7 @@ class MinimalPublisher(Node):
         self.publisher_.publish(msg)
 
         now_time = self.get_clock().now()
-        dt = self.latest_pub_time - now_time
+        # dt = self.latest_pub_time - now_time
 
         self.latest_pub_time = now_time
 
@@ -62,23 +79,26 @@ class MinimalPublisher(Node):
                 rclpy.shutdown()
 
     def load_profile(self, csv_path):
-        """CSVファイルから移動プロファイルを読み込む
-        
+        """
+        CSVファイルから移動プロファイルを読み込む.
+
         Args:
             csv_path (str): CSVファイルのパス
 
         Returns
+        -------
             list: 移動プロファイル
-        """
 
+        """
         with open(csv_path) as f:
             reader = csv.reader(f)
-            l = [row for row in reader]
+            profile = [row for row in reader]
 
         # ヘッダーを削除
-        l.pop(0)
+        profile.pop(0)
 
-        return l
+        return profile
+
 
 def main(args=None):
     rclpy.init(args=args)
