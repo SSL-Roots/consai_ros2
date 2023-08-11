@@ -33,6 +33,8 @@ class MinimalPublisher(Node):
         self.robot_id = self.get_parameter('robot_id').get_parameter_value().integer_value
         self.declare_parameter('loop', False)
         self.loop = self.get_parameter('loop').get_parameter_value().bool_value
+        self.declare_parameter('yellow', False)
+        self.yellow = self.get_parameter('yellow').get_parameter_value().bool_value
 
         # publishers
         self.publisher_ = self.create_publisher(RobotCommand, f"/robot{self.robot_id}/command", 10)
@@ -48,7 +50,7 @@ class MinimalPublisher(Node):
 
         msg = RobotCommand()
         msg.robot_id = self.robot_id
-        msg.team_is_yellow = True
+        msg.team_is_yellow = self.yellow
 
         print(self.profile[self.read_index])
 
