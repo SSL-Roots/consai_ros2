@@ -1,3 +1,5 @@
+import glob
+import os
 from setuptools import setup
 
 package_name = 'consai_robot_control_utils'
@@ -10,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch',
+            glob.glob(os.path.join('launch', '*.launch.py'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
