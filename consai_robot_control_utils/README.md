@@ -7,6 +7,8 @@
 - `visualizer.launch.py` : 
   - ロボットの位置を可視化します。
   - GrSimのロボットを動かす際は必ず起動してください。
+- `rqt_plot.launch.py`:
+  - ロボットの速度指令値`/robot*/command`とローカル速度`/robot_local_velocities`をrqtp_plotで表示します。
 
 ## speedcontrol_test
 
