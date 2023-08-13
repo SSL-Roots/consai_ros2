@@ -252,6 +252,7 @@ RobotLocalVelocity RobotTracker::calc_local_velocity()
     local_vel.y = -(world_vel.x * std::sin(theta) - world_vel.y * std::cos(theta));
     local_velocity.velocity.x = local_vel.x;
     local_velocity.velocity.y = local_vel.y;
+    local_velocity.norm = std::sqrt(std::pow(local_vel.x, 2) + std::pow(local_vel.y, 2));
   }
   if (prev_tracked_robot_.vel_angular.size() > 0) {
     local_velocity.velocity.theta = prev_tracked_robot_.vel_angular[0];

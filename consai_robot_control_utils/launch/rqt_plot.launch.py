@@ -29,7 +29,7 @@ def make_rqt_plot_node(context):
         local_vel_index += 16
 
     command_prefix = '/robot{}/command'.format(robot_id)
-    local_vel_prefix = '/robot_local_velocities/velocities[{}]/velocity'.format(local_vel_index)
+    local_vel_prefix = '/robot_local_velocities/velocities[{}]'.format(local_vel_index)
 
     node = Node(
         package='rqt_plot',
@@ -39,9 +39,10 @@ def make_rqt_plot_node(context):
                    command_prefix + '/velocity_x',
                    command_prefix + '/velocity_y',
                    command_prefix + '/velocity_theta',
-                   local_vel_prefix + '/x',
-                   local_vel_prefix + '/y',
-                   local_vel_prefix + '/theta',
+                   local_vel_prefix + '/velocity/x',
+                   local_vel_prefix + '/velocity/y',
+                   local_vel_prefix + '/velocity/theta',
+                   local_vel_prefix + '/norm',
                    ]
     )
 
