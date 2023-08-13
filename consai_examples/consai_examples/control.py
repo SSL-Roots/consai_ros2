@@ -27,6 +27,11 @@ from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 from referee_parser import RefereeParser
 
+from operation import Operation
+from operation import OneShotOperation
+from operation import TargetXY
+from operation import TargetTheta
+
 
 def test_move_to(max_velocity_xy=None):
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
@@ -487,8 +492,34 @@ def test():
     print(ans)
 
 
+def test_forward_control():
+    robot_id = 9
+    pos_x = 3.0
+    pos_y = -1.0
+    theta = 0.0
+    repeat = 2
+
+    for i in range(repeat):
+        operation = OneShotOperation().move_to_pose(TargetXY.value(pos_x, pos_y), TargetTheta.value(theta))
+        operator_node.operate(robot_id, operation)
+
+        # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+        while operator_node.all_robots_are_free() is False:
+            pass
+
+        operation = OneShotOperation().move_to_pose(TargetXY.value(-pos_x, pos_y), TargetTheta.value(theta))
+        operator_node.operate(robot_id, operation)
+
+        # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
+        while operator_node.all_robots_are_free() is False:
+            pass
+
+    print("Finish")
+
+
 def main():
     # 実行したい関数のコメントを外してください
+    test_forward_control()
     # test_move_to()
     # test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
@@ -501,7 +532,7 @@ def main():
     # test_pass_four_robots()
     # test_stop_robots()
     # test_move_to_line()
-    test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
+    # test_defend_goal_on_line(-1.0, 1.0, -1.0, -1.0)
     # test_reflect_shoot(0, 0, 0)
     # test_refelect_shoot_four_robots(0, 1, 2, 3)
     # test_use_named_targets()
