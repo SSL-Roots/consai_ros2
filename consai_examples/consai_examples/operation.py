@@ -82,6 +82,12 @@ class TargetTheta(NamedTuple):
     constraint: ConstraintTheta
 
     @classmethod
+    def value(cls, theta: float) -> 'TargetTheta':
+        constraint = ConstraintTheta()
+        constraint.value_theta.append(theta)
+        return cls(constraint)
+
+    @classmethod
     def look_ball(cls) -> 'TargetTheta':
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
