@@ -27,7 +27,6 @@ from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 from referee_parser import RefereeParser
 
-from operation import Operation
 from operation import OneShotOperation
 from operation import TargetXY
 from operation import TargetTheta
@@ -500,14 +499,16 @@ def test_forward_control():
     repeat = 2
 
     for i in range(repeat):
-        operation = OneShotOperation().move_to_pose(TargetXY.value(pos_x, pos_y), TargetTheta.value(theta))
+        operation = OneShotOperation().move_to_pose(
+            TargetXY.value(pos_x, pos_y), TargetTheta.value(theta))
         operator_node.operate(robot_id, operation)
 
         # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
         while operator_node.all_robots_are_free() is False:
             pass
 
-        operation = OneShotOperation().move_to_pose(TargetXY.value(-pos_x, pos_y), TargetTheta.value(theta))
+        operation = OneShotOperation().move_to_pose(
+            TargetXY.value(-pos_x, pos_y), TargetTheta.value(theta))
         operator_node.operate(robot_id, operation)
 
         # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
