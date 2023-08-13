@@ -42,6 +42,31 @@ def test_move_on_line():
     assert goal.line[0].theta.object[0].type == ConstraintObject.BALL
 
 
+def test_move_to_intersection():
+    goal = Operation().move_to_intersection(
+        TargetXY.our_goal(), TargetXY.ball(),
+        TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball()).get_goal()
+    assert len(goal.line) >= 1
+    assert goal.line[0].p1.object[0].type == ConstraintObject.OUR_GOAL
+    assert goal.line[0].p2.object[0].type == ConstraintObject.BALL
+    assert len(goal.line[0].p3) >= 1
+    assert goal.line[0].p3[0].object[0].type == ConstraintObject.OUR_ROBOT
+    assert len(goal.line[0].p4) >= 1
+    assert goal.line[0].p4[0].object[0].type == ConstraintObject.OUR_ROBOT
+    assert len(goal.line[0].offset_intersection_to_p2) >= 1
+    assert goal.line[0].offset_intersection_to_p2[0] == 0.0
+    assert goal.line[0].theta.object[0].type == ConstraintObject.BALL
+
+
+def test_offset_intersection_to_p2():
+    operation = Operation().move_to_intersection(
+        TargetXY.our_goal(), TargetXY.ball(),
+        TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball())
+    goal = operation.offset_intersection_to_p2(0.5).get_goal()
+    assert len(goal.line[0].offset_intersection_to_p2) >= 1
+    assert goal.line[0].offset_intersection_to_p2[0] == 0.5
+
+
 def test_move_to_ball_pose():
     goal = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1
@@ -121,11 +146,12 @@ def test_with_dribbling_to():
     assert goal.dribble_target.object[0].robot_id == 3
 
 
-def test_with_reflecting_kick():
+def test_with_reflecting_to():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-    operation = operation.with_reflecting_kick()
+    operation = operation.with_reflecting_to(TargetXY.their_goal())
     goal = operation.get_goal()
     assert goal.reflect_shoot is True
+    assert goal.kick_target.object[0].type == ConstraintObject.THEIR_GOAL
 
 
 def test_keep_control_operation():

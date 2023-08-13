@@ -77,6 +77,22 @@ class TargetXY(NamedTuple):
         constraint.object.append(obj)
         return cls(constraint)
 
+    @classmethod
+    def their_top_corner(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, 1.0)
+        constraint.value_y.insert(0, 1.0)
+        return cls(constraint)
+
+    @classmethod
+    def their_bottom_corner(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, 1.0)
+        constraint.value_y.insert(0, -1.0)
+        return cls(constraint)
+
 
 class TargetTheta(NamedTuple):
     constraint: ConstraintTheta
@@ -111,7 +127,7 @@ class Operation():
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
 
-    def move_on_line(self, p1: TargetXY, p2: TargetTheta, distance_from_p1: float,
+    def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':
         line = ConstraintLine()
         line.p1 = p1.constraint
@@ -120,6 +136,26 @@ class Operation():
         line.theta = target_theta.constraint
         goal = deepcopy(self._goal)
         goal.line.insert(0, line)
+        return Operation(goal)
+
+    def move_to_intersection(self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY,
+                             target_theta: TargetTheta) -> 'Operation':
+        line = ConstraintLine()
+        line.p1 = p1.constraint
+        line.p2 = p2.constraint
+        line.p3.insert(0, p3.constraint)
+        line.p4.insert(0, p4.constraint)
+        line.offset_intersection_to_p2.insert(0, 0.0)
+        line.theta = target_theta.constraint
+        goal = deepcopy(self._goal)
+        goal.line.insert(0, line)
+        return Operation(goal)
+
+    def offset_intersection_to_p2(self, offset: float) -> 'Operation':
+        goal = deepcopy(self._goal)
+        if goal.line:
+            if goal.line[0].offset_intersection_to_p2:
+                goal.line[0].offset_intersection_to_p2[0] = offset
         return Operation(goal)
 
     def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta) -> 'Operation':
@@ -197,15 +233,11 @@ class Operation():
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
-    def with_reflecting_kick(self) -> 'Operation':
+    def with_reflecting_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.reflect_shoot = True
+        goal.kick_target = target_xy.constraint
         return Operation(goal)
-
-    def _object_ball(self) -> ConstraintObject:
-        obj_ball = ConstraintObject()
-        obj_ball.type = ConstraintObject.BALL
-        return obj_ball
 
 
 class OneShotOperation(Operation):

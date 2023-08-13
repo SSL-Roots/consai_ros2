@@ -74,7 +74,7 @@ class AttackerDecision(DecisionBase):
 
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
-        move_to_ball = move_to_ball.with_reflecting_kick()
+        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
            FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
