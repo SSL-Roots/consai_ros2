@@ -593,11 +593,15 @@ bool FieldInfoParser::control_ball(
   const double ROBOT_RADIUS = 0.180 * 0.5;
   const double MAX_X = BALL_RADIUS + 0.3;
   const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.3;
+  const double PIVOT_Y = 0.1;  // meters
+  const double PHI = 30.0;  // degerees
+
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
 
   // ボールの斜め後ろへ近づく
+  // 最終的にはBtoT上の(MAX_X, MAX_Y)に到達する
   if (robot_pose_BtoT.x > 0.0) {
     parsed_pose = trans_BtoT.inverted_transform(
       -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), 0.0);
@@ -605,40 +609,41 @@ bool FieldInfoParser::control_ball(
   }
 
   // ボールの裏へ回るためのピボットを生成
-  const double PIVOT_Y = 0.1;
   State pivot_pose_BtoT;
   pivot_pose_BtoT.x = 0.0;
   pivot_pose_BtoT.y = PIVOT_Y;
-  const double PIVOT_THETA_DEG = 30.0;
-  double limit_angle = tools::to_radians(PIVOT_THETA_DEG) + M_PI_2;
   // ロボットの位置に合わせてpivotを反転
   if (robot_pose_BtoT.y < 0) {
     pivot_pose_BtoT.y *= -1.0;
   }
 
-  double angle_pivot_to_robot_BtoT = tools::calc_angle(
+  // pivotを軸にした角度thetaを計算
+  const double angle_pivot_to_robot_BtoT = tools::calc_angle(
     pivot_pose_BtoT, robot_pose_BtoT);
+  double theta = std::fabs(angle_pivot_to_robot_BtoT) - M_PI_2;
+  // pivotより内側に回り込んだ場合、thetaは90度を超える
+  if (std::fabs(robot_pose_BtoT.y) < PIVOT_Y) {
+    theta = std::fabs(angle_pivot_to_robot_BtoT + std::copysign(M_PI + M_PI_2, robot_pose_BtoT.y));
+  }
 
+  // ボールの裏へ回る
+  // 最終的にはBtoT上の(MAX_X, 0)に到達する
   need_dribble = true;
-  if (std::fabs(angle_pivot_to_robot_BtoT) < limit_angle) {
-    double gain = std::clamp(
-      (limit_angle - std::fabs(angle_pivot_to_robot_BtoT)) / PIVOT_Y, 0.0, 1.0);
+  const bool need_step2 = tools::to_degrees(theta) < PHI;
+  if (need_step2) {
+    const double gain = 1.0 - std::clamp(tools::to_degrees(theta) / PHI, 0.0, 1.0);
     parsed_pose = trans_BtoT.inverted_transform(
       -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y) * gain, 0.0);
     return true;
   }
 
   // ボールへ向かう
-  double gain = 1.0;
-  if (std::signbit(angle_pivot_to_robot_BtoT) == std::signbit(robot_pose_BtoT.y)) {
-    gain = std::clamp(
-      (std::fabs(angle_pivot_to_robot_BtoT) - limit_angle) /
-      (M_PI_2 - tools::to_radians(PIVOT_THETA_DEG)), 0.0, 1.0);
-  }
-
+  // 最終的にはBtoT上で(-ボールの直径, 0)に到達する
+  const double gain = std::clamp(theta / (M_PI - tools::to_radians(PHI)), 0.0, 1.0);
   double distance_x = (-2.0 * BALL_RADIUS + MAX_X) * gain - MAX_X;
 
-  if (std::fabs(robot_pose_BtoT.y) < 0.01) {
+  // ボールの裏に回りきったら前進する
+  if (gain > 0.8) {
     distance_x = dribble_distance;
   }
   parsed_pose = trans_BtoT.inverted_transform(distance_x, 0.0, 0.0);
