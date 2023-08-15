@@ -254,10 +254,25 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
+
   if (parser_.parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
+    // field_info_parserの衝突回避を無効かする場合は、下記の行をコメントアウトすること
+    goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
+      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
+
+    // 障害物情報を取得
+    auto obstacle_environments = parser_.get_obstacle_environment(
+      goal_handle_[robot_id]->get_goal(), my_robot);
+
+    // 現在位置: my_robot.pos
+    // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
+    // 最終目標位置: goal_pose
+    // 障害物情報: obstacle_environments
+    // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
+
     // 目標位置と現在位置の差分
     double diff_x = goal_pose.x - my_robot.pos.x;
     double diff_y = goal_pose.y - my_robot.pos.y;

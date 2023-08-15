@@ -29,6 +29,7 @@
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
+#include "consai_robot_controller/obstacle_environment.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
@@ -75,6 +76,13 @@ public:
     const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
     double & kick_power, double & dribble_power) const;
   std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
+  State modify_goal_pose_to_avoid_obstacles(
+    const std::shared_ptr<const RobotControl::Goal> goal,
+    const TrackedRobot & my_robot,
+    const State & goal_pose, const State & final_goal_pose) const;
+  obstacle::ObstacleEnvironment get_obstacle_environment(
+    const std::shared_ptr<const RobotControl::Goal> goal,
+    const TrackedRobot & my_robot) const;
 
   // controller_componentからアクセスするためpublic変数で定義
   double param_threshold_looking_ball_distance;
