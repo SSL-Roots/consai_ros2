@@ -629,11 +629,19 @@ bool FieldInfoParser::control_ball(
   // ボールの裏へ回る
   // 最終的にはBtoT上の(MAX_X, 0)に到達する
   need_dribble = true;
-  const bool need_step2 = tools::to_degrees(theta) < PHI;
+
+  const auto angle_robot_to_ball = tools::calc_angle(robot_pose, ball_pose);
+  tools::Trans trans_RtoB(robot_pose, angle_robot_to_ball);
+  const auto robot_theta_RtoB = trans_RtoB.transform_theta(robot_pose.theta);
+  const auto parsed_pose_theta = trans_RtoB.inverted_transform_theta(0.0);
+
+  const bool need_theta_correction = std::fabs(robot_theta_RtoB) > tools::to_radians(10.0);
+  const bool need_step2 = tools::to_degrees(theta) < PHI || need_theta_correction;
   if (need_step2) {
     const double gain = 1.0 - std::clamp(tools::to_degrees(theta) / PHI, 0.0, 1.0);
     parsed_pose = trans_BtoT.inverted_transform(
       -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y) * gain, 0.0);
+    parsed_pose.theta = parsed_pose_theta;
     return true;
   }
 
