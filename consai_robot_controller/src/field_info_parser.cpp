@@ -509,7 +509,7 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.15;
+  const double DRIBBLE_DISTANCE = 0.0;
   const double DRIBBLE_POWER = 1.0;
   bool need_kick = false;
   bool need_dribble = false;
@@ -645,9 +645,9 @@ bool FieldInfoParser::control_ball(
   // ボールの裏に回りきったら前進する
   if (gain > 0.8) {
     distance_x = dribble_distance;
+    need_kick = true;
   }
   parsed_pose = trans_BtoT.inverted_transform(distance_x, 0.0, 0.0);
-  need_kick = true;
   return true;
 }
 
