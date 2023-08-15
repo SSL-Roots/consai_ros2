@@ -594,7 +594,7 @@ bool FieldInfoParser::control_ball(
   const double MAX_X = BALL_RADIUS + 0.3;
   const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.3;
   const double PIVOT_Y = 0.1;  // meters
-  const double PHI = 30.0;  // degerees
+  const double PHI = 60.0;  // degerees
 
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
@@ -639,11 +639,13 @@ bool FieldInfoParser::control_ball(
 
   // ボールへ向かう
   // 最終的にはBtoT上で(-ボールの直径, 0)に到達する
-  const double gain = std::clamp(theta / (M_PI - tools::to_radians(PHI)), 0.0, 1.0);
+  double gain = std::clamp(theta / (M_PI - tools::to_radians(PHI)), 0.0, 1.0);
+  // 移動速度を早くするため、gainの分解能を荒くする
+  gain = std::round(gain * 10) / 10;
   double distance_x = (-2.0 * BALL_RADIUS + MAX_X) * gain - MAX_X;
 
   // ボールの裏に回りきったら前進する
-  if (gain > 0.8) {
+  if (gain >= 0.8) {
     distance_x = dribble_distance;
     need_kick = true;
   }
