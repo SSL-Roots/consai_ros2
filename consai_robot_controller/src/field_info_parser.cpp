@@ -595,6 +595,7 @@ bool FieldInfoParser::control_ball(
   const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.3;
   const double PIVOT_Y = 0.1;  // meters
   const double PHI = 60.0;  // degerees
+  const double THETA_CORRECTION_THRESHOLD = 10.0;  // degrees
 
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
@@ -626,22 +627,21 @@ bool FieldInfoParser::control_ball(
     theta = std::fabs(angle_pivot_to_robot_BtoT + std::copysign(M_PI + M_PI_2, robot_pose_BtoT.y));
   }
 
-  // ボールの裏へ回る
+  // ドリブラーを動かしながらボールの裏へ回る
   // 最終的にはBtoT上の(MAX_X, 0)に到達する
+  // ロボットがボールを見るように姿勢も修正する
   need_dribble = true;
 
-  const auto angle_robot_to_ball = tools::calc_angle(robot_pose, ball_pose);
-  tools::Trans trans_RtoB(robot_pose, angle_robot_to_ball);
+  tools::Trans trans_RtoB(robot_pose, tools::calc_angle(robot_pose, ball_pose));
   const auto robot_theta_RtoB = trans_RtoB.transform_theta(robot_pose.theta);
-  const auto parsed_pose_theta = trans_RtoB.inverted_transform_theta(0.0);
-
-  const bool need_theta_correction = std::fabs(robot_theta_RtoB) > tools::to_radians(10.0);
-  const bool need_step2 = tools::to_degrees(theta) < PHI || need_theta_correction;
-  if (need_step2) {
+  const bool need_theta_correction =
+    std::fabs(robot_theta_RtoB) > tools::to_radians(THETA_CORRECTION_THRESHOLD);
+  const bool need_step2_motion = tools::to_degrees(theta) < PHI;
+  if (need_step2_motion || need_theta_correction) {
     const double gain = 1.0 - std::clamp(tools::to_degrees(theta) / PHI, 0.0, 1.0);
     parsed_pose = trans_BtoT.inverted_transform(
       -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y) * gain, 0.0);
-    parsed_pose.theta = parsed_pose_theta;
+    parsed_pose.theta = trans_RtoB.inverted_transform_theta(0.0);
     return true;
   }
 
