@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+message MoveVelocity {
+  // "forward" means towards the kicker
+  // Velocity to the forward [m/s]
+  optional double forward = 1;
+  // Velocity to the left [m/s]
+  optional double left = 2;
+  // Angular velocity counter-clockwise [rad/s]
+  optional double angular = 3;
+}
+
+message RobotControl {
+  // Move velocity of the robot on its local coordinate system
+  optional MoveVelocity move_velocity = 1;
+  // Kick speed [m/s]
+  optional double kick_speed = 2;
+  // Dribbler speed [rounds/minute]
+  optional double dribbler_speed = 3;
+  // Team specific commands
+  repeated int32 custom_commands = 4;
+}

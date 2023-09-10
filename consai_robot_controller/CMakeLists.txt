@@ -23,6 +23,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
+find_package(robocup_ssl_comm REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
 
 include_directories(include)
 
@@ -60,6 +62,21 @@ ament_target_dependencies(grsim_command_converter
 )
 rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controller::GrSimCommandConverter")
 
+# VSSL Command Sender
+add_library(vssl_command_sender SHARED
+  src/vssl_command_sender.cpp
+)
+target_compile_definitions(vssl_command_sender
+  PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
+ament_target_dependencies(vssl_command_sender
+  consai_frootspi_msgs
+  consai_msgs
+  rclcpp
+  rclcpp_components
+  robocup_ssl_comm
+)
+rclcpp_components_register_nodes(vssl_command_sender "consai_robot_controller::VsslCommandSender")
+
 # Exports
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
@@ -69,6 +86,7 @@ ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_action)
 ament_export_dependencies(rclcpp_components)
 ament_export_dependencies(robocup_ssl_msgs)
+ament_export_dependencies(robocup_ssl_comm)
 
 ament_export_include_directories(include)
 ament_export_libraries(controller_component)
@@ -88,6 +106,7 @@ install(DIRECTORY
 install(TARGETS
   controller_component
   grsim_command_converter
+  vssl_command_sender
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

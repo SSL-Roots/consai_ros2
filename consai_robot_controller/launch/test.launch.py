@@ -78,6 +78,16 @@ def generate_launch_description():
                     extra_arguments=[{'use_intra_process_comms': True}],
                     ),
                 ComposableNode(
+                    package='consai_robot_controller',
+                    plugin='consai_robot_controller::VsslCommandSender',
+                    name='vssl_command_sender',
+                    extra_arguments=[{'use_intra_process_comms': True}],
+                    parameters=[{
+                        'udp_address': "192.168.11.20",
+                        'udp_port': 10003,
+                        }],
+                    ),
+                ComposableNode(
                     package='consai_vision_tracker',
                     plugin='consai_vision_tracker::Tracker',
                     name='tracker',
@@ -117,5 +127,5 @@ def generate_launch_description():
         declare_arg_vision_addr,
         declare_arg_vision_port,
         container,
-        visualizer
+        # visualizer
     ])
