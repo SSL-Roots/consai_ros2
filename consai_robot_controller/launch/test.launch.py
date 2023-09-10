@@ -127,5 +127,5 @@ def generate_launch_description():
         declare_arg_vision_addr,
         declare_arg_vision_port,
         container,
-        # visualizer
+        visualizer
     ])

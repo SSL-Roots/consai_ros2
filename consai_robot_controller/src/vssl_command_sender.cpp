@@ -71,6 +71,8 @@ void VsslCommandSender::on_timer()
       control.SerializeToString(&output);
       sender_->send(output);
     }
+
+    it = consai_commands_.erase(it);
   }
 }
 
