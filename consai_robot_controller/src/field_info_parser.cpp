@@ -38,8 +38,8 @@ using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 const double VISIBILITY_THRESHOLD = 0.01;
 const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
-const double MAX_KICK_POWER_PASS = 4.0;  // m/s
-const double MIN_KICK_POWER_PASS = 2.0;  // m/s
+const double MAX_KICK_POWER_PASS = 6.0;  // m/s
+const double MIN_KICK_POWER_PASS = 4.0;  // m/s
 
 FieldInfoParser::FieldInfoParser()
 : invert_(false), team_is_yellow_(false)

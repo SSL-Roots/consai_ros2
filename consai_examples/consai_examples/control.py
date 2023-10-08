@@ -19,6 +19,7 @@ import argparse
 import math
 import threading
 import time
+import random
 
 from consai_msgs.msg import State2D
 from field_observer import FieldObserver
@@ -30,6 +31,7 @@ from referee_parser import RefereeParser
 from operation import OneShotOperation
 from operation import TargetXY
 from operation import TargetTheta
+from operation import Operation
 
 
 def test_move_to(max_velocity_xy=None):
@@ -517,10 +519,56 @@ def test_forward_control():
 
     print("Finish")
 
+def test_pass_shoot():
+    kick_robot_id = 9
+    receive_robots_id = 7
+    pos_x = -3.0
+    pos_y = 1.0
+    theta = 0.0
+
+    operation = Operation().move_to_pose(TargetXY.value(pos_x, pos_y), TargetTheta.value(theta))
+    operation = operation.with_passing_to(TargetXY.our_robot(receive_robots_id))
+    operation = operation.with_reflecting_to(TargetXY.our_robot(receive_robots_id))
+    operator_node.operate(kick_robot_id, operation)
+    
+    receiver = Operation().move_to_pose(TargetXY.value(-pos_x, -pos_y), TargetTheta.look_ball())
+    receiver = receiver.with_passing_to(TargetXY.our_robot(kick_robot_id))
+    receiver = receiver.with_reflecting_to(TargetXY.our_robot(kick_robot_id))
+    operator_node.operate(receive_robots_id, receiver)
+
+    while True:
+        pass
+
+def birdcage():
+    dist_robot_center = 2.5
+    robot_count = 11
+
+    while True:
+        kicker_robot_id = 0
+        target_robot_id = random.randrange(1, 11)
+
+        robot_space_angle = 360 / robot_count
+
+        for robot_id in range(robot_count):
+            robot_place_angle = robot_id * robot_space_angle
+            passer_robot = OneShotOperation().move_to_pose(TargetXY.value(dist_robot_center * math.cos(math.radians(robot_place_angle)), dist_robot_center * math.sin(math.radians(robot_place_angle))), TargetTheta.look_ball())
+
+            if robot_id == kicker_robot_id:
+                passer_robot = passer_robot.with_passing_to(TargetXY.our_robot(3))
+
+            if robot_id == target_robot_id:
+                passer_robot[robot_id] = passer_robot[robot_id].with_reflecting_to(TargetXY.our_robot(kicker_robot_id))
+            operator_node.operate(robot_id, passer_robot[robot_id])
+
+        while operator_node.all_robots_are_free() is False:
+                pass
+
 
 def main():
     # 実行したい関数のコメントを外してください
-    test_forward_control()
+    # test_pass_shoot()
+    birdcage()
+    # test_forward_control()
     # test_move_to()
     # test_move_to(1.5)  # 走行速度を1.0 m/sに制限
     # test_move_to_normalized(3)
