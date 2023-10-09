@@ -37,16 +37,12 @@ public:
   CONSAI_ROBOT_CONTROLLER_PUBLIC
   explicit VsslCommandSender(const rclcpp::NodeOptions & options);
 
-protected:
-  void on_timer();
-
 private:
-  void callback_consai_command_(const ConsaiCommand::SharedPtr msg);
+  void callback_consai_command(const ConsaiCommand::SharedPtr msg, const int id);
 
   rclcpp::TimerBase::SharedPtr timer_;
-  std::unique_ptr<udp_sender::UDPSender> sender_;
+  std::vector<std::unique_ptr<udp_sender::UDPSender>> senders_;
   std::vector<rclcpp::Subscription<ConsaiCommand>::SharedPtr> subs_consai_command_;
-  std::vector<ConsaiCommand::SharedPtr> consai_commands_;
 };
 
 }  // namespace consai_robot_controller

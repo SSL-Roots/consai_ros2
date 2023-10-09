@@ -29,60 +29,38 @@ VsslCommandSender::VsslCommandSender(const rclcpp::NodeOptions & options)
   using namespace std::placeholders;
 
   declare_parameter("udp_address", "192.168.0.10");
-  declare_parameter("udp_port", 10003);
-
-  sender_ = std::make_unique<udp_sender::UDPSender>(
-    get_parameter("udp_address").get_value<std::string>(),
-    get_parameter("udp_port").get_value<int>());
+  declare_parameter("udp_port_base", 10000);
 
   for (int i = 0; i < 16; i++) {
+    senders_.push_back(
+      std::make_unique<udp_sender::UDPSender>(
+        get_parameter("udp_address").get_value<std::string>(),
+        get_parameter("udp_port_base").get_value<int>() + i));
+
+    std::function<void(const ConsaiCommand::SharedPtr)> callback =
+      std::bind(&VsslCommandSender::callback_consai_command, this, _1, i);
     auto sub_command = create_subscription<ConsaiCommand>(
-      "robot" + std::to_string(i) + "/command",
-      10, std::bind(&VsslCommandSender::callback_consai_command_, this, _1));
+      "robot" + std::to_string(i) + "/command", 10, callback);
     subs_consai_command_.push_back(sub_command);
   }
 
-  timer_ = create_wall_timer(10ms, std::bind(&VsslCommandSender::on_timer, this));
-
-  std::cout<<"Start" << std::endl;
+  RCLCPP_INFO(this->get_logger(), "Start");
 }
 
-void VsslCommandSender::on_timer()
+void VsslCommandSender::callback_consai_command(const ConsaiCommand::SharedPtr msg, const int id)
 {
-  // consai用のロボットコマンドをgrSim用のコマンドに変換してpublishする
+  MoveVelocity * velocity = new MoveVelocity();
+  velocity->set_forward(msg->velocity_x);
+  velocity->set_left(msg->velocity_y);
+  velocity->set_angular(msg->velocity_theta);
 
-  if (consai_commands_.size() == 0) {
-    return;
-  }
+  RobotControl control;
+  control.set_allocated_move_velocity(velocity);
+  control.set_kick_speed(msg->kick_power);
 
-  for (auto it = consai_commands_.begin(); it != consai_commands_.end(); ) {
-    // 0番ロボットのコマンドをVSSLロボットに送信する
-    if ( (*it)->robot_id == 0 ) {
-      MoveVelocity * velocity = new MoveVelocity();
-      velocity->set_forward((*it)->velocity_x);
-      velocity->set_left((*it)->velocity_y);
-      velocity->set_angular((*it)->velocity_theta);
-
-      RobotControl control;
-      control.set_allocated_move_velocity(velocity);
-      control.set_kick_speed((*it)->kick_power);
-
-      std::string output;
-      control.SerializeToString(&output);
-      sender_->send(output);
-    }
-
-    it = consai_commands_.erase(it);
-  }
-}
-
-void VsslCommandSender::callback_consai_command_(const ConsaiCommand::SharedPtr msg)
-{
-  consai_commands_.push_back(msg);
-  // バッファの肥大化を防ぐ
-  if (consai_commands_.size() > 200) {
-    consai_commands_.clear();
-  }
+  std::string output;
+  control.SerializeToString(&output);
+  senders_[id]->send(output);
 }
 
 }  // namespace consai_robot_controller
