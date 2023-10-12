@@ -1142,7 +1142,7 @@ bool FieldInfoParser::avoid_ball_500mm(
   // ボールから500 mm以上離れるために、回避処理を実行する
   // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
   // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
-  const double DISTANCE_TO_AVOID_THRESHOLD = 0.65;
+  const double DISTANCE_TO_AVOID_THRESHOLD = 0.20;
   const double AVOID_MARGIN = 0.05;
   const double DISTANCE_TO_AVOID = DISTANCE_TO_AVOID_THRESHOLD - AVOID_MARGIN;
 
