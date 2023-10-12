@@ -1,8 +1,8 @@
 
-max_acceleration_xy: 2.0  # m/s^2
-max_acceleration_theta: 5.0  # rad/s^2
+max_acceleration_xy: 1.0  # m/s^2
+max_acceleration_theta: 3.0  # rad/s^2
 
-max_velocity_xy: 2.0  # m/s^2
+max_velocity_xy: 1.0  # m/s^2
 max_velocity_theta: 5.0  # rad/s^2
 
 control_range_xy: 1.0
