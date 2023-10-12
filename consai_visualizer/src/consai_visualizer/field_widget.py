@@ -58,9 +58,9 @@ class FieldWidget(QWidget):
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
         # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
-        self._RADIUS_BALL = 21.5  # diameter is 43 mm.
+        self._RADIUS_BALL = 17.5  # diameter is 43 mm.
         # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
-        self._RADIUS_ROBOT = 90  # diameter is 180 mm.
+        self._RADIUS_ROBOT = 40  # diameter is 180 mm.
         self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 300
         self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 500
         self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
