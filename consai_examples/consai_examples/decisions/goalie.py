@@ -24,15 +24,18 @@ from operation import TargetTheta
 
 
 class GoaleDecision(DecisionBase):
+    FIELD_LENGTH = 1.2
+    GOAL_WIDTH = 0.3
+    ROBOT_RADIUS = 0.08
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
     def _defend_goal_operation(self):
-        p1_x = -6.0 + 0.3
-        p1_y = 0.9
-        p2_x = -6.0 + 0.3
-        p2_y = -0.9
+        p1_x = -self.FIELD_LENGTH*0.5 + self.ROBOT_RADIUS
+        p1_y = self.GOAL_WIDTH*0.5
+        p2_x = -self.FIELD_LENGTH*0.5 + self.ROBOT_RADIUS
+        p2_y = -self.GOAL_WIDTH*0.5
         defend_goal = Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
@@ -40,10 +43,10 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def _penalty_defend_operation(self):
-        p1_x = -6.0 + 0.05
-        p1_y = 0.9
-        p2_x = -6.0 + 0.05
-        p2_y = -0.9
+        p1_x = -self.FIELD_LENGTH*0.5 + self.ROBOT_RADIUS
+        p1_y = self.GOAL_WIDTH*0.5
+        p2_x = -self.FIELD_LENGTH*0.5 + self.ROBOT_RADIUS
+        p2_y = -self.GOAL_WIDTH*0.5
         defend_goal = Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())

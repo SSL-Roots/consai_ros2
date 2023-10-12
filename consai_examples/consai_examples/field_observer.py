@@ -108,13 +108,13 @@ class FieldObserver(Node):
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
 
-        self._field_x = 12.0  # meters
+        self._field_x = 1.2  # meters
         self._field_half_x = self._field_x * 0.5
-        self._field_y = 9.0  # meters
+        self._field_y = 0.9  # meters
         self._field_half_y = self._field_y * 0.5
         self._field_quarter_y = self._field_half_y * 0.5
-        self._field_defense_x = 1.8  # meters
-        self._field_defense_y = 3.6  # meters
+        self._field_defense_x = 0.2  # meters
+        self._field_defense_y = 0.4  # meters
         self._field_defense_half_y = self._field_defense_y * 0.5  # meters
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
