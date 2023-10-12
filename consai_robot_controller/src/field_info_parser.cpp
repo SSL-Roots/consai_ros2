@@ -667,11 +667,11 @@ bool FieldInfoParser::control_ball(
 
   // Ref: https://ssl.robocup.org/wp-content/uploads/2019/01/2014_ETDP_RoboDragons.pdf
   // // ボールからターゲットを見た座標系を生成
-  const double BALL_RADIUS = 0.043 * 0.5;
-  const double ROBOT_RADIUS = 0.180 * 0.5;
-  const double MAX_X = BALL_RADIUS + 0.3;
-  const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.3;
-  const double PIVOT_Y = 0.1;  // meters
+  const double BALL_RADIUS = 0.035 * 0.5;
+  const double ROBOT_RADIUS = 0.080 * 0.5;
+  const double MAX_X = BALL_RADIUS + 0.1;
+  const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.1;
+  const double PIVOT_Y = 0.05;  // meters
   const double PHI = 60.0;  // degerees
   const double THETA_CORRECTION_THRESHOLD = 10.0;  // degrees
 
