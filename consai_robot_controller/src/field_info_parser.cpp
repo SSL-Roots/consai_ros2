@@ -1160,7 +1160,7 @@ bool FieldInfoParser::avoid_ball_500mm(
     // このとき、最終目標位置側に回避位置を置く
     avoidance_pose = trans_BtoG.inverted_transform(
       std::copysign(DISTANCE_TO_AVOID, final_goal_pose_BtoG.x), 0.0, 0.0);
-    avoidance_pose.theta = goal_pose.theta;
+    avoidance_pose.theta = final_goal_pose.theta;
 
     if (!geometry_) {
       return true;
@@ -1188,7 +1188,7 @@ bool FieldInfoParser::avoid_ball_500mm(
         DISTANCE_TO_AVOID * std::cos(add_angle),
         DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
     }
-    avoidance_pose.theta = goal_pose.theta;
+    avoidance_pose.theta = final_goal_pose.theta;
   }
   return true;
 }
