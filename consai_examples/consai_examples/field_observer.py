@@ -67,21 +67,6 @@ class FieldObserver(Node):
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
 
-    GOAL_POST_Y = 0.9  # meters
-    GOAL_POINT = 5  # ゴール候補のポイント
-    GOAL_POST_TOP = [6, 0.9]  # meters
-    GOAL_POST_BOTTOM = [6, -0.9]  # meters
-    GOAL_CENTER = [6, 0]  # meters
-    GOAL_TOP_CENTER = [6, 0.45]  # meters
-    GOAL_CENTER_BOTTOM = [6, -0.45]  # meters
-    GOAL_POST_WIDTH = 1.8  # meters
-    ROBOT_RADIUS = 0.1  # meters
-    GOAL_POST_TOP_NUM = 0
-    GOAL_TOP_CENTER_NUM = 1
-    GOAL_CENTER_NUM = 2
-    GOAL_CENTER_BOTTOM_NUM = 3
-    GOAL_POST_BOTTOM_NUM = 4
-
     def __init__(self, our_team_is_yellow=False):
         super().__init__('field_observer')
 
