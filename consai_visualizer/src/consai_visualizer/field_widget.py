@@ -763,7 +763,7 @@ class FieldWidget(QWidget):
 
     def _draw_named_targets(self, painter):
         # 名前付きターゲットを描画する
-        TARGET_RADIUS = 70  # ターゲット位置の描画直径 mm
+        TARGET_RADIUS = 20  # ターゲット位置の描画直径 mm
         NAME_POS = QPointF(100.0, 100.0)  # ターゲット名の描画座標 mm
 
         painter.setPen(Qt.black)
