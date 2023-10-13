@@ -81,7 +81,7 @@ class AttackerDecision(DecisionBase):
            FieldObserver.BALL_IS_OUTSIDE_BACK_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(-0.5)
+                move_to_ball = move_to_ball.overwrite_pose_x(-0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
@@ -91,7 +91,7 @@ class AttackerDecision(DecisionBase):
                                 FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
                                 FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(0.5)
+                move_to_ball = move_to_ball.overwrite_pose_x(0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
