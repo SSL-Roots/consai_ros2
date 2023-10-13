@@ -120,6 +120,7 @@ class AttackerDecision(DecisionBase):
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_SHOOT_THEIR_AREA
+            return
 
         # パス可能な場合
         elif len(receiver_robots_id) > 0:
@@ -134,6 +135,7 @@ class AttackerDecision(DecisionBase):
                 passing = move_to_ball.with_passing_to(TargetXY.named_target("pass"))
                 self._operator.operate(robot_id, passing)
                 self._act_id = ID_PASS
+            return
 
         # シュート可能かつ相手エリアにいる場合
         elif len(shoot_point_list) > 0:
@@ -141,13 +143,16 @@ class AttackerDecision(DecisionBase):
                 # 指定座標に向けてシュートする
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
-                self._act_id != ID_SHOOT
+                self._act_id = ID_SHOOT
+            return
+
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_INPLAY
+            return
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
