@@ -106,9 +106,9 @@ class FieldObserver(Node):
 
         self.goal_id_list = [0, 1, 2]
         self.goal_pos_list = [
-            State2D(x=self._field_half_x, y=0.45),
+            State2D(x=self._field_half_x, y=0.12),
             State2D(x=self._field_half_x, y=0.0),
-            State2D(x=self._field_half_x, y=-0.45),
+            State2D(x=self._field_half_x, y=-0.12),
         ]
         self.goal_vel_list = [None] * 5
 
