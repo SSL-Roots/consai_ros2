@@ -199,7 +199,7 @@ class AttackerDecision(DecisionBase):
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PRE_PENALTY
@@ -207,7 +207,7 @@ class AttackerDecision(DecisionBase):
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PENALTY
@@ -215,7 +215,7 @@ class AttackerDecision(DecisionBase):
     def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_INPLAY
@@ -248,7 +248,7 @@ class AttackerDecision(DecisionBase):
     def their_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
             prevent_direct_shooting = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
             self._operator.operate(robot_id, prevent_direct_shooting)
             self._act_id = self.ACT_ID_DIRECT
@@ -263,7 +263,7 @@ class AttackerDecision(DecisionBase):
     def their_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
             prevent_direct_shooting = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
             self._operator.operate(robot_id, prevent_direct_shooting)
             self._act_id = self.ACT_ID_INDIRECT
@@ -329,6 +329,6 @@ class AttackerDecision(DecisionBase):
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:
                 avoid_ball = Operation().move_on_line(
-                    TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+                    TargetXY.ball(), TargetXY.our_robot(robot_id), 0.2, TargetTheta.look_ball())
                 self._operator.operate(robot_id, avoid_ball)
                 self._act_id = ID_ARRIVED
