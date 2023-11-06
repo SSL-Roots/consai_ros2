@@ -24,6 +24,7 @@ from consai_msgs.msg import GoalPoses
 from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
 import consai_visualizer.referee_parser as ref_parser
+from consai_visualizer_msgs.msg import Objects
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
@@ -33,6 +34,7 @@ from robocup_ssl_msgs.msg import GeometryData
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
+import rclpy
 
 from frootspi_msgs.msg import BatteryVoltage
 
@@ -66,21 +68,21 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_logger(self._logger)
 
         # Subscriber、Publisherの作成
-        self._sub_geometry = self._node.create_subscription(
-            GeometryData, 'geometry',
-            self._widget.field_widget.set_field, 10)
-        self._sub_detection = self._node.create_subscription(
-            DetectionFrame, 'detection',
-            self._widget.field_widget.set_detection, 10)
-        self._sub_detection_tracked = self._node.create_subscription(
-            TrackedFrame, 'detection_tracked',
-            self._widget.field_widget.set_detection_tracked, 10)
-        self._sub_referee = self._node.create_subscription(
-            Referee, 'referee',
-            self._callback_referee, 10)
-        self._sub_named_targets = self._node.create_subscription(
-            NamedTargets, 'named_targets',
-            self._widget.field_widget.set_named_targets, 10)
+        # self._sub_geometry = self._node.create_subscription(
+        #     GeometryData, 'geometry',
+        #     self._widget.field_widget.set_field, 10)
+        # self._sub_detection = self._node.create_subscription(
+        #     DetectionFrame, 'detection',
+        #     self._widget.field_widget.set_detection, 10)
+        # self._sub_detection_tracked = self._node.create_subscription(
+        #     TrackedFrame, 'detection_tracked',
+        #     self._widget.field_widget.set_detection_tracked, 10)
+        # self._sub_referee = self._node.create_subscription(
+        #     Referee, 'referee',
+        #     self._callback_referee, 10)
+        # self._sub_named_targets = self._node.create_subscription(
+        #     NamedTargets, 'named_targets',
+        #     self._widget.field_widget.set_named_targets, 10)
 
         self._sub_battery_voltage = []
         for i in range(16):
@@ -100,6 +102,11 @@ class Visualizer(Plugin):
             GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
         self._sub_final_goal_poses = self._node.create_subscription(
             GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
+
+        self._sub_visualize_objects = self._node.create_subscription(
+            Objects, 'visualizer_objects',
+            self._widget.field_widget.set_visualizer_objects,
+            rclpy.qos.qos_profile_sensor_data)
 
         self._widget.field_widget.set_pub_replacement(
             self._node.create_publisher(Replacement, 'replacement', 1))

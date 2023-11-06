@@ -19,6 +19,8 @@
 #include <memory>
 #include <utility>
 
+#include "consai_visualizer_msgs/msg/color.hpp"
+#include "consai_visualizer_msgs/msg/shape_line.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -27,6 +29,8 @@ using namespace std::chrono_literals;
 namespace consai_vision_tracker
 {
 
+using VisColor = consai_visualizer_msgs::msg::Color;
+using VisLine = consai_visualizer_msgs::msg::ShapeLine;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
 
@@ -51,6 +55,8 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
   pub_robot_velocities_ = create_publisher<RobotLocalVelocities>("robot_local_velocities", 10);
+  pub_vis_objects_ = create_publisher<VisualizerObjects>(
+    "visualizer_objects", rclcpp::SensorDataQoS());
 
   declare_parameter("invert", false);
 
@@ -61,6 +67,9 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
     sub_detection_ = create_subscription<DetectionFrame>(
       "detection", 10, std::bind(&Tracker::callback_detection, this, _1));
   }
+
+  sub_geometry_ = create_subscription<GeometryData>(
+    "geometry", 10, std::bind(&Tracker::callback_geometry, this, _1));
 }
 
 void Tracker::on_timer()
@@ -125,6 +134,33 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
+}
+
+void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
+{
+  // geometryを描画情報に変換してpublishするcallback関数
+
+  auto vis_objects = std::make_unique<VisualizerObjects>();
+
+  vis_objects->layer = "vision";
+  vis_objects->sub_layer = "geometry";
+
+  for (const auto & field_line : msg->field.field_lines) {
+    // auto line = std::make_unique<VisLine>();
+    VisLine line;
+
+    line.color.name = "black";
+    line.size = 2;
+    // 単位を[m]に変換
+    line.p1.x = field_line.p1.x * 0.001;
+    line.p1.y = field_line.p1.y * 0.001;
+    line.p2.x = field_line.p2.x * 0.001;
+    line.p2.y = field_line.p2.y * 0.001;
+
+    vis_objects->lines.push_back(line);
+  }
+
+  pub_vis_objects_->publish(std::move(vis_objects));
 }
 
 void Tracker::invert_ball(DetectionBall & ball)
