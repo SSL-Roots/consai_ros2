@@ -156,6 +156,7 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
     line.p1.y = field_line.p1.y * 0.001;
     line.p2.x = field_line.p2.x * 0.001;
     line.p2.y = field_line.p2.y * 0.001;
+    line.caption = field_line.name;
 
     vis_objects->lines.push_back(line);
   }

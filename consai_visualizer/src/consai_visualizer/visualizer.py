@@ -68,6 +68,7 @@ class Visualizer(Plugin):
 
         # loggerをセット
         self._widget.field_widget.set_logger(self._logger)
+        self._add_visualizer_layer("caption", "caption")
 
         # Subscriber、Publisherの作成
         # self._sub_geometry = self._node.create_subscription(

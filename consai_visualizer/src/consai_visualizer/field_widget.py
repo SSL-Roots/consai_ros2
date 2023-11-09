@@ -273,7 +273,7 @@ class FieldWidget(QWidget):
         if self._do_rotate_draw_area is True:
             painter.rotate(-90)
 
-
+        draw_caption = ('caption', 'caption') in self._active_layers
         for key, vis_objects in self._visualizer_objects.items():
             layer = key[0]
             sub_layer = key[1]
@@ -281,7 +281,7 @@ class FieldWidget(QWidget):
                 continue
 
             for shape_line in vis_objects.lines:
-                self._draw_shape_line(painter, shape_line)
+                self._draw_shape_line(painter, shape_line, draw_caption)
         
 
         # if self._can_draw_geometry:
@@ -449,6 +449,19 @@ class FieldWidget(QWidget):
 
         self._scale_field_to_draw = self._draw_area_size.width() / field_full_width
 
+    def _draw_text(self, painter: QPainter, pos: QPointF, text: str):
+        # 回転を考慮したテキスト描画関数
+        painter.save()
+        if self._do_rotate_draw_area:
+            tmp = pos.x()
+            pos.setX(pos.y())
+            pos.setY(tmp)
+            painter.rotate(90)
+
+        painter.drawText(pos, text)
+        painter.restore()
+
+
     def _to_qcolor(self, color: VisColor):
         if color.name:
             output = QColor(color.name)
@@ -461,12 +474,18 @@ class FieldWidget(QWidget):
         output.setAlphaF(color.alpha)
         return output
 
-    def _draw_shape_line(self, painter: QPainter, shape_line: ShapeLine):
+    def _draw_shape_line(self, painter: QPainter, shape_line: ShapeLine, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape_line.color), shape_line.size))
         p1 = self._convert_field_to_draw_point(shape_line.p1.x, shape_line.p1.y)
         p2 = self._convert_field_to_draw_point(shape_line.p2.x, shape_line.p2.y)
         painter.drawLine(p1, p2)
 
+        # 線の中央にキャプションを描画
+        if draw_caption:
+            p_mid = self._convert_field_to_draw_point(
+                (shape_line.p1.x + shape_line.p2.x) * 0.5,
+                (shape_line.p1.y + shape_line.p2.y) * 0.5)
+            self._draw_text(painter, p_mid, shape_line.caption)
 
     def _draw_geometry(self, painter):
         # フィールド形状の描画
