@@ -35,6 +35,7 @@ from robocup_ssl_msgs.msg import GeometryData
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import TrackedFrame
+from rqt_py_common.ini_helper import pack, unpack
 import rclpy
 
 from frootspi_msgs.msg import BatteryVoltage
@@ -166,6 +167,23 @@ class Visualizer(Plugin):
         self.latest_battery_voltage = [0] * 16
         self.latest_kicker_voltage = [0] * 16
 
+    def save_settings(self, plugin_settings, instance_settings):
+        # UIを終了するときに実行される関数
+
+        # layerとsub layerをカンマで結合して保存
+        active_layers = self._extract_active_layers()
+        combined_layers = list(map(lambda x: x[0] + "," + x[1], active_layers))
+        instance_settings.set_value('active_layers', pack(combined_layers))
+
+    def restore_settings(self, plugin_settings, instance_settings):
+        # UIが起動したときに実行される関数
+
+        # カンマ結合されたlayerを復元してセット
+        combined_layers = unpack(instance_settings.value('active_layers', []))
+        active_layers = list(map(lambda x: x.split(","), combined_layers))
+        for (layer, sub_layer) in active_layers:
+            self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
+
     def _clicked_geometry(self):
         if self._widget.check_box_geometry.isChecked():
             self._widget.field_widget.set_can_draw_geometry(True)
@@ -268,7 +286,7 @@ class Visualizer(Plugin):
         self._add_visualizer_layer(msg.layer, msg.sub_layer)
         self._widget.field_widget.set_visualizer_objects(msg)
 
-    def _add_visualizer_layer(self, layer: str, sub_layer: str):
+    def _add_visualizer_layer(self, layer: str, sub_layer: str, state=Qt.Unchecked):
         # レイヤーに重複しないように項目を追加する
         if layer == "" or sub_layer == "":
             self._logger.warning(
@@ -291,7 +309,7 @@ class Visualizer(Plugin):
 
         new_child.setText(0, sub_layer)
         new_child.setFlags(new_child.flags() | Qt.ItemIsUserCheckable)
-        new_child.setCheckState(0, Qt.Checked)
+        new_child.setCheckState(0, state)
 
     def _extract_active_layers(self) -> list[tuple[str, str]]:
         # チェックが入ったレイヤーを抽出する
