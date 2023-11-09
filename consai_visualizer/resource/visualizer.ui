@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
-    <height>518</height>
+    <width>1081</width>
+    <height>741</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -4140,7 +4140,32 @@
       </layout>
      </item>
      <item>
-      <widget class="FieldWidget" name="field_widget" native="true"/>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="FieldWidget" name="field_widget" native="true"/>
+       </item>
+       <item>
+        <widget class="QTreeWidget" name="layer_widget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>200</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <column>
+          <property name="text">
+           <string>Layer</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_2">

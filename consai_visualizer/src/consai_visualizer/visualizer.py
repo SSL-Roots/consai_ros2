@@ -28,6 +28,7 @@ from consai_visualizer_msgs.msg import Objects
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
+from python_qt_binding.QtWidgets import QTreeWidgetItem
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import DetectionFrame
 from robocup_ssl_msgs.msg import GeometryData
@@ -105,7 +106,7 @@ class Visualizer(Plugin):
 
         self._sub_visualize_objects = self._node.create_subscription(
             Objects, 'visualizer_objects',
-            self._widget.field_widget.set_visualizer_objects,
+            self._callback_visualizer_objects,
             rclpy.qos.qos_profile_sensor_data)
 
         self._widget.field_widget.set_pub_replacement(
@@ -140,6 +141,14 @@ class Visualizer(Plugin):
         self._widget.check_box_geometry.setCheckState(Qt.Checked)
         self._widget.check_box_detection.setCheckState(Qt.Unchecked)
         self._widget.check_box_detection_tracked.setCheckState(Qt.Checked)
+
+        # レイヤーツリーの初期設定
+        self._widget.layer_widget.setDragEnabled(True)
+        self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
+        self._add_visualizer_layer("aaa", "111")
+        self._add_visualizer_layer("aaa", "222")
+        self._add_visualizer_layer("bbb", "333")
+        self._add_visualizer_layer("bbb", "444")
 
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
@@ -189,6 +198,12 @@ class Visualizer(Plugin):
     def _clicked_robot_turnon(self, is_yellow, robot_id, state):
         self._widget.field_widget.append_robot_replacement(
             is_yellow, robot_id, state == Qt.Checked)
+
+    def _layer_state_changed(self):
+        # レイヤーのチェックボックスが変更されたときに呼ばれる
+        # 一括でON/OFFすると項目の数だけ実行される
+        active_layers = self._extract_active_layers()
+        self._widget.field_widget.set_active_layers(active_layers)
 
     def _set_all_robot_turnon(self, is_yellow, turnon):
         team = "yellow" if is_yellow else "blue"
@@ -252,6 +267,52 @@ class Visualizer(Plugin):
 
     def _callback_kicker_voltage(self, msg, robot_id):
         self.latest_kicker_voltage[robot_id] = msg.voltage
+
+    def _callback_visualizer_objects(self, msg):
+        # ここでレイヤーを更新する
+        self._add_visualizer_layer(msg.layer, msg.sub_layer)
+        self._widget.field_widget.set_visualizer_objects(msg)
+
+    def _add_visualizer_layer(self, layer: str, sub_layer: str):
+        # レイヤーに重複しないように項目を追加する
+        if layer == "" or sub_layer == "":
+            self._logger.warning(
+                "layer={} or sub_layer={} is empty".format(layer, sub_layer))
+            return
+
+        parents = self._widget.layer_widget.findItems(layer, Qt.MatchExactly, 0)
+
+        if len(parents) == 0:
+            new_parent = QTreeWidgetItem(self._widget.layer_widget)
+            new_parent.setText(0, layer)
+            new_parent.setFlags(new_parent.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
+
+            new_child = QTreeWidgetItem(new_parent)
+        else:
+            for i in range(parents[0].childCount()):
+                if sub_layer == parents[0].child(i).text(0):
+                    return
+            new_child = QTreeWidgetItem(parents[0])
+
+        new_child.setText(0, sub_layer)
+        new_child.setFlags(new_child.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
+        new_child.setCheckState(0, Qt.Checked)
+
+    def _extract_active_layers(self) -> list[tuple[str, str]]:
+        # チェックが入ったレイヤーを抽出する
+        active_layers = []
+        for index in range(self._widget.layer_widget.topLevelItemCount()):
+            parent = self._widget.layer_widget.topLevelItem(index)
+            if parent.checkState(0) != Qt.Checked:
+                continue
+
+            for child_index in range(parent.childCount()):
+                child = parent.child(child_index)
+                if child.checkState(0) != Qt.Checked:
+                    continue
+                active_layers.append((parent.text(0), child.text(0)))
+
+        return active_layers
 
     def battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8

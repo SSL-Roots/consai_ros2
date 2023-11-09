@@ -110,6 +110,7 @@ class FieldWidget(QWidget):
         self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
 
         self._visualizer_objects: Dict[tuple[str, str], VisObjects] = {}
+        self._active_layers: list[tuple[str, str]] = []
 
     def set_logger(self, logger):
         self._logger = logger
@@ -164,6 +165,9 @@ class FieldWidget(QWidget):
 
     def set_visualizer_objects(self, msg):
         self._visualizer_objects[(msg.layer, msg.sub_layer)] = msg
+
+    def set_active_layers(self, layers: list[tuple[str, str]]):
+        self._active_layers = layers
 
     def get_blue_robot_num(self):
         return self._blue_robot_num
@@ -273,6 +277,9 @@ class FieldWidget(QWidget):
         for key, vis_objects in self._visualizer_objects.items():
             layer = key[0]
             sub_layer = key[1]
+            if (layer, sub_layer) not in self._active_layers:
+                continue
+
             for shape_line in vis_objects.lines:
                 self._draw_shape_line(painter, shape_line)
         
