@@ -143,12 +143,7 @@ class Visualizer(Plugin):
         self._widget.check_box_detection_tracked.setCheckState(Qt.Checked)
 
         # レイヤーツリーの初期設定
-        self._widget.layer_widget.setDragEnabled(True)
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
-        self._add_visualizer_layer("aaa", "111")
-        self._add_visualizer_layer("aaa", "222")
-        self._add_visualizer_layer("bbb", "333")
-        self._add_visualizer_layer("bbb", "444")
 
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
@@ -285,7 +280,7 @@ class Visualizer(Plugin):
         if len(parents) == 0:
             new_parent = QTreeWidgetItem(self._widget.layer_widget)
             new_parent.setText(0, layer)
-            new_parent.setFlags(new_parent.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
+            new_parent.setFlags(new_parent.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
 
             new_child = QTreeWidgetItem(new_parent)
         else:
@@ -295,7 +290,7 @@ class Visualizer(Plugin):
             new_child = QTreeWidgetItem(parents[0])
 
         new_child.setText(0, sub_layer)
-        new_child.setFlags(new_child.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
+        new_child.setFlags(new_child.flags() | Qt.ItemIsUserCheckable)
         new_child.setCheckState(0, Qt.Checked)
 
     def _extract_active_layers(self) -> list[tuple[str, str]]:
