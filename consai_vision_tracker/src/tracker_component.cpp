@@ -22,6 +22,7 @@
 #include "consai_visualizer_msgs/msg/color.hpp"
 #include "consai_visualizer_msgs/msg/shape_arc.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
+#include "consai_visualizer_msgs/msg/shape_point.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -33,6 +34,7 @@ namespace consai_vision_tracker
 using VisColor = consai_visualizer_msgs::msg::Color;
 using VisArc = consai_visualizer_msgs::msg::ShapeArc;
 using VisLine = consai_visualizer_msgs::msg::ShapeLine;
+using VisPoint = consai_visualizer_msgs::msg::ShapePoint;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
 
@@ -177,6 +179,20 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
 
     vis_objects->arcs.push_back(arc);
   }
+
+  // ペナルティマーク
+  // Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_penalty_mark
+  VisPoint point;
+  point.color.name = "white";
+  point.size = 6;
+  point.x = -msg->field.field_length * 0.001 / 2.0 + 8.0;
+  point.y = 0.0;
+  point.caption = "penalty_mark_positive";
+  vis_objects->points.push_back(point);
+
+  point.x = -point.x;
+  point.caption = "penalty_mark_negative";
+  vis_objects->points.push_back(point);
 
   pub_vis_objects_->publish(std::move(vis_objects));
 }

@@ -285,6 +285,9 @@ class FieldWidget(QWidget):
             if (layer, sub_layer) not in self._active_layers:
                 continue
 
+            for shape_point in vis_objects.points:
+                self._draw_shape_point(painter, shape_point, draw_caption)
+
             for shape_line in vis_objects.lines:
                 self._draw_shape_line(painter, shape_line, draw_caption)
 
@@ -480,6 +483,14 @@ class FieldWidget(QWidget):
 
         output.setAlphaF(color.alpha)
         return output
+
+    def _draw_shape_point(self, painter: QPainter, shape: ShapePoint, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.color), shape.size))
+        point = self._convert_field_to_draw_point(shape.x, shape.y)
+        painter.drawPoint(point)
+
+        if draw_caption:
+            self._draw_text(painter, point, shape.caption)
 
     def _draw_shape_line(self, painter: QPainter, shape: ShapeLine, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.color), shape.size))
