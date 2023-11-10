@@ -261,6 +261,10 @@ class FieldWidget(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
 
+        # 背景色をセット
+        painter.setBrush(QColor('darkgreen'))
+        painter.drawRect(self.rect())
+
         # 描画領域の中心をWidgetの中心に持ってくる
         cx = float(self.width()) * 0.5
         cy = float(self.height()) * 0.5

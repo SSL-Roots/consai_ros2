@@ -149,7 +149,7 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
     // auto line = std::make_unique<VisLine>();
     VisLine line;
 
-    line.color.name = "black";
+    line.color.name = "white";
     line.size = 2;
     // 単位を[m]に変換
     line.p1.x = field_line.p1.x * 0.001;
