@@ -28,8 +28,9 @@ from python_qt_binding.QtGui import QPen
 from python_qt_binding.QtWidgets import QWidget
 from consai_visualizer_msgs.msg import Objects as VisObjects
 from consai_visualizer_msgs.msg import Color as VisColor
-from consai_visualizer_msgs.msg import ShapePoint
+from consai_visualizer_msgs.msg import ShapeArc
 from consai_visualizer_msgs.msg import ShapeLine
+from consai_visualizer_msgs.msg import ShapePoint
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
@@ -286,7 +287,9 @@ class FieldWidget(QWidget):
 
             for shape_line in vis_objects.lines:
                 self._draw_shape_line(painter, shape_line, draw_caption)
-        
+
+            for shape_arc in vis_objects.arcs:
+                self._draw_shape_arc(painter, shape_arc, draw_caption)
 
         # if self._can_draw_geometry:
         #     self._draw_geometry(painter)
@@ -478,18 +481,39 @@ class FieldWidget(QWidget):
         output.setAlphaF(color.alpha)
         return output
 
-    def _draw_shape_line(self, painter: QPainter, shape_line: ShapeLine, draw_caption: bool = False):
-        painter.setPen(QPen(self._to_qcolor(shape_line.color), shape_line.size))
-        p1 = self._convert_field_to_draw_point(shape_line.p1.x, shape_line.p1.y)
-        p2 = self._convert_field_to_draw_point(shape_line.p2.x, shape_line.p2.y)
+    def _draw_shape_line(self, painter: QPainter, shape: ShapeLine, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.color), shape.size))
+        p1 = self._convert_field_to_draw_point(shape.p1.x, shape.p1.y)
+        p2 = self._convert_field_to_draw_point(shape.p2.x, shape.p2.y)
         painter.drawLine(p1, p2)
 
         # 線の中央にキャプションを描画
         if draw_caption:
             p_mid = self._convert_field_to_draw_point(
-                (shape_line.p1.x + shape_line.p2.x) * 0.5,
-                (shape_line.p1.y + shape_line.p2.y) * 0.5)
-            self._draw_text(painter, p_mid, shape_line.caption)
+                (shape.p1.x + shape.p2.x) * 0.5,
+                (shape.p1.y + shape.p2.y) * 0.5)
+            self._draw_text(painter, p_mid, shape.caption)
+
+    def _draw_shape_arc(self, painter: QPainter, shape: ShapeArc, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.color), shape.size))
+
+        top_left = self._convert_field_to_draw_point(
+            shape.center.x - shape.radius,
+            shape.center.y + shape.radius)
+        size = shape.radius * 2 * self._scale_field_to_draw
+        rect = QRectF(top_left, QSizeF(size, size))
+
+        # angle must be 1/16 degrees order
+        start_angle = int(math.degrees(shape.start_angle) * 16)
+        end_angle = int(math.degrees(shape.end_angle) * 16)
+        span_angle = end_angle - start_angle
+        painter.drawArc(rect, start_angle, span_angle)
+
+        # Arcの中央にキャプションを描画
+        if draw_caption:
+            center = self._convert_field_to_draw_point(
+                shape.center.x, shape.center.y)
+            self._draw_text(painter, center, shape.caption)
 
     def _draw_geometry(self, painter):
         # フィールド形状の描画

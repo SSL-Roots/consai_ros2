@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "consai_visualizer_msgs/msg/color.hpp"
+#include "consai_visualizer_msgs/msg/shape_arc.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
@@ -30,6 +31,7 @@ namespace consai_vision_tracker
 {
 
 using VisColor = consai_visualizer_msgs::msg::Color;
+using VisArc = consai_visualizer_msgs::msg::ShapeArc;
 using VisLine = consai_visualizer_msgs::msg::ShapeLine;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
@@ -146,7 +148,6 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
   vis_objects->sub_layer = "geometry";
 
   for (const auto & field_line : msg->field.field_lines) {
-    // auto line = std::make_unique<VisLine>();
     VisLine line;
 
     line.color.name = "white";
@@ -159,6 +160,22 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
     line.caption = field_line.name;
 
     vis_objects->lines.push_back(line);
+  }
+
+  for (const auto & field_arc : msg->field.field_arcs) {
+    VisArc arc;
+
+    arc.color.name = "white";
+    arc.size = 2;
+    // 単位を[m]に変換
+    arc.center.x = field_arc.center.x * 0.001;
+    arc.center.y = field_arc.center.y * 0.001;
+    arc.radius = field_arc.radius * 0.001;
+    arc.start_angle = field_arc.a1;
+    arc.end_angle = field_arc.a2;
+    arc.caption = field_arc.name;
+
+    vis_objects->arcs.push_back(arc);
   }
 
   pub_vis_objects_->publish(std::move(vis_objects));

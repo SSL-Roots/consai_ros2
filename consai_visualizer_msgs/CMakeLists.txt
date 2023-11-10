@@ -10,6 +10,7 @@ find_package(std_msgs REQUIRED)
 set(msg_files
   "msg/Color.msg"
   "msg/Objects.msg"
+  "msg/ShapeArc.msg"
   "msg/ShapeLine.msg"
   "msg/ShapePoint.msg"
 )
