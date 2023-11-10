@@ -31,6 +31,7 @@ from consai_visualizer_msgs.msg import Color as VisColor
 from consai_visualizer_msgs.msg import ShapeArc
 from consai_visualizer_msgs.msg import ShapeLine
 from consai_visualizer_msgs.msg import ShapePoint
+from consai_visualizer_msgs.msg import ShapeRectangle
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
@@ -294,6 +295,9 @@ class FieldWidget(QWidget):
             for shape_arc in vis_objects.arcs:
                 self._draw_shape_arc(painter, shape_arc, draw_caption)
 
+            for shape_rect in vis_objects.rects:
+                self._draw_shape_rect(painter, shape_rect, draw_caption)
+
         # if self._can_draw_geometry:
         #     self._draw_geometry(painter)
 
@@ -521,6 +525,26 @@ class FieldWidget(QWidget):
         painter.drawArc(rect, start_angle, span_angle)
 
         # Arcの中央にキャプションを描画
+        if draw_caption:
+            center = self._convert_field_to_draw_point(
+                shape.center.x, shape.center.y)
+            self._draw_text(painter, center, shape.caption)
+
+    def _draw_shape_rect(self, painter: QPainter, shape: ShapeRectangle, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
+        painter.setBrush(self._to_qcolor(shape.fill_color))
+
+        half_width = shape.width * 0.5
+        half_height = shape.height * 0.5
+        top_left = self._convert_field_to_draw_point(
+            shape.center.x - half_width,
+            shape.center.y + half_height)
+        bottom_right = self._convert_field_to_draw_point(
+            shape.center.x + half_width,
+            shape.center.y - half_height)
+        rect = QRectF(top_left, bottom_right)
+        painter.drawRect(rect)
+
         if draw_caption:
             center = self._convert_field_to_draw_point(
                 shape.center.x, shape.center.y)

@@ -13,6 +13,7 @@ set(msg_files
   "msg/ShapeArc.msg"
   "msg/ShapeLine.msg"
   "msg/ShapePoint.msg"
+  "msg/ShapeRectangle.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

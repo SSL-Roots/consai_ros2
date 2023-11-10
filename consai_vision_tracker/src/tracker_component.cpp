@@ -23,6 +23,7 @@
 #include "consai_visualizer_msgs/msg/shape_arc.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 #include "consai_visualizer_msgs/msg/shape_point.hpp"
+#include "consai_visualizer_msgs/msg/shape_rectangle.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -35,6 +36,7 @@ using VisColor = consai_visualizer_msgs::msg::Color;
 using VisArc = consai_visualizer_msgs::msg::ShapeArc;
 using VisLine = consai_visualizer_msgs::msg::ShapeLine;
 using VisPoint = consai_visualizer_msgs::msg::ShapePoint;
+using VisRect = consai_visualizer_msgs::msg::ShapeRectangle;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
 
@@ -193,6 +195,18 @@ void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
   point.x = -point.x;
   point.caption = "penalty_mark_negative";
   vis_objects->points.push_back(point);
+
+  // フィールドの枠
+  VisRect rect;
+  rect.line_color.name = "black";
+  rect.fill_color.alpha = 0.0;
+  rect.line_size = 3;
+  rect.center.x = 0.0;
+  rect.center.y = 0.0;
+  rect.width = (msg->field.field_length + msg->field.boundary_width * 2) * 0.001;
+  rect.height = (msg->field.field_width + msg->field.boundary_width * 2) * 0.001;
+  rect.caption = "wall";
+  vis_objects->rects.push_back(rect);
 
   pub_vis_objects_->publish(std::move(vis_objects));
 }
