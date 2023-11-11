@@ -99,6 +99,8 @@ void Tracker::on_timer()
     robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
   }
 
+  tracked_msg = publish_vis_tracked(std::move(tracked_msg));
+
   pub_tracked_->publish(std::move(tracked_msg));
   pub_robot_velocities_->publish(std::move(robot_vel_msg));
 }
@@ -285,6 +287,38 @@ void Tracker::publish_vis_geometry(const GeometryData::SharedPtr msg)
   vis_objects->rects.push_back(rect);
 
   pub_vis_objects_->publish(std::move(vis_objects));
+}
+
+TrackedFrame::UniquePtr Tracker::publish_vis_tracked(TrackedFrame::UniquePtr msg)
+{
+  // tracked_frameを描画情報に変換してpublishする
+  auto vis_objects = std::make_unique<VisualizerObjects>();
+  vis_objects->layer = "vision";
+  vis_objects->sub_layer = "tracked";
+  vis_objects->z_order = 2;
+
+  VisCircle vis_ball;
+  vis_ball.line_color.name = "black";
+  vis_ball.fill_color.name = "orange";
+  vis_ball.line_size = 1;
+  vis_ball.radius = 0.0215;
+  for (const auto & ball : msg->balls) {
+    vis_ball.center.x = ball.pos.x;
+    vis_ball.center.y = ball.pos.y;
+    vis_objects->circles.push_back(vis_ball);
+
+    // ボールは小さいのでボールの周りを大きな円で囲う
+    vis_ball.line_color.name = "crimson";
+    vis_ball.fill_color.alpha = 0.0;
+    vis_ball.line_size = 2;
+    vis_ball.radius = 0.8;
+    vis_ball.caption = "ball is here";
+    vis_objects->circles.push_back(vis_ball);
+  }
+
+  pub_vis_objects_->publish(std::move(vis_objects));
+
+  return msg;
 }
 
 void Tracker::invert_ball(DetectionBall & ball)
