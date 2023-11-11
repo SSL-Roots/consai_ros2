@@ -159,6 +159,7 @@ void Tracker::publish_vis_detection(const DetectionFrame::SharedPtr msg)
 
   vis_objects->layer = "vision";
   vis_objects->sub_layer = "detection_cam" + std::to_string(msg->camera_id);
+  vis_objects->z_order = 1;
 
   VisRobot vis_robot;
   vis_robot.line_color.name = "black";
@@ -207,6 +208,7 @@ void Tracker::publish_vis_geometry(const GeometryData::SharedPtr msg)
 
   vis_objects->layer = "vision";
   vis_objects->sub_layer = "geometry";
+  vis_objects->z_order = 0;
 
   for (const auto & field_line : msg->field.field_lines) {
     VisLine line;

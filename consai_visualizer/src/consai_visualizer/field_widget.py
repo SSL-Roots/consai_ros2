@@ -112,7 +112,7 @@ class FieldWidget(QWidget):
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスでドラッグした距離
         self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
 
-        self._visualizer_objects: Dict[tuple[str, str], VisObjects] = {}
+        self._visualizer_objects: Dict[int, Dict[tuple[str, str], VisObjects]] = {}
         self._active_layers: list[tuple[str, str]] = []
 
     def set_logger(self, logger):
@@ -167,7 +167,7 @@ class FieldWidget(QWidget):
         self._invert = param
 
     def set_visualizer_objects(self, msg):
-        self._visualizer_objects[(msg.layer, msg.sub_layer)] = msg
+        self._visualizer_objects.setdefault(msg.z_order, {})[(msg.layer, msg.sub_layer)] = msg
 
     def set_active_layers(self, layers: list[tuple[str, str]]):
         self._active_layers = layers
@@ -281,38 +281,26 @@ class FieldWidget(QWidget):
             painter.rotate(-90)
 
         draw_caption = ('caption', 'caption') in self._active_layers
-        for key, vis_objects in self._visualizer_objects.items():
-            layer = key[0]
-            sub_layer = key[1]
-            if (layer, sub_layer) not in self._active_layers:
-                continue
+        for z_order in sorted(self._visualizer_objects):
+            for active_layer in self._active_layers:
+                vis_objects = self._visualizer_objects[z_order].get(active_layer)
+                if vis_objects is None:
+                    continue
 
-            for shape_point in vis_objects.points:
-                self._draw_shape_point(painter, shape_point, draw_caption)
+                for shape_point in vis_objects.points:
+                    self._draw_shape_point(painter, shape_point, draw_caption)
 
-            for shape_line in vis_objects.lines:
-                self._draw_shape_line(painter, shape_line, draw_caption)
+                for shape_line in vis_objects.lines:
+                    self._draw_shape_line(painter, shape_line, draw_caption)
 
-            for shape_arc in vis_objects.arcs:
-                self._draw_shape_arc(painter, shape_arc, draw_caption)
+                for shape_arc in vis_objects.arcs:
+                    self._draw_shape_arc(painter, shape_arc, draw_caption)
 
-            for shape_rect in vis_objects.rects:
-                self._draw_shape_rect(painter, shape_rect, draw_caption)
+                for shape_rect in vis_objects.rects:
+                    self._draw_shape_rect(painter, shape_rect, draw_caption)
 
-            # robot = ShapeRobot()
-            # robot.line_color.name = 'black'
-            # robot.fill_color.name = 'dodgerblue'
-            # robot.line_size = 1
-            # robot.id = 0
-            # robot.x = 1.0
-            # robot.y = -1.0
-            # robot.theta = 0.0
-            # robot.radius = 0.5
-            # robot.caption = 'test'
-            # self._draw_shape_robot(painter, robot, draw_caption)
-
-            for shape_robot in vis_objects.robots:
-                self._draw_shape_robot(painter, shape_robot, draw_caption)
+                for shape_robot in vis_objects.robots:
+                    self._draw_shape_robot(painter, shape_robot, draw_caption)
 
         # if self._can_draw_geometry:
         #     self._draw_geometry(painter)
