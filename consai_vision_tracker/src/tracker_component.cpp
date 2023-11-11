@@ -163,16 +163,19 @@ void Tracker::publish_vis_detection(const DetectionFrame::SharedPtr msg)
   // detectionを描画情報に変換してpublishする
   auto vis_objects = std::make_unique<VisualizerObjects>();
   bool has_object = false;
+  const auto cam_id = std::to_string(msg->camera_id);
 
   vis_objects->layer = "vision";
-  vis_objects->sub_layer = "detection_cam" + std::to_string(msg->camera_id);
+  vis_objects->sub_layer = "detection_cam" + cam_id;
   vis_objects->z_order = 1;
 
   VisCircle vis_ball;
   vis_ball.line_color.name = "black";
   vis_ball.fill_color.name = "orange";
+  vis_ball.fill_color.alpha = 0.7;
   vis_ball.line_size = 1;
   vis_ball.radius = 0.0215;
+  vis_ball.caption = cam_id;
 
   for (const auto & ball : msg->balls) {
     vis_ball.center.x = ball.x * 0.001;
@@ -184,8 +187,9 @@ void Tracker::publish_vis_detection(const DetectionFrame::SharedPtr msg)
   VisRobot vis_robot;
   vis_robot.line_color.name = "black";
   vis_robot.fill_color.name = "dodgerblue";
+  vis_robot.fill_color.alpha = 0.7;
   vis_robot.line_size = 1;
-  vis_robot.caption = "detection";
+  vis_robot.caption = cam_id;
   for (const auto & robot : msg->robots_blue) {
     if (robot.robot_id.size() <= 0) {
       continue;
