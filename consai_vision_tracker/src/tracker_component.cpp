@@ -14,6 +14,7 @@
 
 #include "consai_vision_tracker/tracker_component.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <memory>
@@ -303,6 +304,9 @@ TrackedFrame::UniquePtr Tracker::publish_vis_tracked(TrackedFrame::UniquePtr msg
   vis_ball.line_size = 1;
   vis_ball.radius = 0.0215;
   for (const auto & ball : msg->balls) {
+    if (ball.visibility.size() <= 0 || ball.visibility[0] < 0.5) {
+      continue;
+    }
     vis_ball.center.x = ball.pos.x;
     vis_ball.center.y = ball.pos.y;
     vis_objects->circles.push_back(vis_ball);
@@ -314,6 +318,71 @@ TrackedFrame::UniquePtr Tracker::publish_vis_tracked(TrackedFrame::UniquePtr msg
     vis_ball.radius = 0.8;
     vis_ball.caption = "ball is here";
     vis_objects->circles.push_back(vis_ball);
+
+    // 速度を描画
+    if (ball.vel.size() > 0) {
+      const double vel_norm = std::hypot(ball.vel[0].x, ball.vel[0].y);
+      VisLine ball_vel;
+      // 速度の大きさに合わせて色の透明度を変える
+      ball_vel.color.name = "gold";
+      ball_vel.color.alpha = std::clamp(vel_norm, 0.0, 1.0);
+      ball_vel.size = 2;
+      ball_vel.p1.x = ball.pos.x;
+      ball_vel.p1.y = ball.pos.y;
+      ball_vel.p2.x = ball.pos.x + ball.vel[0].x;
+      ball_vel.p2.y = ball.pos.y + ball.vel[0].y;
+      ball_vel.caption = "ball velocity";
+      vis_objects->lines.push_back(ball_vel);
+    }
+  }
+
+  VisRobot vis_robot;
+  vis_robot.line_color.name = "black";
+  vis_robot.line_size = 1;
+  for (const auto & robot : msg->robots) {
+    if (robot.visibility.size() <= 0 || robot.visibility[0] < 0.5) {
+      continue;
+    }
+
+    vis_robot.id = robot.robot_id.id;
+    if (robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE) {
+      vis_robot.fill_color.name = "dodgerblue";
+    } else {
+      vis_robot.fill_color.name = "yellow";
+    }
+
+    vis_robot.x = robot.pos.x;
+    vis_robot.y = robot.pos.y;
+    vis_robot.theta = robot.orientation;
+    vis_objects->robots.push_back(vis_robot);
+
+    // 速度を描画
+    if (robot.vel.size() > 0 && robot.vel_angular.size() > 0) {
+      const double vel_norm = std::hypot(robot.vel[0].x, robot.vel[0].y);
+      VisLine robot_vel;
+      // 速度の大きさに合わせて色の透明度を変える
+      // 直進速度
+      robot_vel.color.name = "gold";
+      robot_vel.color.alpha = std::clamp(vel_norm, 0.0, 1.0);
+      robot_vel.size = 2;
+      robot_vel.p1.x = robot.pos.x;
+      robot_vel.p1.y = robot.pos.y;
+      robot_vel.p2.x = robot.pos.x + robot.vel[0].x;
+      robot_vel.p2.y = robot.pos.y + robot.vel[0].y;
+      robot_vel.caption = "linear";
+      vis_objects->lines.push_back(robot_vel);
+
+      // 角速度
+      const double vel_angular_norm = std::fabs(robot.vel_angular[0]);
+      robot_vel.color.name = "crimson";
+      robot_vel.color.alpha = std::clamp(vel_angular_norm, 0.0, 1.0);
+      robot_vel.p1.x = robot.pos.x;
+      robot_vel.p1.y = robot.pos.y;
+      robot_vel.p2.x = robot.pos.x + robot.vel_angular[0];
+      robot_vel.p2.y = robot.pos.y;
+      robot_vel.caption = "angular";
+      vis_objects->lines.push_back(robot_vel);
+    }
   }
 
   pub_vis_objects_->publish(std::move(vis_objects));
