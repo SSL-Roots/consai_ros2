@@ -1,5 +1,5 @@
 
-ShapePoint center
+Point center
 float32 width
 float32 height
 uint32 line_size

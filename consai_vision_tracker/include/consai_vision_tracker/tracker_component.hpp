@@ -57,6 +57,8 @@ private:
   void callback_detection(const DetectionFrame::SharedPtr msg);
   void callback_detection_invert(const DetectionFrame::SharedPtr msg);
   void callback_geometry(const GeometryData::SharedPtr msg);
+  void publish_vis_detection(const DetectionFrame::SharedPtr msg);
+  void publish_vis_geometry(const GeometryData::SharedPtr msg);
   void invert_ball(DetectionBall & ball);
   void invert_robot(DetectionRobot & robot);
 

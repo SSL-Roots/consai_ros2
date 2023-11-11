@@ -10,10 +10,12 @@ find_package(std_msgs REQUIRED)
 set(msg_files
   "msg/Color.msg"
   "msg/Objects.msg"
+  "msg/Point.msg"
   "msg/ShapeArc.msg"
   "msg/ShapeLine.msg"
   "msg/ShapePoint.msg"
   "msg/ShapeRectangle.msg"
+  "msg/ShapeRobot.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

@@ -32,6 +32,7 @@ from consai_visualizer_msgs.msg import ShapeArc
 from consai_visualizer_msgs.msg import ShapeLine
 from consai_visualizer_msgs.msg import ShapePoint
 from consai_visualizer_msgs.msg import ShapeRectangle
+from consai_visualizer_msgs.msg import ShapeRobot
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
@@ -76,8 +77,8 @@ class FieldWidget(QWidget):
         self._MAX_VELOCITY_OF_REPLACE_BALL = 8.0
         self._ID_POS = QPointF(150.0, 150.0)  # IDの表示位置 mm.
         self._RADIUS_DESIGNATED_POSITION = 150  # ボールプレースメント成功範囲
-        self._FULL_FIELD_LENGTH = 13.4
-        self._FULL_FIELD_WIDTH = 10.4
+        self._FULL_FIELD_LENGTH = 12.6
+        self._FULL_FIELD_WIDTH = 9.6
 
         # 外部からセットするパラメータ
         self._logger = None
@@ -298,6 +299,21 @@ class FieldWidget(QWidget):
             for shape_rect in vis_objects.rects:
                 self._draw_shape_rect(painter, shape_rect, draw_caption)
 
+            # robot = ShapeRobot()
+            # robot.line_color.name = 'black'
+            # robot.fill_color.name = 'dodgerblue'
+            # robot.line_size = 1
+            # robot.id = 0
+            # robot.x = 1.0
+            # robot.y = -1.0
+            # robot.theta = 0.0
+            # robot.radius = 0.5
+            # robot.caption = 'test'
+            # self._draw_shape_robot(painter, robot, draw_caption)
+
+            for shape_robot in vis_objects.robots:
+                self._draw_shape_robot(painter, shape_robot, draw_caption)
+
         # if self._can_draw_geometry:
         #     self._draw_geometry(painter)
 
@@ -463,18 +479,20 @@ class FieldWidget(QWidget):
 
         self._scale_field_to_draw = self._draw_area_size.width() / field_full_width
 
-    def _draw_text(self, painter: QPainter, pos: QPointF, text: str):
+    def _draw_text(self, painter: QPainter, pos: QPointF, text: str, font_size: int = 10):
         # 回転を考慮したテキスト描画関数
         painter.save()
+        font = painter.font()
+        font.setPointSize(font_size)
+        painter.setFont(font)
         if self._do_rotate_draw_area:
             tmp = pos.x()
             pos.setX(pos.y())
-            pos.setY(tmp)
+            pos.setY(-tmp)
             painter.rotate(90)
 
         painter.drawText(pos, text)
         painter.restore()
-
 
     def _to_qcolor(self, color: VisColor):
         if color.name:
@@ -549,6 +567,35 @@ class FieldWidget(QWidget):
             center = self._convert_field_to_draw_point(
                 shape.center.x, shape.center.y)
             self._draw_text(painter, center, shape.caption)
+
+    def _draw_shape_robot(self, painter: QPainter, shape: ShapeRobot, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
+        painter.setBrush(self._to_qcolor(shape.fill_color))
+
+        top_left = self._convert_field_to_draw_point(
+            shape.x - shape.radius,
+            shape.y + shape.radius)
+        size = shape.radius * 2 * self._scale_field_to_draw
+        rect = QRectF(top_left, QSizeF(size, size))
+
+        FRONT_ANGLE = 55  # ロボットの前方を描画する角度
+        start_angle = int(math.degrees(shape.theta) - FRONT_ANGLE * 0.5) * 16
+        span_angle = (-360 + FRONT_ANGLE) * 16
+        painter.drawChord(rect, start_angle, span_angle)
+
+        # ロボットID
+        FONT_SIZE = int(shape.radius * 111)  # ロボットサイズに比例したフォントサイズ
+        text_point = self._convert_field_to_draw_point(
+            shape.x - shape.radius * 0.8,
+            shape.y - shape.radius * 0.5)
+        self._draw_text(painter, text_point, str(shape.id), FONT_SIZE)
+
+        # ロボットの真下にキャプションを描く
+        if draw_caption:
+            caption_point = self._convert_field_to_draw_point(
+                shape.x,
+                shape.y - shape.radius * 1.5)
+            self._draw_text(painter, caption_point, shape.caption)
 
     def _draw_geometry(self, painter):
         # フィールド形状の描画

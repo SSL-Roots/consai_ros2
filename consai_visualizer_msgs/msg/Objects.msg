@@ -6,3 +6,4 @@ ShapePoint[] points
 ShapeLine[] lines
 ShapeArc[] arcs
 ShapeRectangle[] rects
+ShapeRobot[] robots

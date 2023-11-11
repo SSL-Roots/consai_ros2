@@ -317,7 +317,7 @@ class Visualizer(Plugin):
         active_layers = []
         for index in range(self._widget.layer_widget.topLevelItemCount()):
             parent = self._widget.layer_widget.topLevelItem(index)
-            if parent.checkState(0) != Qt.Checked:
+            if parent.checkState(0) == Qt.Unchecked:
                 continue
 
             for child_index in range(parent.childCount()):

@@ -24,6 +24,7 @@
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 #include "consai_visualizer_msgs/msg/shape_point.hpp"
 #include "consai_visualizer_msgs/msg/shape_rectangle.hpp"
+#include "consai_visualizer_msgs/msg/shape_robot.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -37,6 +38,7 @@ using VisArc = consai_visualizer_msgs::msg::ShapeArc;
 using VisLine = consai_visualizer_msgs::msg::ShapeLine;
 using VisPoint = consai_visualizer_msgs::msg::ShapePoint;
 using VisRect = consai_visualizer_msgs::msg::ShapeRectangle;
+using VisRobot = consai_visualizer_msgs::msg::ShapeRobot;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using std::placeholders::_1;
 
@@ -116,6 +118,8 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
+
+  publish_vis_detection(msg);
 }
 
 void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
@@ -144,8 +148,61 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
 
 void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
 {
-  // geometryを描画情報に変換してpublishするcallback関数
+  publish_vis_geometry(msg);
+}
 
+void Tracker::publish_vis_detection(const DetectionFrame::SharedPtr msg)
+{
+  // detectionを描画情報に変換してpublishする
+  auto vis_objects = std::make_unique<VisualizerObjects>();
+  bool has_object = false;
+
+  vis_objects->layer = "vision";
+  vis_objects->sub_layer = "detection_cam" + std::to_string(msg->camera_id);
+
+  VisRobot vis_robot;
+  vis_robot.line_color.name = "black";
+  vis_robot.fill_color.name = "dodgerblue";
+  vis_robot.line_size = 1;
+  vis_robot.caption = "detection";
+  for (const auto & robot : msg->robots_blue) {
+    if (robot.robot_id.size() <= 0) {
+      continue;
+    }
+    vis_robot.id = robot.robot_id[0];
+    vis_robot.x = robot.x * 0.001;
+    vis_robot.y = robot.y * 0.001;
+    if (robot.orientation.size() > 0) {
+      vis_robot.theta = robot.orientation[0];
+    }
+    vis_objects->robots.push_back(vis_robot);
+    has_object = true;
+  }
+
+  vis_robot.line_color.name = "black";
+  vis_robot.fill_color.name = "yellow";
+  for (const auto & robot : msg->robots_yellow) {
+    if (robot.robot_id.size() <= 0) {
+      continue;
+    }
+    vis_robot.id = robot.robot_id[0];
+    vis_robot.x = robot.x * 0.001;
+    vis_robot.y = robot.y * 0.001;
+    if (robot.orientation.size() > 0) {
+      vis_robot.theta = robot.orientation[0];
+    }
+    vis_objects->robots.push_back(vis_robot);
+    has_object = true;
+  }
+
+  if (has_object) {
+    pub_vis_objects_->publish(std::move(vis_objects));
+  }
+}
+
+void Tracker::publish_vis_geometry(const GeometryData::SharedPtr msg)
+{
+  // geometryを描画情報に変換してpublishする
   auto vis_objects = std::make_unique<VisualizerObjects>();
 
   vis_objects->layer = "vision";
