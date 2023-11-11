@@ -29,6 +29,7 @@ from python_qt_binding.QtWidgets import QWidget
 from consai_visualizer_msgs.msg import Objects as VisObjects
 from consai_visualizer_msgs.msg import Color as VisColor
 from consai_visualizer_msgs.msg import ShapeArc
+from consai_visualizer_msgs.msg import ShapeCircle
 from consai_visualizer_msgs.msg import ShapeLine
 from consai_visualizer_msgs.msg import ShapePoint
 from consai_visualizer_msgs.msg import ShapeRectangle
@@ -299,6 +300,9 @@ class FieldWidget(QWidget):
                 for shape_rect in vis_objects.rects:
                     self._draw_shape_rect(painter, shape_rect, draw_caption)
 
+                for shape_circle in vis_objects.circles:
+                    self._draw_shape_circle(painter, shape_circle, draw_caption)
+
                 for shape_robot in vis_objects.robots:
                     self._draw_shape_robot(painter, shape_robot, draw_caption)
 
@@ -554,6 +558,17 @@ class FieldWidget(QWidget):
         if draw_caption:
             center = self._convert_field_to_draw_point(
                 shape.center.x, shape.center.y)
+            self._draw_text(painter, center, shape.caption)
+
+    def _draw_shape_circle(self, painter: QPainter, shape: ShapeCircle, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
+        painter.setBrush(self._to_qcolor(shape.fill_color))
+
+        center = self._convert_field_to_draw_point(shape.center.x, shape.center.y)
+        size = shape.radius * self._scale_field_to_draw
+        painter.drawEllipse(center, size, size)
+
+        if draw_caption:
             self._draw_text(painter, center, shape.caption)
 
     def _draw_shape_robot(self, painter: QPainter, shape: ShapeRobot, draw_caption: bool = False):

@@ -12,6 +12,7 @@ set(msg_files
   "msg/Objects.msg"
   "msg/Point.msg"
   "msg/ShapeArc.msg"
+  "msg/ShapeCircle.msg"
   "msg/ShapeLine.msg"
   "msg/ShapePoint.msg"
   "msg/ShapeRectangle.msg"

@@ -21,6 +21,7 @@
 
 #include "consai_visualizer_msgs/msg/color.hpp"
 #include "consai_visualizer_msgs/msg/shape_arc.hpp"
+#include "consai_visualizer_msgs/msg/shape_circle.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 #include "consai_visualizer_msgs/msg/shape_point.hpp"
 #include "consai_visualizer_msgs/msg/shape_rectangle.hpp"
@@ -35,6 +36,7 @@ namespace consai_vision_tracker
 
 using VisColor = consai_visualizer_msgs::msg::Color;
 using VisArc = consai_visualizer_msgs::msg::ShapeArc;
+using VisCircle = consai_visualizer_msgs::msg::ShapeCircle;
 using VisLine = consai_visualizer_msgs::msg::ShapeLine;
 using VisPoint = consai_visualizer_msgs::msg::ShapePoint;
 using VisRect = consai_visualizer_msgs::msg::ShapeRectangle;
@@ -160,6 +162,19 @@ void Tracker::publish_vis_detection(const DetectionFrame::SharedPtr msg)
   vis_objects->layer = "vision";
   vis_objects->sub_layer = "detection_cam" + std::to_string(msg->camera_id);
   vis_objects->z_order = 1;
+
+  VisCircle vis_ball;
+  vis_ball.line_color.name = "black";
+  vis_ball.fill_color.name = "orange";
+  vis_ball.line_size = 1;
+  vis_ball.radius = 0.0215;
+
+  for (const auto & ball : msg->balls) {
+    vis_ball.center.x = ball.x * 0.001;
+    vis_ball.center.y = ball.y * 0.001;
+    vis_objects->circles.push_back(vis_ball);
+    has_object = true;
+  }
 
   VisRobot vis_robot;
   vis_robot.line_color.name = "black";
