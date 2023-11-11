@@ -146,6 +146,8 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
+
+  publish_vis_detection(msg);
 }
 
 void Tracker::callback_geometry(const GeometryData::SharedPtr msg)
