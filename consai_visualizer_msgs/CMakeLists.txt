@@ -11,6 +11,7 @@ set(msg_files
   "msg/Color.msg"
   "msg/Objects.msg"
   "msg/Point.msg"
+  "msg/ShapeAnnotation.msg"
   "msg/ShapeArc.msg"
   "msg/ShapeCircle.msg"
   "msg/ShapeLine.msg"

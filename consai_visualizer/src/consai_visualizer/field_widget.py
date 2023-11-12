@@ -23,11 +23,13 @@ from python_qt_binding.QtCore import QRectF
 from python_qt_binding.QtCore import QSizeF
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtGui import QColor
+from python_qt_binding.QtGui import QFontMetrics
 from python_qt_binding.QtGui import QPainter
 from python_qt_binding.QtGui import QPen
 from python_qt_binding.QtWidgets import QWidget
 from consai_visualizer_msgs.msg import Objects as VisObjects
 from consai_visualizer_msgs.msg import Color as VisColor
+from consai_visualizer_msgs.msg import ShapeAnnotation
 from consai_visualizer_msgs.msg import ShapeArc
 from consai_visualizer_msgs.msg import ShapeCircle
 from consai_visualizer_msgs.msg import ShapeLine
@@ -497,6 +499,39 @@ class FieldWidget(QWidget):
 
         output.setAlphaF(color.alpha)
         return output
+
+    def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
+        # Annotationはフィールドではなくウィンドウ領域の座標系で描画する
+        TARGET_WIDTH = shape.normalized_width * self.width()
+        TARGET_HEIGHT = shape.normalized_height * self.height()
+
+        if shape.text == "":
+            return
+
+        painter.save()
+
+        # TARGET_HEIGHTに合わせてフォントサイズを変更する
+        font = painter.font()
+        font_metrics = QFontMetrics(font)
+        height_fit_point_size = font.pointSizeF() * TARGET_HEIGHT / font_metrics.height()
+        font.setPointSizeF(height_fit_point_size)
+        font_metrics = QFontMetrics(font)
+
+        # テキストがTARGET_WIDTHをはみ出る場合はフォントサイズを小さくする
+        if font_metrics.width(shape.text) > TARGET_WIDTH:
+            width_fit_point_size = font.pointSizeF() * TARGET_WIDTH / font_metrics.width(shape.text)
+            font.setPointSizeF(width_fit_point_size)
+            font_metrics = QFontMetrics(font)
+
+        painter.setFont(font)
+        rect = QRectF(
+            shape.normalized_x * self.width(),
+            shape.normalized_y * self.height(),
+            TARGET_WIDTH,
+            TARGET_HEIGHT)
+        painter.drawText(rect, Qt.AlignCenter, shape.text)
+
+        painter.restore()
 
     def _draw_shape_point(self, painter: QPainter, shape: ShapePoint, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.color), shape.size))
