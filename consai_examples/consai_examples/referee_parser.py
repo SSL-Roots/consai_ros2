@@ -17,8 +17,11 @@
 
 import math
 
+from rclpy import qos
 from rclpy.node import Node
 from consai_msgs.msg import ParsedReferee
+from consai_visualizer_msgs.msg import Objects
+import referee_visualize_parser as ref_vis_parser
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
@@ -101,6 +104,7 @@ class RefereeParser(Node):
         self._max_allowed_our_bots = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
+        self._pub_visualizer_objects = self.create_publisher(Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
         self._sub_referee = self.create_subscription(
@@ -144,6 +148,9 @@ class RefereeParser(Node):
         # 解釈したレフェリー情報をpublishする
         self._publish_parsed_referee()
 
+        # 可視化用のメッセージをpublishする
+        self._publish_visualizer_objects(msg)
+
     def _publish_parsed_referee(self):
         # 解析したレフェリー情報をpublishする
         referee = ParsedReferee()
@@ -168,6 +175,10 @@ class RefereeParser(Node):
             or self.their_pre_kickoff() \
             or self.their_pre_penalty()
         self._pub_parsed_referee.publish(referee)
+
+    def _publish_visualizer_objects(self, msg: Referee):
+        # レフェリー情報を可視化するためのメッセージをpublishする
+        self._pub_visualizer_objects.publish(ref_vis_parser.to_visualizer_objects(msg))
 
     def _check_inplay(self, msg):
         # referee情報とフィールド情報をもとに、インプレイ状態を判定する

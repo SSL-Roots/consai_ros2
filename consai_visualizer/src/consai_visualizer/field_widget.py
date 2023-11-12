@@ -271,6 +271,8 @@ class FieldWidget(QWidget):
         painter.setBrush(QColor('darkgreen'))
         painter.drawRect(self.rect())
 
+        painter.save()
+
         # 描画領域の中心をWidgetの中心に持ってくる
         cx = float(self.width()) * 0.5
         cy = float(self.height()) * 0.5
@@ -284,29 +286,11 @@ class FieldWidget(QWidget):
             painter.rotate(-90)
 
         draw_caption = ('caption', 'caption') in self._active_layers
-        for z_order in sorted(self._visualizer_objects):
-            for active_layer in self._active_layers:
-                vis_objects = self._visualizer_objects[z_order].get(active_layer)
-                if vis_objects is None:
-                    continue
+        self._draw_objects_on_transformed_area(painter, draw_caption)
 
-                for shape_point in vis_objects.points:
-                    self._draw_shape_point(painter, shape_point, draw_caption)
+        painter.restore()
 
-                for shape_line in vis_objects.lines:
-                    self._draw_shape_line(painter, shape_line, draw_caption)
-
-                for shape_arc in vis_objects.arcs:
-                    self._draw_shape_arc(painter, shape_arc, draw_caption)
-
-                for shape_rect in vis_objects.rects:
-                    self._draw_shape_rect(painter, shape_rect, draw_caption)
-
-                for shape_circle in vis_objects.circles:
-                    self._draw_shape_circle(painter, shape_circle, draw_caption)
-
-                for shape_robot in vis_objects.robots:
-                    self._draw_shape_robot(painter, shape_robot, draw_caption)
+        self._draw_objects_on_window_area(painter, draw_caption)
 
         # if self._can_draw_geometry:
         #     self._draw_geometry(painter)
@@ -499,6 +483,43 @@ class FieldWidget(QWidget):
 
         output.setAlphaF(color.alpha)
         return output
+
+    def _draw_objects_on_transformed_area(self, painter: QPainter, draw_caption: bool = False):
+        # 描画領域の移動や拡大を考慮した座標系でオブジェクトを描画する
+        for z_order in sorted(self._visualizer_objects):
+            for active_layer in self._active_layers:
+                vis_objects = self._visualizer_objects[z_order].get(active_layer)
+                if vis_objects is None:
+                    continue
+
+                for shape_point in vis_objects.points:
+                    self._draw_shape_point(painter, shape_point, draw_caption)
+
+                for shape_line in vis_objects.lines:
+                    self._draw_shape_line(painter, shape_line, draw_caption)
+
+                for shape_arc in vis_objects.arcs:
+                    self._draw_shape_arc(painter, shape_arc, draw_caption)
+
+                for shape_rect in vis_objects.rects:
+                    self._draw_shape_rect(painter, shape_rect, draw_caption)
+
+                for shape_circle in vis_objects.circles:
+                    self._draw_shape_circle(painter, shape_circle, draw_caption)
+
+                for shape_robot in vis_objects.robots:
+                    self._draw_shape_robot(painter, shape_robot, draw_caption)
+
+    def _draw_objects_on_window_area(self, painter: QPainter, draw_caption: bool = False):
+        # ウィンドウ領域にオブジェクトを描画する
+        for z_order in sorted(self._visualizer_objects):
+            for active_layer in self._active_layers:
+                vis_objects = self._visualizer_objects[z_order].get(active_layer)
+                if vis_objects is None:
+                    continue
+
+                for shape_annotation in vis_objects.annotations:
+                    self._draw_shape_annotation(painter, shape_annotation, draw_caption)
 
     def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
         # Annotationはフィールドではなくウィンドウ領域の座標系で描画する
