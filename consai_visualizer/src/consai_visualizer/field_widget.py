@@ -522,6 +522,7 @@ class FieldWidget(QWidget):
                     self._draw_shape_annotation(painter, shape_annotation, draw_caption)
 
     def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.color)))
         # Annotationはフィールドではなくウィンドウ領域の座標系で描画する
         TARGET_WIDTH = shape.normalized_width * self.width()
         TARGET_HEIGHT = shape.normalized_height * self.height()

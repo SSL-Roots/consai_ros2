@@ -5,3 +5,4 @@ float32 normalized_y
 float32 normalized_width
 float32 normalized_height
 string text
+Color color

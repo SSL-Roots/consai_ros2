@@ -36,6 +36,8 @@ def to_visualizer_objects(referee: Referee):
     YELLOW_CARD_TIMES_X = CARDS_X + CARDS_WIDTH + MARGIN_X
     TIMEOUT_WIDTH = 0.1
     TIMEOUT_X = YELLOW_CARD_TIMES_X + YELLOW_CARD_TIMES_WIDTH + MARGIN_X
+    COLOR_TEXT_BLUE = 'deepskyblue'
+    COLOR_TEXT_YELLOW = 'yellow'
 
     vis_objects = Objects()
     vis_objects.layer = 'referee'
@@ -44,6 +46,7 @@ def to_visualizer_objects(referee: Referee):
     # 左端にSTAGEとCOMMANDを表示
     vis_annotation = ShapeAnnotation()
     vis_annotation.text = parse_stage(referee.stage)
+    vis_annotation.color.name = 'white'
     vis_annotation.normalized_x = STAGE_COMMAND_X
     vis_annotation.normalized_y = 0.0
     vis_annotation.normalized_width = STAGE_COMMAND_WIDTH
@@ -52,6 +55,7 @@ def to_visualizer_objects(referee: Referee):
 
     vis_annotation = ShapeAnnotation()
     vis_annotation.text = parse_command(referee.command)
+    vis_annotation.color.name = 'white'
     vis_annotation.normalized_x = STAGE_COMMAND_X
     vis_annotation.normalized_y = TEXT_HEIGHT
     vis_annotation.normalized_width = STAGE_COMMAND_WIDTH
@@ -62,6 +66,7 @@ def to_visualizer_objects(referee: Referee):
     if referee.stage_time_left:
         vis_annotation = ShapeAnnotation()
         vis_annotation.text = parse_stage_time_left(referee.stage_time_left[0])
+        vis_annotation.color.name = 'white'
         vis_annotation.normalized_x = TIMER_X
         vis_annotation.normalized_y = 0.0
         vis_annotation.normalized_width = TIMER_WIDTH
@@ -71,6 +76,7 @@ def to_visualizer_objects(referee: Referee):
     if referee.current_action_time_remaining:
         vis_annotation = ShapeAnnotation()
         vis_annotation.text = parse_action_time_remaining(referee.current_action_time_remaining[0])
+        vis_annotation.color.name = 'white'
         vis_annotation.normalized_x = TIMER_X
         vis_annotation.normalized_y = TEXT_HEIGHT
         vis_annotation.normalized_width = TIMER_WIDTH
@@ -81,6 +87,7 @@ def to_visualizer_objects(referee: Referee):
     if referee.blue.max_allowed_bots:
         blue_bots = 11  # TODO(ShotaAk): 実際のロボット数を入力する
         vis_annotation = ShapeAnnotation()
+        vis_annotation.color.name = COLOR_TEXT_BLUE
         vis_annotation.text = 'BLUE BOTS: {}/{}'.format(
             blue_bots, referee.blue.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
@@ -92,6 +99,7 @@ def to_visualizer_objects(referee: Referee):
     if referee.yellow.max_allowed_bots:
         yellow_bots = 11  # TODO(ShotaAk): 実際のロボット数を入力する
         vis_annotation = ShapeAnnotation()
+        vis_annotation.color.name = COLOR_TEXT_YELLOW
         vis_annotation.text = 'YELLOW BOTS: {}/{}'.format(
             yellow_bots, referee.yellow.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
@@ -102,6 +110,7 @@ def to_visualizer_objects(referee: Referee):
     
     # カード数
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_BLUE
     vis_annotation.text = 'R: {}, Y:{}'.format(
         referee.blue.red_cards,
         referee.blue.yellow_cards)
@@ -112,6 +121,7 @@ def to_visualizer_objects(referee: Referee):
     vis_objects.annotations.append(vis_annotation)
 
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_YELLOW
     vis_annotation.text = 'R: {}, Y:{}'.format(
         referee.yellow.red_cards,
         referee.yellow.yellow_cards)
@@ -123,6 +133,7 @@ def to_visualizer_objects(referee: Referee):
 
     # イエローカードの時間
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_BLUE
     vis_annotation.text = parse_yellow_card_times(referee.blue.yellow_card_times)
     vis_annotation.normalized_x = YELLOW_CARD_TIMES_X
     vis_annotation.normalized_y = 0.0
@@ -131,6 +142,7 @@ def to_visualizer_objects(referee: Referee):
     vis_objects.annotations.append(vis_annotation)
 
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_YELLOW
     vis_annotation.text = parse_yellow_card_times(referee.yellow.yellow_card_times)
     vis_annotation.normalized_x = YELLOW_CARD_TIMES_X
     vis_annotation.normalized_y = TEXT_HEIGHT
@@ -140,6 +152,7 @@ def to_visualizer_objects(referee: Referee):
 
     # タイムアウト
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_BLUE
     vis_annotation.text = parse_timeouts(referee.blue.timeouts, referee.blue.timeout_time)
     vis_annotation.normalized_x = TIMEOUT_X
     vis_annotation.normalized_y = 0.0
@@ -148,6 +161,7 @@ def to_visualizer_objects(referee: Referee):
     vis_objects.annotations.append(vis_annotation)
 
     vis_annotation = ShapeAnnotation()
+    vis_annotation.color.name = COLOR_TEXT_YELLOW
     vis_annotation.text = parse_timeouts(referee.yellow.timeouts, referee.yellow.timeout_time)
     vis_annotation.normalized_x = TIMEOUT_X
     vis_annotation.normalized_y = TEXT_HEIGHT
