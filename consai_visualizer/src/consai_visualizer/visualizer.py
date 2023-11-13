@@ -20,21 +20,14 @@ import os
 import time
 
 from ament_index_python.resources import get_resource
-from consai_msgs.msg import GoalPoses
-from consai_msgs.msg import NamedTargets
 from consai_visualizer.field_widget import FieldWidget
-import consai_visualizer.referee_parser as ref_parser
 from consai_visualizer_msgs.msg import Objects
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtWidgets import QTreeWidgetItem
 from qt_gui.plugin import Plugin
-from robocup_ssl_msgs.msg import DetectionFrame
-from robocup_ssl_msgs.msg import GeometryData
-from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Replacement
-from robocup_ssl_msgs.msg import TrackedFrame
 from rqt_py_common.ini_helper import pack, unpack
 import rclpy
 
@@ -80,9 +73,6 @@ class Visualizer(Plugin):
         # self._sub_detection_tracked = self._node.create_subscription(
         #     TrackedFrame, 'detection_tracked',
         #     self._widget.field_widget.set_detection_tracked, 10)
-        # self._sub_referee = self._node.create_subscription(
-        #     Referee, 'referee',
-        #     self._callback_referee, 10)
         # self._sub_named_targets = self._node.create_subscription(
         #     NamedTargets, 'named_targets',
         #     self._widget.field_widget.set_named_targets, 10)
@@ -101,10 +91,10 @@ class Visualizer(Plugin):
                 BatteryVoltage, topic_name,
                 partial(self._callback_kicker_voltage, robot_id=i), 10))
 
-        self._sub_goal_poses = self._node.create_subscription(
-            GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
-        self._sub_final_goal_poses = self._node.create_subscription(
-            GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
+        # self._sub_goal_poses = self._node.create_subscription(
+        #     GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
+        # self._sub_final_goal_poses = self._node.create_subscription(
+        #     GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
 
         self._sub_visualize_objects = self._node.create_subscription(
             Objects, 'visualizer_objects',
@@ -116,13 +106,6 @@ class Visualizer(Plugin):
 
         # Parameterを設定する
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
-
-        # UIのイベントと関数を接続する
-        self._widget.check_box_geometry.stateChanged.connect(self._clicked_geometry)
-        self._widget.check_box_detection.stateChanged.connect(self._clicked_detection)
-        self._widget.check_box_detection_tracked.stateChanged.connect(
-            self._clicked_detection_tracked)
-        self._widget.check_box_replacement.stateChanged.connect(self._clicked_replacement)
 
         # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
         for team in ["blue", "yellow"]:
@@ -139,18 +122,12 @@ class Visualizer(Plugin):
                     partial(self._set_all_robot_turnon, team == "yellow", turnon == "on")
                 )
 
-        # チェックボックスを操作する
-        self._widget.check_box_geometry.setCheckState(Qt.Checked)
-        self._widget.check_box_detection.setCheckState(Qt.Unchecked)
-        self._widget.check_box_detection_tracked.setCheckState(Qt.Checked)
-
         # レイヤーツリーの初期設定
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
 
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
         self._timer.timeout.connect(self._widget.field_widget.update)
-        self._timer.timeout.connect(self._update_label_bot_num)
         self._timer.start(16)
 
         # 5000 msec周期で描画情報をリセットする
@@ -185,30 +162,6 @@ class Visualizer(Plugin):
         for (layer, sub_layer) in active_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
 
-    def _clicked_geometry(self):
-        if self._widget.check_box_geometry.isChecked():
-            self._widget.field_widget.set_can_draw_geometry(True)
-        else:
-            self._widget.field_widget.set_can_draw_geometry(False)
-
-    def _clicked_detection(self):
-        if self._widget.check_box_detection.isChecked():
-            self._widget.field_widget.set_can_draw_detection(True)
-        else:
-            self._widget.field_widget.set_can_draw_detection(False)
-
-    def _clicked_detection_tracked(self):
-        if self._widget.check_box_detection_tracked.isChecked():
-            self._widget.field_widget.set_can_draw_detection_tracked(True)
-        else:
-            self._widget.field_widget.set_can_draw_detection_tracked(False)
-
-    def _clicked_replacement(self):
-        if self._widget.check_box_replacement.isChecked():
-            self._widget.field_widget.set_can_draw_replacement(True)
-        else:
-            self._widget.field_widget.set_can_draw_replacement(False)
-
     def _clicked_robot_turnon(self, is_yellow, robot_id, state):
         self._widget.field_widget.append_robot_replacement(
             is_yellow, robot_id, state == Qt.Checked)
@@ -225,54 +178,6 @@ class Visualizer(Plugin):
         for robot_id in range(11):
             method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
             eval(method)(checked)
-
-    def _update_label_bot_num(self):
-        self._widget.label_b_bot_num.setText(str(self._widget.field_widget.get_blue_robot_num()))
-        self._widget.label_y_bot_num.setText(str(self._widget.field_widget.get_yellow_robot_num()))
-
-    def _callback_referee(self, msg):
-        self._widget.label_ref_stage.setText(ref_parser.parse_stage(msg.stage))
-        self._widget.label_ref_command.setText(ref_parser.parse_command(msg.command))
-        if msg.stage_time_left:
-            self._widget.label_ref_stage_time_left.setText(
-                ref_parser.parse_stage_time_left(msg.stage_time_left[0]))
-        if msg.current_action_time_remaining:
-            self._widget.label_ref_action_time_remaining.setText(
-                ref_parser.parse_action_time_remaining(msg.current_action_time_remaining[0]))
-
-        # チーム情報の解析
-        if msg.blue.max_allowed_bots:
-            self._widget.label_ref_b_allowed_bots.setText(
-                ref_parser.parse_allowed_bots(msg.blue.max_allowed_bots[0]))
-        if msg.yellow.max_allowed_bots:
-            self._widget.label_ref_y_allowed_bots.setText(
-                ref_parser.parse_allowed_bots(msg.yellow.max_allowed_bots[0]))
-
-        self._widget.label_ref_b_team_red_num.setText(
-            ref_parser.parse_red_cards(msg.blue.red_cards))
-        self._widget.label_ref_y_team_red_num.setText(
-            ref_parser.parse_red_cards(msg.yellow.red_cards))
-        self._widget.label_ref_b_team_yellow_num.setText(
-            ref_parser.parse_yellow_cards(msg.blue.yellow_cards))
-        self._widget.label_ref_y_team_yellow_num.setText(
-            ref_parser.parse_yellow_cards(msg.yellow.yellow_cards))
-        self._widget.label_ref_b_team_yellow_time.setText(
-            ref_parser.parse_yellow_card_times(msg.blue.yellow_card_times))
-        self._widget.label_ref_y_team_yellow_time.setText(
-            ref_parser.parse_yellow_card_times(msg.yellow.yellow_card_times))
-        self._widget.label_ref_b_team_timeouts.setText(
-            ref_parser.parse_timeouts(msg.blue.timeouts))
-        self._widget.label_ref_y_team_timeouts.setText(
-            ref_parser.parse_timeouts(msg.yellow.timeouts))
-        self._widget.label_ref_b_team_timeout_time.setText(
-            ref_parser.parse_timeout_time(msg.blue.timeout_time))
-        self._widget.label_ref_y_team_timeout_time.setText(
-            ref_parser.parse_timeout_time(msg.yellow.timeout_time))
-
-        # ボール配置の目標位置をセット
-        if ref_parser.is_ball_placement(msg.command):
-            if len(msg.designated_position) > 0:
-                self._widget.field_widget.set_designated_position(msg.designated_position[0])
 
     def _callback_battery_voltage(self, msg, robot_id):
         self.latest_battery_voltage[robot_id] = msg.voltage
