@@ -42,7 +42,7 @@ def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
 
     vis_objects = Objects()
     vis_objects.layer = 'referee'
-    vis_objects.sub_layer = 'status'
+    vis_objects.sub_layer = 'annotations'
 
     # 左端にSTAGEとCOMMANDを表示
     vis_annotation = ShapeAnnotation()
@@ -55,8 +55,8 @@ def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
     vis_objects.annotations.append(vis_annotation)
 
     vis_annotation = ShapeAnnotation()
-    vis_annotation.text = parse_command(referee.command)
-    vis_annotation.color.name = 'white'
+    vis_annotation.text, vis_annotation.color.name = parse_command(
+        referee, COLOR_TEXT_BLUE, COLOR_TEXT_YELLOW)
     vis_annotation.normalized_x = STAGE_COMMAND_X
     vis_annotation.normalized_y = TEXT_HEIGHT
     vis_annotation.normalized_width = STAGE_COMMAND_WIDTH
@@ -212,9 +212,17 @@ def parse_stage(ref_stage):
     return output
 
 
-def parse_command(ref_command):
-    # レフェリーコマンドを文字列に変換する
+def parse_command(referee: Referee,
+                  blue_color: str = 'blue', yellow_color: str = 'yellow') -> (str, str):
+    # レフェリーコマンドを文字列と文字色に変換する
     output = "COMMAND"
+    text_color = 'white'
+
+    if len(referee.designated_position) > 0:
+        placement_pos_x = referee.designated_position[0].x * 0.001
+        placement_pos_y = referee.designated_position[0].y * 0.001
+
+    ref_command = referee.command
 
     if ref_command == Referee.COMMAND_HALT:
         output = "HALT"
@@ -226,30 +234,44 @@ def parse_command(ref_command):
         output = "FORCE START"
     elif ref_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW:
         output = "PREPARE KICK OFF YELLOW"
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE:
         output = "PREPARE KICK OFF BLUE"
+        text_color = blue_color
     elif ref_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW:
         output = "PREPARE PENALTY YELLOW"
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_PREPARE_PENALTY_BLUE:
         output = "PREPARE PENALTY BLUE"
+        text_color = blue_color
     elif ref_command == Referee.COMMAND_DIRECT_FREE_YELLOW:
         output = "DIRECT FREE YELLOW"
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_DIRECT_FREE_BLUE:
         output = "DIRECT FREE BLUE"
+        text_color = blue_color
     elif ref_command == Referee.COMMAND_INDIRECT_FREE_YELLOW:
         output = "INDIRECT FREE YELLOW"
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_INDIRECT_FREE_BLUE:
         output = "INDIRECT FREE BLUE"
+        text_color = blue_color
     elif ref_command == Referee.COMMAND_TIMEOUT_YELLOW:
         output = "TIMEOUT YELLOW"
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_TIMEOUT_BLUE:
         output = "TIMEOUT BLUE"
+        text_color = blue_color
     elif ref_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
         output = "BALL PLACEMENT YELLOW"
+        output += "(x: {:.1f}, y: {:.1f})".format(placement_pos_x, placement_pos_y)
+        text_color = yellow_color
     elif ref_command == Referee.COMMAND_BALL_PLACEMENT_BLUE:
         output = "BALL PLACEMENT BLUE"
+        output += "(x: {:.1f}, y: {:.1f})".format(placement_pos_x, placement_pos_y)
+        text_color = blue_color
 
-    return output
+    return (output, text_color)
 
 
 def _microseconds_to_text(microseconds):
