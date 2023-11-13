@@ -26,6 +26,7 @@ from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
+from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import Vector3
 
 
@@ -102,6 +103,8 @@ class RefereeParser(Node):
         self._prev_command = 0
         self._placement_pos = Point()
         self._max_allowed_our_bots = 0
+        self._num_of_blue_bots: int = 0
+        self._num_of_yellow_bots: int = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._pub_visualizer_objects = self.create_publisher(Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
@@ -110,9 +113,11 @@ class RefereeParser(Node):
         self._sub_referee = self.create_subscription(
             Referee, 'referee', self._referee_callback, 10)
 
-    def _detection_tracked_callback(self, msg):
+    def _detection_tracked_callback(self, msg: TrackedFrame) -> None:
         if len(msg.balls) > 0:
             self._ball = msg.balls[0]
+
+        self._update_num_of_bots(msg)
 
     def _referee_callback(self, msg):
         self._stage = msg.stage
@@ -176,9 +181,30 @@ class RefereeParser(Node):
             or self.their_pre_penalty()
         self._pub_parsed_referee.publish(referee)
 
-    def _publish_visualizer_objects(self, msg: Referee):
+    def _publish_visualizer_objects(self, msg: Referee) -> None:
         # レフェリー情報を可視化するためのメッセージをpublishする
-        self._pub_visualizer_objects.publish(ref_vis_parser.to_visualizer_objects(msg))
+        self._pub_visualizer_objects.publish(
+            ref_vis_parser.to_visualizer_objects(
+                msg, self._num_of_blue_bots, self._num_of_yellow_bots))
+
+    def _update_num_of_bots(self, msg: TrackedFrame) -> None:
+        # フィールド上のロボット台数を計上する
+        VISIBILITY_THRESHOLD = 0.01
+        blue_robot_num = 0
+        yellow_robot_num = 0
+        for robot in msg.robots:
+            if len(robot.visibility) <= 0:
+                continue
+
+            if robot.visibility[0] < VISIBILITY_THRESHOLD:
+                continue
+
+            if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+                yellow_robot_num += 1
+            else:
+                blue_robot_num += 1
+        self._num_of_blue_bots = blue_robot_num
+        self._num_of_yellow_bots = yellow_robot_num
 
     def _check_inplay(self, msg):
         # referee情報とフィールド情報をもとに、インプレイ状態を判定する

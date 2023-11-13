@@ -20,7 +20,7 @@ from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeAnnotation
 from robocup_ssl_msgs.msg import Referee
 
-def to_visualizer_objects(referee: Referee):
+def to_visualizer_objects(referee: Referee, blue_bots: int, yellow_bots: int):
     # レフェリー情報を描画オブジェクトに変換する
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
@@ -38,6 +38,7 @@ def to_visualizer_objects(referee: Referee):
     TIMEOUT_X = YELLOW_CARD_TIMES_X + YELLOW_CARD_TIMES_WIDTH + MARGIN_X
     COLOR_TEXT_BLUE = 'deepskyblue'
     COLOR_TEXT_YELLOW = 'yellow'
+    COLOR_TEXT_WARNING = 'red'
 
     vis_objects = Objects()
     vis_objects.layer = 'referee'
@@ -85,9 +86,11 @@ def to_visualizer_objects(referee: Referee):
 
     # ロボット数
     if referee.blue.max_allowed_bots:
-        blue_bots = 11  # TODO(ShotaAk): 実際のロボット数を入力する
         vis_annotation = ShapeAnnotation()
         vis_annotation.color.name = COLOR_TEXT_BLUE
+        # 許可台数よりロボットが多い場合は色を変える
+        if blue_bots > referee.blue.max_allowed_bots[0]:
+            vis_annotation.color.name = COLOR_TEXT_WARNING
         vis_annotation.text = 'BLUE BOTS: {}/{}'.format(
             blue_bots, referee.blue.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
@@ -97,9 +100,11 @@ def to_visualizer_objects(referee: Referee):
         vis_objects.annotations.append(vis_annotation)
 
     if referee.yellow.max_allowed_bots:
-        yellow_bots = 11  # TODO(ShotaAk): 実際のロボット数を入力する
         vis_annotation = ShapeAnnotation()
         vis_annotation.color.name = COLOR_TEXT_YELLOW
+        # 許可台数よりロボットが多い場合は色を変える
+        if yellow_bots > referee.yellow.max_allowed_bots[0]:
+            vis_annotation.color.name = COLOR_TEXT_WARNING
         vis_annotation.text = 'YELLOW BOTS: {}/{}'.format(
             yellow_bots, referee.yellow.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
