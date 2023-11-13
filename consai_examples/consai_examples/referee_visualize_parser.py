@@ -20,8 +20,8 @@ from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeAnnotation
 from robocup_ssl_msgs.msg import Referee
 
-def to_visualizer_objects(referee: Referee, blue_bots: int, yellow_bots: int):
-    # レフェリー情報を描画オブジェクトに変換する
+def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
+    # レフェリー情報を描画オブジェクト(Annotation)に変換する
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
     STAGE_COMMAND_WIDTH = 0.15
@@ -270,14 +270,6 @@ def parse_action_time_remaining(ref_action_time_remaining):
     return "ACT: " + text
 
 
-def parse_red_cards(ref_team_red_cards):
-    return str(ref_team_red_cards)
-
-
-def parse_yellow_cards(ref_team_yellow_cards):
-    return str(ref_team_yellow_cards)
-
-
 def parse_yellow_card_times(yellow_card_times):
     if len(yellow_card_times) == 0:
         return "NO CARDS"
@@ -294,15 +286,3 @@ def parse_yellow_card_times(yellow_card_times):
 def parse_timeouts(timeouts, timeout_time):
     return 'Timeouts: {}\n {}'.format(
         timeouts, _microseconds_to_text(timeout_time))
-
-
-def parse_timeout_time(timeout_time):
-    return _microseconds_to_text(timeout_time)
-
-
-def is_ball_placement(ref_command):
-    if ref_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
-        return True
-    elif ref_command == Referee.COMMAND_BALL_PLACEMENT_BLUE:
-        return True
-    return False

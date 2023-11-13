@@ -184,7 +184,7 @@ class RefereeParser(Node):
     def _publish_visualizer_objects(self, msg: Referee) -> None:
         # レフェリー情報を可視化するためのメッセージをpublishする
         self._pub_visualizer_objects.publish(
-            ref_vis_parser.to_visualizer_objects(
+            ref_vis_parser.annotations(
                 msg, self._num_of_blue_bots, self._num_of_yellow_bots))
 
     def _update_num_of_bots(self, msg: TrackedFrame) -> None:
