@@ -25,6 +25,7 @@ from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtGui import QColor
 from python_qt_binding.QtGui import QFontMetrics
 from python_qt_binding.QtGui import QPainter
+from python_qt_binding.QtGui import QPainterPath
 from python_qt_binding.QtGui import QPen
 from python_qt_binding.QtWidgets import QWidget
 from consai_visualizer_msgs.msg import Objects as VisObjects
@@ -36,8 +37,8 @@ from consai_visualizer_msgs.msg import ShapeLine
 from consai_visualizer_msgs.msg import ShapePoint
 from consai_visualizer_msgs.msg import ShapeRectangle
 from consai_visualizer_msgs.msg import ShapeRobot
+from consai_visualizer_msgs.msg import ShapeTube
 from robocup_ssl_msgs.msg import BallReplacement
-from robocup_ssl_msgs.msg import GeometryFieldSize
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import RobotReplacement
@@ -507,6 +508,9 @@ class FieldWidget(QWidget):
                 for shape_circle in vis_objects.circles:
                     self._draw_shape_circle(painter, shape_circle, draw_caption)
 
+                for shape_tube in vis_objects.tubes:
+                    self._draw_shape_tube(painter, shape_tube, draw_caption)
+
                 for shape_robot in vis_objects.robots:
                     self._draw_shape_robot(painter, shape_robot, draw_caption)
 
@@ -627,6 +631,50 @@ class FieldWidget(QWidget):
 
         if draw_caption:
             self._draw_text(painter, center, shape.caption)
+
+    def _draw_shape_tube(self, painter: QPainter, shape: ShapeTube, draw_caption: bool = False):
+        painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
+        painter.setBrush(self._to_qcolor(shape.fill_color))
+
+        diff_x = shape.p2.x - shape.p1.x
+        diff_y = shape.p2.y - shape.p1.y
+        theta = math.atan2(diff_y, diff_x)
+
+        top_left = self._convert_field_to_draw_point(
+            shape.p1.x + shape.radius * math.cos(theta + math.pi * 0.5),
+            shape.p1.y + shape.radius * math.sin(theta + math.pi * 0.5))
+
+        top_right = self._convert_field_to_draw_point(
+            shape.p2.x + shape.radius * math.cos(theta + math.pi * 0.5),
+            shape.p2.y + shape.radius * math.sin(theta + math.pi * 0.5))
+
+        bottom_right = self._convert_field_to_draw_point(
+            shape.p2.x + shape.radius * math.cos(theta - math.pi * 0.5),
+            shape.p2.y + shape.radius * math.sin(theta - math.pi * 0.5))
+
+        bottom_left = self._convert_field_to_draw_point(
+            shape.p1.x + shape.radius * math.cos(theta - math.pi * 0.5),
+            shape.p1.y + shape.radius * math.sin(theta - math.pi * 0.5))
+
+        p1 = self._convert_field_to_draw_point(shape.p1.x, shape.p1.y)
+        p2 = self._convert_field_to_draw_point(shape.p2.x, shape.p2.y)
+        radius = shape.radius * self._scale_field_to_draw
+
+        path = QPainterPath()
+        path.moveTo(top_left)
+        path.addEllipse(p1, radius, radius)
+        path.moveTo(top_right)
+        path.addEllipse(p2, radius, radius)
+        path.moveTo(top_left)
+        path.lineTo(top_right)
+        path.lineTo(bottom_right)
+        path.lineTo(bottom_left)
+        path.lineTo(top_left)
+        path.setFillRule(Qt.WindingFill)
+        painter.drawPath(path)
+
+        if draw_caption:
+            self._draw_text(painter, bottom_left, shape.caption)
 
     def _draw_shape_robot(self, painter: QPainter, shape: ShapeRobot, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))

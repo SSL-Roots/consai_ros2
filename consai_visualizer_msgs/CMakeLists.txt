@@ -18,6 +18,7 @@ set(msg_files
   "msg/ShapePoint.msg"
   "msg/ShapeRectangle.msg"
   "msg/ShapeRobot.msg"
+  "msg/ShapeTube.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
