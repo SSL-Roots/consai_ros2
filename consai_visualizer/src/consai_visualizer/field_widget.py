@@ -630,7 +630,9 @@ class FieldWidget(QWidget):
         painter.drawEllipse(center, size, size)
 
         if draw_caption:
-            self._draw_text(painter, center, shape.caption)
+            bottom = self._convert_field_to_draw_point(
+                shape.center.x, shape.center.y - shape.radius * 1.2)
+            self._draw_text(painter, bottom, shape.caption)
 
     def _draw_shape_tube(self, painter: QPainter, shape: ShapeTube, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
