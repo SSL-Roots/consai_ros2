@@ -49,6 +49,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     vis_objects = Objects()
     vis_objects.layer = 'referee'
     vis_objects.sub_layer = 'info'
+    vis_objects.z_order = 2
 
     # 左端にSTAGEとCOMMANDを表示
     vis_annotation = ShapeAnnotation()
@@ -197,9 +198,14 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
 
 
 def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
+    COLOR_LINE = 'black'
+    COLOR_FILL = 'crimson'
+    FILL_ALPHA = 0.3
+    LINE_SIZE = 4
     vis_objects = Objects()
     vis_objects.layer = 'referee'
     vis_objects.sub_layer = 'prohibited_area'
+    vis_objects.z_order = 1
 
     if parsed_referee.is_placement:
         # プレースメント時の禁止エリア
@@ -210,12 +216,28 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
         vis_tube.p2.x = ball_pos.x
         vis_tube.p2.y = ball_pos.y
         vis_tube.radius = 0.5
-        vis_tube.line_color.name = 'black'
-        vis_tube.fill_color.name = 'crimson'
-        vis_tube.fill_color.alpha = 0.3
-        vis_tube.line_size = 4
+        vis_tube.line_color.name = COLOR_LINE
+        vis_tube.fill_color.name = COLOR_FILL
+        vis_tube.fill_color.alpha = FILL_ALPHA
+        vis_tube.line_size = LINE_SIZE
         vis_tube.caption = 'Rule 8.4.3'
         vis_objects.tubes.append(vis_tube)
+
+    if not parsed_referee.is_inplay and \
+       not parsed_referee.is_placement and \
+       not parsed_referee.is_our_setplay:
+        # ストップ中のボール周り
+        vis_circle = ShapeCircle()
+        vis_circle.center.x = ball_pos.x
+        vis_circle.center.y = ball_pos.y
+        vis_circle.radius = 0.5
+        vis_circle.line_color.name = COLOR_LINE
+        vis_circle.fill_color.name = COLOR_FILL
+        vis_circle.fill_color.alpha = FILL_ALPHA
+        vis_circle.line_size = LINE_SIZE
+        vis_circle.caption = 'Rule 5.1.1'
+        vis_objects.circles.append(vis_circle)
+
     return vis_objects
 
 
