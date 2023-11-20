@@ -151,13 +151,14 @@ class RefereeParser(Node):
                 self._max_allowed_our_bots = msg.blue.max_allowed_bots[0]
 
         # 解釈したレフェリー情報をpublishする
-        self._publish_parsed_referee()
+        parsed_ref_msg = self._bundle_parsed_referee()
+        self._pub_parsed_referee.publish(parsed_ref_msg)
 
         # 可視化用のメッセージをpublishする
-        self._publish_visualizer_objects(msg)
+        self._publish_visualizer_objects(msg, parsed_ref_msg)
 
-    def _publish_parsed_referee(self):
-        # 解析したレフェリー情報をpublishする
+    def _bundle_parsed_referee(self) -> ParsedReferee:
+        # 解析したレフェリー情報をまとめる
         referee = ParsedReferee()
         referee.designated_position.x = self._placement_pos.x
         referee.designated_position.y = self._placement_pos.y
@@ -179,16 +180,17 @@ class RefereeParser(Node):
             or self.their_ball_placement() \
             or self.their_pre_kickoff() \
             or self.their_pre_penalty()
-        self._pub_parsed_referee.publish(referee)
+        return referee
 
-    def _publish_visualizer_objects(self, msg: Referee) -> None:
+    def _publish_visualizer_objects(
+            self, msg: Referee, parsed_ref_msg: ParsedReferee) -> None:
         # レフェリー情報を可視化するためのメッセージをpublishする
         self._pub_visualizer_objects.publish(
             ref_vis_parser.vis_info(
                 msg, self._num_of_blue_bots, self._num_of_yellow_bots, self._placement_pos))
         self._pub_visualizer_objects.publish(
             ref_vis_parser.vis_prohibited_area(
-                msg, self._placement_pos, self._ball.pos))
+                parsed_ref_msg, self._ball.pos))
 
     def _update_num_of_bots(self, msg: TrackedFrame) -> None:
         # フィールド上のロボット台数を計上する
