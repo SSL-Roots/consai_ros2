@@ -18,10 +18,15 @@ import math
 
 from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeAnnotation
+from consai_visualizer_msgs.msg import ShapeCircle
+from consai_visualizer_msgs.msg import ShapeTube
+from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
+from robocup_ssl_msgs.msg import Vector3
 
-def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
-    # レフェリー情報を描画オブジェクト(Annotation)に変換する
+def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
+             placement_pos: Point):
+    # レフェリー情報を描画オブジェクトに変換する
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
     STAGE_COMMAND_WIDTH = 0.15
@@ -42,7 +47,7 @@ def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
 
     vis_objects = Objects()
     vis_objects.layer = 'referee'
-    vis_objects.sub_layer = 'annotations'
+    vis_objects.sub_layer = 'info'
 
     # 左端にSTAGEとCOMMANDを表示
     vis_annotation = ShapeAnnotation()
@@ -174,6 +179,43 @@ def annotations(referee: Referee, blue_bots: int, yellow_bots: int):
     vis_annotation.normalized_height = TEXT_HEIGHT
     vis_objects.annotations.append(vis_annotation)
 
+    # プレースメント位置
+    if referee.command == Referee.COMMAND_BALL_PLACEMENT_BLUE or \
+       referee.command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
+        vis_circle = ShapeCircle()
+        vis_circle.center.x = placement_pos.x
+        vis_circle.center.y = placement_pos.y
+        vis_circle.radius = 0.15
+        vis_circle.line_color.name = 'aquamarine'
+        vis_circle.fill_color.name = 'aquamarine'
+        vis_circle.line_size = 1
+        vis_circle.caption = 'placement pos'
+        vis_objects.circles.append(vis_circle)
+
+    return vis_objects
+
+def vis_prohibited_area(referee: Referee, placement_pos: Point, ball_pos: Vector3):
+    vis_objects = Objects()
+    vis_objects.layer = 'referee'
+    vis_objects.sub_layer = 'prohibited_area'
+
+    if referee.command == Referee.COMMAND_BALL_PLACEMENT_BLUE or \
+       referee.command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
+        # プレースメント時の禁止エリア
+        # https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball_placement_interference
+        vis_tube = ShapeTube()
+        vis_tube.p1.x = placement_pos.x
+        vis_tube.p1.y = placement_pos.y
+        vis_tube.p2.x = ball_pos.x
+        vis_tube.p2.y = ball_pos.y
+        vis_tube.radius = 0.5
+        vis_tube.line_color.name = 'black'
+        vis_tube.fill_color.name = 'crimson'
+        vis_tube.fill_color.alpha = 0.3
+        vis_tube.line_size = 4
+        vis_tube.caption = 'Ball Placement'
+        vis_objects.tubes.append(vis_tube)
+    
     return vis_objects
 
 def parse_stage(ref_stage):

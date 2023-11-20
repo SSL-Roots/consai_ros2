@@ -184,8 +184,11 @@ class RefereeParser(Node):
     def _publish_visualizer_objects(self, msg: Referee) -> None:
         # レフェリー情報を可視化するためのメッセージをpublishする
         self._pub_visualizer_objects.publish(
-            ref_vis_parser.annotations(
-                msg, self._num_of_blue_bots, self._num_of_yellow_bots))
+            ref_vis_parser.vis_info(
+                msg, self._num_of_blue_bots, self._num_of_yellow_bots, self._placement_pos))
+        self._pub_visualizer_objects.publish(
+            ref_vis_parser.vis_prohibited_area(
+                msg, self._placement_pos, self._ball.pos))
 
     def _update_num_of_bots(self, msg: TrackedFrame) -> None:
         # フィールド上のロボット台数を計上する
