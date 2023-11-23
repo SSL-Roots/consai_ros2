@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import deque
+import datetime
 from enum import Enum
 import math
 
@@ -104,6 +106,8 @@ class FieldWidget(QWidget):
         self._named_targets = {}
         self._robot_replacements = []
         self._invert = False
+        self._visualizer_objects: Dict[int, Dict[tuple[str, str], VisObjects]] = {}
+        self._active_layers: list[tuple[str, str]] = []
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -115,9 +119,9 @@ class FieldWidget(QWidget):
         self._mouse_current_point = QPointF(0.0, 0.0)  # マウスカーソルの現在座標
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスでドラッグした距離
         self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
+        self._previous_update_time = datetime.datetime.now()  # 前回の描画時刻
+        self._frame_rate_buffer = deque(maxlen=20)  # フレームレート計算用のバッファ
 
-        self._visualizer_objects: Dict[int, Dict[tuple[str, str], VisObjects]] = {}
-        self._active_layers: list[tuple[str, str]] = []
 
     def set_logger(self, logger):
         self._logger = logger
@@ -292,31 +296,7 @@ class FieldWidget(QWidget):
         painter.restore()
 
         self._draw_objects_on_window_area(painter, draw_caption)
-
-        # if self._can_draw_geometry:
-        #     self._draw_geometry(painter)
-
-        # # 名前付きターゲットを描画
-        # self._draw_named_targets(painter)
-
-        # # ボールプレースメントでの目標位置と進入禁止エリアを描画
-        # self._draw_designated_position(painter)
-
-        # if self._can_draw_replacement:
-        #     self._draw_replacement(painter)
-
-        # if self._can_draw_detection:
-        #     self._draw_detection(painter)
-
-        # if self._can_draw_detection_tracked:
-        #     self._draw_detection_tracked(painter)
-
-        # # ロボットのreplacementをpublishする
-        # if self._robot_replacements:
-        #     replacement = Replacement()
-        #     replacement.robots = self._robot_replacements
-        #     self._pub_replacement.publish(replacement)
-        #     self._robot_replacements = []
+        self._draw_visualizer_info_on_window_area(painter)
 
     def _get_clicked_replacement_object(self, clicked_point):
         # マウスでクリックした位置がボールやロボットに近いか判定する
@@ -524,6 +504,27 @@ class FieldWidget(QWidget):
 
                 for shape_annotation in vis_objects.annotations:
                     self._draw_shape_annotation(painter, shape_annotation, draw_caption)
+
+    def _draw_visualizer_info_on_window_area(self, painter: QPainter):
+        # ビジュアライザが持つ情報を描画する
+        time_diff = datetime.datetime.now() - self._previous_update_time
+        self._frame_rate_buffer.append(1.0 / time_diff.total_seconds())
+        average_frame_rate = sum(self._frame_rate_buffer) / self._frame_rate_buffer.maxlen
+        self._previous_update_time = datetime.datetime.now()
+
+        annotation = ShapeAnnotation()
+        annotation.text = "frame_rate: {:.1f}".format(average_frame_rate)
+        annotation.normalized_x = 0.0
+        annotation.normalized_y = 0.95
+        annotation.normalized_width = 0.1
+        annotation.normalized_height = 0.05
+        annotation.color.name = "white"
+        self._draw_shape_annotation(painter, annotation)
+
+        annotation.text = "cursor_pos"
+        annotation.normalized_x = 0.1
+        annotation.color.name = "white"
+        self._draw_shape_annotation(painter, annotation)
 
     def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.color)))
