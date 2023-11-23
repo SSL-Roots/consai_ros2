@@ -58,6 +58,8 @@ class FieldWidget(QWidget):
     def __init__(self, parent=None):
         super(FieldWidget, self).__init__(parent)
 
+        self.setMouseTracking(True)  # マウスカーソルの位置を取得するために必要
+
         # 定数
         # Ref: named color  https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self._COLOR_FIELD_CARPET = Qt.green
@@ -236,8 +238,7 @@ class FieldWidget(QWidget):
             # 描画領域を移動するためのオフセットを計算
             self._mouse_drag_offset = (
                 self._mouse_current_point - self._mouse_clicked_point) / self._draw_area_scale
-
-        self.update()
+            self.update()
 
     def mouseReleaseEvent(self, event):
         # マウスクリック解除時のイベント
@@ -507,13 +508,14 @@ class FieldWidget(QWidget):
 
     def _draw_visualizer_info_on_window_area(self, painter: QPainter):
         # ビジュアライザが持つ情報を描画する
+
+        # フレームレートを描画
         time_diff = datetime.datetime.now() - self._previous_update_time
         self._frame_rate_buffer.append(1.0 / time_diff.total_seconds())
         average_frame_rate = sum(self._frame_rate_buffer) / self._frame_rate_buffer.maxlen
         self._previous_update_time = datetime.datetime.now()
-
         annotation = ShapeAnnotation()
-        annotation.text = "frame_rate: {:.1f}".format(average_frame_rate)
+        annotation.text = "FPS: {:.1f}".format(average_frame_rate)
         annotation.normalized_x = 0.0
         annotation.normalized_y = 0.95
         annotation.normalized_width = 0.1
@@ -521,9 +523,15 @@ class FieldWidget(QWidget):
         annotation.color.name = "white"
         self._draw_shape_annotation(painter, annotation)
 
-        annotation.text = "cursor_pos"
+        # カーソル位置を描画
+        cursor_pos = self._convert_draw_to_field_pos(self._mouse_current_point)
+        if self._invert:
+            annotation.text = "inv"
+            annotation.color.name = "lightcoral"
+        else:
+            annotation.text = "pos"
+        annotation.text += " {:.2f} : {:.2f}".format(cursor_pos.x(), cursor_pos.y())
         annotation.normalized_x = 0.1
-        annotation.color.name = "white"
         self._draw_shape_annotation(painter, annotation)
 
     def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
@@ -1101,6 +1109,11 @@ class FieldWidget(QWidget):
 
         field_x /= self._scale_field_to_draw
         field_y /= -self._scale_field_to_draw
+
+        # サイド反転の処理
+        if self._invert:
+            field_x *= -1.0
+            field_y *= -1.0
 
         return QPointF(field_x, field_y)
 
