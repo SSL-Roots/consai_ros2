@@ -123,6 +123,8 @@ class FieldWidget(QWidget):
         self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
         self._previous_update_time = datetime.datetime.now()  # 前回の描画時刻
         self._frame_rate_buffer = deque(maxlen=20)  # フレームレート計算用のバッファ
+        self._mouse_double_clicked = False  # マウスダブルクリックのフラグ
+        self._mouse_double_click_updated = False  # ダブルクリックが更新されたフラグ
 
 
     def set_logger(self, logger):
@@ -188,6 +190,17 @@ class FieldWidget(QWidget):
     def get_yellow_robot_num(self):
         return self._yellow_robot_num
 
+    def get_mouse_double_click_updated(self) -> bool:
+        return self._mouse_double_click_updated
+
+    def get_mouse_double_click_points(self) -> tuple[QPointF, QPointF]:
+        points = (self._convert_draw_to_field_pos(self._mouse_clicked_point),
+                  self._convert_draw_to_field_pos(self._mouse_current_point))
+        return points
+
+    def reset_mouse_double_click_updated(self) -> None:
+        self._mouse_double_click_updated = False
+
     def append_robot_replacement(self, is_yellow, robot_id, turnon):
         # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
         ID_OFFSET_X = 0.2
@@ -212,18 +225,32 @@ class FieldWidget(QWidget):
 
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
+        self._mouse_double_clicked = False
 
         if event.buttons() == Qt.LeftButton:
             self._mouse_clicked_point = event.localPos()
             self._mouse_current_point = event.localPos()
 
-            # ロボット、ボールをクリックしているか
-            if self._can_draw_replacement:
-                self._clicked_replacement_object = self._get_clicked_replacement_object(
-                    self._mouse_clicked_point)
+            # # ロボット、ボールをクリックしているか
+            # if self._can_draw_replacement:
+            #     self._clicked_replacement_object = self._get_clicked_replacement_object(
+            #         self._mouse_clicked_point)
 
         elif event.buttons() == Qt.RightButton:
             self._reset_draw_area_offset_and_scale()
+
+        self.update()
+
+    def mouseDoubleClickEvent(self, event):
+        # ダブルクリック時のイベント
+        # mousePressEvent発行後に実行される
+
+        self._mouse_double_clicked = True
+        self._mouse_double_click_updated = False
+
+        if event.buttons() == Qt.LeftButton:
+            self._mouse_clicked_point = event.localPos()
+            self._mouse_current_point = event.localPos()
 
         self.update()
 
@@ -231,29 +258,38 @@ class FieldWidget(QWidget):
         # マウス移動時のイベント
         self._mouse_current_point = event.localPos()
 
-        if self._clicked_replacement_object != ClickedObject.IS_NONE:
-            # Replacement時は何もしない
-            pass
-        elif event.buttons() == Qt.LeftButton:
-            # 描画領域を移動するためのオフセットを計算
-            self._mouse_drag_offset = (
-                self._mouse_current_point - self._mouse_clicked_point) / self._draw_area_scale
+        # if self._clicked_replacement_object != ClickedObject.IS_NONE:
+        #     # Replacement時は何もしない
+        #     pass
+        if event.buttons() == Qt.LeftButton:
+            if self._mouse_double_clicked:
+                # ダブルクリック時はマウスの現在位置を更新する
+                self._mouse_current_point = event.localPos()
+
+            else:
+                # 描画領域を移動するためのオフセットを計算
+                self._mouse_drag_offset = (
+                    self._mouse_current_point - self._mouse_clicked_point) / self._draw_area_scale
+
             self.update()
 
     def mouseReleaseEvent(self, event):
         # マウスクリック解除時のイベント
-        # マウスのドラッグ操作で描画領域を移動する
 
-        if self._can_draw_replacement:
-            # grSim用のReplacementをpublish
-            if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
-                self._publish_ball_pos_replacement()
-            elif self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
-                self._publish_ball_vel_replacement()
+        # if self._can_draw_replacement:
+        #     # grSim用のReplacementをpublish
+        #     if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
+        #         self._publish_ball_pos_replacement()
+        #     elif self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
+        #         self._publish_ball_vel_replacement()
+
+        if self._mouse_double_clicked:
+            self._mouse_double_clicked = False
+            self._mouse_double_click_updated = True
 
         self._draw_area_offset += self._mouse_drag_offset
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスドラッグ距離の初期化
-        self._clicked_replacement_object = ClickedObject.IS_NONE  # Replacementの初期化
+        # self._clicked_replacement_object = ClickedObject.IS_NONE  # Replacementの初期化
 
         self.update()
 
@@ -293,6 +329,7 @@ class FieldWidget(QWidget):
 
         draw_caption = ('caption', 'caption') in self._active_layers
         self._draw_objects_on_transformed_area(painter, draw_caption)
+        self._draw_visualizer_info_on_transformed_area(painter)
 
         painter.restore()
 
@@ -494,6 +531,28 @@ class FieldWidget(QWidget):
 
                 for shape_robot in vis_objects.robots:
                     self._draw_shape_robot(painter, shape_robot, draw_caption)
+
+    def _draw_visualizer_info_on_transformed_area(self, painter: QPainter):
+        # 描画領域の移動や拡大を考慮した座標系で、ビジュアライザが持つ情報を描画する
+
+        # ドラック時の変位を描画
+        if self._mouse_double_clicked:
+            drag_line = ShapeLine()
+            clicked_point = self._convert_draw_to_field_pos(
+                self._mouse_clicked_point, apply_invert=False)
+            current_point = self._convert_draw_to_field_pos(
+                self._mouse_current_point, apply_invert=False)
+            distance = current_point - clicked_point
+            theta_deg = math.degrees(math.atan2(distance.y(), distance.x()))
+            drag_line.p1.x = clicked_point.x()
+            drag_line.p1.y = clicked_point.y()
+            drag_line.p2.x = current_point.x()
+            drag_line.p2.y = current_point.y()
+            drag_line.size = 4
+            drag_line.color.name = "lightsalmon"
+            drag_line.caption = "dist: {:.1f} : {:.1f}, theta: {:.1f}".format(
+                distance.x(), distance.y(), theta_deg)
+            self._draw_shape_line(painter, drag_line, True)
 
     def _draw_objects_on_window_area(self, painter: QPainter, draw_caption: bool = False):
         # ウィンドウ領域にオブジェクトを描画する
@@ -1088,7 +1147,7 @@ class FieldWidget(QWidget):
         point = QPointF(draw_x, draw_y)
         return point
 
-    def _convert_draw_to_field_pos(self, point):
+    def _convert_draw_to_field_pos(self, point, apply_invert=True):
         # 描画座標系をフィールド座標系に変換する
 
         # スケールを戻す
@@ -1111,7 +1170,7 @@ class FieldWidget(QWidget):
         field_y /= -self._scale_field_to_draw
 
         # サイド反転の処理
-        if self._invert:
+        if self._invert and apply_invert:
             field_x *= -1.0
             field_y *= -1.0
 

@@ -27,6 +27,7 @@ from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtWidgets import QTreeWidgetItem
 from qt_gui.plugin import Plugin
+from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
 from rqt_py_common.ini_helper import pack, unpack
 import rclpy
@@ -101,8 +102,10 @@ class Visualizer(Plugin):
             self._callback_visualizer_objects,
             rclpy.qos.qos_profile_sensor_data)
 
-        self._widget.field_widget.set_pub_replacement(
-            self._node.create_publisher(Replacement, 'replacement', 1))
+        self._pub_replacement = self._node.create_publisher(
+            Replacement, 'replacement', 10)
+        # self._widget.field_widget.set_pub_replacement(
+        #     self._node.create_publisher(Replacement, 'replacement', 1))
 
         # Parameterを設定する
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
@@ -128,6 +131,7 @@ class Visualizer(Plugin):
         # 16 msec周期で描画を更新する
         self._timer = QTimer()
         self._timer.timeout.connect(self._widget.field_widget.update)
+        self._timer.timeout.connect(self._publish_replacement)
         self._timer.start(16)
 
         # 5000 msec周期で描画情報をリセットする
@@ -232,6 +236,25 @@ class Visualizer(Plugin):
                 active_layers.append((parent.text(0), child.text(0)))
 
         return active_layers
+
+    def _publish_replacement(self) -> None:
+        # 描画領域のダブルクリック操作が完了したら、grSimのReplacement情報をpublishする
+        if not self._widget.field_widget.get_mouse_double_click_updated():
+            return
+
+        start, end = self._widget.field_widget.get_mouse_double_click_points()
+        velocity = 1.0 * (end - start)  # 距離のn倍を速度とする
+
+        ball_replacement = BallReplacement()
+        ball_replacement.x.append(start.x())
+        ball_replacement.y.append(start.y())
+        ball_replacement.vx.append(velocity.x())
+        ball_replacement.vy.append(velocity.y())
+        replacement = Replacement()
+        replacement.ball.append(ball_replacement)
+
+        self._pub_replacement.publish(replacement)
+        self._widget.field_widget.reset_mouse_double_click_updated()
 
     def battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8
