@@ -114,7 +114,6 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
 
         # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
-        # for team in ["blue", "yellow"]:
         #     for robot_id in range(11):
         #         method = "self._widget.chbox_turnon_" + team + \
         #             str(robot_id) + ".stateChanged.connect"
@@ -122,11 +121,13 @@ class Visualizer(Plugin):
         #             partial(self._clicked_robot_turnon, team == "yellow", robot_id)
         #         )
 
-        #     for turnon in ["on", "off"]:
-        #         method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
-        #         eval(method)(
-        #             partial(self._set_all_robot_turnon, team == "yellow", turnon == "on")
-        #         )
+        for team in ["blue", "yellow"]:
+            for turnon in ["on", "off"]:
+                method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
+                eval(method)(
+                    partial(self._publish_all_robot_turnon_replacement,
+                            team == "yellow", turnon == "on")
+                )
 
         # レイヤーツリーの初期設定
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
@@ -178,14 +179,6 @@ class Visualizer(Plugin):
         # 一括でON/OFFすると項目の数だけ実行される
         active_layers = self._extract_active_layers()
         self._widget.field_widget.set_active_layers(active_layers)
-
-    def _set_all_robot_turnon(self, is_yellow, turnon):
-        self._logger.info("Need to implement: set all robot turnon")
-        # team = "yellow" if is_yellow else "blue"
-        # checked = Qt.Checked if turnon else Qt.Unchecked
-        # for robot_id in range(11):
-        #     method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
-        #     eval(method)(checked)
 
     def _callback_battery_voltage(self, msg, robot_id):
         self.latest_battery_voltage[robot_id] = msg.voltage
@@ -288,6 +281,24 @@ class Visualizer(Plugin):
         robot_replacement.turnon.append(True)
         replacement = Replacement()
         replacement.robots.append(robot_replacement)
+        self._pub_replacement.publish(replacement)
+
+    def _publish_all_robot_turnon_replacement(self, is_yellow, turnon):
+        # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
+        OFFSET_X = 0.2
+        team_offset_x = -3.0 if is_yellow else 0.0
+        turnon_offset_y = -4.6 if turnon else -5.6
+
+        replacement = Replacement()
+        for i in range(11):
+            robot_replacement = RobotReplacement()
+            robot_replacement.x = team_offset_x + OFFSET_X * i
+            robot_replacement.y = turnon_offset_y
+            robot_replacement.dir = 90.0
+            robot_replacement.id = i
+            robot_replacement.yellowteam = is_yellow
+            robot_replacement.turnon.append(turnon)
+            replacement.robots.append(robot_replacement)
         self._pub_replacement.publish(replacement)
 
     def battery_voltage_to_percentage(self, voltage):
