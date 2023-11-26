@@ -16,6 +16,7 @@
 
 
 from functools import partial
+import math
 import os
 import time
 
@@ -24,11 +25,13 @@ from consai_visualizer.field_widget import FieldWidget
 from consai_visualizer_msgs.msg import Objects
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
+from python_qt_binding.QtCore import QPointF
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtWidgets import QTreeWidgetItem
 from qt_gui.plugin import Plugin
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
+from robocup_ssl_msgs.msg import RobotReplacement
 from rqt_py_common.ini_helper import pack, unpack
 import rclpy
 
@@ -111,19 +114,19 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
 
         # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
-        for team in ["blue", "yellow"]:
-            for robot_id in range(11):
-                method = "self._widget.chbox_turnon_" + team + \
-                    str(robot_id) + ".stateChanged.connect"
-                eval(method)(
-                    partial(self._clicked_robot_turnon, team == "yellow", robot_id)
-                )
+        # for team in ["blue", "yellow"]:
+        #     for robot_id in range(11):
+        #         method = "self._widget.chbox_turnon_" + team + \
+        #             str(robot_id) + ".stateChanged.connect"
+        #         eval(method)(
+        #             partial(self._clicked_robot_turnon, team == "yellow", robot_id)
+        #         )
 
-            for turnon in ["on", "off"]:
-                method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
-                eval(method)(
-                    partial(self._set_all_robot_turnon, team == "yellow", turnon == "on")
-                )
+        #     for turnon in ["on", "off"]:
+        #         method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
+        #         eval(method)(
+        #             partial(self._set_all_robot_turnon, team == "yellow", turnon == "on")
+        #         )
 
         # レイヤーツリーの初期設定
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
@@ -177,11 +180,12 @@ class Visualizer(Plugin):
         self._widget.field_widget.set_active_layers(active_layers)
 
     def _set_all_robot_turnon(self, is_yellow, turnon):
-        team = "yellow" if is_yellow else "blue"
-        checked = Qt.Checked if turnon else Qt.Unchecked
-        for robot_id in range(11):
-            method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
-            eval(method)(checked)
+        self._logger.info("Need to implement: set all robot turnon")
+        # team = "yellow" if is_yellow else "blue"
+        # checked = Qt.Checked if turnon else Qt.Unchecked
+        # for robot_id in range(11):
+        #     method = "self._widget.chbox_turnon_" + team + str(robot_id) + ".setCheckState"
+        #     eval(method)(checked)
 
     def _callback_battery_voltage(self, msg, robot_id):
         self.latest_battery_voltage[robot_id] = msg.voltage
@@ -241,10 +245,26 @@ class Visualizer(Plugin):
         # 描画領域のダブルクリック操作が完了したら、grSimのReplacement情報をpublishする
         if not self._widget.field_widget.get_mouse_double_click_updated():
             return
-
         start, end = self._widget.field_widget.get_mouse_double_click_points()
-        velocity = 1.0 * (end - start)  # 距離のn倍を速度とする
+        self._widget.field_widget.reset_mouse_double_click_updated()
 
+        # チェックが入ったボタン情報を解析する
+        button = self._widget.radio_buttons.checkedButton()
+        if button.text() == "NONE":
+            return
+        elif button.text() == "Ball":
+            self._publish_ball_replacement(start, end)
+            return
+        else:
+            is_yellow = False
+            if button.text()[0] == "Y":
+                is_yellow = True
+            robot_id = int(button.text()[1:])
+            self._publish_robot_replacement(start, end, is_yellow, robot_id)
+            return
+
+    def _publish_ball_replacement(self, start: QPointF, end: QPointF) -> None:
+        velocity = end - start
         ball_replacement = BallReplacement()
         ball_replacement.x.append(start.x())
         ball_replacement.y.append(start.y())
@@ -252,9 +272,23 @@ class Visualizer(Plugin):
         ball_replacement.vy.append(velocity.y())
         replacement = Replacement()
         replacement.ball.append(ball_replacement)
-
         self._pub_replacement.publish(replacement)
-        self._widget.field_widget.reset_mouse_double_click_updated()
+
+    def _publish_robot_replacement(
+            self, start: QPointF, end: QPointF, is_yellow: bool, robot_id: int) -> None:
+
+        theta_deg = math.degrees(math.atan2(end.y() - start.y(), end.x() - start.x()))
+
+        robot_replacement = RobotReplacement()
+        robot_replacement.x = start.x()
+        robot_replacement.y = start.y()
+        robot_replacement.dir = theta_deg
+        robot_replacement.id = robot_id
+        robot_replacement.yellowteam = is_yellow
+        robot_replacement.turnon.append(True)
+        replacement = Replacement()
+        replacement.robots.append(robot_replacement)
+        self._pub_replacement.publish(replacement)
 
     def battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8
