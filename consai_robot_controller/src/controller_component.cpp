@@ -142,6 +142,9 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
   pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
+  vis_data_handler_ = std::make_shared<VisualizationDataHandler>(
+    create_publisher<VisualizerObjects>(
+    "visualizer_objects", rclcpp::SensorDataQoS()));
   timer_pub_goal_poses_ =
     create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
@@ -399,8 +402,10 @@ void Controller::on_timer_pub_goal_poses()
       final_goal_poses->poses.push_back(final_goal_poses_map_[robot_id]);
     }
   }
-  pub_goal_poses_->publish(std::move(goal_poses));
-  pub_final_goal_poses_->publish(std::move(final_goal_poses));
+
+  vis_data_handler_->publish_vis_goal(std::move(goal_poses), std::move(final_goal_poses));
+  // pub_goal_poses_->publish(std::move(goal_poses));
+  // pub_final_goal_poses_->publish(std::move(final_goal_poses));
 }
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)

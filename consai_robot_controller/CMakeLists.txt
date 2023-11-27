@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(consai_frootspi_msgs REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -32,12 +33,14 @@ add_library(controller_component SHARED
   src/field_info_parser.cpp
   src/geometry_tools.cpp
   src/control_tools.cpp
+  src/visualization_data_handler.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
+  consai_visualizer_msgs
   rclcpp
   rclcpp_action
   rclcpp_components
@@ -54,6 +57,7 @@ target_compile_definitions(grsim_command_converter
 ament_target_dependencies(grsim_command_converter
   consai_frootspi_msgs
   consai_msgs
+  consai_visualizer_msgs
   rclcpp
   rclcpp_components
   robocup_ssl_msgs

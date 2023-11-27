@@ -182,7 +182,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
   auto vis_objects = std::make_unique<VisualizerObjects>();
   vis_objects->layer = "vision";
   vis_objects->sub_layer = "tracked";
-  vis_objects->z_order = 2;
+  vis_objects->z_order = 10;  // 一番上に描画する
 
   VisCircle vis_ball;
   vis_ball.line_color.name = "black";

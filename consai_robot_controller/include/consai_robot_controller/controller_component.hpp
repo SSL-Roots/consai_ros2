@@ -29,6 +29,7 @@
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
+#include "consai_robot_controller/visualization_data_handler.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
@@ -106,6 +107,7 @@ private:
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_goal_poses_;
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_final_goal_poses_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;
+  std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
   GoalPosesMap goal_poses_map_;
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
