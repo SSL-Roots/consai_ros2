@@ -391,21 +391,20 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 
 void Controller::on_timer_pub_goal_poses()
 {
-  // goal_posesをpublishするタイマーコールバック関数
-  auto goal_poses = std::make_unique<GoalPoses>();
-  auto final_goal_poses = std::make_unique<GoalPoses>();
+  // 目標位置・姿勢を描画情報として出力する
   for (const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
-    if (goal_poses_map_.count(robot_id) > 0) {
-      goal_poses->poses.push_back(goal_poses_map_[robot_id]);
+    TrackedRobot my_robot;
+    if (!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)) {
+      continue;
     }
-    if (final_goal_poses_map_.count(robot_id) > 0) {
-      final_goal_poses->poses.push_back(final_goal_poses_map_[robot_id]);
+
+    if (goal_poses_map_.count(robot_id) > 0 && final_goal_poses_map_.count(robot_id) > 0) {
+      vis_data_handler_->append_vis_goal(
+        my_robot, goal_poses_map_[robot_id], final_goal_poses_map_[robot_id]);
     }
   }
 
-  vis_data_handler_->publish_vis_goal(std::move(goal_poses), std::move(final_goal_poses));
-  // pub_goal_poses_->publish(std::move(goal_poses));
-  // pub_final_goal_poses_->publish(std::move(final_goal_poses));
+  vis_data_handler_->publish_and_reset_vis_goal();
 }
 
 void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)

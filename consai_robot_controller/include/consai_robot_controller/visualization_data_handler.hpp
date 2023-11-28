@@ -15,15 +15,19 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__VISUALIZATION_DATA_HANDLER_HPP_
 #define CONSAI_ROBOT_CONTROLLER__VISUALIZATION_DATA_HANDLER_HPP_
 
-#include "consai_msgs/msg/goal_poses.hpp"
+#include <memory>
+
+#include "consai_msgs/msg/goal_pose.hpp"
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 namespace consai_robot_controller
 {
 
-using GoalPoses = consai_msgs::msg::GoalPoses;
+using GoalPose = consai_msgs::msg::GoalPose;
 using VisualizerObjects = consai_visualizer_msgs::msg::Objects;
+using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class VisualizationDataHandler
 {
@@ -31,11 +35,14 @@ class VisualizationDataHandler
   explicit VisualizationDataHandler(const rclcpp::Publisher<VisualizerObjects>::SharedPtr ptr);
   ~VisualizationDataHandler() = default;
 
-  void publish_vis_goal(
-    const GoalPoses::SharedPtr goal_poses, const GoalPoses::SharedPtr final_goal_poses);
+  bool append_vis_goal(
+    const TrackedRobot & robot,
+    const GoalPose & goal_pose, const GoalPose & final_goal_pose);
+  void publish_and_reset_vis_goal(void);
 
  private:
   rclcpp::Publisher<VisualizerObjects>::SharedPtr pub_vis_objects_;
+  std::unique_ptr<VisualizerObjects> vis_objects_goal_;
 };
 
 }  // namespace consai_robot_controller
