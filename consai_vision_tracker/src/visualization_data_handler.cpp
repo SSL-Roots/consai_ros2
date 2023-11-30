@@ -217,7 +217,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
       ball_vel.p1.y = ball.pos.y;
       ball_vel.p2.x = ball.pos.x + ball.vel[0].x;
       ball_vel.p2.y = ball.pos.y + ball.vel[0].y;
-      ball_vel.caption = "ball velocity";
+      ball_vel.caption = std::to_string(vel_norm);
       vis_objects->lines.push_back(ball_vel);
     }
   }
@@ -255,7 +255,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
       robot_vel.p1.y = robot.pos.y;
       robot_vel.p2.x = robot.pos.x + robot.vel[0].x;
       robot_vel.p2.y = robot.pos.y + robot.vel[0].y;
-      robot_vel.caption = "linear";
+      robot_vel.caption = std::to_string(vel_norm);
       vis_objects->lines.push_back(robot_vel);
 
       // 角速度
@@ -266,7 +266,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
       robot_vel.p1.y = robot.pos.y;
       robot_vel.p2.x = robot.pos.x + robot.vel_angular[0];
       robot_vel.p2.y = robot.pos.y;
-      robot_vel.caption = "angular";
+      robot_vel.caption = std::to_string(vel_angular_norm);
       vis_objects->lines.push_back(robot_vel);
     }
   }
