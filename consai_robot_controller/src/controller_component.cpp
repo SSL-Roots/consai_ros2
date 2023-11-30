@@ -144,7 +144,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
   vis_data_handler_ = std::make_shared<VisualizationDataHandler>(
     create_publisher<VisualizerObjects>(
-    "visualizer_objects", rclcpp::SensorDataQoS()));
+      "visualizer_objects", rclcpp::SensorDataQoS()));
   timer_pub_goal_poses_ =
     create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 

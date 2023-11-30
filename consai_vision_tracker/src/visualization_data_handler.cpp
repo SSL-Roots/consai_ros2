@@ -35,7 +35,7 @@ using RobotId = robocup_ssl_msgs::msg::RobotId;
 
 VisualizationDataHandler::VisualizationDataHandler(
   const rclcpp::Publisher<VisualizerObjects>::SharedPtr ptr)
-  : pub_vis_objects_(ptr)
+: pub_vis_objects_(ptr)
 {
 }
 

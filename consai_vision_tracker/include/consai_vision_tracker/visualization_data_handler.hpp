@@ -31,7 +31,7 @@ using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 
 class VisualizationDataHandler
 {
- public:
+public:
   explicit VisualizationDataHandler(const rclcpp::Publisher<VisualizerObjects>::SharedPtr ptr);
   ~VisualizationDataHandler() = default;
 
@@ -39,7 +39,7 @@ class VisualizationDataHandler
   void publish_vis_geometry(const GeometryData::SharedPtr msg);
   TrackedFrame::UniquePtr publish_vis_tracked(TrackedFrame::UniquePtr msg);
 
- private:
+private:
   rclcpp::Publisher<VisualizerObjects>::SharedPtr pub_vis_objects_;
 };
 

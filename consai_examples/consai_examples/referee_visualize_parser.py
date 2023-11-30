@@ -25,6 +25,7 @@ from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Vector3
 
+
 def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
              placement_pos: Point):
     # レフェリー情報を描画オブジェクトに変換する
@@ -119,7 +120,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
         vis_annotation.normalized_width = BOTS_WIDTH
         vis_annotation.normalized_height = TEXT_HEIGHT
         vis_objects.annotations.append(vis_annotation)
-    
+
     # カード数
     vis_annotation = ShapeAnnotation()
     vis_annotation.color.name = COLOR_TEXT_BLUE

@@ -351,7 +351,8 @@ class FieldWidget(QWidget):
         annotation.normalized_x = 0.1
         self._draw_shape_annotation(painter, annotation)
 
-    def _draw_shape_annotation(self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
+    def _draw_shape_annotation(
+            self, painter: QPainter, shape: ShapeAnnotation, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.color)))
         # Annotationはフィールドではなくウィンドウ領域の座標系で描画する
         TARGET_WIDTH = shape.normalized_width * self.width()
@@ -371,7 +372,8 @@ class FieldWidget(QWidget):
 
         # テキストがTARGET_WIDTHをはみ出る場合はフォントサイズを小さくする
         if font_metrics.width(shape.text) > TARGET_WIDTH:
-            width_fit_point_size = font.pointSizeF() * TARGET_WIDTH / font_metrics.width(shape.text)
+            width_fit_point_size = font.pointSizeF() * \
+                TARGET_WIDTH / font_metrics.width(shape.text)
             font.setPointSizeF(width_fit_point_size)
             font_metrics = QFontMetrics(font)
 
@@ -427,7 +429,8 @@ class FieldWidget(QWidget):
                 shape.center.x, shape.center.y)
             self._draw_text(painter, center, shape.caption)
 
-    def _draw_shape_rect(self, painter: QPainter, shape: ShapeRectangle, draw_caption: bool = False):
+    def _draw_shape_rect(
+            self, painter: QPainter, shape: ShapeRectangle, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
         painter.setBrush(self._to_qcolor(shape.fill_color))
 
@@ -447,7 +450,8 @@ class FieldWidget(QWidget):
                 shape.center.x, shape.center.y - half_height)
             self._draw_text(painter, bottom_center, shape.caption)
 
-    def _draw_shape_circle(self, painter: QPainter, shape: ShapeCircle, draw_caption: bool = False):
+    def _draw_shape_circle(
+            self, painter: QPainter, shape: ShapeCircle, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
         painter.setBrush(self._to_qcolor(shape.fill_color))
 

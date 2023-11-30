@@ -107,7 +107,8 @@ class RefereeParser(Node):
         self._num_of_yellow_bots: int = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
-        self._pub_visualizer_objects = self.create_publisher(Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+        self._pub_visualizer_objects = self.create_publisher(
+            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
         self._sub_referee = self.create_subscription(

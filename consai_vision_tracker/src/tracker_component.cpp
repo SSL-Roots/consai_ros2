@@ -54,7 +54,7 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   pub_robot_velocities_ = create_publisher<RobotLocalVelocities>("robot_local_velocities", 10);
   vis_data_handler_ = std::make_shared<VisualizationDataHandler>(
     create_publisher<VisualizerObjects>(
-    "visualizer_objects", rclcpp::SensorDataQoS()));
+      "visualizer_objects", rclcpp::SensorDataQoS()));
 
   declare_parameter("invert", false);
 

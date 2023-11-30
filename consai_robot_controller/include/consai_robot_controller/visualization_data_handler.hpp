@@ -31,7 +31,7 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class VisualizationDataHandler
 {
- public:
+public:
   explicit VisualizationDataHandler(const rclcpp::Publisher<VisualizerObjects>::SharedPtr ptr);
   ~VisualizationDataHandler() = default;
 
@@ -40,7 +40,7 @@ class VisualizationDataHandler
     const GoalPose & goal_pose, const GoalPose & final_goal_pose);
   void publish_and_reset_vis_goal(void);
 
- private:
+private:
   rclcpp::Publisher<VisualizerObjects>::SharedPtr pub_vis_objects_;
   std::unique_ptr<VisualizerObjects> vis_objects_goal_;
 };

@@ -24,7 +24,7 @@ using VisRobot = consai_visualizer_msgs::msg::ShapeRobot;
 
 VisualizationDataHandler::VisualizationDataHandler(
   const rclcpp::Publisher<VisualizerObjects>::SharedPtr ptr)
-  : pub_vis_objects_(ptr)
+: pub_vis_objects_(ptr)
 {
   vis_objects_goal_ = std::make_unique<VisualizerObjects>();
 }
@@ -77,7 +77,7 @@ bool VisualizationDataHandler::append_vis_goal(
   return true;
 }
 
-void  VisualizationDataHandler::publish_and_reset_vis_goal(void)
+void VisualizationDataHandler::publish_and_reset_vis_goal(void)
 {
   if (!vis_objects_goal_) {
     return;
