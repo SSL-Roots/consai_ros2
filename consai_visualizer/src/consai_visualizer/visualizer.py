@@ -15,27 +15,25 @@
 # limitations under the License.
 
 
-from functools import partial
-import math
-import os
-import time
-
 from ament_index_python.resources import get_resource
 from consai_visualizer.field_widget import FieldWidget
 from consai_visualizer_msgs.msg import Objects
+from frootspi_msgs.msg import BatteryVoltage
+from functools import partial
+import math
+import os
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer
 from python_qt_binding.QtCore import QPointF
 from python_qt_binding.QtWidgets import QWidget
 from python_qt_binding.QtWidgets import QTreeWidgetItem
 from qt_gui.plugin import Plugin
+import rclpy
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotReplacement
 from rqt_py_common.ini_helper import pack, unpack
-import rclpy
-
-from frootspi_msgs.msg import BatteryVoltage
+import time
 
 
 class Visualizer(Plugin):

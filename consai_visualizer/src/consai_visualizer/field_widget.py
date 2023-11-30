@@ -15,20 +15,6 @@
 # limitations under the License.
 
 from collections import deque
-import datetime
-import math
-
-from typing import Dict
-from python_qt_binding.QtCore import QPointF
-from python_qt_binding.QtCore import QRectF
-from python_qt_binding.QtCore import QSizeF
-from python_qt_binding.QtCore import Qt
-from python_qt_binding.QtGui import QColor
-from python_qt_binding.QtGui import QFontMetrics
-from python_qt_binding.QtGui import QPainter
-from python_qt_binding.QtGui import QPainterPath
-from python_qt_binding.QtGui import QPen
-from python_qt_binding.QtWidgets import QWidget
 from consai_visualizer_msgs.msg import Objects as VisObjects
 from consai_visualizer_msgs.msg import Color as VisColor
 from consai_visualizer_msgs.msg import ShapeAnnotation
@@ -39,6 +25,19 @@ from consai_visualizer_msgs.msg import ShapePoint
 from consai_visualizer_msgs.msg import ShapeRectangle
 from consai_visualizer_msgs.msg import ShapeRobot
 from consai_visualizer_msgs.msg import ShapeTube
+import datetime
+import math
+from python_qt_binding.QtCore import QPointF
+from python_qt_binding.QtCore import QRectF
+from python_qt_binding.QtCore import QSizeF
+from python_qt_binding.QtCore import Qt
+from python_qt_binding.QtGui import QColor
+from python_qt_binding.QtGui import QFontMetrics
+from python_qt_binding.QtGui import QPainter
+from python_qt_binding.QtGui import QPainterPath
+from python_qt_binding.QtGui import QPen
+from python_qt_binding.QtWidgets import QWidget
+from typing import Dict
 
 
 class FieldWidget(QWidget):
@@ -444,9 +443,9 @@ class FieldWidget(QWidget):
         painter.drawRect(rect)
 
         if draw_caption:
-            center = self._convert_field_to_draw_point(
-                shape.center.x, shape.center.y)
-            self._draw_text(painter, center, shape.caption)
+            bottom_center = self._convert_field_to_draw_point(
+                shape.center.x, shape.center.y - half_height)
+            self._draw_text(painter, bottom_center, shape.caption)
 
     def _draw_shape_circle(self, painter: QPainter, shape: ShapeCircle, draw_caption: bool = False):
         painter.setPen(QPen(self._to_qcolor(shape.line_color), shape.line_size))
