@@ -68,19 +68,6 @@ class Visualizer(Plugin):
         self._add_visualizer_layer("caption", "caption")
 
         # Subscriber、Publisherの作成
-        # self._sub_geometry = self._node.create_subscription(
-        #     GeometryData, 'geometry',
-        #     self._widget.field_widget.set_field, 10)
-        # self._sub_detection = self._node.create_subscription(
-        #     DetectionFrame, 'detection',
-        #     self._widget.field_widget.set_detection, 10)
-        # self._sub_detection_tracked = self._node.create_subscription(
-        #     TrackedFrame, 'detection_tracked',
-        #     self._widget.field_widget.set_detection_tracked, 10)
-        # self._sub_named_targets = self._node.create_subscription(
-        #     NamedTargets, 'named_targets',
-        #     self._widget.field_widget.set_named_targets, 10)
-
         self._sub_battery_voltage = []
         for i in range(16):
             topic_name = 'robot' + str(i) + '/battery_voltage'
@@ -95,11 +82,6 @@ class Visualizer(Plugin):
                 BatteryVoltage, topic_name,
                 partial(self._callback_kicker_voltage, robot_id=i), 10))
 
-        # self._sub_goal_poses = self._node.create_subscription(
-        #     GoalPoses, 'goal_poses', self._widget.field_widget.set_goal_poses, 10)
-        # self._sub_final_goal_poses = self._node.create_subscription(
-        #     GoalPoses, 'final_goal_poses', self._widget.field_widget.set_final_goal_poses, 10)
-
         self._sub_visualize_objects = self._node.create_subscription(
             Objects, 'visualizer_objects',
             self._callback_visualizer_objects,
@@ -107,19 +89,9 @@ class Visualizer(Plugin):
 
         self._pub_replacement = self._node.create_publisher(
             Replacement, 'replacement', 10)
-        # self._widget.field_widget.set_pub_replacement(
-        #     self._node.create_publisher(Replacement, 'replacement', 1))
 
         # Parameterを設定する
         self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
-
-        # チェックボックスは複数あるので、文字列をメソッドに変換してconnect文を簡単にする
-        #     for robot_id in range(11):
-        #         method = "self._widget.chbox_turnon_" + team + \
-        #             str(robot_id) + ".stateChanged.connect"
-        #         eval(method)(
-        #             partial(self._clicked_robot_turnon, team == "yellow", robot_id)
-        #         )
 
         for team in ["blue", "yellow"]:
             for turnon in ["on", "off"]:
@@ -137,11 +109,6 @@ class Visualizer(Plugin):
         self._timer.timeout.connect(self._widget.field_widget.update)
         self._timer.timeout.connect(self._publish_replacement)
         self._timer.start(16)
-
-        # 5000 msec周期で描画情報をリセットする
-        self._draw_reset_timer = QTimer()
-        self._draw_reset_timer.timeout.connect(self._widget.field_widget.reset_topics)
-        self._draw_reset_timer.start(5000)
 
         # ロボットの死活監視
         # 1秒以上バッテリーの電圧が来ていないロボットは死んだとみなす
@@ -169,10 +136,6 @@ class Visualizer(Plugin):
         active_layers = list(map(lambda x: x.split(","), combined_layers))
         for (layer, sub_layer) in active_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
-
-    def _clicked_robot_turnon(self, is_yellow, robot_id, state):
-        self._widget.field_widget.append_robot_replacement(
-            is_yellow, robot_id, state == Qt.Checked)
 
     def _layer_state_changed(self):
         # レイヤーのチェックボックスが変更されたときに呼ばれる
@@ -301,7 +264,7 @@ class Visualizer(Plugin):
             replacement.robots.append(robot_replacement)
         self._pub_replacement.publish(replacement)
 
-    def battery_voltage_to_percentage(self, voltage):
+    def _battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8
         MIN_VOLTAGE = 14.8
         percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
@@ -311,7 +274,7 @@ class Visualizer(Plugin):
             percentage = 100
         return int(percentage)
 
-    def kicker_voltage_to_percentage(self, voltage):
+    def _kicker_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 200
         MIN_VOLTAGE = 0
         percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
@@ -330,9 +293,9 @@ class Visualizer(Plugin):
 
             try:
                 getattr(self._widget, f"robot{i}_battery_voltage").setValue(
-                    self.battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                    self._battery_voltage_to_percentage(self.latest_battery_voltage[i]))
                 getattr(self._widget, f"robot{i}_kicker_voltage").setValue(
-                    self.kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+                    self._kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
             except AttributeError:
                 # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                 pass

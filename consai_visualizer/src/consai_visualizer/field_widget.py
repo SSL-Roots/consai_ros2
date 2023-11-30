@@ -16,7 +16,6 @@
 
 from collections import deque
 import datetime
-from enum import Enum
 import math
 
 from typing import Dict
@@ -40,17 +39,6 @@ from consai_visualizer_msgs.msg import ShapePoint
 from consai_visualizer_msgs.msg import ShapeRectangle
 from consai_visualizer_msgs.msg import ShapeRobot
 from consai_visualizer_msgs.msg import ShapeTube
-from robocup_ssl_msgs.msg import BallReplacement
-from robocup_ssl_msgs.msg import Replacement
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import RobotReplacement
-from robocup_ssl_msgs.msg import TrackedFrame
-
-
-class ClickedObject(Enum):
-    IS_NONE = 0
-    IS_BALL_POS = 1
-    IS_BALL_VEL = 2
 
 
 class FieldWidget(QWidget):
@@ -61,52 +49,13 @@ class FieldWidget(QWidget):
         self.setMouseTracking(True)  # マウスカーソルの位置を取得するために必要
 
         # 定数
-        # Ref: named color  https://www.w3.org/TR/SVG11/types.html#ColorKeywords
-        self._COLOR_FIELD_CARPET = Qt.green
-        self._COLOR_FIELD_LINE = Qt.white
-        self._COLOR_BALL = QColor('orange')
-        self._COLOR_BLUE_ROBOT = Qt.cyan
-        self._COLOR_YELLOW_ROBOT = Qt.yellow
-        self._COLOR_REPLACEMENT_POS = QColor('magenta')
-        self._COLOR_REPLACEMENT_VEL_ANGLE = QColor('darkviolet')
-        self._COLOR_DESIGNATED_POSITION = QColor('red')
-        self._THICKNESS_FIELD_LINE = 2
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
-        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball
-        self._RADIUS_BALL = 21.5  # diameter is 43 mm.
-        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_shape
-        self._RADIUS_ROBOT = 90  # diameter is 180 mm.
-        self._RADIUS_REPLACEMENT_BALL_POS = self._RADIUS_BALL + 300
-        self._RADIUS_REPLACEMENT_BALL_VEL = self._RADIUS_BALL + 500
-        self._RADIUS_REPLACEMENT_ROBOT_POS = self._RADIUS_ROBOT + 100
-        self._RADIUS_REPLACEMENT_ROBOT_ANGLE = self._RADIUS_ROBOT + 200
-        self._GAIN_REPLACE_BALL_VEL = 0.001 * 3.0
-        self._MAX_VELOCITY_OF_REPLACE_BALL = 8.0
-        self._ID_POS = QPointF(150.0, 150.0)  # IDの表示位置 mm.
-        self._RADIUS_DESIGNATED_POSITION = 150  # ボールプレースメント成功範囲
         self._FULL_FIELD_LENGTH = 12.6
         self._FULL_FIELD_WIDTH = 9.6
 
         # 外部からセットするパラメータ
         self._logger = None
-        self._pub_replacement = None
-        self._can_draw_geometry = False
-        self._can_draw_detection = False
-        self._can_draw_detection_tracked = False
-        self._can_draw_replacement = False
-        # self._field = GeometryFieldSize()
-        # self._field.field_length = 13.4  # resize_draw_area()で0 divisionを防ぐための初期値
-        # self._field.field_width = 10.4  # resize_draw_area()で0 divisionを防ぐための初期値
-        self._detections = {}
-        self._detection_tracked = TrackedFrame()
-        self._blue_robot_num = 0
-        self._yellow_robot_num = 0
-        self._goal_poses = {}
-        self._final_goal_poses = {}
-        self._designated_position = {}  # ball placementの目標位置
-        self._named_targets = {}
-        self._robot_replacements = []
         self._invert = False
         self._visualizer_objects: Dict[int, Dict[tuple[str, str], VisObjects]] = {}
         self._active_layers: list[tuple[str, str]] = []
@@ -120,60 +69,13 @@ class FieldWidget(QWidget):
         self._mouse_clicked_point = QPointF(0.0, 0.0)  # マウスでクリックした描画領域の座標
         self._mouse_current_point = QPointF(0.0, 0.0)  # マウスカーソルの現在座標
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスでドラッグした距離
-        self._clicked_replacement_object = ClickedObject.IS_NONE  # マウスでクリックした、grSimのReplacementの対象
         self._previous_update_time = datetime.datetime.now()  # 前回の描画時刻
         self._frame_rate_buffer = deque(maxlen=20)  # フレームレート計算用のバッファ
         self._mouse_double_clicked = False  # マウスダブルクリックのフラグ
         self._mouse_double_click_updated = False  # ダブルクリックが更新されたフラグ
 
-
     def set_logger(self, logger):
         self._logger = logger
-
-    def set_pub_replacement(self, pub_replacement):
-        self._pub_replacement = pub_replacement
-
-    def set_can_draw_geometry(self, enable=True):
-        self._can_draw_geometry = enable
-
-    def set_can_draw_detection(self, enable=True):
-        self._can_draw_detection = enable
-
-    def set_can_draw_detection_tracked(self, enable=True):
-        self._can_draw_detection_tracked = enable
-
-    def set_can_draw_replacement(self, enable=True):
-        self._can_draw_replacement = enable
-
-    def set_field(self, msg):
-        self._field = msg.field
-        self._resize_draw_area()
-
-    def set_detection(self, msg):
-        self._detections[msg.camera_id] = msg
-
-    def set_detection_tracked(self, msg):
-        self._detection_tracked = msg
-        self._update_robot_num()
-
-    def set_goal_poses(self, msg):
-        self._goal_poses.clear()
-        for goal_pose in msg.poses:
-            self._goal_poses[goal_pose.robot_id] = goal_pose
-
-    def set_final_goal_poses(self, msg):
-        self._final_goal_poses.clear()
-        for goal_pose in msg.poses:
-            self._final_goal_poses[goal_pose.robot_id] = goal_pose
-
-    def set_designated_position(self, msg):
-        self._designated_position[0] = msg
-
-    def set_named_targets(self, msg):
-        # トピックを受け取るたびに初期化する
-        self._named_targets = {}
-        for i in range(len(msg.name)):
-            self._named_targets[msg.name[i]] = msg.pose[i]
 
     def set_invert(self, param):
         self._invert = param
@@ -183,12 +85,6 @@ class FieldWidget(QWidget):
 
     def set_active_layers(self, layers: list[tuple[str, str]]):
         self._active_layers = layers
-
-    def get_blue_robot_num(self):
-        return self._blue_robot_num
-
-    def get_yellow_robot_num(self):
-        return self._yellow_robot_num
 
     def get_mouse_double_click_updated(self) -> bool:
         return self._mouse_double_click_updated
@@ -201,28 +97,6 @@ class FieldWidget(QWidget):
     def reset_mouse_double_click_updated(self) -> None:
         self._mouse_double_click_updated = False
 
-    def append_robot_replacement(self, is_yellow, robot_id, turnon):
-        # turnon時はフィールド内に、turnoff時はフィールド外に、ID順でロボットを並べる
-        ID_OFFSET_X = 0.2
-        team_offset_x = -3.0 if is_yellow else 0.0
-        turnon_offset_y = -4.6 if turnon else -5.6
-
-        replacement = RobotReplacement()
-        replacement.x = team_offset_x + ID_OFFSET_X * robot_id
-        replacement.y = turnon_offset_y
-        replacement.dir = 90.0
-        replacement.id = robot_id
-        replacement.yellowteam = is_yellow
-        replacement.turnon.append(turnon)
-        self._robot_replacements.append(replacement)
-
-    def reset_topics(self):
-        # 取得したトピックをリセットする
-        self._detections = {}
-        self._goal_poses = {}
-        self._final_goal_poses = {}
-        self._designated_position = {}
-
     def mousePressEvent(self, event):
         # マウスクリック時のイベント
         self._mouse_double_clicked = False
@@ -230,11 +104,6 @@ class FieldWidget(QWidget):
         if event.buttons() == Qt.LeftButton:
             self._mouse_clicked_point = event.localPos()
             self._mouse_current_point = event.localPos()
-
-            # # ロボット、ボールをクリックしているか
-            # if self._can_draw_replacement:
-            #     self._clicked_replacement_object = self._get_clicked_replacement_object(
-            #         self._mouse_clicked_point)
 
         elif event.buttons() == Qt.RightButton:
             self._reset_draw_area_offset_and_scale()
@@ -258,9 +127,6 @@ class FieldWidget(QWidget):
         # マウス移動時のイベント
         self._mouse_current_point = event.localPos()
 
-        # if self._clicked_replacement_object != ClickedObject.IS_NONE:
-        #     # Replacement時は何もしない
-        #     pass
         if event.buttons() == Qt.LeftButton:
             if self._mouse_double_clicked:
                 # ダブルクリック時はマウスの現在位置を更新する
@@ -276,20 +142,12 @@ class FieldWidget(QWidget):
     def mouseReleaseEvent(self, event):
         # マウスクリック解除時のイベント
 
-        # if self._can_draw_replacement:
-        #     # grSim用のReplacementをpublish
-        #     if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
-        #         self._publish_ball_pos_replacement()
-        #     elif self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
-        #         self._publish_ball_vel_replacement()
-
         if self._mouse_double_clicked:
             self._mouse_double_clicked = False
             self._mouse_double_click_updated = True
 
         self._draw_area_offset += self._mouse_drag_offset
         self._mouse_drag_offset = QPointF(0.0, 0.0)  # マウスドラッグ距離の初期化
-        # self._clicked_replacement_object = ClickedObject.IS_NONE  # Replacementの初期化
 
         self.update()
 
@@ -335,105 +193,6 @@ class FieldWidget(QWidget):
 
         self._draw_objects_on_window_area(painter, draw_caption)
         self._draw_visualizer_info_on_window_area(painter)
-
-    def _get_clicked_replacement_object(self, clicked_point):
-        # マウスでクリックした位置がボールやロボットに近いか判定する
-        # 近ければreplacementと判定する
-        field_clicked_pos = self._convert_draw_to_field_pos(clicked_point)
-
-        # サイド反転の処理
-        if self._invert:
-            field_clicked_pos *= -1.0
-
-        clicked_object = ClickedObject.IS_NONE
-        for detection in self._detections.values():
-            for ball in detection.balls:
-                clicked_object = self._get_clicked_ball_object(field_clicked_pos, ball)
-
-        return clicked_object
-
-    def _get_clicked_ball_object(self, clicked_pos, ball):
-        ball_pos = QPointF(ball.x, ball.y)
-
-        if self._is_clicked(ball_pos, clicked_pos, self._RADIUS_REPLACEMENT_BALL_POS):
-            return ClickedObject.IS_BALL_POS
-        elif self._is_clicked(ball_pos, clicked_pos, self._RADIUS_REPLACEMENT_BALL_VEL):
-            return ClickedObject.IS_BALL_VEL
-        else:
-            return ClickedObject.IS_NONE
-
-    def _is_clicked(self, pos1, pos2, threshold):
-        # フィールド上のオブジェクトをクリックしたか判定する
-        diff_pos = pos1 - pos2
-        diff_norm = math.hypot(diff_pos.x(), diff_pos.y())
-
-        if diff_norm < threshold:
-            return True
-        else:
-            return False
-
-    def _publish_ball_pos_replacement(self):
-        # grSimのBall Replacementの位置をpublsihする
-        ball_replacement = BallReplacement()
-        pos = self._convert_draw_to_field_pos(self._mouse_current_point)
-        # サイド反転
-        if self._invert:
-            pos *= -1.0
-        ball_replacement.x.append(pos.x() * 0.001)  # mm に変換
-        ball_replacement.y.append(pos.y() * 0.001)  # mm に変換
-        ball_replacement.vx.append(0.0)
-        ball_replacement.vy.append(0.0)
-        replacement = Replacement()
-        replacement.ball.append(ball_replacement)
-        self._pub_replacement.publish(replacement)
-
-    def _publish_ball_vel_replacement(self):
-        # grSimのBall Replacementの速度をpublsihする
-        ball_replacement = BallReplacement()
-
-        start_pos = self._convert_draw_to_field_pos(self._mouse_clicked_point)
-        end_pos = self._convert_draw_to_field_pos(self._mouse_current_point)
-
-        # サイド反転
-        if self._invert:
-            start_pos *= -1.0
-            end_pos *= -1.0
-
-        # ball_replacement.x.append(start_pos.x() * 0.001)  # mm に変換
-        # ball_replacement.y.append(start_pos.y() * 0.001)  # mm に変換
-
-        diff_pos = end_pos - start_pos
-        diff_norm = math.hypot(diff_pos.x(), diff_pos.y())
-
-        velocity_norm = diff_norm * self._GAIN_REPLACE_BALL_VEL
-        if velocity_norm > self._MAX_VELOCITY_OF_REPLACE_BALL:
-            velocity_norm = self._MAX_VELOCITY_OF_REPLACE_BALL
-
-        angle = math.atan2(diff_pos.y(), diff_pos.x())
-        ball_replacement.vx.append(velocity_norm * math.cos(angle))
-        ball_replacement.vy.append(velocity_norm * math.sin(angle))
-
-        replacement = Replacement()
-        replacement.ball.append(ball_replacement)
-        self._pub_replacement.publish(replacement)
-
-    def _update_robot_num(self):
-        # 存在するロボットの台数を計上する
-        blue_robot_num = 0
-        yellow_robot_num = 0
-        for robot in self._detection_tracked.robots:
-            if len(robot.visibility) <= 0:
-                continue
-
-            if robot.visibility[0] < 0.01:
-                continue
-
-            if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
-                yellow_robot_num += 1
-            else:
-                blue_robot_num += 1
-        self._blue_robot_num = blue_robot_num
-        self._yellow_robot_num = yellow_robot_num
 
     def _reset_draw_area_offset_and_scale(self):
         # 描画領域の移動と拡大・縮小を初期化する
@@ -775,371 +534,6 @@ class FieldWidget(QWidget):
                 shape.y - shape.radius * 1.5)
             self._draw_text(painter, caption_point, shape.caption)
 
-    def _draw_geometry(self, painter):
-        # フィールド形状の描画
-        pass
-
-        # # グリーンカーペットを描画
-        # painter.setBrush(self._COLOR_FIELD_CARPET)
-        # rect = QRectF(
-        #     QPointF(-self._draw_area_size.width() * 0.5, -self._draw_area_size.height() * 0.5),
-        #     self._draw_area_size
-        # )
-        # painter.drawRect(rect)
-
-        # # 白線を描画
-        # painter.setPen(QPen(self._COLOR_FIELD_LINE, self._THICKNESS_FIELD_LINE))
-        # for line in self._field.field_lines:
-        #     p1 = self._convert_field_to_draw_point(line.p1.x, line.p1.y)
-        #     p2 = self._convert_field_to_draw_point(line.p2.x, line.p2.y)
-        #     painter.drawLine(p1, p2)
-
-        # for arc in self._field.field_arcs:
-        #     top_left = self._convert_field_to_draw_point(
-        #         arc.center.x - arc.radius,
-        #         arc.center.y + arc.radius)
-        #     size = arc.radius * 2 * self._scale_field_to_draw
-        #     rect = QRectF(top_left, QSizeF(size, size))
-
-        #     # angle must be 1/16 degrees order
-        #     start_angle = int(math.degrees(arc.a1) * 16)
-        #     end_angle = int(math.degrees(arc.a2) * 16)
-        #     span_angle = end_angle - start_angle
-        #     painter.drawArc(rect, start_angle, span_angle)
-
-        # # ペナルティポイントを描画
-        # painter.setBrush(self._COLOR_FIELD_LINE)
-        # PENALTY_X = self._field.field_length * 0.5 - 8000  # ルールの2.1.3 Field Markingsを参照
-        # PENALTY_DRAW_SIZE = 50 * self._scale_field_to_draw
-        # point = self._convert_field_to_draw_point(PENALTY_X, 0.0)
-        # painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
-        # point = self._convert_field_to_draw_point(-PENALTY_X, 0.0)
-        # painter.drawEllipse(point, PENALTY_DRAW_SIZE, PENALTY_DRAW_SIZE)
-
-        # # ゴールを描画
-        # painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
-        # painter.setBrush(self._COLOR_FIELD_CARPET)
-        # rect = QRectF(
-        #     self._convert_field_to_draw_point(
-        #         self._field.field_length * 0.5, self._field.goal_width*0.5),
-        #     QSizeF(self._field.goal_depth * self._scale_field_to_draw,
-        #            self._field.goal_width * self._scale_field_to_draw))
-        # painter.drawRect(rect)
-
-        # painter.setPen(QPen(Qt.black, self._THICKNESS_FIELD_LINE))
-        # rect = QRectF(
-        #     self._convert_field_to_draw_point(
-        #         -self._field.field_length * 0.5 - self._field.goal_depth,
-        #         self._field.goal_width*0.5),
-        #     QSizeF(self._field.goal_depth * self._scale_field_to_draw,
-        #            self._field.goal_width * self._scale_field_to_draw))
-        # painter.drawRect(rect)
-
-    def _draw_detection(self, painter):
-        # detectionトピックのロボット・ボールの描画
-
-        for detection in self._detections.values():
-            for ball in detection.balls:
-                self._draw_detection_ball(painter, ball, detection.camera_id)
-
-            for robot in detection.robots_yellow:
-                self._draw_detection_yellow_robot(painter, robot, detection.camera_id)
-
-            for robot in detection.robots_blue:
-                self._draw_detection_blue_robot(painter, robot, detection.camera_id)
-
-    def _draw_detection_tracked(self, painter):
-        # detection_trackedトピックのロボット・ボールの描画
-
-        for ball in self._detection_tracked.balls:
-            self._draw_tracked_ball(painter, ball)
-
-        for robot in self._detection_tracked.robots:
-            self._draw_tracked_robot(painter, robot)
-
-    def _draw_replacement(self, painter):
-        # grSim Replacementの描画
-        for detection in self._detections.values():
-            for ball in detection.balls:
-                self._draw_replacement_ball(painter, ball)
-
-    def _draw_detection_ball(self, painter, ball, camera_id=-1):
-        # detectionトピックのボールを描画する
-        point = self._convert_field_to_draw_point(ball.x, ball.y)
-        size = self._RADIUS_BALL * self._scale_field_to_draw
-
-        painter.setPen(self._COLOR_BALL)
-        painter.setBrush(self._COLOR_BALL)
-        painter.drawEllipse(point, size, size)
-
-    def _draw_tracked_ball(self, painter, ball):
-        VELOCITY_THRESH = 0.3  # m/s
-        PAINT_LENGTH = 10.0  # meters
-
-        # detection_trackedトピックのボールを描画する
-
-        # visibilityが下がるほど、色を透明にする
-        color_pen = QColor(Qt.black)
-        color_brush = QColor(self._COLOR_BALL)
-        if len(ball.visibility) > 0:
-            color_pen.setAlpha(int(255 * ball.visibility[0]))
-            color_brush.setAlpha(int(255 * ball.visibility[0]))
-        else:
-            color_pen.setAlpha(0)
-            color_brush.setAlpha(0)
-
-        painter.setPen(color_pen)
-        painter.setBrush(color_brush)
-        point_pos = self._convert_field_to_draw_point(
-            ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
-        size = self._RADIUS_BALL * self._scale_field_to_draw
-        painter.drawEllipse(point_pos, size, size)
-
-        # ボール速度を描画する
-        if len(ball.vel) == 0:
-            return
-        velocity = ball.vel[0]
-
-        # 速度が小さければ描画しない
-        if math.hypot(velocity.x, velocity.y) < VELOCITY_THRESH:
-            return
-        direction = math.atan2(velocity.y, velocity.x)
-        vel_end_x = PAINT_LENGTH * math.cos(direction) + ball.pos.x
-        vel_end_y = PAINT_LENGTH * math.sin(direction) + ball.pos.y
-        point_vel = self._convert_field_to_draw_point(
-            vel_end_x * 1000, vel_end_y * 1000)  # meters to mm
-
-        painter.setPen(QPen(QColor(102, 0, 255), 2))
-        painter.drawLine(point_pos, point_vel)
-
-    def _draw_detection_yellow_robot(self, painter, robot, camera_id=-1):
-        # detectionトピックの黄色ロボットを描画する
-        self._draw_detection_robot(painter, robot, self._COLOR_YELLOW_ROBOT, camera_id)
-
-    def _draw_detection_blue_robot(self, painter, robot, camera_id=-1):
-        # detectionトピックの青色ロボットを描画する
-        self._draw_detection_robot(painter, robot, self._COLOR_BLUE_ROBOT, camera_id)
-
-    def _draw_detection_robot(self, painter, robot, color, camera_id=-1):
-        # ロボットを描画する
-        point = self._convert_field_to_draw_point(robot.x, robot.y)
-        size = self._RADIUS_ROBOT * self._scale_field_to_draw
-
-        painter.setPen(color)
-        painter.setBrush(color)
-        painter.drawEllipse(point, size, size)
-
-        painter.setPen(Qt.black)
-        # ロボット角度
-        if len(robot.orientation) > 0:
-            line_x = self._RADIUS_ROBOT * math.cos(robot.orientation[0])
-            line_y = self._RADIUS_ROBOT * math.sin(robot.orientation[0])
-            line_point = point + self._convert_field_to_draw_point(line_x, line_y)
-            painter.drawLine(point, line_point)
-
-        # ロボットID
-        if len(robot.robot_id) > 0:
-            text_point = point + \
-                self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
-            painter.drawText(text_point, str(robot.robot_id[0]))
-
-    def _draw_tracked_robot(self, painter, robot):
-        # detection_trackedトピックのロボットを描画する
-        color_pen = QColor(Qt.black)
-        color_brush = QColor(self._COLOR_BLUE_ROBOT)
-        if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
-            color_brush = QColor(self._COLOR_YELLOW_ROBOT)
-
-        # visibilityが下がるほど、色を透明にする
-        if len(robot.visibility) > 0:
-            color_brush.setAlpha(int(255 * robot.visibility[0]))
-            # ペンの色はvisibilityが0になるまで透明度を下げない
-            if(robot.visibility[0] > 0.01):
-                color_pen.setAlpha(255)
-            else:
-                color_pen.setAlpha(0)
-        else:
-            color_pen.setAlpha(0)
-            color_brush.setAlpha(0)
-
-        self._draw_goal_pose(painter, robot)
-
-        painter.setPen(color_pen)
-        painter.setBrush(color_brush)
-        point = self._convert_field_to_draw_point(
-            robot.pos.x * 1000, robot.pos.y * 1000)  # meters to mm
-        size = self._RADIUS_ROBOT * self._scale_field_to_draw
-        painter.drawEllipse(point, size, size)
-
-        # ロボット角度
-        line_x = self._RADIUS_ROBOT * math.cos(robot.orientation)
-        line_y = self._RADIUS_ROBOT * math.sin(robot.orientation)
-        line_point = point + self._convert_field_to_draw_point(line_x, line_y)
-        painter.drawLine(point, line_point)
-
-        # ロボットID
-        text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
-        painter.drawText(text_point, str(robot.robot_id.id))
-
-    def _draw_goal_pose(self, painter, robot):
-        # goal_poseトピックを描画する
-        # ロボットの情報も参照するため、draw_tracked_robot()から呼び出すこと
-
-        robot_id = robot.robot_id.id
-
-        # goal_poseが存在しなければ終了
-        goal_pose = self._goal_poses.get(robot_id)
-        final_goal_pose = self._final_goal_poses.get(robot_id)
-        if goal_pose is None or final_goal_pose is None:
-            return
-
-        # team_colorが一致しなければ終了
-        robot_is_yellow = robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
-        if robot_is_yellow is not goal_pose.team_is_yellow:
-            return
-
-        brush_color = QColor('silver')
-        line_color = QColor('red')
-        self._draw_goal_pose_and_line_to_parent(
-            painter, goal_pose, robot.pos.x, robot.pos.y, robot_id,
-            self._RADIUS_ROBOT * self._scale_field_to_draw, brush_color, line_color)
-
-        brush_color.setAlphaF(0.5)
-        line_color.setAlphaF(0.5)
-        self._draw_goal_pose_and_line_to_parent(
-            painter, final_goal_pose, goal_pose.pose.x, goal_pose.pose.y, robot_id,
-            self._RADIUS_ROBOT * 0.7 * self._scale_field_to_draw, brush_color, line_color)
-
-    def _draw_goal_pose_and_line_to_parent(
-            self, painter, goal_pose, parent_x, parent_y, robot_id,
-            size, color_brush, color_line_to_parent):
-        # 目標位置を描画する
-        # parentはロボットだったり、回避位置だったりする
-        painter.setPen(Qt.black)
-        painter.setBrush(color_brush)
-        # x,y座標
-        point = self._convert_field_to_draw_point(
-            goal_pose.pose.x * 1000, goal_pose.pose.y * 1000)  # meters to mm
-        painter.drawEllipse(point, size, size)
-
-        # 角度
-        line_x = self._RADIUS_ROBOT * math.cos(goal_pose.pose.theta)
-        line_y = self._RADIUS_ROBOT * math.sin(goal_pose.pose.theta)
-        line_point = point + self._convert_field_to_draw_point(line_x, line_y)
-        painter.drawLine(point, line_point)
-
-        # ロボットID
-        text_point = point + self._convert_field_to_draw_point(self._ID_POS.x(), self._ID_POS.y())
-        painter.drawText(text_point, str(robot_id))
-
-        # goal_poseとparent_poseを結ぶ直線を引く
-        painter.setPen(QPen(color_line_to_parent, 2))
-        parent_point = self._convert_field_to_draw_point(
-            parent_x * 1000, parent_y * 1000)  # meters to mm
-        painter.drawLine(point, parent_point)
-
-    def _draw_replacement_ball(self, painter, ball):
-        # ボールのreplacementを描画する
-
-        # ボール速度replacement判定エリアの描画
-        point = self._convert_field_to_draw_point(ball.x, ball.y)
-        # サイド反転の処理
-        if self._invert:
-            point *= -1.0
-
-        size = self._RADIUS_REPLACEMENT_BALL_VEL * self._scale_field_to_draw
-        painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
-        painter.setBrush(self._COLOR_REPLACEMENT_VEL_ANGLE)
-        painter.drawEllipse(point, size, size)
-
-        # ボール位置replacement判定エリアの描画
-        size = self._RADIUS_REPLACEMENT_BALL_POS * self._scale_field_to_draw
-        painter.setPen(self._COLOR_REPLACEMENT_POS)
-        painter.setBrush(self._COLOR_REPLACEMENT_POS)
-        painter.drawEllipse(point, size, size)
-
-        # ボールのreplacement位置の描画
-        if self._clicked_replacement_object == ClickedObject.IS_BALL_POS:
-            end_point = self._apply_transpose_to_draw_point(self._mouse_current_point)
-            painter.setPen(self._COLOR_REPLACEMENT_POS)
-            painter.drawLine(point, end_point)
-
-        # ボールのreplacement速度の描画
-        if self._clicked_replacement_object == ClickedObject.IS_BALL_VEL:
-            end_point = self._apply_transpose_to_draw_point(self._mouse_current_point)
-            painter.setPen(self._COLOR_REPLACEMENT_VEL_ANGLE)
-            painter.drawLine(point, end_point)
-
-    def _draw_designated_position(self, painter):
-        # ボールプレースメントの目標位置と進入禁止エリアを描画する関数
-        if not self._designated_position:
-            return
-        if not self._detection_tracked.balls:
-            return
-
-        # 目標位置とボール位置を取得
-        designated_point = self._convert_field_to_draw_point(
-            self._designated_position[0].x, self._designated_position[0].y)
-        # サイド反転
-        if self._invert:
-            designated_point *= -1.0
-
-        ball = self._detection_tracked.balls[0]
-        ball_point = self._convert_field_to_draw_point(
-            ball.pos.x * 1000, ball.pos.y * 1000)  # meters to mm
-
-        # ボール配置しないロボットは、ボールと目標位置を結ぶラインから0.5 m以上離れなければならない
-        PROHIBITED_DISTANCE = 500
-        color_prohibited = QColor(Qt.black)
-        color_prohibited.setAlpha(100)
-        painter.setPen(color_prohibited)
-        painter.setBrush(color_prohibited)
-        size = PROHIBITED_DISTANCE * self._scale_field_to_draw
-
-        # 目標位置周りの進入禁止エリアを描画
-        painter.drawEllipse(designated_point, size, size)
-
-        # ボール周りの進入禁止エリアを描画
-        painter.drawEllipse(ball_point, size, size)
-
-        # ボールと目標位置を結ぶラインを描画
-        pen_line = QPen()
-        pen_line.setColor(color_prohibited)
-        pen_line.setWidthF(size * 2.0)  # 幅を2倍にする
-        painter.setPen(pen_line)
-        painter.drawLine(designated_point, ball_point)
-
-        # 目標位置を描画
-        size = self._RADIUS_DESIGNATED_POSITION * self._scale_field_to_draw
-        painter.setPen(self._COLOR_DESIGNATED_POSITION)
-        painter.setBrush(self._COLOR_DESIGNATED_POSITION)
-        painter.drawEllipse(designated_point, size, size)
-
-    def _draw_named_targets(self, painter):
-        # 名前付きターゲットを描画する
-        TARGET_RADIUS = 70  # ターゲット位置の描画直径 mm
-        NAME_POS = QPointF(100.0, 100.0)  # ターゲット名の描画座標 mm
-
-        painter.setPen(Qt.black)
-        painter.setBrush(Qt.white)
-
-        for name, pose in self._named_targets.items():
-            # x,y座標
-            point = self._convert_field_to_draw_point(
-                pose.x * 1000, pose.y * 1000)  # meters to mm
-            size = TARGET_RADIUS * self._scale_field_to_draw
-            painter.drawEllipse(point, size, size)
-
-            # 角度
-            line_x = TARGET_RADIUS * math.cos(pose.theta)
-            line_y = TARGET_RADIUS * math.sin(pose.theta)
-            line_point = point + self._convert_field_to_draw_point(line_x, line_y)
-            painter.drawLine(point, line_point)
-
-            # 名前
-            text_point = point + self._convert_field_to_draw_point(NAME_POS.x(), NAME_POS.y())
-            painter.drawText(text_point, str(name))
-
     def _convert_field_to_draw_point(self, x, y):
         # フィールド座標系を描画座標系に変換する
         draw_x = x * self._scale_field_to_draw
@@ -1175,25 +569,3 @@ class FieldWidget(QWidget):
             field_y *= -1.0
 
         return QPointF(field_x, field_y)
-
-    def _apply_transpose_to_draw_point(self, point):
-        # Widget上のポイント（左上が0, 0となる座標系）を、
-        # translate、scale、rotate適用後のポイントに変換する
-
-        draw_point = QPointF()
-
-        # 描画中心座標変更の適用
-        draw_point.setX(point.x() - self.width() * 0.5)
-        draw_point.setY(point.y() - self.height() * 0.5)
-
-        # 描画領域の拡大・縮小の適用
-        draw_point /= self._draw_area_scale
-
-        # 描画領域の移動の適用
-        draw_point -= self._draw_area_offset
-
-        # 描画領域の回転の適用
-        if self._do_rotate_draw_area is True:
-            draw_point = QPointF(-draw_point.y(), draw_point.x())
-
-        return draw_point
