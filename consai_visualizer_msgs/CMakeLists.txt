@@ -4,7 +4,6 @@ project(consai_visualizer_msgs)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(robocup_ssl_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 set(msg_files
