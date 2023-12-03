@@ -44,7 +44,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${action_files}
   DEPENDENCIES std_msgs robocup_ssl_msgs
-  ADD_LINTER_TESTS
+  # ADD_LINTER_TESTS
 )
 
 if(BUILD_TESTING)

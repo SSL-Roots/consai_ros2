@@ -11,6 +11,7 @@
 
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>consai_msgs</exec_depend>
+  <exec_depend>consai_visualizer_msgs</exec_depend>
   <exec_depend>frootspi_msgs</exec_depend>
   <exec_depend version_gte="0.2.19">python_qt_binding</exec_depend>
   <exec_depend>rclpy</exec_depend>

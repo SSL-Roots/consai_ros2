@@ -27,6 +27,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
+    ${PROJECT_NAME}/referee_visualize_parser.py
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
