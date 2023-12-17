@@ -675,7 +675,7 @@ bool FieldInfoParser::control_ball(
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
-  
+ 
   // ボールより前方にロボットが存在する場合
   if (0.0 < robot_pose_BtoT.x) {
     // ボールの斜め後ろに目標座標を設定
