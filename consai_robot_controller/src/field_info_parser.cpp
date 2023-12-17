@@ -681,15 +681,14 @@ bool FieldInfoParser::control_ball(
     // ボールの斜め後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(
       -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), 0.0);
-  }
-  // ボールの後ろにロボットが存在しない場合
-  else if (ROBOT_RADIUS < std::fabs(robot_pose_BtoT.y)) {
+  } else if (ROBOT_RADIUS < std::fabs(robot_pose_BtoT.y)) {
+    // ボールの後ろにロボットが存在しない場合
     // ドリブルON
     need_dribble = true;
     // ボールの真後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(-MAX_X, 0.0, 0.0);
-  }
-  else {
+  } else {
+    // ボールの後ろにロボットが存在する場合
     // キックとドリブルON
     need_kick = true;
     need_dribble = true;
