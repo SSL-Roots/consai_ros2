@@ -35,6 +35,7 @@ add_library(controller_component SHARED
   src/geometry_tools.cpp
   src/control_tools.cpp
   src/visualization_data_handler.cpp
+  src/trajectory_follow_control.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
