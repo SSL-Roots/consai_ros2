@@ -105,6 +105,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/command", 10)
     );
 
+    pub_visualizer_objects_ = create_publisher<VisualizerObjects>("visualizer_objects", 10);
+
     std::string name_space = team_color + std::to_string(i);
     server_control_.push_back(
       rclcpp_action::create_server<RobotControl>(
@@ -369,6 +371,18 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
     }
   }
+
+  // Visualizerにデータを送る
+  Trajectory traj(
+    {
+      Pose2D(0, 0, 0),
+      Pose2D(1, 1, 0),
+      Pose2D(2, 1, 0),
+      Pose2D(3, 3, 0),
+    },
+    0, 0);
+  VisualizerObjects objects = TrajectoryVisualizer::createObjectsFromTrajectory(traj);
+  pub_visualizer_objects_->publish(objects);
 }
 
 void Controller::on_timer_pub_stop_command(const unsigned int robot_id)

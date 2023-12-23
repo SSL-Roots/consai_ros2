@@ -30,6 +30,8 @@
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
+#include "consai_robot_controller/trajectory_follow_control.hpp"
+#include "consai_visualizer_msgs/msg/objects.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
@@ -52,6 +54,7 @@ using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using GoalPosesMap = std::map<unsigned int, GoalPose>;
+using VisualizerObjects = consai_visualizer_msgs::msg::Objects;
 
 class Controller : public rclcpp::Node
 {
@@ -97,6 +100,7 @@ private:
   std::vector<bool> need_response_;
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
   std::vector<State> last_world_vel_;
+  rclcpp::Publisher<VisualizerObjects>::SharedPtr pub_visualizer_objects_;
 
   consai_robot_controller::FieldInfoParser parser_;
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
