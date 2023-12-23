@@ -3,6 +3,7 @@
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 
+
 class Pose2D {
 public:
   double x;
@@ -11,6 +12,25 @@ public:
 
   Pose2D();
   Pose2D(double x, double y, double theta);
+};
+
+class Velocity2D {
+public:
+  double x;
+  double y;
+  double theta;
+
+  Velocity2D();
+  Velocity2D(double x, double y, double theta);
+};
+
+class State2D {
+public:
+  Pose2D pose;
+  Velocity2D velocity;
+
+  State2D();
+  State2D(Pose2D pose, Velocity2D velocity);
 };
 
 class TimeStamp {

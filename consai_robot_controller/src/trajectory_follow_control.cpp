@@ -14,6 +14,30 @@ Pose2D::Pose2D(double x, double y, double theta) {
     this->theta = theta;
 }
 
+// Velocity2D クラスの定義
+Velocity2D::Velocity2D() {
+    this->x = 0.0;
+    this->y = 0.0;
+    this->theta = 0.0;
+}
+
+Velocity2D::Velocity2D(double x, double y, double theta) {
+    this->x = x;
+    this->y = y;
+    this->theta = theta;
+}
+
+// State2D クラスの定義
+State2D::State2D() {
+    this->pose = Pose2D();
+    this->velocity = Velocity2D();
+}
+
+State2D::State2D(Pose2D pose, Velocity2D velocity) {
+    this->pose = pose;
+    this->velocity = velocity;
+}
+
 // TimeStamp クラスの定義
 TimeStamp::TimeStamp() {
     this->start_time_ms = 0;
