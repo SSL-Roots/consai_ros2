@@ -36,9 +36,10 @@ public:
 class Trajectory {
 public:
   Trajectory();
-  Trajectory(std::vector<Pose2D> poses, uint64_t start_time_ms, uint64_t dt_ms);
+  Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms);
     
-  std::vector<Pose2DStamped> poses;
+  std::vector<Pose2D> poses;
+  uint16_t dt_ms;
 };
 
 

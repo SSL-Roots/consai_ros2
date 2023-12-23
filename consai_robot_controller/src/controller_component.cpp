@@ -380,7 +380,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       Pose2D(2, 1, 0),
       Pose2D(3, 3, 0),
     },
-    0, 0);
+    10);
   VisualizerObjects objects = TrajectoryVisualizer::createObjectsFromTrajectory(traj);
   pub_visualizer_objects_->publish(objects);
 }

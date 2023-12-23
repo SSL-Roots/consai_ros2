@@ -38,16 +38,13 @@ Pose2DStamped::Pose2DStamped(Pose2D pose, TimeStamp timestamp) {
 
 // Trajectory クラスの定義
 Trajectory::Trajectory() {
-    this->poses = std::vector<Pose2DStamped>();
+    this->poses = std::vector<Pose2D>();
+    this->dt_ms = 0;
 }
 
-Trajectory::Trajectory(std::vector<Pose2D> poses, uint64_t start_time_ms, uint64_t dt_ms) {
-    this->poses = std::vector<Pose2DStamped>();
-
-    for (auto i = 0; i < poses.size(); i++) {
-        Pose2DStamped pose2d_stamped = Pose2DStamped(poses[i], TimeStamp(start_time_ms, dt_ms * i));
-        this->poses.push_back(pose2d_stamped);
-    }
+Trajectory::Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms) {
+    this->dt_ms = dt_ms;
+    this->poses = poses;
 }
 
 // TrajectoryVisualizer クラスの定義
@@ -61,10 +58,10 @@ consai_visualizer_msgs::msg::Objects TrajectoryVisualizer::createObjectsFromTraj
     for (auto i = 0; i < trajectory.poses.size() - 1; i++) {
         consai_visualizer_msgs::msg::ShapeLine line;
 
-        line.p1.x = trajectory.poses[i].pose.x;
-        line.p1.y = trajectory.poses[i].pose.y;
-        line.p2.x = trajectory.poses[i + 1].pose.x;
-        line.p2.y = trajectory.poses[i + 1].pose.y;
+        line.p1.x = trajectory.poses[i].x;
+        line.p1.y = trajectory.poses[i].y;
+        line.p2.x = trajectory.poses[i + 1].x;
+        line.p2.y = trajectory.poses[i + 1].y;
         line.size = 1;
         line.color.red = 1.0;
         line.color.green = 0.0;
