@@ -71,6 +71,73 @@ Trajectory::Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms) {
     this->poses = poses;
 }
 
+// TrajectoryFollowController クラスの定義
+TrajectoryFollowController::TrajectoryFollowController() {
+    this->trajectory_ = Trajectory();
+    this->state_ = ControllerState::INITIALIZED;
+}
+
+void TrajectoryFollowController::initialize(const Trajectory& trajectory) {
+    this->trajectory_ = trajectory;
+    this->state_ = ControllerState::INITIALIZED;
+    this->current_index_ = 0;
+}
+
+std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFollowController::run(const State2D& current_state) {
+    /** 
+     * 軌道追従の制御を行う制御器
+     * 現在位置と次ステップの目標軌道位置との差分を元にPID制御を行う。
+     * また、フィードフォワード項として、現ステップと次ステップの目標位置の差分(=理想の速度)を使用する。
+     */
+    Velocity2D output = Velocity2D();
+
+    // 状態の判定
+    ControllerState state = ControllerState::RUNNING;
+
+    if (this->state_ == ControllerState::INITIALIZED) {
+        this->state_ = ControllerState::RUNNING;
+    }
+
+    // x についての制御
+    output.x = this->control(
+        current_state.pose.x,
+        this->trajectory_.poses[this->current_index_ + 1].x,
+        this->trajectory_.poses[this->current_index_].x,
+        this->trajectory_.dt_ms
+    );
+
+    // y についての制御
+    output.y = this->control(
+        current_state.pose.y,
+        this->trajectory_.poses[this->current_index_ + 1].y,
+        this->trajectory_.poses[this->current_index_].y,
+        this->trajectory_.dt_ms
+    );
+
+    // theta についての制御
+    output.theta = this->control(
+        current_state.pose.theta,
+        this->trajectory_.poses[this->current_index_ + 1].theta,
+        this->trajectory_.poses[this->current_index_].theta,
+        this->trajectory_.dt_ms
+    );
+
+    // 終点に到達するまで current_index_ をインクリメント
+    if (this->current_index_ < this->trajectory_.poses.size() - 1) {
+        this->current_index_++;
+    } else {
+        state = ControllerState::COMPLETE;
+    }   
+}
+
+double TrajectoryFollowController::control(double current, double target, double current_target, uint16_t dt_ms) {
+    double error = target - current;
+    double ideal_speed = (target - current_target) / dt_ms;
+    double output = kp_ * error + ideal_speed;
+    return output;
+}
+
+
 // TrajectoryVisualizer クラスの定義
 consai_visualizer_msgs::msg::Objects TrajectoryVisualizer::createObjectsFromTrajectory(const Trajectory& trajectory) {
     consai_visualizer_msgs::msg::Objects objects;

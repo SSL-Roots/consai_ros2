@@ -62,6 +62,60 @@ public:
   uint16_t dt_ms;
 };
 
+/**
+ * @brief Trajectoryを追従するためのクラス
+ * @details
+ * Trajectoryを追従するためのクラス
+*/
+class TrajectoryFollowController {
+public:
+  /**
+   * @brief コントローラの状態
+   * @details
+   * コントローラの状態
+  */
+  enum ControllerState {
+    INITIALIZED,
+    RUNNING,
+    COMPLETE,
+    FAILED
+  };
+
+  /**
+   * @brief コンストラクタ
+   * @details
+   * コンストラクタ
+  */
+  TrajectoryFollowController();
+
+  /**
+   * @brief コントローラの初期化
+   * @param trajectory 追従するTrajectory
+   */
+  void initialize(const Trajectory& trajectory);
+
+  /**
+   * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する
+   * @param current_state 現在の状態
+   * @return 次ステップの指令速度とコントローラのステート
+   */
+  std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
+
+private:
+  double control(double current, double target, double current_target, uint16_t dt_ms);
+
+  Trajectory& trajectory_;
+  ControllerState state_;
+
+  _Float64  kp_ = 10.0;
+  // _Float64  ki_ = 0.0;
+  // _Float64  kd_ = 0.0;
+
+  uint32_t  current_index_ = 0;
+
+
+}
+
 
 
 
