@@ -63,24 +63,46 @@ Pose2DStamped::Pose2DStamped(Pose2D pose, TimeStamp timestamp) {
 // Trajectory クラスの定義
 Trajectory::Trajectory() {
     this->poses = std::vector<Pose2D>();
-    this->dt_ms = 0;
+    this->step_time_ms = 0;
 }
 
 Trajectory::Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms) {
-    this->dt_ms = dt_ms;
+    this->step_time_ms = dt_ms;
     this->poses = poses;
+}
+
+/**
+ * 指定した時刻の軌道位置を取得する
+ * 軌道のポイントの間にある時刻の場合は、線形補間を行う
+ * @param time_ms 時刻
+ * @return 指定した時刻の軌道位置
+*/
+Pose2D Trajectory::getPoseAtTime(uint64_t time_ms) {
+    // 軌道のポイントの間にある時刻の場合は、線形補間を行う
+    uint64_t index = time_ms / this->step_time_ms;
+    if (index < this->poses.size() - 1) {
+        double ratio = (time_ms % this->step_time_ms) / (double)this->step_time_ms;
+        double x = this->poses[index].x + (this->poses[index + 1].x - this->poses[index].x) * ratio;
+        double y = this->poses[index].y + (this->poses[index + 1].y - this->poses[index].y) * ratio;
+        double theta = this->poses[index].theta + (this->poses[index + 1].theta - this->poses[index].theta) * ratio;
+        return Pose2D(x, y, theta);
+    } else {
+        return this->poses[this->poses.size() - 1];
+    }
 }
 
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController() {
     this->trajectory_ = Trajectory();
     this->state_ = ControllerState::INITIALIZED;
+    this->tracked_time_ms_ = 0;
+    this->kp_ = 1.0;
 }
 
 void TrajectoryFollowController::initialize(const Trajectory& trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
-    this->current_index_ = 0;
+    this->tracked_time_ms_ = 0;
 }
 
 std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFollowController::run(const State2D& current_state) {
@@ -98,41 +120,35 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
         this->state_ = ControllerState::RUNNING;
     }
 
-    // x についての制御
-    output.x = this->control(
-        current_state.pose.x,
-        this->trajectory_.poses[this->current_index_ + 1].x,
-        this->trajectory_.poses[this->current_index_].x,
-        this->trajectory_.dt_ms
-    );
+    // 前ステップの目標位置の取得
+    Pose2D last_target_pose = this->trajectory_.getPoseAtTime(this->tracked_time_ms_);
 
-    // y についての制御
-    output.y = this->control(
-        current_state.pose.y,
-        this->trajectory_.poses[this->current_index_ + 1].y,
-        this->trajectory_.poses[this->current_index_].y,
-        this->trajectory_.dt_ms
-    );
+    // 今ステップの目標位置の取得
+    Pose2D target_pose = this->trajectory_.getPoseAtTime(this->tracked_time_ms_ + this->dt_ms_);
 
-    // theta についての制御
-    output.theta = this->control(
-        current_state.pose.theta,
-        this->trajectory_.poses[this->current_index_ + 1].theta,
-        this->trajectory_.poses[this->current_index_].theta,
-        this->trajectory_.dt_ms
-    );
+    // x方向の制御
+    output.x = this->control(current_state.pose.x, target_pose.x, last_target_pose.x);
 
-    // 終点に到達するまで current_index_ をインクリメント
-    if (this->current_index_ < this->trajectory_.poses.size() - 1) {
-        this->current_index_++;
-    } else {
+    // y方向の制御
+    output.y = this->control(current_state.pose.y, target_pose.y, last_target_pose.y);
+
+    // theta方向の制御
+    output.theta = this->control(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
+
+    // 時間の更新
+    this->tracked_time_ms_ += this->dt_ms_;
+
+    // 終了判定
+    if (this->tracked_time_ms_ >= this->trajectory_.poses.size() * this->dt_ms_) {
         state = ControllerState::COMPLETE;
-    }   
+    }
+
+    return std::make_pair(output, state);
 }
 
-double TrajectoryFollowController::control(double current, double target, double current_target, uint16_t dt_ms) {
+double TrajectoryFollowController::control(double current, double target, double current_target) {
     double error = target - current;
-    double ideal_speed = (target - current_target) / dt_ms;
+    double ideal_speed = (target - current_target) / this->dt_ms_;
     double output = kp_ * error + ideal_speed;
     return output;
 }

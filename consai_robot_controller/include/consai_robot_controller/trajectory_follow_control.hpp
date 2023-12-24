@@ -57,9 +57,10 @@ class Trajectory {
 public:
   Trajectory();
   Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms);
+  Pose2D getPoseAtTime(uint64_t time_ms);
     
   std::vector<Pose2D> poses;
-  uint16_t dt_ms;
+  uint16_t step_time_ms;
 };
 
 /**
@@ -102,7 +103,7 @@ public:
   std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
 
 private:
-  double control(double current, double target, double current_target, uint16_t dt_ms);
+  double control(double current, double target, double current_target);
 
   Trajectory& trajectory_;
   ControllerState state_;
@@ -111,10 +112,9 @@ private:
   // _Float64  ki_ = 0.0;
   // _Float64  kd_ = 0.0;
 
-  uint32_t  current_index_ = 0;
-
-
-}
+  uint64_t tracked_time_ms_ = 0;  // 追従制御開始時刻からの経過時刻
+  uint16_t dt_ms_ = 0;           // 制御周期
+};
 
 
 
