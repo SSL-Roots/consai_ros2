@@ -224,7 +224,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
 
   VisRobot vis_robot;
   vis_robot.line_color.name = "black";
-  vis_robot.line_size = 1;
+  vis_robot.line_size = 4;
   for (const auto & robot : msg->robots) {
     if (robot.visibility.size() <= 0 || robot.visibility[0] < 0.5) {
       continue;
