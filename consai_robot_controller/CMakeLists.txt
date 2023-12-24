@@ -30,12 +30,16 @@ include_directories(include)
 # Controller Component
 add_library(controller_component SHARED
   src/ball_boy_tactics.cpp
+  src/bangbangtrajectory1d.cpp
+  src/bangbangtrajectory2d.cpp
   src/controller_component.cpp
   src/field_info_parser.cpp
   src/geometry_tools.cpp
   src/control_tools.cpp
   src/visualization_data_handler.cpp
   src/trajectory_follow_control.cpp
+  src/trajectory.cpp
+  src/utils.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
