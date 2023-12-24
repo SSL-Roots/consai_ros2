@@ -82,12 +82,8 @@ public:
     FAILED
   };
 
-  /**
-   * @brief コンストラクタ
-   * @details
-   * コンストラクタ
-  */
   TrajectoryFollowController();
+  TrajectoryFollowController(_Float64 kp, uint64_t dt_ms);
 
   /**
    * @brief コントローラの初期化

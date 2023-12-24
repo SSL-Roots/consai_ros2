@@ -99,6 +99,15 @@ TrajectoryFollowController::TrajectoryFollowController() {
     this->kp_ = 1.0;
 }
 
+TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, uint64_t dt_ms) {
+    this->trajectory_ = Trajectory();
+    this->state_ = ControllerState::INITIALIZED;
+    this->tracked_time_ms_ = 0;
+    this->kp_ = kp;
+    this->dt_ms_ = dt_ms;
+}
+
+
 void TrajectoryFollowController::initialize(const Trajectory& trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
