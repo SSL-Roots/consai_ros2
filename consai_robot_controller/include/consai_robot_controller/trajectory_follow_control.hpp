@@ -1,5 +1,6 @@
-#include "rclcpp/rclcpp.hpp"
+#pragma once
 
+#include "rclcpp/rclcpp.hpp"
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
 
