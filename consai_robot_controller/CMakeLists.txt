@@ -38,6 +38,7 @@ add_library(controller_component SHARED
   src/control_tools.cpp
   src/visualization_data_handler.cpp
   src/trajectory_follow_control.cpp
+  src/trajectory_generator.cpp
   src/trajectory.cpp
   src/utils.cpp
 )
