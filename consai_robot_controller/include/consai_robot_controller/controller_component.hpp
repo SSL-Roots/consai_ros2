@@ -90,6 +90,10 @@ private:
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   bool switch_to_stop_control_mode(
     const unsigned int robot_id, const bool success, const std::string & error_msg);
+  State calculate_velocity_with_avoidance(
+    const TrackedRobot& my_robot, const State& goal_pose,
+    const State& final_goal_pose, const std::shared_ptr<GoalHandleRobotControl> goal_handle,
+    const double max_velocity_xy, const double max_velocity_theta);
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
