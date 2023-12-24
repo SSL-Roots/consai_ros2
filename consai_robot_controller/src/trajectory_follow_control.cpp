@@ -93,22 +93,22 @@ Pose2D Trajectory::getPoseAtTime(uint64_t time_ms) {
 
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController() {
-    this->trajectory_ = Trajectory();
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ms_ = 0;
     this->kp_ = 1.0;
+    this->trajectory_ = nullptr;
 }
 
 TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, uint64_t dt_ms) {
-    this->trajectory_ = Trajectory();
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ms_ = 0;
     this->kp_ = kp;
     this->dt_ms_ = dt_ms;
+    this->trajectory_ = nullptr;
 }
 
 
-void TrajectoryFollowController::initialize(const Trajectory& trajectory) {
+void TrajectoryFollowController::initialize(std::shared_ptr<Trajectory> trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ms_ = 0;
@@ -130,10 +130,10 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     }
 
     // 前ステップの目標位置の取得
-    Pose2D last_target_pose = this->trajectory_.getPoseAtTime(this->tracked_time_ms_);
+    Pose2D last_target_pose = this->trajectory_->getPoseAtTime(this->tracked_time_ms_);
 
     // 今ステップの目標位置の取得
-    Pose2D target_pose = this->trajectory_.getPoseAtTime(this->tracked_time_ms_ + this->dt_ms_);
+    Pose2D target_pose = this->trajectory_->getPoseAtTime(this->tracked_time_ms_ + this->dt_ms_);
 
     // x方向の制御
     output.x = this->control(current_state.pose.x, target_pose.x, last_target_pose.x);
@@ -148,7 +148,7 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     this->tracked_time_ms_ += this->dt_ms_;
 
     // 終了判定
-    if (this->tracked_time_ms_ >= this->trajectory_.poses.size() * this->dt_ms_) {
+    if (this->tracked_time_ms_ >= this->trajectory_->poses.size() * this->dt_ms_) {
         state = ControllerState::COMPLETE;
     }
 

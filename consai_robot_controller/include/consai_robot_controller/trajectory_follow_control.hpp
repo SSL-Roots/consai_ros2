@@ -89,7 +89,7 @@ public:
    * @brief コントローラの初期化
    * @param trajectory 追従するTrajectory
    */
-  void initialize(const Trajectory& trajectory);
+  void initialize(std::shared_ptr<Trajectory> trajectory);
 
   /**
    * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する
@@ -101,7 +101,7 @@ public:
 private:
   double control(double current, double target, double current_target);
 
-  Trajectory& trajectory_;
+  std::shared_ptr<Trajectory> trajectory_;
   ControllerState state_;
 
   _Float64  kp_ = 10.0;
