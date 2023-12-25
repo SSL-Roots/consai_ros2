@@ -14,7 +14,6 @@ public:
     RUNNING_FOLLOW_TRAJECTORY,
     COMPLETE,
     FAILED,
-    HALT,
   };
 
   LocomotionController(_Float64 kp_xy, _Float64 kp_theta, uint64_t dt_ms, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration);

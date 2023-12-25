@@ -36,12 +36,6 @@ LocomotionController::ControllerState LocomotionController::moveToPose(const Pos
     return state_;
 }
 
-LocomotionController::ControllerState LocomotionController::halt() {
-    // 停止を指示するメソッドの実装
-    state_ = HALT;
-    return state_;
-}
-
 std::pair<Velocity2D, LocomotionController::ControllerState> LocomotionController::run(const State2D& current_state) {
     // 現在の状態から次のステップの速度と状態を計算するメソッドの実装
     Velocity2D output_velocity;
@@ -59,11 +53,6 @@ std::pair<Velocity2D, LocomotionController::ControllerState> LocomotionControlle
         case RUNNING_FOLLOW_TRAJECTORY:
             // 軌道追従制御を実行
             output_velocity = runFollowTrajectory(current_state);
-            break;
-
-        case HALT:
-            // 停止
-            output_velocity = Velocity2D(0, 0, 0);
             break;
 
         case COMPLETE:
