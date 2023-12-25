@@ -40,6 +40,7 @@ add_library(controller_component SHARED
   src/trajectory_follow_control.cpp
   src/trajectory_generator.cpp
   src/trajectory.cpp
+  src/locomotion_controller.cpp
   src/utils.cpp
 )
 target_compile_definitions(controller_component
