@@ -26,6 +26,6 @@ Trajectory TrajectoryGenerator::generate(
         poses.push_back(pose);
     }
 
-    Trajectory traj = Trajectory(poses, dt);
+    Trajectory traj = Trajectory(poses, dt * 1000);
     return traj;
 }
