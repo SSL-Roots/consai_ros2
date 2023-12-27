@@ -37,11 +37,13 @@ public:
 class Trajectory {
 public:
   Trajectory();
-  Trajectory(std::vector<Pose2D> poses, uint64_t dt_ms);
-  Pose2D getPoseAtTime(uint64_t time_ms);
+  Trajectory(std::vector<Pose2D> poses, double dt);
+  Pose2D getPoseAtTime(double sec);
     
   std::vector<Pose2D> poses;
-  uint16_t step_time_ms;
+
+private:
+  double dt_;
 };
 
 /**
@@ -64,7 +66,7 @@ public:
   };
 
   TrajectoryFollowController();
-  TrajectoryFollowController(_Float64 kp, uint64_t dt_ms);
+  TrajectoryFollowController(_Float64 kp, double dt);
 
   /**
    * @brief コントローラの初期化
@@ -89,8 +91,8 @@ private:
   // _Float64  ki_ = 0.0;
   // _Float64  kd_ = 0.0;
 
-  uint64_t tracked_time_ms_ = 0;  // 追従制御開始時刻からの経過時刻
-  uint16_t dt_ms_ = 0;           // 制御周期
+  double tracked_time_ = 0;  // 追従制御開始時刻からの経過時刻
+  double dt_ = 0.0;          // 制御周期
 };
 
 

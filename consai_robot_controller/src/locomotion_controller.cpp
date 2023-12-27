@@ -1,14 +1,14 @@
 #include "consai_robot_controller/locomotion_controller.hpp"
 
 
-LocomotionController::LocomotionController(_Float64 kp_xy, _Float64 kp_theta, uint64_t dt_ms, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration) {
-    this->trajectory_follow_controller_ = TrajectoryFollowController(kp_xy, dt_ms);
+LocomotionController::LocomotionController(_Float64 kp_xy, _Float64 kp_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration) {
+    this->trajectory_follow_controller_ = TrajectoryFollowController(kp_xy, dt);
     this->target_velocity_ = Velocity2D(0, 0, 0);
     this->output_velocity_ = Velocity2D(0, 0, 0);
     this->state_ = INITIALIZED;    
     this->kp_xy = kp_xy;
     this->kp_theta = kp_theta;
-    this->dt_ms_ = dt_ms;
+    this->dt_ = dt;
     this->max_linear_velocity_ = max_linear_velocity;
     this->max_angular_velocity_ = max_angular_velocity;
     this->max_linear_acceleration_ = max_linear_acceleration;
