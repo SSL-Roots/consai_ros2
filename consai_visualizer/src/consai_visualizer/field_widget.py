@@ -518,7 +518,7 @@ class FieldWidget(QWidget):
         size = shape.radius * 2 * self._scale_field_to_draw
         rect = QRectF(top_left, QSizeF(size, size))
 
-        FRONT_ANGLE = 55  # ロボットの前方を描画する角度
+        FRONT_ANGLE = 65  # ロボットの前方を描画する角度（わかりやすくするためルールより大きい）
         start_angle = int(math.degrees(shape.theta) - FRONT_ANGLE * 0.5) * 16
         span_angle = (-360 + FRONT_ANGLE) * 16
         painter.drawChord(rect, start_angle, span_angle)
@@ -526,7 +526,7 @@ class FieldWidget(QWidget):
         # ロボットID
         FONT_SIZE = int(shape.radius * 111)  # ロボットサイズに比例したフォントサイズ
         text_point = self._convert_field_to_draw_point(
-            shape.x - shape.radius * 0.8,
+            shape.x - shape.radius * 0.5,
             shape.y - shape.radius * 0.5)
         self._draw_text(painter, text_point, str(shape.id), FONT_SIZE)
 
