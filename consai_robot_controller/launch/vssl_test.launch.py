@@ -30,7 +30,7 @@ def generate_launch_description():
                     name='vssl_command_sender',
                     extra_arguments=[{'use_intra_process_comms': True}],
                     parameters=[{
-                        'udp_address': "192.168.11.20",
+                        'udp_address': "192.168.1.32",
                         'udp_port_base': 10000,
                         }],
                     ),

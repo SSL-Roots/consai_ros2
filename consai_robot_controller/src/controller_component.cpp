@@ -377,7 +377,7 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
   command_msg->team_is_yellow = team_is_yellow_;
 
   last_update_time_[robot_id] = steady_clock_.now();
-  pub_command_[robot_id]->publish(std::move(command_msg));
+  // pub_command_[robot_id]->publish(std::move(command_msg));
 
   // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
   if (control_enable_[robot_id] == true) {

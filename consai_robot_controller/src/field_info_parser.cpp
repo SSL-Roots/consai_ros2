@@ -276,7 +276,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
     avoid_ball = true;
   }
-  avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+  // avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
 
   // ボールプレイスメントエリアを回避する
   if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
@@ -587,7 +587,7 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.0;
+  const double DRIBBLE_DISTANCE = 0.1;
   const double DRIBBLE_POWER = 1.0;
   bool need_kick = false;
   bool need_dribble = false;
@@ -673,7 +673,7 @@ bool FieldInfoParser::control_ball(
   const double MAX_Y = BALL_RADIUS + ROBOT_RADIUS + 0.1;
   const double PIVOT_Y = 0.05;  // meters
   const double PHI = 60.0;  // degerees
-  const double THETA_CORRECTION_THRESHOLD = 10.0;  // degrees
+  const double THETA_CORRECTION_THRESHOLD = 15.0;  // degrees
 
   auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
@@ -902,14 +902,14 @@ bool FieldInfoParser::avoid_obstacles(
 
   const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
   // 自身から直進方向に何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_X = 0.5;
+  const double OBSTACLE_DETECTION_X = 0.25;
   // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y_ROBOT = 0.3;
-  const double OBSTACLE_DETECTION_Y_BALL = 0.2;
+  const double OBSTACLE_DETECTION_Y_ROBOT = 0.15;
+  const double OBSTACLE_DETECTION_Y_BALL = 0.1;
   // 回避の相対位置
-  const double AVOIDANCE_POS_X_SHORT = 0.1;
-  const double AVOIDANCE_POS_X_LONG = 0.2;
-  const double AVOIDANCE_POS_Y = 0.4;
+  const double AVOIDANCE_POS_X_SHORT = 0.05;
+  const double AVOIDANCE_POS_X_LONG = 0.1;
+  const double AVOIDANCE_POS_Y = 0.2;
 
   // 相対的な回避位置
   double avoidance_pos_x = 0.0;

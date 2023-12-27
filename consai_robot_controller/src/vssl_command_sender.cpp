@@ -28,13 +28,16 @@ VsslCommandSender::VsslCommandSender(const rclcpp::NodeOptions & options)
 {
   using namespace std::placeholders;
 
-  declare_parameter("udp_address", "192.168.0.10");
+  declare_parameter("udp_address", "192.168.1.32");
   declare_parameter("udp_port_base", 10000);
 
   for (int i = 0; i < 16; i++) {
+    int addr_index = 131 + i;
+    std::string addr = "192.168.1." + std::to_string(addr_index);
     senders_.push_back(
       std::make_unique<udp_sender::UDPSender>(
-        get_parameter("udp_address").get_value<std::string>(),
+        addr,
+        // get_parameter("udp_address").get_value<std::string>(),
         get_parameter("udp_port_base").get_value<int>() + i));
 
     std::function<void(const ConsaiCommand::SharedPtr)> callback =
@@ -57,6 +60,7 @@ void VsslCommandSender::callback_consai_command(const ConsaiCommand::SharedPtr m
   RobotControl control;
   control.set_allocated_move_velocity(velocity);
   control.set_kick_speed(msg->kick_power);
+  // control.set_dribbler_speed(msg->dribble_power);
 
   std::string output;
   control.SerializeToString(&output);

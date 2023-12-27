@@ -103,14 +103,23 @@ class AttackerDecision(DecisionBase):
             shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
         # NamedTargetを更新
-        if len(shoot_point_list) > 0:
-            shoot_point = shoot_point_list[0]
-            shoot_pos_x = self.goal_pos_list[shoot_point].x
-            shoot_pos_y = self.goal_pos_list[shoot_point].y
-            self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
-        else:
-            self._operator.set_named_target("shoot", 0.6, 0.0)
+        # if len(shoot_point_list) > 0:
+        #     shoot_point = shoot_point_list[0]
+        #     shoot_pos_x = self.goal_pos_list[shoot_point].x
+        #     shoot_pos_y = self.goal_pos_list[shoot_point].y
+        #     self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
+        # else:
+        
+        self._operator.set_named_target("shoot", 0.6, 0.0)
         self._operator.publish_named_targets()
+
+        if self._act_id != ID_INPLAY:
+            # 相手ゴールの中心に向かってシュートを打つ
+            shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
+            self._operator.operate(robot_id, shooting)
+            self._act_id = ID_INPLAY
+        return
+
 
         # シュート可能かつ相手エリアにいる場合
         if len(shoot_point_list) > 0 \
