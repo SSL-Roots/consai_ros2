@@ -124,9 +124,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
+    auto control_loop_cycle = 10ms;
     timer_pub_control_command_.push_back(
       create_wall_timer(
-        10ms, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
+        control_loop_cycle, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
       )
     );
     timer_pub_control_command_[i]->cancel();  // タイマーを停止
@@ -139,6 +140,13 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     last_world_vel_.push_back(State());
     control_enable_.push_back(false);
     need_response_.push_back(false);
+
+    double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
+    locomotion_controller_.push_back(
+      LocomotionController(
+        10, 10, control_loop_cycle_sec, this->max_velocity_xy_, this->max_velocity_theta_, this->max_acceleration_xy_, this->max_acceleration_theta_
+      )
+    );
   }
   goal_handle_.resize(ROBOT_NUM);
 
@@ -264,10 +272,35 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
+    if (this->USE_NEW_CONTROLLER) {
+
+        RCLCPP_INFO(this->get_logger(), "locomotion_controller_[robot_id].moveToPose");
+        this->locomotion_controller_[robot_id].moveToPose(
+          Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
+          Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
+        );
+        RCLCPP_INFO(this->get_logger(), "locomotion_controller_[robot_id].moveToPose");
+
+
+        RCLCPP_INFO(this->get_logger(), "locomotion_controller_[robot_id].run");
+        auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
+          State2D(
+            Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+            Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+          )
+        );
+        RCLCPP_INFO(this->get_logger(), "locomotion_controller_[robot_id].run");
+
+        // 型変換
+        world_vel.x = output_vel.x;
+        world_vel.y = output_vel.y;
+        world_vel.theta = output_vel.theta;
+    } else {
     // 関数を呼び出して目標位置を調整し、速度を計算する
     world_vel = calculate_velocity_with_avoidance(
       my_robot, goal_pose, final_goal_pose, goal_handle_[robot_id],
       max_velocity_xy_, max_velocity_theta_);
+    }
   }
 
   // 最大加速度リミットを適用
@@ -392,6 +425,17 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
   command_msg->team_is_yellow = team_is_yellow_;
 
   last_update_time_[robot_id] = steady_clock_.now();
+
+  if (this->USE_NEW_CONTROLLER) {
+    State2D state(
+      Pose2D(0, 0, 0),  // 何でも良い 
+      Velocity2D(last_world_vel_[robot_id].x, last_world_vel_[robot_id].y, last_world_vel_[robot_id].theta)
+    );
+
+    // locomotion_controller内部の速度指令値の履歴更新のため、呼んでおく
+    locomotion_controller_[robot_id].run(state);
+  }
+
   pub_command_[robot_id]->publish(std::move(command_msg));
 
   // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
@@ -613,6 +657,10 @@ bool Controller::switch_to_stop_control_mode(
   stop_command_msg->robot_id = robot_id;
   stop_command_msg->team_is_yellow = team_is_yellow_;
   pub_command_[robot_id]->publish(std::move(stop_command_msg));
+
+  if (this->USE_NEW_CONTROLLER) {
+    locomotion_controller_[robot_id].moveConstantVelocity(Velocity2D(0.0, 0.0, 0.0));
+  }
 
   return true;
 }

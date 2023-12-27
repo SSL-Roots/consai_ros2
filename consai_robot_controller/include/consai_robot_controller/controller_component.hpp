@@ -28,6 +28,7 @@
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
+#include "consai_robot_controller/locomotion_controller.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
@@ -104,6 +105,7 @@ private:
   std::vector<bool> need_response_;
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
   std::vector<State> last_world_vel_;
+  std::vector<LocomotionController> locomotion_controller_;
   rclcpp::Publisher<VisualizerObjects>::SharedPtr pub_visualizer_objects_;
 
   consai_robot_controller::FieldInfoParser parser_;
@@ -128,6 +130,8 @@ private:
   double param_control_range_xy_;
   double param_control_a_xy_;
   double param_control_a_theta_;
+
+  const bool USE_NEW_CONTROLLER = true;
 };
 
 }  // namespace consai_robot_controller
