@@ -38,28 +38,6 @@ State2D::State2D(Pose2D pose, Velocity2D velocity) {
     this->velocity = velocity;
 }
 
-// TimeStamp クラスの定義
-TimeStamp::TimeStamp() {
-    this->start_time_ms = 0;
-    this->timestamp_ms = 0;
-}
-
-TimeStamp::TimeStamp(uint64_t start_time_ms, uint64_t timestamp_ms) {
-    this->start_time_ms = start_time_ms;
-    this->timestamp_ms = timestamp_ms;
-}
-
-// Pose2DStamped クラスの定義
-Pose2DStamped::Pose2DStamped() {
-    this->pose = Pose2D();
-    this->timestamp = TimeStamp();
-}
-
-Pose2DStamped::Pose2DStamped(Pose2D pose, TimeStamp timestamp) {
-    this->pose = pose;
-    this->timestamp = timestamp;
-}
-
 // Trajectory クラスの定義
 Trajectory::Trajectory() {
     this->poses = std::vector<Pose2D>();

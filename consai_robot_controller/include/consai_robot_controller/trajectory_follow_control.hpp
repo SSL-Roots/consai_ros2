@@ -34,26 +34,6 @@ public:
   State2D(Pose2D pose, Velocity2D velocity);
 };
 
-class TimeStamp {
-public:
-    /* 原点となる時刻　UnixTime形式 */
-    uint64_t start_time_ms;
-    /* start_time_ms からの相対的な時刻 */
-    uint64_t timestamp_ms;
-
-    TimeStamp();
-    TimeStamp(uint64_t start_time_ms, uint64_t timestamp_ms);
-};
-
-class Pose2DStamped {
-public:
-  Pose2D pose;
-  TimeStamp timestamp;
-
-  Pose2DStamped();
-  Pose2DStamped(Pose2D pose, TimeStamp timestamp);
-};
-
 class Trajectory {
 public:
   Trajectory();
