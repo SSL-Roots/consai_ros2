@@ -149,7 +149,7 @@ consai_visualizer_msgs::msg::Objects TrajectoryVisualizer::createObjectsFromTraj
     objects.sub_layer = "trajectory";
 
     // trajectory is visualised by objects.lines
-    for (auto i = 0; i < trajectory.poses.size() - 1; i++) {
+    for (unsigned long i = 0; i < trajectory.poses.size() - 1; i++) {
         consai_visualizer_msgs::msg::ShapeLine line;
 
         line.p1.x = trajectory.poses[i].x;
