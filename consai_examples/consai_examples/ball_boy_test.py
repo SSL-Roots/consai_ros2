@@ -23,18 +23,19 @@ from rclpy.executors import MultiThreadedExecutor
 from robot_operator import RobotOperator
 
 from operation import Operation
-from operation import OneShotOperation
 from operation import TargetXY
 from operation import TargetTheta
 
+
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):
     move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-    dribble_operation =move_to_ball.with_ball_boy_dribbling_to(TargetXY.value(target_x, target_y))
+    dribble_operation = move_to_ball.with_ball_boy_dribbling_to(TargetXY.value(target_x, target_y))
 
     operator_node.operate(robot_id, dribble_operation)
 
     while operator_node.robot_is_free(robot_id) is False:
         pass
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()

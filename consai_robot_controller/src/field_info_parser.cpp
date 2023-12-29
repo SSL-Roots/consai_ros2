@@ -177,7 +177,7 @@ bool FieldInfoParser::parse_goal(
 bool FieldInfoParser::parse_goal(
   const std::shared_ptr<const RobotControl::Goal> goal,
   const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
-  double & kick_power, double & dribble_power) const
+  double & kick_power, double & dribble_power)
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
@@ -224,11 +224,13 @@ bool FieldInfoParser::parse_goal(
       parse_constraint_xy(goal->dribble_target, target.x, target.y))
     {
       parse_dribble(target, my_robot, ball, parsed_pose, dribble_power);
-    } else if (goal->ball_boy_dribble_enable &&  // NOLINT
-      parse_constraint_xy(goal->dribble_target, target.x, target.y))
-    {
-      parse_ball_boy_dribble(target, my_robot, ball, parsed_pose, dribble_power);
     }
+  }
+
+  if (goal->ball_boy_dribble_enable &&  // NOLINT
+    parse_constraint_xy(goal->dribble_target, target.x, target.y) && result == false)
+  {
+    ball_boy_tactics_.update(target, my_robot, ball, parsed_pose, dribble_power);
   }
 
   return true;
@@ -656,8 +658,8 @@ bool FieldInfoParser::parse_dribble(
 }
 
 bool FieldInfoParser::parse_ball_boy_dribble(
-    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const
+  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  State & parsed_pose, double & parsed_dribble_power) const
 {
   // ボールボーイロボ用のドリブル関数
   const double BALL_ARRIVAL_DISTANCE = 0.1;
@@ -683,7 +685,7 @@ bool FieldInfoParser::parse_ball_boy_dribble(
   // ロボットがボールを見ていたら、目標位置に向かって進む
   const auto angle_robot_to_ball = tools::calc_angle(robot_pose, ball_pose);
   const tools::Trans trans_RtoB(robot_pose, angle_robot_to_ball);
-  const auto  robot_pose_RtoB = trans_RtoB.transform(robot_pose);
+  const auto robot_pose_RtoB = trans_RtoB.transform(robot_pose);
 
   // 早めにキャッチャーを動かす
   std::cout << "theta:" << tools::to_degrees(std::fabs(robot_pose_RtoB.theta)) << std::endl;
@@ -700,7 +702,8 @@ bool FieldInfoParser::parse_ball_boy_dribble(
   // }
 
   if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
-      distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.0) {
+    distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.0)
+  {
     parsed_dribble_power = DRIBBLE_CATCH_POWER;
 
     const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
