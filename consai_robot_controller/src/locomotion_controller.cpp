@@ -29,11 +29,26 @@ LocomotionController::ControllerState LocomotionController::moveToPose(const Pos
     // 軌道生成を行う
     BangBangTrajectory2D trajectory;
 
-    Vector2D s0 = Vector2D(current_pose.x, current_pose.y);
-    Vector2D s1 = Vector2D(goal_pose.x, goal_pose.y);
-    Vector2D v0 = Vector2D(this->output_velocity_.x, this->output_velocity_.y);
+    Vector2D s0, s1, v0;
+    if (this->state_ == INITIALIZED || this->state_ == RUNNING_CONSTANT_VELOCITY) {
+        // 位置追従制御に切り替わるタイミングでは、現在の位置と速度を初期値として軌道生成を行う
+        s0 = Vector2D(current_pose.x, current_pose.y);
+        s1 = Vector2D(goal_pose.x, goal_pose.y);
+        v0 = Vector2D(this->output_velocity_.x, this->output_velocity_.y);  // TODO: ロボットの現在速度を使うように変える
+    } else {
+        // 位置追従制御中に新たな目標位置が与えられた場合は、直前の目標位置と速度を初期値として軌道生成を行う
+        s0 = Vector2D(this->trajectory_follow_controller_.latest_target_state_.pose.x, this->trajectory_follow_controller_.latest_target_state_.pose.y);
+        s1 = Vector2D(goal_pose.x, goal_pose.y);
+        v0 = Vector2D(this->trajectory_follow_controller_.latest_target_state_.velocity.x, this->trajectory_follow_controller_.latest_target_state_.velocity.y);
+    }
 
     trajectory.generate(s0, s1, v0, this->max_linear_velocity_, this->max_linear_acceleration_, 0.1);
+
+    std::cout << "s0: " << s0.x << ", " << s0.y << std::endl;
+    std::cout << "s1: " << s1.x << ", " << s1.y << std::endl;
+    std::cout << "v0: " << v0.x << ", " << v0.y << std::endl;
+    std::cout << "max_linear_velocity: " << this->max_linear_velocity_ << std::endl;
+    std::cout << "max_linear_acceleration: " << this->max_linear_acceleration_ << std::endl;
 
     
     trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory2D>(trajectory));

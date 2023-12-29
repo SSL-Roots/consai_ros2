@@ -51,6 +51,7 @@ TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, double dt) {
     this->tracked_time_ = 0;
     this->kp_ = kp;
     this->dt_ = dt;
+    this->latest_target_state_ = State2D();
     this->trajectory_ = nullptr;
 }
 
@@ -58,6 +59,7 @@ TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, double dt) {
 void TrajectoryFollowController::initialize(std::shared_ptr<BangBangTrajectory2D> trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
+    this->latest_target_state_ = State2D();
     this->tracked_time_ = 0;
 }
 
@@ -84,11 +86,14 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     Vector2D target_pose = this->trajectory_->get_position(this->tracked_time_ + this->dt_);
     Pose2D target_pose2(target_pose.x, target_pose.y, 0.0);
 
+    // 今ステップの目標速度の取得
+    Vector2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
+
     // x方向の制御
-    output.x = this->control(current_state.pose.x, target_pose.x, last_target_pose.x);
+    output.x = this->control(current_state.pose.x, target_pose.x, target_velocity.x);
 
     // y方向の制御
-    output.y = this->control(current_state.pose.y, target_pose.y, last_target_pose.y);
+    output.y = this->control(current_state.pose.y, target_pose.y, target_velocity.y);
 
     // theta方向の制御
     // output.theta = this->control(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
@@ -96,6 +101,8 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
 
     // 時間の更新
     this->tracked_time_ += this->dt_;
+
+    this->latest_target_state_ = State2D(target_pose2, Velocity2D(target_velocity.x, target_velocity.y, 0.0));  // TODO: implement theta
 
     // 終了判定
     if (this->tracked_time_ >= this->trajectory_->get_total_time()) {
@@ -105,10 +112,10 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     return std::make_pair(output, state);
 }
 
-double TrajectoryFollowController::control(double current, double target, double current_target) {
-    double error = target - current;
-    double ideal_speed = (target - current_target) / this->dt_;
-    double output = kp_ * error + ideal_speed;
+double TrajectoryFollowController::control(double current_position, double target_position, double target_velocity) {
+    double error = target_position - current_position;
+    double output = kp_ * error + target_velocity;
+
     return output;
 }
 

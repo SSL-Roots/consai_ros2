@@ -297,16 +297,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     }
   }
 
-  // 最大加速度リミットを適用
-  world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-  // 最大速度リミットを適用
-  auto max_velocity_xy = max_velocity_xy_;
-  // 最大速度リミットを上書きできる
-  if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-    max_velocity_xy = std::min(
-      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
-  }
-  world_vel = limit_world_velocity(world_vel, max_velocity_xy);
+  // // 最大加速度リミットを適用
+  // world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
+  // // 最大速度リミットを適用
+  // auto max_velocity_xy = max_velocity_xy_;
+  // // 最大速度リミットを上書きできる
+  // if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+  //   max_velocity_xy = std::min(
+  //     goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+  // }
+  // world_vel = limit_world_velocity(world_vel, max_velocity_xy);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
@@ -362,6 +362,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
     }
   }
+
 
   // // Visualizerにデータを送る
   // Trajectory traj(

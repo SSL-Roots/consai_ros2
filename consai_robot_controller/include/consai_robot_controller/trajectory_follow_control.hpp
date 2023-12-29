@@ -54,6 +54,8 @@ public:
     FAILED
   };
 
+  State2D latest_target_state_;
+
   TrajectoryFollowController();
   TrajectoryFollowController(_Float64 kp, double dt);
 
@@ -71,7 +73,7 @@ public:
   std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
 
 private:
-  double control(double current, double target, double current_target);
+  double control(double current_position, double target_position, double target_velocity);
 
   std::shared_ptr<BangBangTrajectory2D> trajectory_;
   ControllerState state_;
