@@ -27,10 +27,16 @@ LocomotionController::ControllerState LocomotionController::moveToPose(const Pos
     // 特定のポーズへの移動を指示するメソッドの実装
 
     // 軌道生成を行う
-    State2D current_state = State2D(current_pose, this->output_velocity_);
-    State2D goal_state = State2D(goal_pose, Velocity2D(0, 0, 0));
-    Trajectory trajectory = TrajectoryGenerator::generate(current_state, goal_state, this->max_linear_velocity_, this->max_linear_acceleration_, 0.1);
-    trajectory_follow_controller_.initialize(std::make_shared<Trajectory>(trajectory));
+    BangBangTrajectory2D trajectory;
+
+    Vector2D s0 = Vector2D(current_pose.x, current_pose.y);
+    Vector2D s1 = Vector2D(goal_pose.x, goal_pose.y);
+    Vector2D v0 = Vector2D(this->output_velocity_.x, this->output_velocity_.y);
+
+    trajectory.generate(s0, s1, v0, this->max_linear_velocity_, this->max_linear_acceleration_, 0.1);
+
+    
+    trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory2D>(trajectory));
 
     state_ = RUNNING_FOLLOW_TRAJECTORY;
     return state_;

@@ -3,6 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory2d.h"
 
 
 class Pose2D {
@@ -34,18 +35,6 @@ public:
   State2D(Pose2D pose, Velocity2D velocity);
 };
 
-class Trajectory {
-public:
-  Trajectory();
-  Trajectory(std::vector<Pose2D> poses, double dt);
-  Pose2D getPoseAtTime(double sec);
-    
-  std::vector<Pose2D> poses;
-
-private:
-  double dt_;
-};
-
 /**
  * @brief Trajectoryを追従するためのクラス
  * @details
@@ -72,7 +61,7 @@ public:
    * @brief コントローラの初期化
    * @param trajectory 追従するTrajectory
    */
-  void initialize(std::shared_ptr<Trajectory> trajectory);
+  void initialize(std::shared_ptr<BangBangTrajectory2D> trajectory);
 
   /**
    * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する
@@ -84,7 +73,7 @@ public:
 private:
   double control(double current, double target, double current_target);
 
-  std::shared_ptr<Trajectory> trajectory_;
+  std::shared_ptr<BangBangTrajectory2D> trajectory_;
   ControllerState state_;
 
   _Float64  kp_ = 10.0;
@@ -107,5 +96,5 @@ class TrajectoryVisualizer {
          * @param trajectory
          * @return Objects
          */ 
-        static consai_visualizer_msgs::msg::Objects createObjectsFromTrajectory(const Trajectory& trajectory);
+        static consai_visualizer_msgs::msg::Objects createObjectsFromTrajectory(BangBangTrajectory2D& trajectory);
 };

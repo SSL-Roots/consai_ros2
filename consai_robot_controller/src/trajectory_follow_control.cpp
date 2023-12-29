@@ -38,37 +38,6 @@ State2D::State2D(Pose2D pose, Velocity2D velocity) {
     this->velocity = velocity;
 }
 
-// Trajectory クラスの定義
-Trajectory::Trajectory() {
-    this->poses = std::vector<Pose2D>();
-    this->dt_ = 0;
-}
-
-Trajectory::Trajectory(std::vector<Pose2D> poses, double dt) {
-    this->dt_ = dt;
-    this->poses = poses;
-}
-
-/**
- * 指定した時刻の軌道位置を取得する
- * 軌道のポイントの間にある時刻の場合は、線形補間を行う
- * @param sec 時刻
- * @return 指定した時刻の軌道位置
-*/
-Pose2D Trajectory::getPoseAtTime(double sec) {
-    // 軌道のポイントの間にある時刻の場合は、線形補間を行う
-    uint16_t index = sec / this->dt_;
-    if (index < this->poses.size() - 1) {
-        double ratio = std::fmod(sec, this->dt_) / this->dt_;
-        double x = this->poses[index].x + (this->poses[index + 1].x - this->poses[index].x) * ratio;
-        double y = this->poses[index].y + (this->poses[index + 1].y - this->poses[index].y) * ratio;
-        double theta = this->poses[index].theta + (this->poses[index + 1].theta - this->poses[index].theta) * ratio;
-        return Pose2D(x, y, theta);
-    } else {
-        return this->poses[this->poses.size() - 1];
-    }
-}
-
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController() {
     this->state_ = ControllerState::INITIALIZED;
@@ -86,7 +55,7 @@ TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, double dt) {
 }
 
 
-void TrajectoryFollowController::initialize(std::shared_ptr<Trajectory> trajectory) {
+void TrajectoryFollowController::initialize(std::shared_ptr<BangBangTrajectory2D> trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ = 0;
@@ -108,10 +77,12 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     }
 
     // 前ステップの目標位置の取得
-    Pose2D last_target_pose = this->trajectory_->getPoseAtTime(this->tracked_time_);
+    Vector2D last_target_pose = this->trajectory_->get_position(this->tracked_time_);
+    Pose2D last_target_pose2(last_target_pose.x, last_target_pose.y, 0.0);
 
     // 今ステップの目標位置の取得
-    Pose2D target_pose = this->trajectory_->getPoseAtTime(this->tracked_time_ + this->dt_);
+    Vector2D target_pose = this->trajectory_->get_position(this->tracked_time_ + this->dt_);
+    Pose2D target_pose2(target_pose.x, target_pose.y, 0.0);
 
     // x方向の制御
     output.x = this->control(current_state.pose.x, target_pose.x, last_target_pose.x);
@@ -120,13 +91,14 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     output.y = this->control(current_state.pose.y, target_pose.y, last_target_pose.y);
 
     // theta方向の制御
-    output.theta = this->control(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
+    // output.theta = this->control(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
+    // TODO: implement theta control
 
     // 時間の更新
     this->tracked_time_ += this->dt_;
 
     // 終了判定
-    if (this->tracked_time_ >= this->trajectory_->poses.size() * this->dt_) {
+    if (this->tracked_time_ >= this->trajectory_->get_total_time()) {
         state = ControllerState::COMPLETE;
     }
 
@@ -142,24 +114,24 @@ double TrajectoryFollowController::control(double current, double target, double
 
 
 // TrajectoryVisualizer クラスの定義
-consai_visualizer_msgs::msg::Objects TrajectoryVisualizer::createObjectsFromTrajectory(const Trajectory& trajectory) {
+consai_visualizer_msgs::msg::Objects TrajectoryVisualizer::createObjectsFromTrajectory(BangBangTrajectory2D& trajectory) {
     consai_visualizer_msgs::msg::Objects objects;
 
     objects.layer = "trajectory";
     objects.sub_layer = "trajectory";
 
-    // trajectory is visualised by objects.lines
-    for (unsigned long i = 0; i < trajectory.poses.size() - 1; i++) {
+    double dt = 0.1;
+    for (double t = 0; t < trajectory.get_total_time(); t += dt) {
         consai_visualizer_msgs::msg::ShapeLine line;
 
-        line.p1.x = trajectory.poses[i].x;
-        line.p1.y = trajectory.poses[i].y;
-        line.p2.x = trajectory.poses[i + 1].x;
-        line.p2.y = trajectory.poses[i + 1].y;
+        line.p1.x = trajectory.get_position(t).x;
+        line.p1.y = trajectory.get_position(t).y;
+        line.p2.x = trajectory.get_position(t + dt).x;
+        line.p2.y = trajectory.get_position(t + dt).y;
         line.size = 1;
-        line.color.red = 1.0;
+        line.color.red = 0.0;
         line.color.green = 0.0;
-        line.color.blue = 0.0;
+        line.color.blue = 1.0;
         line.color.alpha = 1.0;
         objects.lines.push_back(line);
     }
