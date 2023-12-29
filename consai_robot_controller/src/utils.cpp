@@ -56,6 +56,45 @@ Vector2D Vector2D::operator/(double scalar) {
     return Vector2D(x / scalar, y / scalar);
 }
 
+
+// Pose2D クラスの定義
+Pose2D::Pose2D() {
+    this->x = 0.0;
+    this->y = 0.0;
+    this->theta = 0.0;
+}
+
+Pose2D::Pose2D(double x, double y, double theta) {
+    this->x = x;
+    this->y = y;
+    this->theta = theta;
+}
+
+// Velocity2D クラスの定義
+Velocity2D::Velocity2D() {
+    this->x = 0.0;
+    this->y = 0.0;
+    this->theta = 0.0;
+}
+
+Velocity2D::Velocity2D(double x, double y, double theta) {
+    this->x = x;
+    this->y = y;
+    this->theta = theta;
+}
+
+// State2D クラスの定義
+State2D::State2D() {
+    this->pose = Pose2D();
+    this->velocity = Velocity2D();
+}
+
+State2D::State2D(Pose2D pose, Velocity2D velocity) {
+    this->pose = pose;
+    this->velocity = velocity;
+}
+
+
 LineSegment::LineSegment(Vector2D start, Vector2D end) : s(start), e(end) {}
 
 double LineSegment::length() {

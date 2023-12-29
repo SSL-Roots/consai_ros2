@@ -6,35 +6,6 @@
 #include "consai_robot_controller/trajectory/bangbangtrajectory2d.h"
 
 
-class Pose2D {
-public:
-  double x;
-  double y;
-  double theta;
-
-  Pose2D();
-  Pose2D(double x, double y, double theta);
-};
-
-class Velocity2D {
-public:
-  double x;
-  double y;
-  double theta;
-
-  Velocity2D();
-  Velocity2D(double x, double y, double theta);
-};
-
-class State2D {
-public:
-  Pose2D pose;
-  Velocity2D velocity;
-
-  State2D();
-  State2D(Pose2D pose, Velocity2D velocity);
-};
-
 /**
  * @brief Trajectoryを追従するためのクラス
  * @details
