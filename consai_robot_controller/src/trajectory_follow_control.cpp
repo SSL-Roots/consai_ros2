@@ -43,9 +43,6 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
         this->state_ = ControllerState::RUNNING;
     }
 
-    // 前ステップの目標位置の取得
-    Pose2D last_target_pose = this->trajectory_->get_pose(this->tracked_time_);
-
     // 今ステップの目標位置の取得
     Pose2D target_pose = this->trajectory_->get_pose(this->tracked_time_ + this->dt_);
 
