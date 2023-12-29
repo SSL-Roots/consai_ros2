@@ -59,7 +59,7 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     output.y = this->controlLinear(current_state.pose.y, target_pose.y, target_velocity.y);
 
     // theta方向の制御
-    output.theta = this->controlAngular(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
+    output.theta = this->controlAngular(current_state.pose.theta, target_pose.theta, target_velocity.theta);
 
     // 時間の更新
     this->tracked_time_ += this->dt_;
@@ -83,7 +83,8 @@ double TrajectoryFollowController::controlLinear(double current_position, double
 
 double TrajectoryFollowController::controlAngular(double current_position, double target_position, double target_velocity) {
     double error = geometry_tools::normalize_theta(target_position - current_position);
-    double output = kp_angular_ * error + target_velocity;
+    // double output = kp_angular_ * error + target_velocity;
+    double output = target_velocity;
 
     return output;
 }
