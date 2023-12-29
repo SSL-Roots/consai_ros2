@@ -3,7 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
-#include "consai_robot_controller/trajectory/bangbangtrajectory2d.h"
+#include "consai_robot_controller/trajectory/bangbangtrajectory3d.h"
 
 
 /**
@@ -28,13 +28,13 @@ public:
   State2D latest_target_state_;
 
   TrajectoryFollowController();
-  TrajectoryFollowController(_Float64 kp, double dt);
+  TrajectoryFollowController(_Float64 kp_linear, _Float64 kp_angular_, double dt);
 
   /**
    * @brief コントローラの初期化
    * @param trajectory 追従するTrajectory
    */
-  void initialize(std::shared_ptr<BangBangTrajectory2D> trajectory);
+  void initialize(std::shared_ptr<BangBangTrajectory3D> trajectory);
 
   /**
    * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する
@@ -44,14 +44,19 @@ public:
   std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
 
 private:
-  double control(double current_position, double target_position, double target_velocity);
+  double controlLinear(double current_position, double target_position, double target_velocity);
+  double controlAngular(double current_position, double target_position, double target_velocity);
 
-  std::shared_ptr<BangBangTrajectory2D> trajectory_;
+  std::shared_ptr<BangBangTrajectory3D> trajectory_;
   ControllerState state_;
 
-  _Float64  kp_ = 10.0;
-  // _Float64  ki_ = 0.0;
-  // _Float64  kd_ = 0.0;
+  _Float64  kp_linear_ = 10.0;
+  // _Float64  ki_linear_ = 0.0;
+  // _Float64  kd_linear_ = 0.0;
+
+  _Float64  kp_angular_ = 10.0;
+  // _Float64  ki_angular_ = 0.0;
+  // _Float64  kd_angular_ = 0.0;
 
   double tracked_time_ = 0;  // 追従制御開始時刻からの経過時刻
   double dt_ = 0.0;          // 制御周期

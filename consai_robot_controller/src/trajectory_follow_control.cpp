@@ -1,25 +1,27 @@
 #include "consai_robot_controller/trajectory_follow_control.hpp"
+#include "consai_robot_controller/geometry_tools.hpp"
 #include <cstdint>
 
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController() {
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ = 0;
-    this->kp_ = 1.0;
+    this->kp_linear_ = 1.0;
     this->trajectory_ = nullptr;
 }
 
-TrajectoryFollowController::TrajectoryFollowController(_Float64 kp, double dt) {
+TrajectoryFollowController::TrajectoryFollowController(_Float64 kp_linear, _Float64 kp_angular_, double dt) {
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ = 0;
-    this->kp_ = kp;
+    this->kp_linear_ = kp_linear;
+    this->kp_angular_ = kp_angular_;
     this->dt_ = dt;
     this->latest_target_state_ = State2D();
     this->trajectory_ = nullptr;
 }
 
 
-void TrajectoryFollowController::initialize(std::shared_ptr<BangBangTrajectory2D> trajectory) {
+void TrajectoryFollowController::initialize(std::shared_ptr<BangBangTrajectory3D> trajectory) {
     this->trajectory_ = trajectory;
     this->state_ = ControllerState::INITIALIZED;
     this->latest_target_state_ = State2D();
@@ -42,30 +44,27 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     }
 
     // 前ステップの目標位置の取得
-    Vector2D last_target_pose = this->trajectory_->get_position(this->tracked_time_);
-    Pose2D last_target_pose2(last_target_pose.x, last_target_pose.y, 0.0);
+    Pose2D last_target_pose = this->trajectory_->get_pose(this->tracked_time_);
 
     // 今ステップの目標位置の取得
-    Vector2D target_pose = this->trajectory_->get_position(this->tracked_time_ + this->dt_);
-    Pose2D target_pose2(target_pose.x, target_pose.y, 0.0);
+    Pose2D target_pose = this->trajectory_->get_pose(this->tracked_time_ + this->dt_);
 
     // 今ステップの目標速度の取得
-    Vector2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
+    Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
 
     // x方向の制御
-    output.x = this->control(current_state.pose.x, target_pose.x, target_velocity.x);
+    output.x = this->controlLinear(current_state.pose.x, target_pose.x, target_velocity.x);
 
     // y方向の制御
-    output.y = this->control(current_state.pose.y, target_pose.y, target_velocity.y);
+    output.y = this->controlLinear(current_state.pose.y, target_pose.y, target_velocity.y);
 
     // theta方向の制御
-    // output.theta = this->control(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
-    // TODO: implement theta control
+    output.theta = this->controlAngular(current_state.pose.theta, target_pose.theta, last_target_pose.theta);
 
     // 時間の更新
     this->tracked_time_ += this->dt_;
 
-    this->latest_target_state_ = State2D(target_pose2, Velocity2D(target_velocity.x, target_velocity.y, 0.0));  // TODO: implement theta
+    this->latest_target_state_ = State2D(target_pose, target_velocity);
 
     // 終了判定
     if (this->tracked_time_ >= this->trajectory_->get_total_time()) {
@@ -75,12 +74,20 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     return std::make_pair(output, state);
 }
 
-double TrajectoryFollowController::control(double current_position, double target_position, double target_velocity) {
+double TrajectoryFollowController::controlLinear(double current_position, double target_position, double target_velocity) {
     double error = target_position - current_position;
-    double output = kp_ * error + target_velocity;
+    double output = kp_linear_ * error + target_velocity;
 
     return output;
 }
+
+double TrajectoryFollowController::controlAngular(double current_position, double target_position, double target_velocity) {
+    double error = geometry_tools::normalize_theta(target_position - current_position);
+    double output = kp_angular_ * error + target_velocity;
+
+    return output;
+}
+
 
 
 // TrajectoryVisualizer クラスの定義
