@@ -665,8 +665,9 @@ bool FieldInfoParser::control_ball(
   auto ball_pose = tools::pose_state(ball);
   auto robot_pose = tools::pose_state(my_robot);
 
-  // Ref: https://ssl.robocup.org/wp-content/uploads/2019/01/2014_ETDP_RoboDragons.pdf
+  // ボールの半径
   const double BALL_RADIUS = 0.043 * 0.5;
+  // ロボットの半径
   const double ROBOT_RADIUS = 0.180 * 0.5;
   const double MAX_X = BALL_RADIUS + 0.2;
   const double MAX_Y = BALL_RADIUS + 0.2;
@@ -676,24 +677,30 @@ bool FieldInfoParser::control_ball(
   tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
 
+  // ロボットから見たボールまでの角度を算出
+  auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, trans_BtoT.transform(ball_pose));
+
   // ボールより前方にロボットが存在する場合
   if (0.0 < robot_pose_BtoT.x) {
     // ボールの斜め後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(
-      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), 0.0);
-  } else if (ROBOT_RADIUS < std::fabs(robot_pose_BtoT.y)) {
+      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), angle_robot_to_ball_BtoT);
+  } else if (BALL_RADIUS < std::fabs(robot_pose_BtoT.y)) {
     // ボールの後ろにロボットが存在しない場合
-    // ドリブルON
-    need_dribble = true;
-    // ボールの真後ろに目標座標を設定
-    parsed_pose = trans_BtoT.inverted_transform(-MAX_X, 0.0, 0.0);
+    // ボールの後ろに目標座標を設定
+    //   角度はボールの方向を向く
+    parsed_pose = trans_BtoT.inverted_transform(-MAX_X, 0.0, angle_robot_to_ball_BtoT);
   } else {
     // ボールの後ろにロボットが存在する場合
-    // キックとドリブルON
-    need_kick = true;
+    // ドリブルON
     need_dribble = true;
     // ボールのすぐ後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
+    if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(1.0)) {
+        // ロボットが目標座標の方向を向いている場合
+        // ドリブルON
+        need_kick = true;
+    }
   }
   return true;
 }
