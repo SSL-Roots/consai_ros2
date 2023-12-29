@@ -32,6 +32,7 @@ add_library(controller_component SHARED
   src/ball_boy_tactics.cpp
   src/bangbangtrajectory1d.cpp
   src/bangbangtrajectory2d.cpp
+  src/bangbangtrajectory3d.cpp
   src/controller_component.cpp
   src/field_info_parser.cpp
   src/geometry_tools.cpp
