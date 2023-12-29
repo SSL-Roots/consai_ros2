@@ -154,6 +154,15 @@ def test_with_reflecting_to():
     assert goal.kick_target.object[0].type == ConstraintObject.THEIR_GOAL
 
 
+def test_with_ball_boy_dribbling_to():
+    operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    operation = operation.with_ball_boy_dribbling_to(TargetXY.our_robot(3))
+    goal = operation.get_goal()
+    assert goal.ball_boy_dribble_enable is True
+    assert goal.dribble_target.object[0].type == ConstraintObject.OUR_ROBOT
+    assert goal.dribble_target.object[0].robot_id == 3
+
+
 def test_keep_control_operation():
     goal = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1

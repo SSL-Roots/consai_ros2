@@ -26,6 +26,7 @@ ConstraintXY kick_target
 
 # dribble_enable = trueで、dribble_targetに向かってボールを運ぶ
 bool dribble_enable false
+bool ball_boy_dribble_enable false
 ConstraintXY dribble_target
 
 # 転がっているボールを受け取るときはtrue
