@@ -450,8 +450,15 @@ void Controller::on_timer_pub_goal_poses()
     }
 
     if (goal_poses_map_.count(robot_id) > 0 && final_goal_poses_map_.count(robot_id) > 0) {
+      State2D virtual_target_state2d = locomotion_controller_[robot_id].getCurrentTargetState();
+      GoalPose virtual_target;
+      virtual_target.pose.x = virtual_target_state2d.pose.x;
+      virtual_target.pose.y = virtual_target_state2d.pose.y;
+      virtual_target.pose.theta = virtual_target_state2d.pose.theta;
+
       vis_data_handler_->append_vis_goal(
-        my_robot, goal_poses_map_[robot_id], final_goal_poses_map_[robot_id]);
+        my_robot, goal_poses_map_[robot_id], final_goal_poses_map_[robot_id],
+        virtual_target);
     }
   }
 

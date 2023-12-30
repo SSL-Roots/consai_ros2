@@ -93,6 +93,10 @@ LocomotionController::ControllerState LocomotionController::getState() {
     return state_;
 }
 
+State2D LocomotionController::getCurrentTargetState() {
+    return this->trajectory_follow_controller_.latest_target_state_;
+}
+
 /**
  * Private
 */

@@ -23,6 +23,7 @@ public:
   ControllerState halt();
   std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
   ControllerState getState();
+  State2D getCurrentTargetState();
 
 private:
   TrajectoryFollowController trajectory_follow_controller_;

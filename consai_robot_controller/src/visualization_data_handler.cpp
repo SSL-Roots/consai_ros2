@@ -32,7 +32,8 @@ VisualizationDataHandler::VisualizationDataHandler(
 
 bool VisualizationDataHandler::append_vis_goal(
   const TrackedRobot & robot,
-  const GoalPose & goal_pose, const GoalPose & final_goal_pose)
+  const GoalPose & goal_pose, const GoalPose & final_goal_pose,
+  const GoalPose & virtual_target_pose)
 {
   if (!vis_objects_goal_) {
     return false;
@@ -56,6 +57,14 @@ bool VisualizationDataHandler::append_vis_goal(
   vis_robot.x = final_goal_pose.pose.x;
   vis_robot.y = final_goal_pose.pose.y;
   vis_robot.theta = final_goal_pose.pose.theta;
+  vis_objects_goal_->robots.push_back(vis_robot);
+
+  vis_robot.fill_color.alpha = 0.4;
+  vis_robot.caption = "virtual_target" + std::to_string(final_goal_pose.robot_id);
+  vis_robot.id = final_goal_pose.robot_id;
+  vis_robot.x = virtual_target_pose.pose.x;
+  vis_robot.y = virtual_target_pose.pose.y;
+  vis_robot.theta = virtual_target_pose.pose.theta;
   vis_objects_goal_->robots.push_back(vis_robot);
 
   // ロボットから目標位置までの直線を引く

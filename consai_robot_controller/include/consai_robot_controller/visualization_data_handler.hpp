@@ -37,7 +37,8 @@ public:
 
   bool append_vis_goal(
     const TrackedRobot & robot,
-    const GoalPose & goal_pose, const GoalPose & final_goal_pose);
+    const GoalPose & goal_pose, const GoalPose & final_goal_pose,
+    const GoalPose & virtual_target_pose);
   void publish_and_reset_vis_goal(void);
 
 private:
