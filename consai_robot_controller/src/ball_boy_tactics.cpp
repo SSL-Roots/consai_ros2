@@ -23,8 +23,9 @@ namespace tools = geometry_tools;
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double ROBOT_RADIUS = 0.180 * 0.5;
-static constexpr double DISTANCE_TO_CATCHER = 0.175;  // ロボット中心からボールキャッチャーまでの距離
-static const State FIELD_CENTER;
+// ロボット中心からボールキャッチャーまでの距離
+static constexpr double DISTANCE_TO_CATCHER = 0.175;
+static const State FIELD_CENTER;  // (0.0, 0.0, 0.0)がセットされる
 
 BallBoyTactics::BallBoyTactics()
 {
