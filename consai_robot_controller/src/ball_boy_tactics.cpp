@@ -49,6 +49,11 @@ bool BallBoyTactics::update(
   const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
   State & parsed_pose, double & parsed_dribble_power)
 {
+  // 外部から実行される関数
+  // ロボット（ロボットID）が持つ現在の戦術（Tactic）状態に合わせた関数を実行する
+  // 戦術状態は、各関数内で更新される
+  // 演算結果の移動目標位置・姿勢はparsed_poseに、ドリブルパワーはparsed_dribble_powerに格納される
+
   const auto robot_id = my_robot.robot_id.id;
   if (tactic_state_.find(robot_id) == tactic_state_.end()) {
     tactic_state_[robot_id] = TacticState::APPROACH;
@@ -69,7 +74,7 @@ bool BallBoyTactics::update(
 
 bool BallBoyTactics::need_reset_state(const TrackedRobot & my_robot, const TrackedBall & ball) const
 {
-  // 状態リセットが必要化判定する
+  // 状態リセットが必要か判定する
   const double RESET_DISTANCE = 0.5;
 
   // ボールがロボットから離れたらリセットする
@@ -118,6 +123,7 @@ TacticState BallBoyTactics::tactic_approach(DataSet & data_set)
 TacticState BallBoyTactics::tactic_catch(DataSet & data_set) const
 {
   // キャッチャーを駆動させながら前進する
+  // 掴む動作を完了させるため、一定時間待機する
   constexpr double DISTANCE_TO_CATCH = DISTANCE_TO_CATCHER * 0.95;
   constexpr double CATCH_TIME = 0.5;
 
@@ -166,7 +172,8 @@ TacticState BallBoyTactics::tactic_carry(DataSet & data_set)
 
 TacticState BallBoyTactics::tactic_release(DataSet & data_set) const
 {
-  // n秒経過するまでボールを離す
+  // ボールを離す
+  // 離す動作を完了させるため、一定時間待機する
   constexpr double RELEASE_TIME = 1.0;  // [s]
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
 
