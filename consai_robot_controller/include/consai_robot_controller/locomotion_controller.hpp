@@ -16,7 +16,7 @@ public:
     FAILED,
   };
 
-  LocomotionController(_Float64 kp_xy, _Float64 kp_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration);
+  LocomotionController(_Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration);
 
   ControllerState moveConstantVelocity(const Velocity2D& velocity);
   ControllerState moveToPose(const Pose2D& goal_pose, const Pose2D& current_pose);

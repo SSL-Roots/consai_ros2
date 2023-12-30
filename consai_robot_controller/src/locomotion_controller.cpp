@@ -3,8 +3,8 @@
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.h"
 
 
-LocomotionController::LocomotionController(_Float64 kp_xy, _Float64 kp_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration) {
-    this->trajectory_follow_controller_ = TrajectoryFollowController(kp_xy, kp_theta, dt);
+LocomotionController::LocomotionController(_Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration) {
+    this->trajectory_follow_controller_ = TrajectoryFollowController(kp_xy, kd_xy, kp_theta, kd_theta, dt);
     this->target_velocity_ = Velocity2D(0, 0, 0);
     this->output_velocity_ = Velocity2D(0, 0, 0);
     this->state_ = INITIALIZED;    

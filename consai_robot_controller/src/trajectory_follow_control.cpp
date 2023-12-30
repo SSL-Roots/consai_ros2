@@ -10,11 +10,13 @@ TrajectoryFollowController::TrajectoryFollowController() {
     this->trajectory_ = nullptr;
 }
 
-TrajectoryFollowController::TrajectoryFollowController(_Float64 kp_linear, _Float64 kp_angular_, double dt) {
+TrajectoryFollowController::TrajectoryFollowController(_Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_, _Float64 kd_angular, double dt) {
     this->state_ = ControllerState::INITIALIZED;
     this->tracked_time_ = 0;
     this->kp_linear_ = kp_linear;
+    this->kd_linear_ = kd_linear;
     this->kp_angular_ = kp_angular_;
+    this->kd_angular_ = kd_angular;
     this->dt_ = dt;
     this->latest_target_state_ = State2D();
     this->trajectory_ = nullptr;
@@ -50,11 +52,11 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
 
     // x方向の制御
-    output.x = this->controlLinear(current_state.pose.x, target_pose.x, target_velocity.x);
+    output.x = this->controlLinear(P, current_state.pose.x, target_pose.x, target_velocity.x);
 
     // y方向の制御
-    output.y = this->controlLinear(current_state.pose.y, target_pose.y, target_velocity.y);
-
+    output.y = this->controlLinear(P, current_state.pose.y, target_pose.y, target_velocity.y);
+        
     // theta方向の制御
     output.theta = this->controlAngular(current_state.pose.theta, target_pose.theta, target_velocity.theta);
 
@@ -71,12 +73,19 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     return std::make_pair(output, state);
 }
 
-double TrajectoryFollowController::controlLinear(double current_position, double target_position, double target_velocity) {
-    double error = target_position - current_position;
-    // double output = kp_linear_ * error + target_velocity;
-    double output = kp_linear_ * error;
-
-    return output;
+double TrajectoryFollowController::controlLinear(ControllerMode mode, double current_position, double target_position, double target_velocity) {
+    if (mode == FF_AND_P) {
+        double error = target_position - current_position;
+        double output = kp_linear_ * error + target_velocity;
+        return output;
+    } else if (mode == P) {
+        double error = target_position - current_position;
+        double output = kp_linear_ * error;
+        return output;
+    } else {
+        double output = 0.0;
+        return output;
+    }
 }
 
 double TrajectoryFollowController::controlAngular(double current_position, double target_position, double target_velocity) {

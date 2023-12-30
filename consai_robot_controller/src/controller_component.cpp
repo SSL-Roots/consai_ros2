@@ -144,7 +144,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
     locomotion_controller_.push_back(
       LocomotionController(
-        5, 5, control_loop_cycle_sec, this->max_velocity_xy_, this->max_velocity_theta_, this->max_acceleration_xy_, this->max_acceleration_theta_
+        5, 5, 0.0, 0.0, control_loop_cycle_sec, this->max_velocity_xy_, this->max_velocity_theta_, this->max_acceleration_xy_, this->max_acceleration_theta_
       )
     );
   }
