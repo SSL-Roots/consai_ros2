@@ -76,6 +76,16 @@ class TargetXY(NamedTuple):
         constraint = ConstraintXY()
         constraint.object.append(obj)
         return cls(constraint)
+    
+    @classmethod
+    def their_robot(cls, robot_id: int) -> 'TargetXY':
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.THEIR_ROBOT
+        obj.robot_id = robot_id
+
+        constraint = ConstraintXY()
+        constraint.object.append(obj)
+        return cls(constraint)
 
     @classmethod
     def their_top_corner(cls) -> 'TargetXY':
