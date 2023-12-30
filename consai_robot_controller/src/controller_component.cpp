@@ -289,6 +289,15 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         world_vel.x = output_vel.x;
         world_vel.y = output_vel.y;
         world_vel.theta = output_vel.theta;
+
+        // sin関数を用いた角速度制御
+        double diff_theta = tools::normalize_theta(
+          goal_pose.theta -
+          my_robot.orientation);
+        world_vel.theta = ctools::angular_velocity_contol_sin(
+          diff_theta,
+          param_control_a_theta_ *
+          this->max_velocity_theta_);
     } else {
     // 関数を呼び出して目標位置を調整し、速度を計算する
     world_vel = calculate_velocity_with_avoidance(
