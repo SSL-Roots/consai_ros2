@@ -2,6 +2,8 @@
 
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.h"
 
+#include <algorithm>
+
 
 LocomotionController::LocomotionController(_Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration) {
     this->trajectory_follow_controller_ = TrajectoryFollowController(kp_xy, kd_xy, kp_theta, kd_theta, dt);
@@ -83,8 +85,10 @@ std::pair<Velocity2D, LocomotionController::ControllerState> LocomotionControlle
             break;
     }
 
-    // TODO: 速度・加速度リミットをここに移植する
-    this->output_velocity_ = output_velocity;
+    Velocity2D acc_limited_velocity = limitAcceleration(output_velocity, this->output_velocity_, this->dt_);
+    Velocity2D vel_limited_velocity = limitVelocity(acc_limited_velocity);
+
+    this->output_velocity_ = vel_limited_velocity;
     return std::make_pair(output_velocity, state_);
 }
 
@@ -100,6 +104,51 @@ State2D LocomotionController::getCurrentTargetState() {
 /**
  * Private
 */
+Velocity2D LocomotionController::limitAcceleration(
+  const Velocity2D & velocity, const Velocity2D & last_velocity,
+  const double & dt) const
+{
+  // ワールド座標系のロボット加速度に制限を掛ける
+  Velocity2D acc;   // TODO: 型を修正する
+  acc.x = (velocity.x - last_velocity.x) / dt;
+  acc.y = (velocity.y - last_velocity.y) / dt;
+  acc.theta = (velocity.theta - last_velocity.theta) / dt;
+
+  auto acc_norm = std::hypot(acc.x, acc.y);
+  auto acc_ratio = acc_norm / this->max_linear_acceleration_;
+
+  if (acc_ratio > 1.0) {
+    acc.x /= acc_ratio;
+    acc.y /= acc_ratio;
+  }
+  acc.theta = std::clamp(acc.theta, -this->max_angular_acceleration_, max_angular_acceleration_);
+
+  Velocity2D modified_velocity = velocity;
+  modified_velocity.x = last_velocity.x + acc.x * dt;
+  modified_velocity.y = last_velocity.y + acc.y * dt;
+  modified_velocity.theta = last_velocity.theta + acc.theta * dt;
+
+  return modified_velocity;
+}
+
+Velocity2D LocomotionController::limitVelocity(
+  const Velocity2D & velocity) const
+{
+  // ワールド座標系のロボット速度に制限を掛ける
+  auto velocity_norm = std::hypot(velocity.x, velocity.y);
+  auto velocity_ratio = velocity_norm / this->max_linear_velocity_;
+
+  Velocity2D modified_velocity = velocity;
+  if (velocity_ratio > 1.0) {
+    modified_velocity.x /= velocity_ratio;
+    modified_velocity.y /= velocity_ratio;
+  }
+  modified_velocity.theta = std::clamp(velocity.theta, -this->max_angular_velocity_, this->max_angular_velocity_);
+
+  return modified_velocity;
+}
+
+
 Velocity2D LocomotionController::runFollowTrajectory(const State2D& current_state) {
     auto control_output = trajectory_follow_controller_.run(current_state);
     Velocity2D output = control_output.first;

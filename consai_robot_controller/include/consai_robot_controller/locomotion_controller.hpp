@@ -44,4 +44,9 @@ private:
   double max_angular_acceleration_; // [rad/s^2]
 
   Velocity2D runFollowTrajectory(const State2D& current_state);
+  Velocity2D limitAcceleration(
+    const Velocity2D & velocity, const Velocity2D & last_velocity,
+    const double & dt) const;
+  Velocity2D limitVelocity(
+    const Velocity2D & velocity) const;
 };
