@@ -47,7 +47,7 @@ LocomotionController::ControllerState LocomotionController::moveToPose(const Pos
         v0 = Velocity2D(this->trajectory_follow_controller_.latest_target_state_.velocity.x, this->trajectory_follow_controller_.latest_target_state_.velocity.y, this->trajectory_follow_controller_.latest_target_state_.velocity.theta);
     }
 
-    trajectory.generate(s0, s1, v0, this->max_linear_velocity_ * 0.8, this->max_linear_acceleration_ * 0.8, this->max_angular_velocity_ * 0.8, this->max_angular_acceleration_ * 0.8, 0.1);
+    trajectory.generate(s0, s1, v0, this->max_linear_velocity_ * 0.8, this->max_angular_velocity_* 0.8, this->max_linear_acceleration_ * 0.8, this->max_angular_acceleration_ * 0.8, 0.1);
     
     trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory3D>(trajectory));
 
@@ -89,7 +89,7 @@ std::pair<Velocity2D, LocomotionController::ControllerState> LocomotionControlle
     Velocity2D vel_limited_velocity = limitVelocity(acc_limited_velocity);
 
     this->output_velocity_ = vel_limited_velocity;
-    return std::make_pair(output_velocity, state_);
+    return std::make_pair(this->output_velocity_, state_);
 }
 
 LocomotionController::ControllerState LocomotionController::getState() {
