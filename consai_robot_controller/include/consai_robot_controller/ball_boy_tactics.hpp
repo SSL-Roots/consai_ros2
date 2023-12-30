@@ -15,6 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__BALL_BOY_TACTICS_HPP_
 #define CONSAI_ROBOT_CONTROLLER__BALL_BOY_TACTICS_HPP_
 
+#include <chrono>
 #include <map>
 
 #include "consai_msgs/msg/state2_d.hpp"
@@ -24,6 +25,7 @@
 namespace tactics
 {
 
+using Time = std::chrono::system_clock::time_point;
 using State = consai_msgs::msg::State2D;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
@@ -77,14 +79,17 @@ public:
 
 private:
   bool need_reset_state(const TrackedRobot & my_robot, const TrackedBall & ball) const;
-  bool is_same(const State & target, const State & current) const;
+  bool is_same(
+    const State & target, const State & current, const double threshold_distance = 0.05) const;
 
-  TacticState tactic_approach(DataSet & data_set) const;
+  TacticState tactic_approach(DataSet & data_set);
   TacticState tactic_catch(DataSet & data_set) const;
-  TacticState tactic_carry(DataSet & data_set) const;
+  TacticState tactic_carry(DataSet & data_set);
   TacticState tactic_release(DataSet & data_set) const;
+  TacticState tactic_finish(DataSet & data_set) const;
 
   std::map<unsigned int, TacticState> tactic_state_;
+  std::map<unsigned int, Time> tactic_time_;
   std::map<TacticState, std::function<TacticState(DataSet & data_set)>> tactic_functions_;
 };
 

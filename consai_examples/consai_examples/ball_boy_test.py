@@ -28,7 +28,8 @@ from operation import TargetTheta
 
 
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):
-    move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    standby_position = TargetXY.value(0.0, -2.0)  # ボールボーイの待機位置
+    move_to_ball = Operation().move_to_pose(standby_position, TargetTheta.look_ball())
     dribble_operation = move_to_ball.with_ball_boy_dribbling_to(TargetXY.value(target_x, target_y))
 
     operator_node.operate(robot_id, dribble_operation)

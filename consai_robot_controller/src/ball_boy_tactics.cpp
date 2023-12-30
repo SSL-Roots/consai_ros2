@@ -23,7 +23,7 @@ namespace tools = geometry_tools;
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double ROBOT_RADIUS = 0.180 * 0.5;
-static constexpr double DISTANCE_TO_CATCHER = 0.18;  // ロボット中心からボールキャッチャーまでの距離
+static constexpr double DISTANCE_TO_CATCHER = 0.17;  // ロボット中心からボールキャッチャーまでの距離
 static const State FIELD_CENTER;
 
 BallBoyTactics::BallBoyTactics()
@@ -40,6 +40,9 @@ BallBoyTactics::BallBoyTactics()
   tactic_functions_[TacticState::RELEASE] = [this](DataSet & data_set) {
       return tactic_release(data_set);
     };
+  tactic_functions_[TacticState::FINISH] = [this](DataSet & data_set) {
+      return tactic_finish(data_set);
+    };
 }
 
 bool BallBoyTactics::update(
@@ -51,7 +54,7 @@ bool BallBoyTactics::update(
     tactic_state_[robot_id] = TacticState::APPROACH;
   }
 
-  if (need_reset_state(my_robot, ball)) {
+  if (tactic_state_[robot_id] != TacticState::FINISH && need_reset_state(my_robot, ball)) {
     tactic_state_[robot_id] = TacticState::APPROACH;
   }
 
@@ -77,12 +80,12 @@ bool BallBoyTactics::need_reset_state(const TrackedRobot & my_robot, const Track
   return false;
 }
 
-bool BallBoyTactics::is_same(const State & target, const State & current) const
+bool BallBoyTactics::is_same(
+  const State & target, const State & current, const double threshold_distance) const
 {
-  constexpr double THRESHOLD_DISTANCE = ROBOT_RADIUS * 0.5;
   const double THRESHOLD_ANGLE = tools::to_radians(10.0);
 
-  if (tools::distance(target, current) < THRESHOLD_DISTANCE &&
+  if (tools::distance(target, current) < threshold_distance &&
     std::fabs(tools::normalize_theta(target.theta - current.theta)) < THRESHOLD_ANGLE)
   {
     return true;
@@ -91,9 +94,10 @@ bool BallBoyTactics::is_same(const State & target, const State & current) const
   return false;
 }
 
-TacticState BallBoyTactics::tactic_approach(DataSet & data_set) const
+TacticState BallBoyTactics::tactic_approach(DataSet & data_set)
 {
   // フィールド中心を背中にして、ボールに近づく
+  constexpr double THRESHOLD_DISTANCE = ROBOT_RADIUS * 0.25;
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
   const auto ball_pose = tools::pose_state(data_set.get_ball());
 
@@ -103,7 +107,8 @@ TacticState BallBoyTactics::tactic_approach(DataSet & data_set) const
   data_set.set_parsed_pose(new_parsed_pose);
   data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
-  if (is_same(new_parsed_pose, robot_pose)) {
+  if (is_same(new_parsed_pose, robot_pose, THRESHOLD_DISTANCE)) {
+    tactic_time_[data_set.get_my_robot().robot_id.id] = std::chrono::system_clock::now();
     return TacticState::CATCH;
   }
 
@@ -113,7 +118,9 @@ TacticState BallBoyTactics::tactic_approach(DataSet & data_set) const
 TacticState BallBoyTactics::tactic_catch(DataSet & data_set) const
 {
   // キャッチャーを駆動させながら前進する
-  constexpr double DISTANCE_TO_CATCH = DISTANCE_TO_CATCHER * 0.9;
+  constexpr double DISTANCE_TO_CATCH = DISTANCE_TO_CATCHER * 0.85;
+  constexpr double CATCH_TIME = 0.5;
+
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
   const auto ball_pose = tools::pose_state(data_set.get_ball());
 
@@ -123,6 +130,12 @@ TacticState BallBoyTactics::tactic_catch(DataSet & data_set) const
   data_set.set_parsed_pose(new_parsed_pose);
   data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
+  const auto elapsed =
+    std::chrono::system_clock::now() - tactic_time_.at(data_set.get_my_robot().robot_id.id);
+  if (elapsed < std::chrono::duration<double>(CATCH_TIME)) {
+    return TacticState::CATCH;
+  }
+
   if (is_same(new_parsed_pose, robot_pose)) {
     return TacticState::CARRY;
   }
@@ -130,11 +143,10 @@ TacticState BallBoyTactics::tactic_catch(DataSet & data_set) const
   return TacticState::CATCH;
 }
 
-TacticState BallBoyTactics::tactic_carry(DataSet & data_set) const
+TacticState BallBoyTactics::tactic_carry(DataSet & data_set)
 {
   // 目標位置へボールを運ぶ
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-  const auto ball_pose = tools::pose_state(data_set.get_ball());
   const auto dribble_target = data_set.get_dribble_target();
 
   const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
@@ -145,6 +157,7 @@ TacticState BallBoyTactics::tactic_carry(DataSet & data_set) const
   data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
   if (is_same(new_parsed_pose, robot_pose)) {
+    tactic_time_[data_set.get_my_robot().robot_id.id] = std::chrono::system_clock::now();
     return TacticState::RELEASE;
   }
 
@@ -153,24 +166,37 @@ TacticState BallBoyTactics::tactic_carry(DataSet & data_set) const
 
 TacticState BallBoyTactics::tactic_release(DataSet & data_set) const
 {
-  // ボールを離す
-  const double DISTANCE_TO_RELEASE = DISTANCE_TO_CATCHER + 0.0;
+  // n秒経過するまでボールを離す
+  constexpr double RELEASE_TIME = 1.0;  // [s]
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-  const auto ball_pose = tools::pose_state(data_set.get_ball());
-  const auto dribble_target = data_set.get_dribble_target();
 
-  const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
-  const tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
-  const auto new_parsed_pose = trans_TtoR.inverted_transform(DISTANCE_TO_RELEASE, 0.0, -M_PI);
-
-  data_set.set_parsed_pose(new_parsed_pose);
+  data_set.set_parsed_pose(robot_pose);
   data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
-  if (is_same(new_parsed_pose, robot_pose)) {
-    return TacticState::RELEASE;
+  const auto elapsed =
+    std::chrono::system_clock::now() - tactic_time_.at(data_set.get_my_robot().robot_id.id);
+  if (elapsed > std::chrono::duration<double>(RELEASE_TIME)) {
+    return TacticState::FINISH;
   }
 
   return TacticState::RELEASE;
+}
+
+TacticState BallBoyTactics::tactic_finish(DataSet & data_set) const
+{
+  constexpr double THRESHOLD_DISTANCE = 0.15;
+  // もともとparsed_poseにセットされている目標位置へ移動する
+  data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+
+  // ボールが目標地点から離れていたらリセット
+  const auto ball_pose = tools::pose_state(data_set.get_ball());
+  const auto dribble_target = data_set.get_dribble_target();
+
+  if (!is_same(dribble_target, ball_pose, THRESHOLD_DISTANCE)) {
+    return TacticState::APPROACH;
+  }
+
+  return TacticState::FINISH;
 }
 
 
