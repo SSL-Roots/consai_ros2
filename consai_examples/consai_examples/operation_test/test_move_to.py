@@ -32,7 +32,6 @@ def test_move_to(max_velocity_xy=None):
     for i in range(16):
         operation = OneShotOperation().move_to_pose(TargetXY.value(-5.0 + 0.5 * i, 4.0), TargetTheta.value(math.pi * 0.5))
         operator_node.operate(i, operation)
-        # operator_node.move_to(i, -5.0 + 0.5 * i, 4.0, -math.pi * 0.5, False, max_velocity_xy)
 
     # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
     while operator_node.all_robots_are_free() is False:
@@ -42,7 +41,6 @@ def test_move_to(max_velocity_xy=None):
     for i in range(16):
         operation = OneShotOperation().move_to_pose(TargetXY.value(-5.0 + 0.5 * i, -4.0), TargetTheta.value(-math.pi * 0.5))
         operator_node.operate(i, operation)
-        # operator_node.move_to(i, -5.0 + 0.5 * i, -4.0, -math.pi * 0.5, True, max_velocity_xy)
 
     while operator_node.all_robots_are_free() is False:
         pass
