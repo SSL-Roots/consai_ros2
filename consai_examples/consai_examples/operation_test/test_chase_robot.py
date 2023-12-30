@@ -21,11 +21,12 @@ import threading
 import rclpy
 import math
 from rclpy.executors import MultiThreadedExecutor
-from  consai_examples.robot_operator import RobotOperator
+from consai_examples.robot_operator import RobotOperator
 
 from consai_examples.operation import OneShotOperation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
+
 
 def test_chase_robot(offset_x: float, offset_y: float):
     # 全ロボットが、別のチームカラーの同じIDのロボットの左上に移動する
