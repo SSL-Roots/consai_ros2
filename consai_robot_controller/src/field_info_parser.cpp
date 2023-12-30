@@ -678,7 +678,8 @@ bool FieldInfoParser::control_ball(
   auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
 
   // ロボットから見たボールまでの角度を算出
-  auto angle_robot_to_ball_BtoT = tools::calc_angle(robot_pose_BtoT, trans_BtoT.transform(ball_pose));
+  auto angle_robot_to_ball_BtoT =
+    tools::calc_angle(robot_pose_BtoT, trans_BtoT.transform(ball_pose));
 
   // ボールより前方にロボットが存在する場合
   if (0.0 < robot_pose_BtoT.x) {
@@ -697,9 +698,9 @@ bool FieldInfoParser::control_ball(
     // ボールのすぐ後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
     if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(1.0)) {
-        // ロボットが目標座標の方向を向いている場合
-        // ドリブルON
-        need_kick = true;
+      // ロボットが目標座標の方向を向いている場合
+      // ドリブルON
+      need_kick = true;
     }
   }
   return true;
