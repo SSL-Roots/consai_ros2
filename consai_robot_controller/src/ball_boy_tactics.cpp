@@ -23,7 +23,7 @@ namespace tools = geometry_tools;
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double ROBOT_RADIUS = 0.180 * 0.5;
-static constexpr double DISTANCE_TO_CATCHER = 0.17;  // ロボット中心からボールキャッチャーまでの距離
+static constexpr double DISTANCE_TO_CATCHER = 0.175;  // ロボット中心からボールキャッチャーまでの距離
 static const State FIELD_CENTER;
 
 BallBoyTactics::BallBoyTactics()
@@ -118,7 +118,7 @@ TacticState BallBoyTactics::tactic_approach(DataSet & data_set)
 TacticState BallBoyTactics::tactic_catch(DataSet & data_set) const
 {
   // キャッチャーを駆動させながら前進する
-  constexpr double DISTANCE_TO_CATCH = DISTANCE_TO_CATCHER * 0.85;
+  constexpr double DISTANCE_TO_CATCH = DISTANCE_TO_CATCHER * 0.95;
   constexpr double CATCH_TIME = 0.5;
 
   const auto robot_pose = tools::pose_state(data_set.get_my_robot());
