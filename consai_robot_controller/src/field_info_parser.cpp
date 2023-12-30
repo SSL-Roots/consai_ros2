@@ -217,9 +217,10 @@ bool FieldInfoParser::parse_goal(
     if (goal->kick_enable &&
       parse_constraint_xy(goal->kick_target, target.x, target.y))
     {
-      parse_kick(
-        target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose,
-        kick_power, dribble_power);
+      kick_tactics_.update(target, my_robot, ball, parsed_pose, kick_power, dribble_power);
+      // parse_kick(
+      //   target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose,
+      //   kick_power, dribble_power);
     } else if (goal->dribble_enable &&  // NOLINT
       parse_constraint_xy(goal->dribble_target, target.x, target.y))
     {

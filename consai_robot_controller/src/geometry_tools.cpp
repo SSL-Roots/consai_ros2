@@ -65,6 +65,17 @@ State pose_state(const TrackedBall & ball)
   return state;
 }
 
+State vel_state(const TrackedBall & ball)
+{
+  State state;
+  if (ball.vel.size() > 0) {
+    state.x = ball.vel[0].x;
+    state.y = ball.vel[0].y;
+    state.theta = 0.0;
+  }
+  return state;
+}
+
 double to_radians(const double degrees)
 {
   constexpr double TO_RADIANS = M_PI / 180.0;
