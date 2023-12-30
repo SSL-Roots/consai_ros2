@@ -19,7 +19,6 @@ import argparse
 import threading
 
 import rclpy
-import math
 from rclpy.executors import MultiThreadedExecutor
 from consai_examples.robot_operator import RobotOperator
 
@@ -29,7 +28,11 @@ from consai_examples.operation import TargetTheta
 
 
 def shoot_to_their_test(robot_id: int):
+    # 相手のゴールに無限シュートをするテスト
+
+    # ボールに向かって移動する
     operation = OneShotOperation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    # 相手のゴール中心(6.0, 0)に向かってシュートする
     operation = operation.with_shooting_to(TargetXY.their_goal())
     operator_node.operate(robot_id, operation)
 
@@ -44,7 +47,7 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='ball placementの目標座標を反転する場合にセットする')
-    arg_parser.add_argument('-robot_id', default=0)
+    arg_parser.add_argument('-id', default=0)
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
