@@ -47,7 +47,7 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='ball placementの目標座標を反転する場合にセットする')
-    arg_parser.add_argument('-id', default=0)
+    arg_parser.add_argument('--robot_id', '-id', type=int, default=0)
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
