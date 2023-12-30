@@ -33,6 +33,7 @@ def shoot_to_their_test(robot_id: int):
     operation = operation.with_shooting_to(TargetXY.their_goal())
     operator_node.operate(robot_id, operation)
 
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--yellow',
