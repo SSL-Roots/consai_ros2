@@ -21,16 +21,23 @@ import threading
 import rclpy
 import math
 from rclpy.executors import MultiThreadedExecutor
-from  consai_examples.robot_operator import RobotOperator
+from consai_examples.robot_operator import RobotOperator
 
 from consai_examples.operation import OneShotOperation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
 
+
 def test_move_to(target_x: float, target_y: float):
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
-    for i in range(16):
-        operation = OneShotOperation().move_to_pose(TargetXY.value(target_x + 0.5 * i, target_y), TargetTheta.value(math.pi * 0.5))
+    ROBOT_NUM = 16
+    OFFSET_X = 0.5
+    TARGET_THETA = math.pi * 0.5
+
+    for i in range(ROBOT_NUM):
+        operation = OneShotOperation().move_to_pose(
+            TargetXY.value(target_x + OFFSET_X * i, target_y),
+            TargetTheta.value(TARGET_THETA))
         operator_node.operate(i, operation)
 
     # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
@@ -38,12 +45,15 @@ def test_move_to(target_x: float, target_y: float):
         pass
 
     # 制御継続フラグがTrueなので、ロボットはすぐにフリー状態になる
-    for i in range(16):
-        operation = OneShotOperation().move_to_pose(TargetXY.value(target_x + 0.5 * i, -target_y), TargetTheta.value(-math.pi * 0.5))
+    for i in range(ROBOT_NUM):
+        operation = OneShotOperation().move_to_pose(
+            TargetXY.value(target_x + OFFSET_X * i, -target_y),
+            TargetTheta.value(-TARGET_THETA))
         operator_node.operate(i, operation)
 
     while operator_node.all_robots_are_free() is False:
         pass
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
