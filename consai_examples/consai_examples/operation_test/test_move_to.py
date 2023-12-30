@@ -21,16 +21,16 @@ import threading
 import rclpy
 import math
 from rclpy.executors import MultiThreadedExecutor
-from robot_operator import RobotOperator
+from  consai_examples.robot_operator import RobotOperator
 
-from operation import OneShotOperation
-from operation import TargetXY
-from operation import TargetTheta
+from consai_examples.operation import OneShotOperation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
 
-def test_move_to(max_velocity_xy=None):
+def test_move_to(target_x: float, target_y: float):
     # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
     for i in range(16):
-        operation = OneShotOperation().move_to_pose(TargetXY.value(-5.0 + 0.5 * i, 4.0), TargetTheta.value(math.pi * 0.5))
+        operation = OneShotOperation().move_to_pose(TargetXY.value(target_x + 0.5 * i, target_y), TargetTheta.value(math.pi * 0.5))
         operator_node.operate(i, operation)
 
     # 全てのロボットがフリー（目的地に到着 or 常時制御中）になるまで待機
@@ -39,7 +39,7 @@ def test_move_to(max_velocity_xy=None):
 
     # 制御継続フラグがTrueなので、ロボットはすぐにフリー状態になる
     for i in range(16):
-        operation = OneShotOperation().move_to_pose(TargetXY.value(-5.0 + 0.5 * i, -4.0), TargetTheta.value(-math.pi * 0.5))
+        operation = OneShotOperation().move_to_pose(TargetXY.value(target_x + 0.5 * i, -target_y), TargetTheta.value(-math.pi * 0.5))
         operator_node.operate(i, operation)
 
     while operator_node.all_robots_are_free() is False:
@@ -55,9 +55,8 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='ball placementの目標座標を反転する場合にセットする')
-    arg_parser.add_argument('-robot_id', default=0)
-    arg_parser.add_argument('-x', default=0.0)
-    arg_parser.add_argument('-y', default=0.0)
+    arg_parser.add_argument('-x', default=-5.0)
+    arg_parser.add_argument('-y', default=4.0)
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
@@ -76,7 +75,7 @@ if __name__ == '__main__':
     executor_thread.start()
 
     try:
-        test_move_to()
+        test_move_to(float(args.x), float(args.y))
     except KeyboardInterrupt:
         pass
 
