@@ -362,19 +362,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
     }
   }
-
-
-  // // Visualizerにデータを送る
-  // Trajectory traj(
-  //   {
-  //     Pose2D(0, 0, 0),
-  //     Pose2D(1, 1, 0),
-  //     Pose2D(2, 1, 0),
-  //     Pose2D(3, 3, 0),
-  //   },
-  //   10);
-  // VisualizerObjects objects = TrajectoryVisualizer::createObjectsFromTrajectory(traj);
-  // pub_visualizer_objects_->publish(objects);
 }
 
 // calculate_velocity_with_avoidance関数の定義
