@@ -177,7 +177,7 @@ bool FieldInfoParser::parse_goal(
 bool FieldInfoParser::parse_goal(
   const std::shared_ptr<const RobotControl::Goal> goal,
   const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
-  double & kick_power, double & dribble_power) const
+  double & kick_power, double & dribble_power)
 {
   // RobotControlのgoalを解析し、目標姿勢を出力する
   // 解析に失敗したらfalseを返す
@@ -225,6 +225,12 @@ bool FieldInfoParser::parse_goal(
     {
       parse_dribble(target, my_robot, ball, parsed_pose, dribble_power);
     }
+  }
+
+  if (goal->ball_boy_dribble_enable &&  // NOLINT
+    parse_constraint_xy(goal->dribble_target, target.x, target.y) && result == false)
+  {
+    ball_boy_tactics_.update(target, my_robot, ball, parsed_pose, dribble_power);
   }
 
   return true;
@@ -648,6 +654,81 @@ bool FieldInfoParser::parse_dribble(
   } else {
     parsed_dribble_power = 0.0;
   }
+  return true;
+}
+
+bool FieldInfoParser::parse_ball_boy_dribble(
+  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  State & parsed_pose, double & parsed_dribble_power) const
+{
+  // ボールボーイロボ用のドリブル関数
+  const double BALL_ARRIVAL_DISTANCE = 0.1;
+  const double RELEASE_DISTANCE = 0.5;
+  const double CATCH_DISTANCE = 0.2;
+
+  const double DRIBBLE_CATCH_POWER = 1.0;
+  const double DRIBBLE_RELEASE_POWER = 0.0;
+  const double ROBOT_RADIUS = 0.180 * 0.5;
+  const auto center_pose = State();
+  const auto ball_pose = tools::pose_state(ball);
+  const auto robot_pose = tools::pose_state(my_robot);
+
+  // ボールが目標位置に到着したら、ボールから離れた位置に移動する
+  if (tools::distance(ball_pose, dribble_target) < BALL_ARRIVAL_DISTANCE) {
+    const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
+    tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
+    parsed_pose = trans_TtoR.inverted_transform(RELEASE_DISTANCE, 0.0, -M_PI);
+    parsed_dribble_power = DRIBBLE_RELEASE_POWER;
+    return true;
+  }
+
+  // ロボットがボールを見ていたら、目標位置に向かって進む
+  const auto angle_robot_to_ball = tools::calc_angle(robot_pose, ball_pose);
+  const tools::Trans trans_RtoB(robot_pose, angle_robot_to_ball);
+  const auto robot_pose_RtoB = trans_RtoB.transform(robot_pose);
+
+  // 早めにキャッチャーを動かす
+  std::cout << "theta:" << tools::to_degrees(std::fabs(robot_pose_RtoB.theta)) << std::endl;
+  std::cout << "distance:" << tools::distance(robot_pose, ball_pose) << std::endl;
+
+  const auto distance_RtoB = tools::distance(robot_pose, ball_pose);
+
+  // if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
+  //     distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE) {
+  //   std::cout << "PRE CATCH!!!" << std::endl;
+  //   parsed_dribble_power = DRIBBLE_CATCH_POWER;
+  // } else {
+  //   parsed_dribble_power = DRIBBLE_RELEASE_POWER;
+  // }
+
+  if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
+    distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.0)
+  {
+    parsed_dribble_power = DRIBBLE_CATCH_POWER;
+
+    const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
+    tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
+    parsed_pose = trans_TtoR.inverted_transform(CATCH_DISTANCE, 0.0, -M_PI);
+    return true;
+  } else {
+    parsed_dribble_power = DRIBBLE_RELEASE_POWER;
+  }
+
+  // if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
+  //     distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.2) {
+  //   std::cout << "CATCH!!!" << std::endl;
+  //   const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
+  //   tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
+  //   parsed_pose = trans_TtoR.inverted_transform(CATCH_DISTANCE, 0.0, -M_PI);
+  //   parsed_dribble_power = DRIBBLE_CATCH_POWER;
+  //   return true;
+  // }
+
+  // ロボットがボールをキャッチできそうな場合
+  const auto angle_ball_to_center = tools::calc_angle(ball_pose, center_pose);
+  tools::Trans trans_BtoC(ball_pose, angle_ball_to_center);
+  parsed_pose = trans_BtoC.inverted_transform(CATCH_DISTANCE * 0.8, 0.0, -M_PI);
+
   return true;
 }
 

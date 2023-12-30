@@ -29,6 +29,7 @@ include_directories(include)
 
 # Controller Component
 add_library(controller_component SHARED
+  src/ball_boy_tactics.cpp
   src/controller_component.cpp
   src/field_info_parser.cpp
   src/geometry_tools.cpp
@@ -105,6 +106,7 @@ if(BUILD_TESTING)
   ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
   ament_add_gtest(field_info_parser_test
     test/field_info_parser_test.cpp
+    src/ball_boy_tactics.cpp
     src/geometry_tools.cpp
     src/field_info_parser.cpp)
   ament_target_dependencies(field_info_parser_test

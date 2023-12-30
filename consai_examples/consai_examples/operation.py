@@ -245,6 +245,12 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
+    def with_ball_boy_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.ball_boy_dribble_enable = True
+        goal.dribble_target = target_xy.constraint
+        return Operation(goal)
+
 
 class OneShotOperation(Operation):
     def __init__(self, goal: RobotControl.Goal = None) -> None:
