@@ -30,7 +30,8 @@ from consai_examples.operation import TargetTheta
 def test_chase_robot(offset_x: float, offset_y: float):
     # 全ロボットが、別のチームカラーの同じIDのロボットの左上に移動する
     for i in range(16):
-        operation = OneShotOperation().move_to_pose(TargetXY.their_robot(i), TargetTheta.look_ball())
+        operation = OneShotOperation().move_to_pose(
+            TargetXY.their_robot(i), TargetTheta.look_ball())
         operation = operation.offset_pose_x(offset_x)
         operation = operation.offset_pose_y(offset_y)
         operator_node.operate(i, operation)
