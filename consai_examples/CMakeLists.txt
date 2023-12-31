@@ -43,7 +43,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/zone_defense.py
     ${PROJECT_NAME}/decisions/side_wing.py
     ${PROJECT_NAME}/operation_test/test_move_to.py
-    ${PROJECT_NAME}/operation_test/test_chase_robot.py
+    ${PROJECT_NAME}/operation_test/chase_robot_test.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY

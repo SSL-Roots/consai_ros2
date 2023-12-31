@@ -19,7 +19,6 @@ import argparse
 import threading
 
 import rclpy
-import math
 from rclpy.executors import MultiThreadedExecutor
 from consai_examples.robot_operator import RobotOperator
 
@@ -50,8 +49,8 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='ball placementの目標座標を反転する場合にセットする')
-    arg_parser.add_argument('-x', default=-0.2)
-    arg_parser.add_argument('-y', default=0.2)
+    arg_parser.add_argument('-x', type=float, default=-0.2)
+    arg_parser.add_argument('-y', type=float, default=0.2)
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
@@ -70,7 +69,7 @@ if __name__ == '__main__':
     executor_thread.start()
 
     try:
-        test_chase_robot(float(args.x), float(args.y))
+        test_chase_robot(args.x, args.y)
     except KeyboardInterrupt:
         pass
 
