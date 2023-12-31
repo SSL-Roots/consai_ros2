@@ -84,8 +84,8 @@ if __name__ == '__main__':
     executor_thread.start()
 
     try:
-        pass_shoot(int(args.robot_id0), float(args.x0), float(args.y0),
-                   int(args.robot_id1), float(args.x1), float(args.y1))
+        pass_shoot(args.robot_id0, args.x0, args.y0,
+                   args.robot_id1, args.x1, args.y1)
     except KeyboardInterrupt:
         pass
 
