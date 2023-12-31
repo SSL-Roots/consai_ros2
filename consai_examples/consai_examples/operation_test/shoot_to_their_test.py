@@ -66,7 +66,7 @@ if __name__ == '__main__':
     executor_thread.start()
 
     try:
-        shoot_to_their_test(int(args.robot_id))
+        shoot_to_their_test(args.robot_id)
     except KeyboardInterrupt:
         pass
 
