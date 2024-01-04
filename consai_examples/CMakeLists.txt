@@ -44,6 +44,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/side_wing.py
     ${PROJECT_NAME}/operation_test/test_move_to.py
     ${PROJECT_NAME}/operation_test/pass_shoot_test.py
+    ${PROJECT_NAME}/operation_test/shoot_to_their_test.py
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
