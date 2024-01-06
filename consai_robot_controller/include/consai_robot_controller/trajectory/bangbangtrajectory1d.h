@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// bangbangtrajectory1d.h
-#ifndef BANGBANGTRAJECTORY1D_H
-#define BANGBANGTRAJECTORY1D_H
+#pragma once
 
 #include "consai_robot_controller/trajectory/utils.h"
 #include "consai_robot_controller/trajectory/trajectory.h"
@@ -66,6 +64,3 @@ private:
 
 
 };
-
-
-# endif // BANGBANGTRAJECTORY1D_H

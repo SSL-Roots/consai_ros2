@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// trajectory.h
-#ifndef TRAJECTORY_H
-#define TRAJECTORY_H
+
+#pragma once
 
 #include <vector>
 #include "consai_robot_controller/trajectory/utils.h"
@@ -62,5 +61,3 @@ public:
   PosVelAcc get_values_at_time(double tt);
   std::vector < double > get_time_sections();
 };
-
-#endif // TRAJECTORY_H

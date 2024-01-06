@@ -13,8 +13,7 @@
 // limitations under the License.
 
 // utils.h
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 class PosVelAcc {
 public:
@@ -220,6 +219,3 @@ public:
   //     }
   // }
 };
-
-
-#endif // UTILS_H
