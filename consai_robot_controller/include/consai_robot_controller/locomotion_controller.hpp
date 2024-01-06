@@ -5,9 +5,11 @@
 #include "consai_robot_controller/trajectory_generator.hpp"
 
 
-class LocomotionController {
+class LocomotionController
+{
 public:
-  enum ControllerState {
+  enum ControllerState
+  {
     INITIALIZED,
     RUNNING_CONSTANT_VELOCITY,
     GENERATING_TRAJECTORY,
@@ -16,12 +18,15 @@ public:
     FAILED,
   };
 
-  LocomotionController(_Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, double dt, double max_linear_velocity, double max_angular_velocity, double max_linear_acceleration, double max_angular_acceleration);
+  LocomotionController(
+    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
+    double dt, double max_linear_velocity, double max_angular_velocity,
+    double max_linear_acceleration, double max_angular_acceleration);
 
-  ControllerState moveConstantVelocity(const Velocity2D& velocity);
-  ControllerState moveToPose(const Pose2D& goal_pose, const Pose2D& current_pose);
+  ControllerState moveConstantVelocity(const Velocity2D & velocity);
+  ControllerState moveToPose(const Pose2D & goal_pose, const Pose2D & current_pose);
   ControllerState halt();
-  std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
+  std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
   ControllerState getState();
   State2D getCurrentTargetState();
 
@@ -31,10 +36,10 @@ private:
   Velocity2D output_velocity_;
   ControllerState state_;
 
-  _Float64  kp_xy;
+  _Float64 kp_xy;
   // _Float64  ki_xy;
   // _Float64  kd_xy;
-  _Float64  kp_theta; // [rad]
+  _Float64 kp_theta;  // [rad]
   // _Float64  ki_theta;
   // _Float64  kd_theta;
   double dt_;           // 制御周期
@@ -43,7 +48,7 @@ private:
   double max_linear_acceleration_; // [m/s^2]
   double max_angular_acceleration_; // [rad/s^2]
 
-  Velocity2D runFollowTrajectory(const State2D& current_state);
+  Velocity2D runFollowTrajectory(const State2D & current_state);
   Velocity2D limitAcceleration(
     const Velocity2D & velocity, const Velocity2D & last_velocity,
     const double & dt) const;

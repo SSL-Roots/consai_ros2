@@ -11,14 +11,16 @@
  * @details
  * Trajectoryを追従するためのクラス
 */
-class TrajectoryFollowController {
+class TrajectoryFollowController
+{
 public:
   /**
    * @brief コントローラの状態
    * @details
    * コントローラの状態
   */
-  enum ControllerState {
+  enum ControllerState
+  {
     INITIALIZED,
     RUNNING,
     COMPLETE,
@@ -28,7 +30,9 @@ public:
   State2D latest_target_state_;
 
   TrajectoryFollowController();
-  TrajectoryFollowController(_Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_, _Float64 kd_angular, double dt);
+  TrajectoryFollowController(
+    _Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_,
+    _Float64 kd_angular, double dt);
 
   /**
    * @brief コントローラの初期化
@@ -41,27 +45,30 @@ public:
    * @param current_state 現在の状態
    * @return 次ステップの指令速度とコントローラのステート
    */
-  std::pair<Velocity2D, ControllerState> run(const State2D& current_state);
+  std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
 
 private:
-  enum ControllerMode {
+  enum ControllerMode
+  {
     FF_AND_P,
     P
   };
 
-  double controlLinear(ControllerMode mode, double current_position, double target_position, double target_velocity);
+  double controlLinear(
+    ControllerMode mode, double current_position, double target_position,
+    double target_velocity);
   double controlAngular(double current_position, double target_position, double target_velocity);
 
   std::shared_ptr<BangBangTrajectory3D> trajectory_;
   ControllerState state_;
 
-  _Float64  kp_linear_ = 10.0;
+  _Float64 kp_linear_ = 10.0;
   // _Float64  ki_linear_ = 0.0;
-  _Float64  kd_linear_ = 0.0;
+  _Float64 kd_linear_ = 0.0;
 
-  _Float64  kp_angular_ = 10.0;
+  _Float64 kp_angular_ = 10.0;
   // _Float64  ki_angular_ = 0.0;
-  _Float64  kd_angular_ = 0.0;
+  _Float64 kd_angular_ = 0.0;
 
   double tracked_time_ = 0;  // 追従制御開始時刻からの経過時刻
   double dt_ = 0.0;          // 制御周期
@@ -69,16 +76,17 @@ private:
 };
 
 
-
 /**
  * Visualize 関連
 */
-class TrajectoryVisualizer {
-    public:
-        /**
-         * @brief TrajectoryからObjetcsを生成するクラスメソッド
-         * @param trajectory
-         * @return Objects
-         */ 
-        static consai_visualizer_msgs::msg::Objects createObjectsFromTrajectory(BangBangTrajectory2D& trajectory);
+class TrajectoryVisualizer
+{
+public:
+  /**
+       * @brief TrajectoryからObjetcsを生成するクラスメソッド
+       * @param trajectory
+       * @return Objects
+       */
+  static consai_visualizer_msgs::msg::Objects createObjectsFromTrajectory(
+    BangBangTrajectory2D & trajectory);
 };

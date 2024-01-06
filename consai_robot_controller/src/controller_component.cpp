@@ -144,7 +144,8 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
     locomotion_controller_.push_back(
       LocomotionController(
-        2.5, 0.0, 2.5, 0.0, control_loop_cycle_sec, this->max_velocity_xy_, this->max_velocity_theta_, this->max_acceleration_xy_, this->max_acceleration_theta_
+        2.5, 0.0, 2.5, 0.0, control_loop_cycle_sec, this->max_velocity_xy_,
+        this->max_velocity_theta_, this->max_acceleration_xy_, this->max_acceleration_theta_
       )
     );
   }
@@ -273,36 +274,36 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       dribble_power))
   {
     if (this->USE_NEW_CONTROLLER) {
-        this->locomotion_controller_[robot_id].moveToPose(
-          Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-          Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
-        );
+      this->locomotion_controller_[robot_id].moveToPose(
+        Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
+        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
+      );
 
-        auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
-          State2D(
-            Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-            Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-          )
-        );
+      auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
+        State2D(
+          Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+          Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+        )
+      );
 
-        // 型変換
-        world_vel.x = output_vel.x;
-        world_vel.y = output_vel.y;
-        world_vel.theta = output_vel.theta;
+      // 型変換
+      world_vel.x = output_vel.x;
+      world_vel.y = output_vel.y;
+      world_vel.theta = output_vel.theta;
 
-        // sin関数を用いた角速度制御
-        double diff_theta = tools::normalize_theta(
-          goal_pose.theta -
-          my_robot.orientation);
-        world_vel.theta = ctools::angular_velocity_contol_sin(
-          diff_theta,
-          param_control_a_theta_ *
-          this->max_velocity_theta_);
+      // sin関数を用いた角速度制御
+      double diff_theta = tools::normalize_theta(
+        goal_pose.theta -
+        my_robot.orientation);
+      world_vel.theta = ctools::angular_velocity_contol_sin(
+        diff_theta,
+        param_control_a_theta_ *
+        this->max_velocity_theta_);
     } else {
-    // 関数を呼び出して目標位置を調整し、速度を計算する
-    world_vel = calculate_velocity_with_avoidance(
-      my_robot, goal_pose, final_goal_pose, goal_handle_[robot_id],
-      max_velocity_xy_, max_velocity_theta_);
+      // 関数を呼び出して目標位置を調整し、速度を計算する
+      world_vel = calculate_velocity_with_avoidance(
+        my_robot, goal_pose, final_goal_pose, goal_handle_[robot_id],
+        max_velocity_xy_, max_velocity_theta_);
     }
   }
 
@@ -375,8 +376,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
 // calculate_velocity_with_avoidance関数の定義
 State Controller::calculate_velocity_with_avoidance(
-  const TrackedRobot& my_robot, const State& goal_pose,
-  const State& final_goal_pose, const std::shared_ptr<GoalHandleRobotControl> goal_handle,
+  const TrackedRobot & my_robot, const State & goal_pose,
+  const State & final_goal_pose, const std::shared_ptr<GoalHandleRobotControl> goal_handle,
   const double max_velocity_xy, const double max_velocity_theta)
 {
   // field_info_parserの衝突回避を無効かする場合は、下記の行をコメントアウトすること
@@ -419,8 +420,10 @@ void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 
   if (this->USE_NEW_CONTROLLER) {
     State2D state(
-      Pose2D(0, 0, 0),  // 何でも良い 
-      Velocity2D(last_world_vel_[robot_id].x, last_world_vel_[robot_id].y, last_world_vel_[robot_id].theta)
+      Pose2D(0, 0, 0),  // 何でも良い
+      Velocity2D(
+        last_world_vel_[robot_id].x, last_world_vel_[robot_id].y,
+        last_world_vel_[robot_id].theta)
     );
 
     // locomotion_controller内部の速度指令値の履歴更新のため、呼んでおく

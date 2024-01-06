@@ -9,20 +9,21 @@
 class BangBangTrajectory3D
 {
 public:
-    BangBangTrajectory3D();
-    ~BangBangTrajectory3D();
+  BangBangTrajectory3D();
+  ~BangBangTrajectory3D();
 
-    Pose2D get_pose(double t);
-    Velocity2D get_velocity(double t);
-    double get_total_time();
+  Pose2D get_pose(double t);
+  Velocity2D get_velocity(double t);
+  double get_total_time();
 
-    void generate(
-        Pose2D s0, Pose2D s1, Velocity2D v0, double vmax_linear, double vmax_angular, double acc_linear, double acc_angular, double accuracy
-    );
-    
+  void generate(
+    Pose2D s0, Pose2D s1, Velocity2D v0, double vmax_linear, double vmax_angular, double acc_linear,
+    double acc_angular, double accuracy
+  );
+
 private:
-    BangBangTrajectory2D linear_;
-    BangBangTrajectory1D angular_;
+  BangBangTrajectory2D linear_;
+  BangBangTrajectory1D angular_;
 
 };
 
