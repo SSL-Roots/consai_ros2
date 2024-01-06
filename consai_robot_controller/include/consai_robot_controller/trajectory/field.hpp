@@ -17,11 +17,13 @@
 #include <iostream>
 #include <cmath>
 
-class Field {
+class Field
+{
 public:
   Field(
     double x_size, double y_size, double goal_area_x_size, double goal_area_y_size,
-    double center_circle_radius) {
+    double center_circle_radius)
+  {
     this->x_size = x_size;
     this->y_size = y_size;
 

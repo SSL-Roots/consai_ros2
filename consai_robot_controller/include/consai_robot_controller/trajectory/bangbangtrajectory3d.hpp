@@ -12,34 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #pragma once
 
-#include "consai_robot_controller/trajectory/trajectory.h"
-#include "consai_robot_controller/trajectory/bangbangtrajectory1d.h"
+#include "consai_robot_controller/trajectory/trajectory.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory1d.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory2d.hpp"
 
-class BangBangTrajectory2D
+class BangBangTrajectory3D
 {
 public:
-  BangBangTrajectory2D();
-  ~BangBangTrajectory2D();
+  BangBangTrajectory3D();
+  ~BangBangTrajectory3D();
 
-  Vector2D get_position_mm(double t);
-  Vector2D get_position(double t);
-  Vector2D get_velocity(double t);
-  Vector2D get_acceleration(double t);
+  Pose2D get_pose(double t);
+  Velocity2D get_velocity(double t);
   double get_total_time();
-  PosVelAcc get_values_at_time(double t);
-  std::vector < double > get_time_sections();
-  Vector2D get_max_position();
-  Vector2D get_min_position();
 
   void generate(
-    Vector2D s0, Vector2D s1, Vector2D v0, double vmax, double acc, double accuracy
+    Pose2D s0, Pose2D s1, Velocity2D v0, double vmax_linear, double vmax_angular, double acc_linear,
+    double acc_angular, double accuracy
   );
 
 private:
-  BangBangTrajectory1D _x;
-  BangBangTrajectory1D _y;
-
+  BangBangTrajectory2D linear_;
+  BangBangTrajectory1D angular_;
 };

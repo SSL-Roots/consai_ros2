@@ -14,8 +14,9 @@
 
 #pragma once
 
-#include "consai_robot_controller/trajectory/utils.h"
-#include "consai_robot_controller/trajectory/trajectory.h"
+#include <vector>
+#include "consai_robot_controller/trajectory/utils.hpp"
+#include "consai_robot_controller/trajectory/trajectory.hpp"
 
 class BBTrajectoryPart
 {
@@ -44,7 +45,7 @@ public:
     double initialPos, double finalPos, double initialVel, double maxVel,
     double maxAcc);
   PosVelAcc get_values_at_time(double tt);
-  std::vector < double > get_time_sections();
+  std::vector<double> get_time_sections();
   double get_max_position();
   double get_min_position();
 
@@ -61,6 +62,4 @@ private:
   double _vel_tri_to_zero(double s0, double v0, double v1, double aMax);
   void _calc_tri(double s0, double v0, double s2, double a);
   void _calc_trapz(double s0, double v0, double v1, double s3, double aMax);
-
-
 };

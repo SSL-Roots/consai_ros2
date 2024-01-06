@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "consai_robot_controller/trajectory/utils.h"
+#include "consai_robot_controller/trajectory/utils.hpp"
 
 #include <iostream>
 #include <cmath>
-
-using namespace std;
 
 PosVelAcc::PosVelAcc(double pos, double vel, double acc)
 : pos(pos), vel(vel), acc(acc) {}

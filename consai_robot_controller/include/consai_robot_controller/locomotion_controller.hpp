@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <utility>
 #include "rclcpp/rclcpp.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/trajectory_generator.hpp"
@@ -57,10 +58,10 @@ private:
   // _Float64  ki_theta;
   // _Float64  kd_theta;
   double dt_;           // 制御周期
-  double max_linear_velocity_;    // [m/s]
-  double max_angular_velocity_; // [rad/s]
-  double max_linear_acceleration_; // [m/s^2]
-  double max_angular_acceleration_; // [rad/s^2]
+  double max_linear_velocity_;        // [m/s]
+  double max_angular_velocity_;       // [rad/s]
+  double max_linear_acceleration_;    // [m/s^2]
+  double max_angular_acceleration_;   // [rad/s^2]
 
   Velocity2D runFollowTrajectory(const State2D & current_state);
   Velocity2D limitAcceleration(

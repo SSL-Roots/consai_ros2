@@ -14,10 +14,12 @@
 
 #pragma once
 
+#include <memory>
+#include <utility>
 #include "rclcpp/rclcpp.hpp"
 #include "consai_visualizer_msgs/msg/objects.hpp"
 #include "consai_visualizer_msgs/msg/shape_line.hpp"
-#include "consai_robot_controller/trajectory/bangbangtrajectory3d.h"
+#include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
 
 /**

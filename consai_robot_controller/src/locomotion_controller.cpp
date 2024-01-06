@@ -14,9 +14,9 @@
 
 #include "consai_robot_controller/locomotion_controller.hpp"
 
-#include "consai_robot_controller/trajectory/bangbangtrajectory3d.h"
-
 #include <algorithm>
+
+#include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
 
 LocomotionController::LocomotionController(
@@ -67,7 +67,8 @@ LocomotionController::ControllerState LocomotionController::moveToPose(
     s0 = Pose2D(current_pose.x, current_pose.y, current_pose.theta);
     s1 = Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta);
     v0 =
-      Velocity2D(this->output_velocity_.x, this->output_velocity_.y, this->output_velocity_.theta);         // TODO: ロボットの現在速度を使うように変える
+      Velocity2D(this->output_velocity_.x, this->output_velocity_.y, this->output_velocity_.theta);
+    // TODO(tilt_silvie): ロボットの現在速度を使うように変える
   } else {
     // 位置追従制御中に新たな目標位置が与えられた場合は、直前の目標位置と速度を初期値として軌道生成を行う
     s0 = Pose2D(
@@ -152,7 +153,7 @@ Velocity2D LocomotionController::limitAcceleration(
   const double & dt) const
 {
   // ワールド座標系のロボット加速度に制限を掛ける
-  Velocity2D acc;   // TODO: 型を修正する
+  Velocity2D acc;   // TODO(tilt_silvie): 型を修正する
   acc.x = (velocity.x - last_velocity.x) / dt;
   acc.y = (velocity.y - last_velocity.y) / dt;
   acc.theta = (velocity.theta - last_velocity.theta) / dt;

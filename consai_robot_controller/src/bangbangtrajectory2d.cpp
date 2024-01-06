@@ -15,9 +15,9 @@
 #include <cmath>
 #include <vector>
 
-#include "consai_robot_controller/trajectory/trajectory.h"
-#include "consai_robot_controller/trajectory/bangbangtrajectory1d.h"
-#include "consai_robot_controller/trajectory/bangbangtrajectory2d.h"
+#include "consai_robot_controller/trajectory/trajectory.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory1d.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory2d.hpp"
 
 BangBangTrajectory2D::BangBangTrajectory2D()
 {

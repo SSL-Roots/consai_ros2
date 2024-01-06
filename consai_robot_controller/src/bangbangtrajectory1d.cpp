@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "consai_robot_controller/trajectory/bangbangtrajectory1d.h"
+#include "consai_robot_controller/trajectory/bangbangtrajectory1d.hpp"
 
 #include <cmath>
 

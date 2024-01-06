@@ -14,10 +14,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <cmath>
-#include "trajectory.h"
-#include "utils.h"
+#include <utility>
+#include <vector>
+#include "trajectory.hpp"
+#include "utils.hpp"
 
 bool does_collide_lineseg_lineseg(LineSegment seg1, LineSegment seg2)
 {
@@ -47,9 +50,10 @@ bool does_collide_lineseg_lineseg(LineSegment seg1, LineSegment seg2)
   return true;
 }
 
-std::pair < bool, Vector2D > get_intersection_point_lineseg_lineseg(
+std::pair<bool, Vector2D> get_intersection_point_lineseg_lineseg(
   LineSegment seg1,
-  LineSegment seg2) {
+  LineSegment seg2)
+{
   double eps = 1e-6;
 
   double a_x = seg1.s.x;
@@ -107,11 +111,12 @@ bool does_collide_rectangle_lineseg(Rectangle rect, LineSegment seg)
   return false;
 }
 
-std::pair < std::pair < bool, Vector2D >, std::pair < bool,
-Vector2D >> get_intersection_point_rectangle_lineseg(Rectangle rect, LineSegment seg) {
+std::pair<std::pair<bool, Vector2D>, std::pair<bool,
+  Vector2D>> get_intersection_point_rectangle_lineseg(Rectangle rect, LineSegment seg)
+{
   // Get the intersection points of a rectangle and a line segment
 
-  std::vector < Vector2D > intersection_points;
+  std::vector<Vector2D> intersection_points;
 
   for (auto s : rect.sides) {
     auto intersection_point = get_intersection_point_lineseg_lineseg(s, seg);
@@ -129,7 +134,7 @@ Vector2D >> get_intersection_point_rectangle_lineseg(Rectangle rect, LineSegment
   }
 
   return {std::make_pair(true, intersection_points[0]),
-           std::make_pair(true, intersection_points[1])};
+    std::make_pair(true, intersection_points[1])};
 }
 
 bool does_collide_circle_lineseg(Circle circle, LineSegment seg)
@@ -143,8 +148,9 @@ bool does_collide_circle_lineseg(Circle circle, LineSegment seg)
   return false;
 }
 
-std::pair < std::pair < bool, Vector2D >, std::pair < bool,
-Vector2D >> get_intersection_point_circle_lineseg(Circle circle, LineSegment seg) {
+std::pair<std::pair<bool, Vector2D>, std::pair<bool,
+  Vector2D>> get_intersection_point_circle_lineseg(Circle circle, LineSegment seg)
+{
   // Get the intersection points of a circle and a line segment
 
   Vector2D l = seg.e - seg.s;
@@ -165,7 +171,7 @@ Vector2D >> get_intersection_point_circle_lineseg(Circle circle, LineSegment seg
   Vector2D p1_temp = proj - l_unit * d;
   Vector2D p2_temp = proj + l_unit * d;
 
-  std::pair < bool, Vector2D > p1, p2;
+  std::pair<bool, Vector2D> p1, p2;
 
   if (l.x * p1_temp.x + l.y * p1_temp.y < 0 ||
     sqrt(p1_temp.x * p1_temp.x + p1_temp.y * p1_temp.y) > sqrt(l.x * l.x + l.y * l.y))

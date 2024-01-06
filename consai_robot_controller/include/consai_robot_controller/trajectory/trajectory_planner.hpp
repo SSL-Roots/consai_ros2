@@ -14,13 +14,15 @@
 
 #pragma once
 
+#include <algorithm>
+#include <utility>
 #include <vector>
 #include <limits>
 
-#include "consai_robot_controller/trajectory/utils.h"
-#include "consai_robot_controller/trajectory/field.h"
-#include "consai_robot_controller/trajectory/bangbangtrajectory2d.h"
-#include "consai_robot_controller/trajectory/obstacle.h"
+#include "consai_robot_controller/trajectory/utils.hpp"
+#include "consai_robot_controller/trajectory/field.hpp"
+#include "consai_robot_controller/trajectory/bangbangtrajectory2d.hpp"
+#include "consai_robot_controller/trajectory/obstacle.hpp"
 
 class StateLatticeTrajectoryPlanner
 {
@@ -37,9 +39,9 @@ private:
   double robot_radius;
   double dt;
 
-  std::vector < BangBangTrajectory2D > generate_trajectories(Vector2D p0, Vector2D v0, Vector2D pg)
+  std::vector<BangBangTrajectory2D> generate_trajectories(Vector2D p0, Vector2D v0, Vector2D pg)
   {
-    std::vector < BangBangTrajectory2D > trajectories;
+    std::vector<BangBangTrajectory2D> trajectories;
 
     // 基準となる目的地を生成
     double look_ahead_angle = (pg - p0).angle();
@@ -67,14 +69,14 @@ private:
   }
 
   BangBangTrajectory2D get_best_trajectory(
-    std::vector < BangBangTrajectory2D > & trajectories,
-    Vector2D pg, std::vector < IObstacle * > & obstacles,
+    std::vector<BangBangTrajectory2D> & trajectories,
+    Vector2D pg, std::vector<IObstacle *> & obstacles,
     double t = 0)
   {
     // 軌道の範囲内に含まれる障害物のみを評価対象とする
     Vector2D current_position = trajectories[0].get_position(0);
     Circle traj_area(current_position, this->sample_radius);
-    std::vector < IObstacle * > filtered_obstacles;
+    std::vector<IObstacle *> filtered_obstacles;
     for (IObstacle * obstacle : obstacles) {
       if (obstacle->does_circle_collide(traj_area)) {
         filtered_obstacles.push_back(obstacle);
@@ -82,14 +84,14 @@ private:
     }
 
     // 評価の各項目を計算
-    std::vector < double > distance_list;
-    std::vector < std::pair < double, double >> obstacle_eval_list;
+    std::vector<double> distance_list;
+    std::vector<std::pair<double, double>> obstacle_eval_list;
     for (BangBangTrajectory2D traj : trajectories) {
       distance_list.push_back(_get_distance_between_tip_of_trajectory_and_goal(traj, pg));
       obstacle_eval_list.push_back(_get_obstacle_evals(traj, filtered_obstacles, t));
     }
-    std::vector < double > time_to_collision_list;
-    std::vector < double > clearance_list;
+    std::vector<double> time_to_collision_list;
+    std::vector<double> clearance_list;
     for (auto x : obstacle_eval_list) {
       time_to_collision_list.push_back(x.first);
       clearance_list.push_back(x.second);
@@ -99,7 +101,7 @@ private:
     double k0 = 1.0;
     double k1 = 10000.0;
     double k2 = 1.0;
-    std::vector < double > evals;
+    std::vector<double> evals;
     for (int i = 0; i < distance_list.size(); i++) {
       double distance = distance_list[i];
       double time = time_to_collision_list[i];
@@ -111,18 +113,21 @@ private:
       double val_k2 = k2 * std::max((-1.0 / 2.0 * clearance) + 1.0, 0.0);
       // debug
 
-      // double eval = k0 * distance + k1 * std::max((-1 / 5 * time) + 1, 0.0) + k2 * std::max((-1 / 2 * clearance) + 1, 0.0);
+      // double eval =
+      //   k0 * distance +
+      //   k1 * std::max((-1 / 5 * time) + 1, 0.0) +
+      //   k2 * std::max((-1 / 2 * clearance) + 1, 0.0);
       double eval = val_k0 + val_k1 + val_k2;
       evals.push_back(eval);
     }
 
     // evals と trajectories をペアにしてソート
-    std::vector < std::pair < double, BangBangTrajectory2D >> eval_traj_pairs;
+    std::vector<std::pair<double, BangBangTrajectory2D>> eval_traj_pairs;
     for (int i = 0; i < evals.size(); i++) {
       eval_traj_pairs.push_back(std::make_pair(evals[i], trajectories[i]));
     }
     std::sort(
-      eval_traj_pairs.begin(), eval_traj_pairs.end(), [] (const auto & x, const auto & y)
+      eval_traj_pairs.begin(), eval_traj_pairs.end(), [](const auto & x, const auto & y)
       {return x.first < y.first;});
 
     // 評価値が最小の軌道を選択
@@ -139,9 +144,9 @@ private:
     return distance_to_path;
   }
 
-  std::pair < double, double > _get_obstacle_evals(
+  std::pair<double, double> _get_obstacle_evals(
     BangBangTrajectory2D traj,
-    std::vector < IObstacle * > &obstacles,
+    std::vector<IObstacle *> & obstacles,
     double t_from_start)
   {
     // 障害物に衝突するまでの時間
@@ -155,7 +160,7 @@ private:
     NonRotatingRectangle traj_area(
       traj_min_position.x, traj_min_position.y, traj_area_width,
       traj_area_height);
-    std::vector < IObstacle * > filtered_obstacles;
+    std::vector<IObstacle *> filtered_obstacles;
     for (IObstacle * obstacle : obstacles) {
       if (obstacle->does_rectangle_collide(traj_area)) {
         filtered_obstacles.push_back(obstacle);
@@ -180,7 +185,7 @@ private:
 
 public:
   StateLatticeTrajectoryPlanner(Field field, double v_max, double a_max)
-    : field(field), v_max(v_max), a_max(a_max),
+  : field(field), v_max(v_max), a_max(a_max),
     sample_radius(2.0), sample_angle_step(M_PI / 12), sample_angle_range(M_PI * 2),
     look_ahed_distance(2.0), robot_radius(0.09), dt(0.1)
   {
@@ -189,16 +194,18 @@ public:
 
   BangBangTrajectory2D planOnce(
     Vector2D p0, Vector2D v0, Vector2D pg,
-    std::vector < IObstacle * > obstacles)
+    std::vector<IObstacle *> obstacles)
   {
-    std::vector < BangBangTrajectory2D > trajectories = generate_trajectories(p0, v0, pg);
+    std::vector<BangBangTrajectory2D> trajectories = generate_trajectories(p0, v0, pg);
 
     BangBangTrajectory2D traj = get_best_trajectory(trajectories, pg, obstacles, 0.0);
 
     return traj;
   }
 
-  // BangBangTrajectory2D plan(Vector2D p0, Vector2D v0, Vector2D pg, std::vector<IObstacle *> obstacles) {
+  // BangBangTrajectory2D plan(
+  //   Vector2D p0, Vector2D v0, Vector2D pg, std::vector<IObstacle *> obstacles
+  // ) {
   //     std::vector<BangBangTrajectory2D> traj_segments;
 
   //     Vector2D position = p0;
@@ -206,13 +213,16 @@ public:
 
   //     double t = 0.0;
   //     while (true) {
-  //         std::vector<BangBangTrajectory2D> trajectories = generate_trajectories(position, velocity, pg);
+  //         std::vector<BangBangTrajectory2D> trajectories =
+  //          generate_trajectories(position, velocity, pg);
 
   //         BangBangTrajectory2D traj = get_best_trajectory(trajectories, pg, obstacles, t);
   //         BangBangTrajectory2D traj_segement = TrimmedTrajectory(traj, 0.0, 0.1);
   //         traj_segments.push_back(traj_segement);
 
-  //         if (traj_segement.get_position(traj_segement.get_total_time()).distance_to(pg) < 0.001) {
+  //         if (
+  //          traj_segement.get_position(traj_segement.get_total_time()).distance_to(pg) < 0.001
+  //         ) {
   //             break;
   //         }
 

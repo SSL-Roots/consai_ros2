@@ -15,7 +15,8 @@
 // utils.h
 #pragma once
 
-class PosVelAcc {
+class PosVelAcc
+{
 public:
   PosVelAcc(double pos, double vel, double acc);
 
@@ -24,9 +25,11 @@ public:
   double acc;
 };
 
-class Vector2D {
+class Vector2D
+{
 public:
-  Vector2D() {
+  Vector2D()
+  {
     x = 0;
     y = 0;
   }
@@ -39,16 +42,17 @@ public:
   Vector2D rotate(double angle);
   double dot(Vector2D other);
   double cross(Vector2D other);
-  Vector2D operator + (Vector2D other);
-  Vector2D operator - (Vector2D other);
-  Vector2D operator * (double scalar);
-  Vector2D operator / (double scalar);
+  Vector2D operator+(Vector2D other);
+  Vector2D operator-(Vector2D other);
+  Vector2D operator*(double scalar);
+  Vector2D operator/(double scalar);
 
   double x;
   double y;
 };
 
-class Pose2D {
+class Pose2D
+{
 public:
   double x;
   double y;
@@ -58,7 +62,8 @@ public:
   Pose2D(double x, double y, double theta);
 };
 
-class Velocity2D {
+class Velocity2D
+{
 public:
   double x;
   double y;
@@ -68,7 +73,8 @@ public:
   Velocity2D(double x, double y, double theta);
 };
 
-class State2D {
+class State2D
+{
 public:
   Pose2D pose;
   Velocity2D velocity;
@@ -78,7 +84,8 @@ public:
 };
 
 
-class LineSegment {
+class LineSegment
+{
 public:
   LineSegment(Vector2D start, Vector2D end);
 
@@ -90,7 +97,8 @@ public:
   Vector2D closest_point(Vector2D point);
 };
 
-class Circle {
+class Circle
+{
 public:
   Circle(Vector2D center, double radius);
 
@@ -100,23 +108,26 @@ public:
 
 #include <vector>
 
-class IPolygon {
+class IPolygon
+{
 public:
   virtual bool does_point_include(Vector2D p) = 0;
-  virtual std::vector < Vector2D > get_vertices() = 0;
+  virtual std::vector<Vector2D> get_vertices() = 0;
 };
 
-class Rectangle: public IPolygon {
+class Rectangle : public IPolygon
+{
 public:
   double x, y, w, h;
   Vector2D left_bottom;
   Vector2D left_top;
   Vector2D right_top;
   Vector2D right_bottom;
-  std::vector < LineSegment > sides;
-  std::vector < LineSegment > diagonals;
+  std::vector<LineSegment> sides;
+  std::vector<LineSegment> diagonals;
 
-  Rectangle(double x, double y, double w, double h) : x(x), y(y), w(w), h(h),
+  Rectangle(double x, double y, double w, double h)
+  : x(x), y(y), w(w), h(h),
     left_bottom(Vector2D(x, y)),
     left_top(Vector2D(x, y + h)),
     right_top(Vector2D(x + w, y + h)),
@@ -128,7 +139,8 @@ public:
         LineSegment(right_bottom, left_bottom)}),
     diagonals(
       {LineSegment(left_bottom, right_top),
-        LineSegment(left_top, right_bottom)}) {
+        LineSegment(left_top, right_bottom)})
+  {
   }
 
   bool does_point_include(Vector2D p) override
@@ -142,7 +154,8 @@ public:
     return true;
   }
 
-  std::vector < Vector2D > get_vertices() override {
+  std::vector<Vector2D> get_vertices() override
+  {
     return {left_bottom, left_top, right_top, right_bottom};
   }
 
@@ -163,17 +176,19 @@ public:
   // }
 };
 
-class NonRotatingRectangle: public IPolygon {
+class NonRotatingRectangle : public IPolygon
+{
 public:
   double x, y, w, h;
   Vector2D left_bottom;
   Vector2D left_top;
   Vector2D right_top;
   Vector2D right_bottom;
-  std::vector < LineSegment > sides;
-  std::vector < LineSegment > diagonals;
+  std::vector<LineSegment> sides;
+  std::vector<LineSegment> diagonals;
 
-  NonRotatingRectangle(double x, double y, double w, double h) : x(x), y(y), w(w), h(h),
+  NonRotatingRectangle(double x, double y, double w, double h)
+  : x(x), y(y), w(w), h(h),
     left_bottom(Vector2D(x, y)),
     left_top(Vector2D(x, y + h)),
     right_top(Vector2D(x + w, y + h)),
@@ -185,7 +200,8 @@ public:
         LineSegment(right_bottom, left_bottom)}),
     diagonals(
       {LineSegment(left_bottom, right_top),
-        LineSegment(left_top, right_bottom)}) {
+        LineSegment(left_top, right_bottom)})
+  {
   }
 
   bool does_point_include(Vector2D p) override
@@ -199,7 +215,8 @@ public:
     return true;
   }
 
-  std::vector < Vector2D > get_vertices() override {
+  std::vector<Vector2D> get_vertices() override
+  {
     return {left_bottom, left_top, right_top, right_bottom};
   }
 

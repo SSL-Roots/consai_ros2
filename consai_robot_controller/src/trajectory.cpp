@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "consai_robot_controller/trajectory/trajectory.h"
+#include "consai_robot_controller/trajectory/trajectory.hpp"
 
 TrimmedTrajectory::TrimmedTrajectory(ITrajectory * traj, double start_t, double end_t)
 : trajectory(traj), start_time(start_t), end_time(end_t) {}

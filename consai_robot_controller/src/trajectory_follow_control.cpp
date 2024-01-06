@@ -13,8 +13,10 @@
 // limitations under the License.
 
 #include "consai_robot_controller/trajectory_follow_control.hpp"
-#include "consai_robot_controller/geometry_tools.hpp"
+
 #include <cstdint>
+
+#include "consai_robot_controller/geometry_tools.hpp"
 
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController()
