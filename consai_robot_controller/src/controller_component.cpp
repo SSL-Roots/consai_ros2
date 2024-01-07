@@ -351,6 +351,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       max_velocity_xy = std::min(
         goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
     }
+    world_vel = limit_world_velocity(world_vel, max_velocity_xy);
   }
 
   // ワールド座標系でのxy速度をロボット座標系に変換
