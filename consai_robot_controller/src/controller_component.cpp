@@ -304,19 +304,18 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       world_vel = calculate_velocity_with_avoidance(
         my_robot, goal_pose, final_goal_pose, goal_handle_[robot_id],
         max_velocity_xy_, max_velocity_theta_);
+      // 最大加速度リミットを適用
+      world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
+      // 最大速度リミットを適用
+      auto max_velocity_xy = max_velocity_xy_;
+      // 最大速度リミットを上書きできる
+      if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+        max_velocity_xy = std::min(
+          goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+      }
+      world_vel = limit_world_velocity(world_vel, max_velocity_xy);
     }
   }
-
-  // // 最大加速度リミットを適用
-  // world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-  // // 最大速度リミットを適用
-  // auto max_velocity_xy = max_velocity_xy_;
-  // // 最大速度リミットを上書きできる
-  // if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-  //   max_velocity_xy = std::min(
-  //     goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
-  // }
-  // world_vel = limit_world_velocity(world_vel, max_velocity_xy);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
