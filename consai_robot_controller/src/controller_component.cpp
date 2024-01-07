@@ -300,20 +300,56 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         param_control_a_theta_ *
         this->max_velocity_theta_);
     } else {
-      // 関数を呼び出して目標位置を調整し、速度を計算する
-      world_vel = calculate_velocity_with_avoidance(
-        my_robot, goal_pose, final_goal_pose, goal_handle_[robot_id],
-        max_velocity_xy_, max_velocity_theta_);
-      // 最大加速度リミットを適用
-      world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-      // 最大速度リミットを適用
-      auto max_velocity_xy = max_velocity_xy_;
-      // 最大速度リミットを上書きできる
-      if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-        max_velocity_xy = std::min(
-          goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
-      }
-      world_vel = limit_world_velocity(world_vel, max_velocity_xy);
+      // field_info_parserの衝突回避を無効かする場合は、下記の行をコメントアウトすること
+      goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
+        goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
+
+      // 障害物情報を取得
+      auto obstacle_environments = parser_.get_obstacle_environment(
+        goal_handle_[robot_id]->get_goal(), my_robot);
+
+      // 現在位置: my_robot.pos
+      // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
+      // 最終目標位置: goal_pose
+      // 障害物情報: obstacle_environments
+      // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
+
+      // 目標位置と現在位置の差分
+      double diff_x = goal_pose.x - my_robot.pos.x;
+      double diff_y = goal_pose.y - my_robot.pos.y;
+      double diff_theta = tools::normalize_theta(
+        goal_pose.theta -
+        my_robot.orientation);
+
+      // tanhに反応する区間の係数
+      // double range_xy = 1.0;
+      // double range_theta = 0.1;
+      // 最大速度調整用の係数(a < 1)
+      // double a_xy = 1.0;
+      // double a_theta = 0.5;
+
+      // tanh関数を用いた速度制御
+      world_vel.x = ctools::velocity_contol_tanh(
+        diff_x, param_control_range_xy_,
+        param_control_a_xy_ * max_velocity_xy_);
+      world_vel.y = ctools::velocity_contol_tanh(
+        diff_y, param_control_range_xy_,
+        param_control_a_xy_ * max_velocity_xy_);
+      // sin関数を用いた角速度制御
+      world_vel.theta = ctools::angular_velocity_contol_sin(
+        diff_theta,
+        param_control_a_theta_ *
+        max_velocity_theta_);
+    }
+
+    // 最大加速度リミットを適用
+    world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
+    // 最大速度リミットを適用
+    auto max_velocity_xy = max_velocity_xy_;
+    // 最大速度リミットを上書きできる
+    if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+      max_velocity_xy = std::min(
+        goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
     }
   }
 
@@ -373,39 +409,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 }
 
-// calculate_velocity_with_avoidance関数の定義
-State Controller::calculate_velocity_with_avoidance(
-  const TrackedRobot & my_robot, const State & goal_pose,
-  const State & final_goal_pose, const std::shared_ptr<GoalHandleRobotControl> goal_handle,
-  const double max_velocity_xy, const double max_velocity_theta)
-{
-  // field_info_parserの衝突回避を無効かする場合は、下記の行をコメントアウトすること
-  auto modified_goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
-    goal_handle->get_goal(), my_robot, goal_pose, final_goal_pose);
-
-  // 目標位置と現在位置の差分
-  double diff_x = modified_goal_pose.x - my_robot.pos.x;
-  double diff_y = modified_goal_pose.y - my_robot.pos.y;
-  double diff_theta = tools::normalize_theta(
-    modified_goal_pose.theta -
-    my_robot.orientation);
-
-  State world_vel;
-  // tanh関数を用いた速度制御
-  world_vel.x = ctools::velocity_contol_tanh(
-    diff_x, param_control_range_xy_,
-    param_control_a_xy_ * max_velocity_xy);
-  world_vel.y = ctools::velocity_contol_tanh(
-    diff_y, param_control_range_xy_,
-    param_control_a_xy_ * max_velocity_xy);
-  // sin関数を用いた角速度制御
-  world_vel.theta = ctools::angular_velocity_contol_sin(
-    diff_theta,
-    param_control_a_theta_ *
-    max_velocity_theta);
-
-  return world_vel;
-}
 
 void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
 {
