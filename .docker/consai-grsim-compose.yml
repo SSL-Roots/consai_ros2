@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  grsim:
+    image: robocupssl/grsim
+    network_mode: host
+    command: []
+    tty: true
+    stdin_open: true
+    restart: "no"
+
+  consai_ros2:
+    image: ghcr.io/ssl-roots/consai_ros2:humble
+    network_mode: host
+    command: ["ros2", "launch", "consai_examples", "start.launch.py", "game:=true", "invert:=false", "vision_port:=10020", "gui:=false"]
+    tty: true
+    stdin_open: true
+    restart: "no"
