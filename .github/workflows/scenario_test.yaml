@@ -1,0 +1,40 @@
+name: Scenario Test
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  scenario_test:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker/compose:1.29.2
+        ports:
+          - 80:80
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install simple robocup ssl library
+      run: |
+        python -m pip install --upgrade pip
+        sudo apt update
+        sudo apt install -y protobuf-compiler
+        pip install -v git+https://github.com/SSL-Roots/simple_robocup_ssl
+        pip install pytest
+
+    - name: Start Docker Compose services
+      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+
+    - name: Run pytest
+      run: pytest tests/test_scenario_kickoff.py
+
+    - name: Clean up Docker Compose services
+      run: docker compose -f .docker/consai-grsim-compose.yml down
