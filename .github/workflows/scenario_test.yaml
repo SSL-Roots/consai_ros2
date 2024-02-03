@@ -1,10 +1,21 @@
 name: Scenario Test
 
 on:
-  workflow_run:
-    workflows: ["build_and_lint"]
-    types:
-      - completed
+  push:
+    branches:
+      - main 
+      - '**-devel'
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
+      - '.github/workflows/build_lint.yaml'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
+      - '.github/workflows/build_lint.yaml'
   workflow_dispatch:
 
 jobs:
@@ -41,7 +52,7 @@ jobs:
 
     - name: Get and print logs
       if: always()
-      run: docker compose -f .docker/consai-grsim-compose.yml logs
+      run: docker compose -f .docker/consai-grsim-compose.yml logs --tail 100
 
     - name: Clean up Docker Compose services
       if: always()
