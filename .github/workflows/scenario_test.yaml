@@ -1,8 +1,11 @@
 name: Scenario Test
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["build_and_lint"]
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   scenario_test:
