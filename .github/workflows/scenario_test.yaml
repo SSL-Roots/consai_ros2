@@ -1,8 +1,11 @@
 name: Scenario Test
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["build_and_lint"]
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   scenario_test:
@@ -22,19 +25,24 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install simple robocup ssl library
+    - name: Install robocup_scenario_test library
       run: |
         python -m pip install --upgrade pip
         sudo apt update
         sudo apt install -y protobuf-compiler
-        pip install -v git+https://github.com/SSL-Roots/simple_robocup_ssl
+        pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
         pip install pytest
 
     - name: Start Docker Compose services
       run: docker compose -f .docker/consai-grsim-compose.yml up -d
 
     - name: Run pytest
-      run: pytest tests/test_scenario_kickoff.py
+      run: pytest tests/test_scenario_kickoff.py --vision_port=10020
+
+    - name: Get and print logs
+      if: always()
+      run: docker compose -f .docker/consai-grsim-compose.yml logs
 
     - name: Clean up Docker Compose services
+      if: always()
       run: docker compose -f .docker/consai-grsim-compose.yml down
