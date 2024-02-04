@@ -338,6 +338,12 @@ class RefereeParser(Node):
     def their_ball_placement(self):
         return self._current_command == self._COMMAND_THEIR_BALL_PLACEMENT
 
+    def goal_blue(self):
+        return self._current_command == Referee.COMMAND_GOAL_BLUE
+
+    def goal_yellow(self):
+        return self._current_command == Referee.COMMAND_GOAL_YELLOW
+
     def placement_position(self):
         return self._placement_pos
 
