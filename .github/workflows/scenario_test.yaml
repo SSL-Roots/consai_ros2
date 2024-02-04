@@ -52,6 +52,19 @@ jobs:
     - name: Start Docker Compose services
       run: docker compose -f .docker/consai-grsim-compose.yml up -d
 
+    - name: Wait for game.py to start
+      timeout-minutes: 5
+      run: |
+        CHECK_INTERVAL=10
+
+        until docker top consai 2>/dev/null | grep -q game.py
+        do
+          echo "Waiting for game.py to start..."
+          sleep $CHECK_INTERVAL
+        done
+
+        echo "game.py started!"
+
     - name: Run pytest
       run: pytest tests/test_scenario_kickoff.py --vision_port=10020
 

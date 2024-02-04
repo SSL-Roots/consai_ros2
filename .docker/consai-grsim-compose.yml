@@ -2,6 +2,7 @@ version: '3.8'
 services:
   grsim:
     image: robocupssl/grsim
+    container_name: grsim
     network_mode: host
     command: []
     tty: true
@@ -10,6 +11,7 @@ services:
 
   consai_ros2:
     image: ghcr.io/ssl-roots/consai_ros2:humble
+    container_name: consai
     network_mode: host
     volumes:
       - "../:/root/ros2_ws/src/consai_ros2"  # Mount the repository to the container
