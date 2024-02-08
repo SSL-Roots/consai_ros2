@@ -105,6 +105,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/command", 10)
     );
 
+    pub_current_pose_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/current_pose", 10)
+    );
+
     pub_goal_pose_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/goal_pose", 10)
@@ -352,16 +357,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         param_control_a_theta_ *
         max_velocity_theta_);
 
-    // 最大加速度リミットを適用
-    world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-    // 最大速度リミットを適用
-    auto max_velocity_xy = max_velocity_xy_;
-    // 最大速度リミットを上書きできる
-    if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-      max_velocity_xy = std::min(
-        goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
-    }
-    world_vel = limit_world_velocity(world_vel, max_velocity_xy);
+      // 最大加速度リミットを適用
+      world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
+      // 最大速度リミットを適用
+      auto max_velocity_xy = max_velocity_xy_;
+      // 最大速度リミットを上書きできる
+      if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
+        max_velocity_xy = std::min(
+          goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+      }
+      world_vel = limit_world_velocity(world_vel, max_velocity_xy);
     }
   }
 
@@ -380,7 +385,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   pub_command_[robot_id]->publish(std::move(command_msg));
 
   // デバッグ用に、目標姿勢、ワールド座標系での速度を出力する
-  pub_goal_pose_[robot_id]->publish(goal_pose);
+  State2D current_goal = State2D(this->locomotion_controller_[robot_id].getCurrentTargetState());
+  State current_goal_state;
+  current_goal_state.x = current_goal.pose.x;
+  current_goal_state.y = current_goal.pose.y;
+  current_goal_state.theta = current_goal.pose.theta;
+  pub_goal_pose_[robot_id]->publish(current_goal_state);
   pub_target_speed_world_[robot_id]->publish(world_vel);
 
   // 制御更新時間と速度を保存する

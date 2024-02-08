@@ -97,6 +97,7 @@ private:
     const double max_velocity_xy, const double max_velocity_theta);
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
