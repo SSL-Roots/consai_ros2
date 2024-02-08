@@ -351,7 +351,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         diff_theta,
         param_control_a_theta_ *
         max_velocity_theta_);
-    }
 
     // 最大加速度リミットを適用
     world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
@@ -363,6 +362,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
     }
     world_vel = limit_world_velocity(world_vel, max_velocity_xy);
+    }
   }
 
   // ワールド座標系でのxy速度をロボット座標系に変換
