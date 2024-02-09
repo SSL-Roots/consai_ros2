@@ -63,6 +63,14 @@ public:
    */
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
 
+
+  /**
+   * @brief 現在の制御出力の各項を取得する
+   * @return 現在の制御出力のFF項とP項
+  */
+  std::pair<Velocity2D, Velocity2D> getDetailedControlOutput();
+
+
 private:
   enum ControllerMode
   {
@@ -70,10 +78,17 @@ private:
     P
   };
 
-  double controlLinear(
+  struct ControllerOutput
+  {
+    double output;
+    double ff_term;
+    double p_term;
+  };
+
+  ControllerOutput controlLinear(
     ControllerMode mode, double current_position, double target_position,
     double target_velocity);
-  double controlAngular(double current_position, double target_position, double target_velocity);
+  ControllerOutput controlAngular(double current_position, double target_position, double target_velocity);
 
   std::shared_ptr<BangBangTrajectory3D> trajectory_;
   ControllerState state_;
@@ -89,6 +104,9 @@ private:
   double tracked_time_ = 0;  // 追従制御開始時刻からの経過時刻
   double dt_ = 0.0;          // 制御周期
   double last_error_linear_ = 0;
+
+  Velocity2D last_control_output_ff_;
+  Velocity2D last_control_output_p_;
 };
 
 

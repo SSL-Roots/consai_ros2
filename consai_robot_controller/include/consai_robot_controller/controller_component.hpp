@@ -100,6 +100,8 @@ private:
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_ff_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_p_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;

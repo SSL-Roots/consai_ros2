@@ -76,15 +76,25 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
 
   // x方向の制御
-  output.x = this->controlLinear(FF_AND_P, current_state.pose.x, target_pose.x, target_velocity.x);
+  ControllerOutput x_output = this->controlLinear(
+    FF_AND_P, current_state.pose.x, target_pose.x, target_velocity.x);
+  output.x = x_output.output;
 
   // y方向の制御
-  output.y = this->controlLinear(FF_AND_P, current_state.pose.y, target_pose.y, target_velocity.y);
+  ControllerOutput y_output = this->controlLinear(
+    FF_AND_P, current_state.pose.y, target_pose.y, target_velocity.y);
+  output.y = y_output.output;
 
-  // theta方向の制御
-  output.theta = this->controlAngular(
-    current_state.pose.theta, target_pose.theta,
-    target_velocity.theta);
+  // 角度の制御
+  ControllerOutput theta_output = this->controlAngular(
+    current_state.pose.theta, target_pose.theta, target_velocity.theta);
+  output.theta = theta_output.output;
+
+  // 保存
+  this->last_control_output_ff_ = Velocity2D(
+    x_output.ff_term, y_output.ff_term, theta_output.ff_term);
+  this->last_control_output_p_ = Velocity2D(
+    x_output.p_term, y_output.p_term, theta_output.p_term);
 
   // 時間の更新
   this->tracked_time_ += this->dt_;
@@ -99,30 +109,48 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   return std::make_pair(output, state);
 }
 
-double TrajectoryFollowController::controlLinear(
+std::pair<Velocity2D, Velocity2D> TrajectoryFollowController::getDetailedControlOutput()
+{
+  return std::make_pair(this->last_control_output_ff_, this->last_control_output_p_);
+}
+
+TrajectoryFollowController::ControllerOutput TrajectoryFollowController::controlLinear(
   ControllerMode mode, double current_position,
   double target_position, double target_velocity)
 {
+  ControllerOutput output;
+
   if (mode == FF_AND_P) {
     double error = target_position - current_position;
-    double output = kp_linear_ * error + target_velocity;
+    output.ff_term = target_velocity;
+    output.p_term = kp_linear_ * error;
+    output.output = output.ff_term + output.p_term;
     return output;
   } else if (mode == P) {
     double error = target_position - current_position;
-    double output = kp_linear_ * error;
+    output.ff_term = 0.0;
+    output.p_term = kp_linear_ * error;
+    output.output = output.p_term;
     return output;
   } else {
-    double output = 0.0;
+    output.ff_term = 0.0;
+    output.p_term = 0.0;
+    output.output = 0.0;
     return output;
   }
 }
 
-double TrajectoryFollowController::controlAngular(
+TrajectoryFollowController::ControllerOutput TrajectoryFollowController::controlAngular(
   double current_position, double target_position,
   double target_velocity)
 {
   double error = geometry_tools::normalize_theta(target_position - current_position);
-  double output = kp_angular_ * error + target_velocity;
+
+  ControllerOutput output;
+  output.ff_term = target_velocity;
+  output.p_term = kp_angular_ * error;
+  output.output = output.ff_term + output.p_term;
+
   // double output = kp_angular_ * error;
 
   return output;
