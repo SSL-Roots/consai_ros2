@@ -25,6 +25,7 @@
 #include "consai_robot_controller/geometry_tools.hpp"
 #include "consai_robot_controller/control_tools.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "consai_robot_controller/global_for_debug.hpp"
 
 namespace consai_robot_controller
 {
@@ -409,6 +410,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     my_pose.y = my_robot.pos.y;
     my_pose.theta = my_robot.orientation;
     pub_current_pose_[robot_id]->publish(my_pose);
+
+    State control_output_ff, control_output_p;
+    control_output_ff.x = global_for_debug::last_control_output_ff.x;
+    control_output_ff.y = global_for_debug::last_control_output_ff.y;
+    control_output_ff.theta = global_for_debug::last_control_output_ff.theta;
+    control_output_p.x = global_for_debug::last_control_output_p.x;
+    control_output_p.y = global_for_debug::last_control_output_p.y;
+    control_output_p.theta = global_for_debug::last_control_output_p.theta;
+    pub_control_output_ff_[robot_id]->publish(control_output_ff);
+    pub_control_output_p_[robot_id]->publish(control_output_p);
   }
 
   // 制御更新時間と速度を保存する

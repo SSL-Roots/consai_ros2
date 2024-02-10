@@ -17,6 +17,7 @@
 #include <cstdint>
 
 #include "consai_robot_controller/geometry_tools.hpp"
+#include "consai_robot_controller/global_for_debug.hpp"
 
 // TrajectoryFollowController クラスの定義
 TrajectoryFollowController::TrajectoryFollowController()
@@ -91,10 +92,8 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   output.theta = theta_output.output;
 
   // 保存
-  this->last_control_output_ff_ = Velocity2D(
-    x_output.ff_term, y_output.ff_term, theta_output.ff_term);
-  this->last_control_output_p_ = Velocity2D(
-    x_output.p_term, y_output.p_term, theta_output.p_term);
+  global_for_debug::last_control_output_ff = Velocity2D(x_output.ff_term, y_output.ff_term, theta_output.ff_term);
+  global_for_debug::last_control_output_p = Velocity2D(x_output.p_term, y_output.p_term, theta_output.p_term);
 
   // 時間の更新
   this->tracked_time_ += this->dt_;
@@ -107,11 +106,6 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   }
 
   return std::make_pair(output, state);
-}
-
-std::pair<Velocity2D, Velocity2D> TrajectoryFollowController::getDetailedControlOutput()
-{
-  return std::make_pair(this->last_control_output_ff_, this->last_control_output_p_);
 }
 
 TrajectoryFollowController::ControllerOutput TrajectoryFollowController::controlLinear(
