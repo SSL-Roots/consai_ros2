@@ -17,12 +17,16 @@
 
 import math
 
+from rclpy import qos
 from rclpy.node import Node
 from consai_msgs.msg import ParsedReferee
+from consai_visualizer_msgs.msg import Objects
+import referee_visualize_parser as ref_vis_parser
 from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
+from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import Vector3
 
 
@@ -99,16 +103,22 @@ class RefereeParser(Node):
         self._prev_command = 0
         self._placement_pos = Point()
         self._max_allowed_our_bots = 0
+        self._num_of_blue_bots: int = 0
+        self._num_of_yellow_bots: int = 0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
+        self._pub_visualizer_objects = self.create_publisher(
+            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
         self._sub_referee = self.create_subscription(
             Referee, 'referee', self._referee_callback, 10)
 
-    def _detection_tracked_callback(self, msg):
+    def _detection_tracked_callback(self, msg: TrackedFrame) -> None:
         if len(msg.balls) > 0:
             self._ball = msg.balls[0]
+
+        self._update_num_of_bots(msg)
 
     def _referee_callback(self, msg):
         self._stage = msg.stage
@@ -142,10 +152,14 @@ class RefereeParser(Node):
                 self._max_allowed_our_bots = msg.blue.max_allowed_bots[0]
 
         # 解釈したレフェリー情報をpublishする
-        self._publish_parsed_referee()
+        parsed_ref_msg = self._bundle_parsed_referee()
+        self._pub_parsed_referee.publish(parsed_ref_msg)
 
-    def _publish_parsed_referee(self):
-        # 解析したレフェリー情報をpublishする
+        # 可視化用のメッセージをpublishする
+        self._publish_visualizer_objects(msg, parsed_ref_msg)
+
+    def _bundle_parsed_referee(self) -> ParsedReferee:
+        # 解析したレフェリー情報をまとめる
         referee = ParsedReferee()
         referee.designated_position.x = self._placement_pos.x
         referee.designated_position.y = self._placement_pos.y
@@ -167,7 +181,36 @@ class RefereeParser(Node):
             or self.their_ball_placement() \
             or self.their_pre_kickoff() \
             or self.their_pre_penalty()
-        self._pub_parsed_referee.publish(referee)
+        return referee
+
+    def _publish_visualizer_objects(
+            self, msg: Referee, parsed_ref_msg: ParsedReferee) -> None:
+        # レフェリー情報を可視化するためのメッセージをpublishする
+        self._pub_visualizer_objects.publish(
+            ref_vis_parser.vis_info(
+                msg, self._num_of_blue_bots, self._num_of_yellow_bots, self._placement_pos))
+        self._pub_visualizer_objects.publish(
+            ref_vis_parser.vis_prohibited_area(
+                parsed_ref_msg, self._ball.pos))
+
+    def _update_num_of_bots(self, msg: TrackedFrame) -> None:
+        # フィールド上のロボット台数を計上する
+        VISIBILITY_THRESHOLD = 0.01
+        blue_robot_num = 0
+        yellow_robot_num = 0
+        for robot in msg.robots:
+            if len(robot.visibility) <= 0:
+                continue
+
+            if robot.visibility[0] < VISIBILITY_THRESHOLD:
+                continue
+
+            if robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW:
+                yellow_robot_num += 1
+            else:
+                blue_robot_num += 1
+        self._num_of_blue_bots = blue_robot_num
+        self._num_of_yellow_bots = yellow_robot_num
 
     def _check_inplay(self, msg):
         # referee情報とフィールド情報をもとに、インプレイ状態を判定する
@@ -294,6 +337,12 @@ class RefereeParser(Node):
 
     def their_ball_placement(self):
         return self._current_command == self._COMMAND_THEIR_BALL_PLACEMENT
+
+    def goal_blue(self):
+        return self._current_command == Referee.COMMAND_GOAL_BLUE
+
+    def goal_yellow(self):
+        return self._current_command == Referee.COMMAND_GOAL_YELLOW
 
     def placement_position(self):
         return self._placement_pos

@@ -11,10 +11,9 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 ## Requirements
 
 - Linux OS
-    - Ubuntu 20.04 tested and is recommended
+    - Ubuntu 22.04 tested and is recommended
 - ROS 2
     - [Humble Hawksbill](https://docs.ros.org/en/humble/Installation.html)
-    - [Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation.html)
     - [colcon build tool](https://docs.ros.org/en/humble/Tutorials/Colcon-Tutorial.html)
 - [consai_frootspi_msgs](https://github.com/SSL-Roots/consai_frootspi_msgs)
     - CON-SAIと[FrootsPi](https://github.com/SSL-Roots/FrootsPi)が通信するために必要なパッケージです

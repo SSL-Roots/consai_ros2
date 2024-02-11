@@ -172,6 +172,10 @@ def main():
             elif referee.their_ball_placement():
                 decisions[role].their_ball_placement(
                     robot_id, referee.placement_position())
+            elif referee.goal_blue():
+                decisions[role].halt(robot_id)
+            elif referee.goal_yellow():
+                decisions[role].halt(robot_id)
             else:
                 print("UNDEFINED REFEREE COMMAND!!! : {}".format(referee.get_command()))
 

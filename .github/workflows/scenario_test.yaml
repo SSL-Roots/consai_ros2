@@ -1,0 +1,77 @@
+name: Scenario Test
+
+on:
+  push:
+    branches:
+      - main 
+      - '**-devel'
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
+      - '.github/workflows/build_lint.yaml'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.docker/**'
+      - '.github/workflows/build_docker_image.yaml'
+      - '.github/workflows/build_lint.yaml'
+  workflow_dispatch:
+
+jobs:
+  scenario_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+
+    - name: Install robocup_scenario_test library
+      run: |
+        python -m pip install --upgrade pip
+        sudo apt update
+        sudo apt install -y protobuf-compiler
+        pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
+        pip install pytest
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Start Docker Compose services
+      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+
+    - name: Wait for game.py to start
+      timeout-minutes: 5
+      run: |
+        CHECK_INTERVAL=10
+
+        until docker top consai 2>/dev/null | grep -q game.py
+        do
+          echo "Waiting for game.py to start..."
+          sleep $CHECK_INTERVAL
+        done
+
+        echo "game.py started!"
+
+    - name: Run pytest
+      run: pytest tests/test_scenario_kickoff.py --vision_port=10020
+
+    - name: Get and print logs
+      if: always()
+      run: docker compose -f .docker/consai-grsim-compose.yml logs --tail 100
+
+    - name: Clean up Docker Compose services
+      if: always()
+      run: docker compose -f .docker/consai-grsim-compose.yml down

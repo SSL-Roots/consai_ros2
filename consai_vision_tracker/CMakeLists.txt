@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
@@ -33,11 +34,13 @@ add_library(tracker_component SHARED
   src/tracker_component.cpp
   src/ball_tracker.cpp
   src/robot_tracker.cpp
+  src/visualization_data_handler.cpp
 )
 target_compile_definitions(tracker_component
   PRIVATE "CONSAI_VISION_TRACKER_BUILDING_DLL")
 ament_target_dependencies(tracker_component
   consai_msgs
+  consai_visualizer_msgs
   rclcpp
   rclcpp_components
   robocup_ssl_msgs
@@ -51,6 +54,7 @@ rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Track
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(consai_msgs)
+ament_export_dependencies(consai_visualizer_msgs)
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rclcpp_components)
 ament_export_dependencies(robocup_ssl_msgs)
