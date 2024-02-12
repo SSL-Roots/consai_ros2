@@ -109,7 +109,6 @@ class AttackerDecision(DecisionBase):
         #     shoot_pos_y = self.goal_pos_list[shoot_point].y
         #     self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
         # else:
-        
         self._operator.set_named_target("shoot", 0.6, 0.0)
         self._operator.publish_named_targets()
 
@@ -119,7 +118,6 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, shooting)
             self._act_id = ID_INPLAY
         return
-
 
         # シュート可能かつ相手エリアにいる場合
         if len(shoot_point_list) > 0 \
