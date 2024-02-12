@@ -34,6 +34,7 @@ set(protobuf_files
   proto/ssl_gc_game_event.proto
   proto/ssl_gc_geometry.proto
   proto/ssl_gc_referee_message.proto
+  proto/vssl_robot_control.proto
 )
 protobuf_generate_cpp(PROTO_CPP PROTO_H
   ${protobuf_files}

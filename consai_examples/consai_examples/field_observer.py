@@ -64,23 +64,8 @@ class FieldObserver(Node):
     BALL_ZONE_RIGHT_MID_BOTTOM = 7
     BALL_ZONE_RIGHT_BOTTOM = 8
 
-    THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
+    THRESHOLD_MARGIN = 0.02  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
-
-    GOAL_POST_Y = 0.9  # meters
-    GOAL_POINT = 5  # ゴール候補のポイント
-    GOAL_POST_TOP = [6, 0.9]  # meters
-    GOAL_POST_BOTTOM = [6, -0.9]  # meters
-    GOAL_CENTER = [6, 0]  # meters
-    GOAL_TOP_CENTER = [6, 0.45]  # meters
-    GOAL_CENTER_BOTTOM = [6, -0.45]  # meters
-    GOAL_POST_WIDTH = 1.8  # meters
-    ROBOT_RADIUS = 0.1  # meters
-    GOAL_POST_TOP_NUM = 0
-    GOAL_TOP_CENTER_NUM = 1
-    GOAL_CENTER_NUM = 2
-    GOAL_CENTER_BOTTOM_NUM = 3
-    GOAL_POST_BOTTOM_NUM = 4
 
     def __init__(self, our_team_is_yellow=False):
         super().__init__('field_observer')
@@ -108,22 +93,22 @@ class FieldObserver(Node):
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
 
-        self._field_x = 12.0  # meters
+        self._field_x = 1.2  # meters
         self._field_half_x = self._field_x * 0.5
-        self._field_y = 9.0  # meters
+        self._field_y = 0.9  # meters
         self._field_half_y = self._field_y * 0.5
         self._field_quarter_y = self._field_half_y * 0.5
-        self._field_defense_x = 1.8  # meters
-        self._field_defense_y = 3.6  # meters
+        self._field_defense_x = 0.2  # meters
+        self._field_defense_y = 0.4  # meters
         self._field_defense_half_y = self._field_defense_y * 0.5  # meters
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
         self.goal_id_list = [0, 1, 2]
         self.goal_pos_list = [
-            State2D(x=self._field_half_x, y=0.45),
+            State2D(x=self._field_half_x, y=0.12),
             State2D(x=self._field_half_x, y=0.0),
-            State2D(x=self._field_half_x, y=-0.45),
+            State2D(x=self._field_half_x, y=-0.12),
         ]
         self.goal_vel_list = [None] * 5
 
@@ -257,7 +242,7 @@ class FieldObserver(Node):
     def _check_is_ball_in_defense_area(self, ball_pos, our_area=True):
         # ボールがディフェンスエリアに入ったか判定
         threshold_x = self._field_half_x - self._field_defense_x
-        threshold_y = self._field_defense_half_y + 0.1  # ロボットの半径分マージンをとる
+        threshold_y = self._field_defense_half_y + 0.04  # ロボットの半径分マージンをとる
         if self.ball_is_in_our_defense_area() or self.ball_is_in_their_defense_area():
             threshold_x -= self.THRESHOLD_MARGIN
             threshold_y += self.THRESHOLD_MARGIN

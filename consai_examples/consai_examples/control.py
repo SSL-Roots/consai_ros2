@@ -492,9 +492,9 @@ def test():
 
 
 def test_forward_control():
-    robot_id = 9
-    pos_x = 3.0
-    pos_y = -1.0
+    robot_id = 1
+    pos_x = 0.5
+    pos_y = 0.0
     theta = 0.0
     repeat = 2
 

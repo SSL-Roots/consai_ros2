@@ -42,7 +42,7 @@ class AttackerDecision(DecisionBase):
            FieldObserver.BALL_IS_OUTSIDE_BACK_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
+                move_to_ball = move_to_ball.overwrite_pose_x(-0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
@@ -53,14 +53,14 @@ class AttackerDecision(DecisionBase):
            FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(3.0)
+                move_to_ball = move_to_ball.overwrite_pose_x(0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
 
         # ボールを追いかける
         if self._act_id != ID_CHASE:
-            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            chase_ball = move_to_ball.offset_pose_x(-0.3)
             self._operator.operate(robot_id, chase_ball)
             self._act_id = ID_CHASE
 
@@ -81,7 +81,7 @@ class AttackerDecision(DecisionBase):
            FieldObserver.BALL_IS_OUTSIDE_BACK_X,
            FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
             if self._act_id != ID_IN_OUR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
+                move_to_ball = move_to_ball.overwrite_pose_x(-0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_OUR_DEFENSE
             return
@@ -91,7 +91,7 @@ class AttackerDecision(DecisionBase):
                                 FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
                                 FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
             if self._act_id != ID_IN_THEIR_DEFENSE:
-                move_to_ball = move_to_ball.overwrite_pose_x(3.0)
+                move_to_ball = move_to_ball.overwrite_pose_x(0.2)
                 self._operator.operate(robot_id, move_to_ball)
                 self._act_id = ID_IN_THEIR_DEFENSE
             return
@@ -103,14 +103,21 @@ class AttackerDecision(DecisionBase):
             shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
         # NamedTargetを更新
-        if len(shoot_point_list) > 0:
-            shoot_point = shoot_point_list[0]
-            shoot_pos_x = self.goal_pos_list[shoot_point].x
-            shoot_pos_y = self.goal_pos_list[shoot_point].y
-            self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
-        else:
-            self._operator.set_named_target("shoot", 6.0, 0.0)
+        # if len(shoot_point_list) > 0:
+        #     shoot_point = shoot_point_list[0]
+        #     shoot_pos_x = self.goal_pos_list[shoot_point].x
+        #     shoot_pos_y = self.goal_pos_list[shoot_point].y
+        #     self._operator.set_named_target("shoot", shoot_pos_x, shoot_pos_y)
+        # else:
+        self._operator.set_named_target("shoot", 0.6, 0.0)
         self._operator.publish_named_targets()
+
+        if self._act_id != ID_INPLAY:
+            # 相手ゴールの中心に向かってシュートを打つ
+            shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
+            self._operator.operate(robot_id, shooting)
+            self._act_id = ID_INPLAY
+        return
 
         # シュート可能かつ相手エリアにいる場合
         if len(shoot_point_list) > 0 \
@@ -120,6 +127,7 @@ class AttackerDecision(DecisionBase):
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_SHOOT_THEIR_AREA
+            return
 
         # パス可能な場合
         elif len(receiver_robots_id) > 0:
@@ -134,6 +142,7 @@ class AttackerDecision(DecisionBase):
                 passing = move_to_ball.with_passing_to(TargetXY.named_target("pass"))
                 self._operator.operate(robot_id, passing)
                 self._act_id = ID_PASS
+            return
 
         # シュート可能かつ相手エリアにいる場合
         elif len(shoot_point_list) > 0:
@@ -141,18 +150,21 @@ class AttackerDecision(DecisionBase):
                 # 指定座標に向けてシュートする
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
-                self._act_id != ID_SHOOT
+                self._act_id = ID_SHOOT
+            return
+
         else:
             if self._act_id != ID_INPLAY:
                 # 相手ゴールの中心に向かってシュートを打つ
                 shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
                 self._operator.operate(robot_id, shooting)
                 self._act_id = ID_INPLAY
+            return
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            chase_ball = move_to_ball.offset_pose_x(-0.3)
             self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
@@ -166,21 +178,21 @@ class AttackerDecision(DecisionBase):
     def their_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            chase_ball = move_to_ball.offset_pose_x(-0.3)
             self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_KICKOFF
 
     def their_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_KICKOFF:
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            chase_ball = move_to_ball.offset_pose_x(-0.3)
             self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_KICKOFF
 
     def our_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            chase_ball = move_to_ball.offset_pose_x(-0.6)
+            chase_ball = move_to_ball.offset_pose_x(-0.3)
             self._operator.operate(robot_id, chase_ball)
             self._act_id = self.ACT_ID_PRE_PENALTY
 
@@ -194,7 +206,7 @@ class AttackerDecision(DecisionBase):
     def their_pre_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_PENALTY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PRE_PENALTY
@@ -202,7 +214,7 @@ class AttackerDecision(DecisionBase):
     def their_penalty(self, robot_id):
         if self._act_id != self.ACT_ID_PENALTY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_PENALTY
@@ -210,7 +222,7 @@ class AttackerDecision(DecisionBase):
     def their_penalty_inplay(self, robot_id):
         if self._act_id != self.ACT_ID_INPLAY:
             operation = Operation().move_to_pose(
-                TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
+                TargetXY.value(self._PENALTY_WAIT_X, 0.3 - 0.3 * 0.0),
                 TargetTheta.look_ball())
             self._operator.operate(robot_id, operation)
             self._act_id = self.ACT_ID_INPLAY
@@ -243,7 +255,7 @@ class AttackerDecision(DecisionBase):
     def their_direct(self, robot_id):
         if self._act_id != self.ACT_ID_DIRECT:
             prevent_direct_shooting = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
             self._operator.operate(robot_id, prevent_direct_shooting)
             self._act_id = self.ACT_ID_DIRECT
@@ -258,7 +270,7 @@ class AttackerDecision(DecisionBase):
     def their_indirect(self, robot_id):
         if self._act_id != self.ACT_ID_INDIRECT:
             prevent_direct_shooting = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
             self._operator.operate(robot_id, prevent_direct_shooting)
             self._act_id = self.ACT_ID_INDIRECT
@@ -324,6 +336,6 @@ class AttackerDecision(DecisionBase):
             # ボール位置が配置目標位置に到着したらボールから離れる
             if self._act_id != ID_ARRIVED:
                 avoid_ball = Operation().move_on_line(
-                    TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+                    TargetXY.ball(), TargetXY.our_robot(robot_id), 0.2, TargetTheta.look_ball())
                 self._operator.operate(robot_id, avoid_ball)
                 self._act_id = ID_ARRIVED

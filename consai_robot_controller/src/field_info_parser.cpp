@@ -282,7 +282,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
     avoid_ball = true;
   }
-  avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+  // avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
 
   // ボールプレイスメントエリアを回避する
   if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
@@ -593,7 +593,7 @@ bool FieldInfoParser::parse_kick(
   const bool & kick_pass, const bool & kick_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  const double DRIBBLE_DISTANCE = 0.0;
+  const double DRIBBLE_DISTANCE = 0.1;
   const double DRIBBLE_POWER = 1.0;
   bool need_kick = false;
   bool need_dribble = false;
@@ -950,14 +950,14 @@ bool FieldInfoParser::avoid_obstacles(
 
   const double VISIBILITY_THRESHOLD = 0.01;  // 0.0 ~ 1.0
   // 自身から直進方向に何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_X = 0.5;
+  const double OBSTACLE_DETECTION_X = 0.25;
   // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y_ROBOT = 0.3;
-  const double OBSTACLE_DETECTION_Y_BALL = 0.2;
+  const double OBSTACLE_DETECTION_Y_ROBOT = 0.15;
+  const double OBSTACLE_DETECTION_Y_BALL = 0.1;
   // 回避の相対位置
-  const double AVOIDANCE_POS_X_SHORT = 0.1;
-  const double AVOIDANCE_POS_X_LONG = 0.2;
-  const double AVOIDANCE_POS_Y = 0.4;
+  const double AVOIDANCE_POS_X_SHORT = 0.05;
+  const double AVOIDANCE_POS_X_LONG = 0.1;
+  const double AVOIDANCE_POS_Y = 0.2;
 
   // 相対的な回避位置
   double avoidance_pos_x = 0.0;
@@ -1190,7 +1190,7 @@ bool FieldInfoParser::avoid_ball_500mm(
   // ボールから500 mm以上離れるために、回避処理を実行する
   // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
   // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
-  const double DISTANCE_TO_AVOID_THRESHOLD = 0.65;
+  const double DISTANCE_TO_AVOID_THRESHOLD = 0.20;
   const double AVOID_MARGIN = 0.05;
   const double DISTANCE_TO_AVOID = DISTANCE_TO_AVOID_THRESHOLD - AVOID_MARGIN;
 
