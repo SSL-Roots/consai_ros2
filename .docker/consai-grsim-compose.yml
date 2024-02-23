@@ -1,10 +1,11 @@
 version: '3.8'
 services:
   grsim:
-    image: robocupssl/grsim
+    image: ghcr.io/ssl-roots/docker_images/grsim:main
     container_name: grsim
     network_mode: host
-    command: []
+    command: |
+      ./grSim --headless -platform offscreen
     tty: true
     stdin_open: true
     restart: "no"
