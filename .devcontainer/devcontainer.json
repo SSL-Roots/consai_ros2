@@ -1,7 +1,6 @@
 {
   "name": "humble desktop",
-  "dockerFile": "Dockerfile",
-  "context": "..",
-  "workspaceFolder": "/home/vscode/ros2_ws/src/${localWorkspaceFolderBasename}",
-  "workspaceMount": "source=${localWorkspaceFolder},target=${containerWorkspaceFolder},type=bind,consistency=cached"
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "consai",
+  "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
 }
