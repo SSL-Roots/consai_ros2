@@ -826,6 +826,10 @@ class FieldObserver(Node):
                     their_robot_pos_trans = trans.transform(their_robot_pos)
                     their_robot_vel = their_robots_vel[their_robot_id]
 
+                    # TODO(ShotaAk): ソフト構造を変更し、問題の根本解決をすべき
+                    if their_robot_vel is None:
+                        continue
+
                     # 共有点を持つか判定
                     common_point = -1
                     if abs(their_robot_pos_trans.y) < \
