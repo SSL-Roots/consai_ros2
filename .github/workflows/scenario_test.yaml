@@ -55,7 +55,7 @@ jobs:
     - name: Wait for game.py to start
       timeout-minutes: 5
       run: |
-        CHECK_INTERVAL=10
+        CHECK_INTERVAL=5
 
         until docker top consai 2>/dev/null | grep -q game.py
         do
