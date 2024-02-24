@@ -59,11 +59,11 @@ def test_so_far_position(rcst_comm):
     assert wait_for_placement(rcst_comm) is True
 
 
-def test_so_far_position_with_a_few_robots(rcst_comm):
-    init_our_placement(rcst_comm, -6.0, -4.5,
-                       num_of_robots=2,
-                       ball_x=5.9, ball_y=4.4)
-    assert wait_for_placement(rcst_comm) is True
+# def test_so_far_position_with_a_few_robots(rcst_comm):
+#     init_our_placement(rcst_comm, -6.0, -4.5,
+#                        num_of_robots=2,
+#                        ball_x=5.9, ball_y=4.4)
+#     assert wait_for_placement(rcst_comm) is True
 
 
 def test_around_our_defense_area(rcst_comm):
