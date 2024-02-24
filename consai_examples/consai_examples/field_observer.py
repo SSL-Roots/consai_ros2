@@ -901,6 +901,10 @@ class FieldObserver(Node):
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
 
+            # TODO(ShotaAk): ソフト構造を変更し、問題の根本解決をすべき
+            if target_robot_pos is None:
+                continue
+
             estimated_displacement = 0.0
             vel_norm = 0.0
             if target_robot_vel is not None:
