@@ -19,10 +19,6 @@ USER $USERNAME
 # Install apt packages
 RUN sudo apt update && sudo apt install -y \
     curl \
-    # grSim dependencies
-    git build-essential cmake pkg-config qtbase5-dev \
-    libqt5opengl5-dev libgl1-mesa-dev libglu1-mesa-dev \
-    libprotobuf-dev protobuf-compiler libode-dev libboost-dev \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/*
 
@@ -30,13 +26,6 @@ RUN sudo apt update && sudo apt install -y \
 RUN cd /home/${USERNAME} \
     && curl -L -o ssl-game-controller https://github.com/RoboCup-SSL/ssl-game-controller/releases/download/v3.8.0/ssl-game-controller_v3.8.0_linux_amd64 \
     && chmod +x ssl-game-controller
-
-# Install grSim
-RUN cd /home/${USERNAME}/ && \
-    git clone https://github.com/RoboCup-SSL/grSim.git \
-    && cd grSim && mkdir build && cd build \
-    && cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. \
-    && make && sudo make install
 
 # Create ROS2 Workspace
 RUN mkdir -p /home/${USERNAME}/ros2_ws/src
