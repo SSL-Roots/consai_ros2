@@ -72,7 +72,7 @@ BallTracker::BallTracker(const double dt)
 
   // 位置、速度の変化をのシステムノイズで表現する（つまりめちゃくちゃノイズがでかい）
   // 0 m/s から、いきなり1.0 m/sに変化しうる、ということ
-  const double MAX_LINEAR_ACC_MPS = 0.1 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
+  const double MAX_LINEAR_ACC_MPS = 0.5 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
   const double MAX_LINEAR_ACCEL_IN_DT = MAX_LINEAR_ACC_MPS * dt;  // [m/s]
   const double MAX_LINEAR_MOVEMENT_IN_DT = MAX_LINEAR_ACC_MPS / 2 * std::pow(dt, 2);  // [m]
 
