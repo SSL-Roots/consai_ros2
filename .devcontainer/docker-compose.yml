@@ -1,0 +1,11 @@
+version: '3'
+services:
+  consai:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command: ["bash", "-c", "tail -f /dev/null"]
+    volumes:
+      - ../:/home/vscode/ros2_ws/src/consai_ros2
+  grsim:
+    image: robocupssl/grsim
