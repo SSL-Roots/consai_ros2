@@ -3,4 +3,9 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "consai",
   "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/node-asdf:0": {
+      "version": "20.11.1"
+    }
+  }
 }
