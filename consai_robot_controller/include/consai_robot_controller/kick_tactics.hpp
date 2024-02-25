@@ -34,7 +34,9 @@ enum class TacticState
 {
   STOP_THE_BALL,
   BEHIND_THE_BALL,
+  APPROACH_TO_BALL,
   SHOOT,
+  FINISH,
 };
 
 class DataSet
@@ -88,6 +90,9 @@ private:
 
   TacticState tactic_stop_the_ball(DataSet & data_set) const;
   TacticState tactic_behind_the_ball(DataSet & data_set) const;
+  TacticState tactic_approach_to_ball(DataSet & data_set) const;
+  TacticState tactic_shoot(DataSet & data_set) const;
+  TacticState tactic_finish(DataSet & data_set) const;
 
   std::map<unsigned int, TacticState> tactic_state_;
   std::map<unsigned int, Time> tactic_time_;
