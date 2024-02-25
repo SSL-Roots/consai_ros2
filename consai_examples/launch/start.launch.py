@@ -65,7 +65,7 @@ def generate_launch_description():
         'referee_port', default_value='10003',
         description=('Set multicast port to connect Game Controller.')
     )
-    
+
     declare_arg_robot_control_ip = DeclareLaunchArgument(
         'robot_control_ip', default_value='127.0.0.1',
         description=('Set GrSim control address.')
