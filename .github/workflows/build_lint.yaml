@@ -14,6 +14,7 @@ on:
       - '**.md'
       - '.docker/**'
       - '.github/workflows/build_docker_image.yaml'
+  workflow_dispatch:
 
 jobs:
   industrial_ci:
@@ -26,8 +27,16 @@ jobs:
       UPSTREAM_WORKSPACE: .ci.rosinstall
       # テストがworkspace内のパッケージに依存しているため、setup.bashを読み込む
       BEFORE_RUN_TARGET_TEST_EMBED: "ici_with_unset_variables source /root/target_ws/install/setup.bash"
+      CCACHE_DIR: "${{ github.workspace }}/.ccache"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache ROS dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-ros-${{ matrix.env.ROS_DISTRO }}-${{ hashFiles('**/package.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-ros-${{ matrix.env.ROS_DISTRO }}-
       - uses: "ros-industrial/industrial_ci@master"
         env: ${{ matrix.env }}
