@@ -28,13 +28,13 @@ const MsgBox = ({ros}) => {
 
     const listener = new ROSLIB.Topic({
       ros: ros,
-      name: "/chatter",
-      messageType: "std_msgs/String",
+      name: "/robot0/command",
+      messageType: "consai_frootspi_msgs/msg/RobotCommand",
     });
 
     listener.subscribe((message) => {
-      console.log("Received message on " + listener.name + ": " + message.data);
-      setMessage(message.data);
+      // console.log(JSON.stringify(message));
+      setMessage(message.velocity_x);
     });
   }, [ros]);
 
