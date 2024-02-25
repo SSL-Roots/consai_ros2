@@ -74,7 +74,7 @@ jobs:
         chmod +x ssl-log-recorder
 
     - name: Run pytest
-      run: pytest tests/test_scenario_kickoff.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+      run: pytest tests/test_scenario_*.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
 
     - name: Get and print logs
       if: always()
