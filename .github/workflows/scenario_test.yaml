@@ -18,6 +18,9 @@ on:
       - '.github/workflows/build_lint.yaml'
   workflow_dispatch:
 
+permissions:
+  pull-requests: write  # For uploading PR comments
+
 jobs:
   scenario_test:
     runs-on: ubuntu-latest
@@ -65,8 +68,13 @@ jobs:
 
         echo "game.py started!"
 
+    - name: Download logger
+      run: |
+        curl -L https://github.com/RoboCup-SSL/ssl-go-tools/releases/download/v1.5.2/ssl-log-recorder_v1.5.2_linux_amd64 -o ssl-log-recorder
+        chmod +x ssl-log-recorder
+
     - name: Run pytest
-      run: pytest tests/test_scenario_kickoff.py --vision_port=10020
+      run: pytest tests/test_scenario_kickoff.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
 
     - name: Get and print logs
       if: always()
@@ -75,3 +83,31 @@ jobs:
     - name: Clean up Docker Compose services
       if: always()
       run: docker compose -f .docker/consai-grsim-compose.yml down
+
+    - name: Upload artifacts
+      id: upload-artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: failure-logs
+        path: '*.log.gz'
+
+    - name: Check if Artifact was uploaded
+      id: check-artifact
+      if: always()
+      run: |
+        if [ -z "${{ steps.upload-artifact.outputs.artifact-url }}" ]; then
+          echo "Artifact URL not found, skipping comment."
+          echo "skip_comment=true" >> $GITHUB_OUTPUT
+        else
+          echo "Artifact URL found."
+          echo "skip_comment=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Comment PR with Artifact URL
+      if: steps.check-artifact.outputs.skip_comment != 'true'
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
