@@ -1,11 +1,16 @@
-'use client'
-
+import Head from "next/head";
 import Image from "next/image";
-import styles from "./page.module.css";
+import { Inter } from "next/font/google";
+import styles from "@/styles/Home.module.css";
+
+import ROSLIB from "roslib";
+
+
 import { useEffect, useState } from "react";
 
-import { Rosconnection } from "@/app/lib/RosConnection";
-import ROSLIB from "roslib";
+import { Rosconnection } from "@/components/RosConnection";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const [ros, setRos] = useState(null);
@@ -19,7 +24,6 @@ export default function Home() {
   );
 }
 
-
 const MsgBox = ({ros}) => {
   const [message, setMessage] = useState("");
 
@@ -28,13 +32,13 @@ const MsgBox = ({ros}) => {
 
     const listener = new ROSLIB.Topic({
       ros: ros,
-      name: "/robot0/command",
-      messageType: "consai_frootspi_msgs/msg/RobotCommand",
+      name: "/chatter",
+      messageType: "std_msgs/String",
     });
 
     listener.subscribe((message) => {
       // console.log(JSON.stringify(message));
-      setMessage(message.velocity_x);
+      setMessage(message.data);
     });
   }, [ros]);
 
@@ -44,3 +48,4 @@ const MsgBox = ({ros}) => {
     </div>
   );
 }
+
