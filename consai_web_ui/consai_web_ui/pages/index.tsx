@@ -10,7 +10,14 @@ import { useEffect, useState } from "react";
 
 import { Rosconnection } from "@/components/RosConnection";
 
+import dynamic from 'next/dynamic';
+
+
 const inter = Inter({ subsets: ["latin"] });
+
+const Field = dynamic(() => import('../components/field'), {
+  ssr: false,
+});
 
 export default function Home() {
   const [ros, setRos] = useState(null);
@@ -20,6 +27,7 @@ export default function Home() {
       <Rosconnection rosUrl="ws://127.0.0.1:9090" setRos={setRos} />
       <h1>Hello consai web ui</h1>
       <MsgBox ros={ros} />
+      <Field />
     </>
   );
 }
@@ -48,4 +56,3 @@ const MsgBox = ({ros}) => {
     </div>
   );
 }
-
