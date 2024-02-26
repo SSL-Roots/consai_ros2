@@ -5,17 +5,15 @@ import styles from "@/styles/Home.module.css";
 
 import ROSLIB from "roslib";
 
-
 import { useEffect, useState } from "react";
 
 import { Rosconnection } from "@/components/RosConnection";
 
-import dynamic from 'next/dynamic';
-
+import dynamic from "next/dynamic";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const Field = dynamic(() => import('../components/field'), {
+const Field = dynamic(() => import("../components/field"), {
   ssr: false,
 });
 
@@ -32,7 +30,7 @@ export default function Home() {
   );
 }
 
-const MsgBox = ({ros}) => {
+const MsgBox = ({ ros }) => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -55,4 +53,4 @@ const MsgBox = ({ros}) => {
       <h1>{message}</h1>
     </div>
   );
-}
+};
