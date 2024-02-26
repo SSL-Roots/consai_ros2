@@ -13,7 +13,7 @@ import dynamic from "next/dynamic";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const Field = dynamic(() => import("../components/field"), {
+const BirdView = dynamic(() => import("../components/birdview/birdview"), {
   ssr: false,
 });
 
@@ -25,7 +25,7 @@ export default function Home() {
       <Rosconnection rosUrl="ws://127.0.0.1:9090" setRos={setRos} />
       <h1>Hello consai web ui</h1>
       <MsgBox ros={ros} />
-      <Field />
+      <BirdView />
     </>
   );
 }
