@@ -93,13 +93,13 @@ class FieldObserver(Node):
         self.their_robots_pos = [None] * self.MAX_ROBOT_NUM
         self.their_robots_vel = [None] * self.MAX_ROBOT_NUM
 
-        self._field_x = 1.2  # meters
+        self._field_x = 0.9  # meters
         self._field_half_x = self._field_x * 0.5
-        self._field_y = 0.9  # meters
+        self._field_y = 0.35  # meters
         self._field_half_y = self._field_y * 0.5
         self._field_quarter_y = self._field_half_y * 0.5
-        self._field_defense_x = 0.2  # meters
-        self._field_defense_y = 0.4  # meters
+        self._field_defense_x = 0.09  # meters
+        self._field_defense_y = 0.18  # meters
         self._field_defense_half_y = self._field_defense_y * 0.5  # meters
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
@@ -811,6 +811,10 @@ class FieldObserver(Node):
                     their_robot_pos_trans = trans.transform(their_robot_pos)
                     their_robot_vel = their_robots_vel[their_robot_id]
 
+                    # TODO(ShotaAk): ソフト構造を変更し、問題の根本解決をすべき
+                    if their_robot_vel is None:
+                        continue
+
                     # 共有点を持つか判定
                     common_point = -1
                     if abs(their_robot_pos_trans.y) < \
@@ -881,6 +885,10 @@ class FieldObserver(Node):
 
             target_robot_pos = robots_pos[robot_id]
             target_robot_vel = robots_vel[robot_id]
+
+            # TODO(ShotaAk): ソフト構造を変更し、問題の根本解決をすべき
+            if target_robot_pos is None:
+                continue
 
             estimated_displacement = 0.0
             vel_norm = 0.0

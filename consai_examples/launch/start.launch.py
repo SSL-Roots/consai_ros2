@@ -66,6 +66,16 @@ def generate_launch_description():
         description=('Set multicast port to connect Game Controller.')
     )
 
+    declare_arg_robot_control_ip = DeclareLaunchArgument(
+        'robot_control_ip', default_value='127.0.0.1',
+        description=('Set GrSim control address.')
+    )
+
+    declare_arg_robot_control_port = DeclareLaunchArgument(
+        'robot_control_port', default_value='20011',
+        description=('Set GrSim control port.')
+    )
+
     controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             get_package_share_directory('consai_robot_controller'),
@@ -74,6 +84,8 @@ def generate_launch_description():
                           'yellow': LaunchConfiguration('yellow'),
                           'vision_addr': LaunchConfiguration('vision_addr'),
                           'vision_port': LaunchConfiguration('vision_port'),
+                          'robot_control_ip': LaunchConfiguration('robot_control_ip'),
+                          'robot_control_port': LaunchConfiguration('robot_control_port'),
                           }.items(),
     )
 
@@ -115,6 +127,8 @@ def generate_launch_description():
         declare_arg_vision_port,
         declare_arg_referee_addr,
         declare_arg_referee_port,
+        declare_arg_robot_control_ip,
+        declare_arg_robot_control_port,
         controller,
         container,
         game_node
