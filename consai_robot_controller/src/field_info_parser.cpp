@@ -776,8 +776,10 @@ bool FieldInfoParser::control_ball(
     // ボールの後ろにロボットが存在する場合
     // ドリブルON
     need_dribble = true;
-    // ボールのすぐ後ろに目標座標を設定
-    parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
+    // ボールのすぐ後ろに目標座標を設定していたが、
+    // VSSLではキックデバイスがないので、代わりに突進動作を実装する
+    constexpr auto FORWARD_POS = 0.1;
+    parsed_pose = trans_BtoT.inverted_transform(FORWARD_POS, 0.0, 0.0);
     if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(1.0)) {
       // ロボットが目標座標の方向を向いている場合
       // ドリブルON

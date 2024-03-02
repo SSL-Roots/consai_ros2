@@ -24,8 +24,8 @@ from operation import TargetTheta
 
 
 class GoaleDecision(DecisionBase):
-    FIELD_LENGTH = 1.2
-    GOAL_WIDTH = 0.3
+    FIELD_LENGTH = 0.9
+    GOAL_WIDTH = 0.180
     ROBOT_RADIUS = 0.08
 
     def __init__(self, robot_operator, field_observer):
