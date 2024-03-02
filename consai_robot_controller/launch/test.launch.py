@@ -56,6 +56,16 @@ def generate_launch_description():
         description=('Set multicast port to connect SSL-Vision.')
     )
 
+    declare_arg_robot_control_ip = DeclareLaunchArgument(
+        'robot_control_ip', default_value='127.0.0.1',
+        description=('Set GrSim control address.')
+    )
+
+    declare_arg_robot_control_port = DeclareLaunchArgument(
+        'robot_control_port', default_value='20011',
+        description=('Set GrSim control port.')
+    )
+
     container = ComposableNodeContainer(
             name='test_container',
             namespace='',
@@ -107,7 +117,11 @@ def generate_launch_description():
                 ComposableNode(
                     package='robocup_ssl_comm',
                     plugin='robocup_ssl_comm::GrSim',
-                    name='grsim'),
+                    name='grsim',
+                    parameters=[{
+                        'robot_control_ip': LaunchConfiguration('robot_control_ip'),
+                        'robot_control_port': LaunchConfiguration('robot_control_port'),
+                    }]),
             ],
             output='screen',
     )
@@ -126,6 +140,8 @@ def generate_launch_description():
         declare_arg_yellow,
         declare_arg_vision_addr,
         declare_arg_vision_port,
+        declare_arg_robot_control_ip,
+        declare_arg_robot_control_port,
         container,
         visualizer
     ])

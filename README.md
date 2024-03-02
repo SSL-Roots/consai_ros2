@@ -27,7 +27,7 @@ CON-SAIはRoboCup SSLに 初めて参加する人でも開発できるサッカ�
 ### Docker
 
 ```sh
-$ docker pull ghcr.io/ssl-roots/consai_ros2:main
+docker pull ghcr.io/ssl-roots/consai_ros2:main
 ```
 
 Dockerを用いたCON-SAIの開発方法については[.docker/README.md](.docker/README.md)を参照してください
@@ -36,36 +36,32 @@ Dockerを用いたCON-SAIの開発方法については[.docker/README.md](.dock
 
 ```sh
 # Setup ROS environment
-$ source /opt/ros/humble/setup.bash
+source /opt/ros/humble/setup.bash
 
 # Create working directory
-$ mkdir -p ~/ros2_ws/src
+mkdir -p ~/ros2_ws/src
 # Download consai_ros2
-$ cd ~/ros2_ws/src
-$ git clone https://github.com/SSL-Roots/consai_ros2.git
-$ git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git
-$ git clone https://github.com/SSL-Roots/frootspi_msgs.git
+cd ~/ros2_ws/src
+git clone https://github.com/SSL-Roots/consai_ros2.git
+git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git
+git clone https://github.com/SSL-Roots/frootspi_msgs.git
 
 # Install dependencies
-$ rosdep install -r -y -i --from-paths .
+rosdep install -r -y -i --from-paths .
 
 # Build & Install
-$ cd ~/ros2_ws
-$ colcon build --symlink-install
+cd ~/ros2_ws
+colcon build --symlink-install
 # Setup working directory's environment
-$ source ~/ros2_ws/install/setup.bash
+source ~/ros2_ws/install/setup.bash
 ```
 
 ## Quick start
 
 ```sh
 # Start grSim and ssl-game-controller, then
-$ source ~/ros2_ws/install/setup.bash
-$ ros2 launch consai_examples start.launch.py
-
-# anothor terminal
-$ source ~/ros2_ws/install/setup.bash
-$ ros2 run consai_examples game.py
+source ~/ros2_ws/install/setup.bash
+ros2 launch consai_examples start.launch.py game:=true
 ```
 
 CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を参照してください。
@@ -73,23 +69,28 @@ CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を
 ## Packages
 
 - consai
-    - メタパッケージ
+  - メタパッケージ
 - consai_examples
-    - CON-SAIの各種パッケージを使ったサンプル集です
+  - CON-SAIの各種パッケージを使ったサンプル集です
 - consai_msgs
-    - CON-SAIで使用するデータ型を定義するパッケージです
+  - CON-SAIで使用するデータ型を定義するパッケージです
 - consai_observer
-    - フィールド情報を解析するパッケージです
+  - フィールド情報を解析するパッケージです
+  - 機能は未実装です
+- consai_robot_control_utils
+  - ロボットの走行制御をテストするためのパッケージです
 - consai_robot_controller
-    - ロボットの走行、キック、ドリブル制御を担うパッケージです
+  - ロボットの走行、キック、ドリブル制御を担うパッケージです
 - consai_vision_tracker
-    - ビジョン情報をフィルタリングするパッケージです
+  - ビジョン情報をフィルタリングするパッケージです
 - consai_visualizer
-    - ビジョン情報やロボットの走行情報を描画するパッケージです
+  - ビジョン情報やロボットの走行情報を描画するパッケージです
+- consai_visualizer_msgs
+  - consai_visualizerで使用するデータ型を定義するパッケージです
 - robocup_ssl_comm
-    - SSL-Vision、SSL-Game-Controller、grSimのデータパケットをROS 2のトピックに変換するパッケージです
+  - SSL-Vision、SSL-Game-Controller、grSimのデータパケットをROS 2のトピックに変換するパッケージです
 - robocup_ssl_msgs
-    - SSL-Vision、SSL-Game-Controller、grSimのデータプロトコルをROS 2のデータ型に再定義するパッケージです
+  - SSL-Vision、SSL-Game-Controller、grSimのデータプロトコルをROS 2のデータ型に再定義するパッケージです
 
 ## License
 

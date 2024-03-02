@@ -31,7 +31,12 @@ using std::placeholders::_1;
 GrSim::GrSim(const rclcpp::NodeOptions & options)
 : Node("grsim", options)
 {
-  sender_ = std::make_unique<udp_sender::UDPSender>("127.0.0.1", 20011);
+  declare_parameter("robot_control_ip", "127.0.0.1");
+  declare_parameter("robot_control_port", 20011);
+
+  std::string robot_control_ip = get_parameter("robot_control_ip").as_string();
+  int robot_control_port = get_parameter("robot_control_port").as_int();
+  sender_ = std::make_unique<udp_sender::UDPSender>(robot_control_ip, robot_control_port);
 
   sub_commands_ = create_subscription<Commands>(
     "commands", 10, std::bind(&GrSim::callback_commands, this, _1));

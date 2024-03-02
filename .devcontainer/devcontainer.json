@@ -1,0 +1,6 @@
+{
+  "name": "humble desktop",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "consai",
+  "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
+}
