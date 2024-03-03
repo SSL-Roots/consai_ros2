@@ -25,7 +25,7 @@ export default function Home() {
       <Rosconnection rosUrl="ws://127.0.0.1:9090" setRos={setRos} />
       <h1>Hello consai web ui</h1>
       <MsgBox ros={ros} />
-      <BirdView />
+      <BirdView ros={ros} />
     </>
   );
 }
