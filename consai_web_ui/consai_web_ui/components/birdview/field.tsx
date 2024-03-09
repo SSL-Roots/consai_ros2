@@ -58,41 +58,39 @@ const Field = ({ ros }: FieldProps) => {
     });
 
     listener.subscribe((message) => {
-      // console.log(message.field.field_length);
-      // console.log(JSON.stringify(message));
-      //   const fieldSizeXMm = message.field.field_length;
-      //   const fieldSizeYMm = message.field.field_width;
-      //   const goalWidthMm = message.field.goal_width;
-      //   const goalDepthMm = message.field.goal_depth;
-      //   const boundaryWidthMm = message.field.boundary_width;
-      //   const fieldLines = message.field.field_lines.map((line) => {
-      //     const p1 = { x: line.p1.x, y: line.p1.y };
-      //     const p2 = { x: line.p2.x, y: line.p2.y };
-      //     return { name: line.name, p1, p2, thickness: line.thickness };
-      //   });
-      //   const fieldArcs = message.field.field_arcs.map((arc) => {
-      //     const center = { x: arc.center.x, y: arc.center.y };
-      //     const radius = arc.radius;
-      //     const a1 = arc.a1;
-      //     const a2 = arc.a2;
-      //     return {
-      //       name: arc.name,
-      //       center,
-      //       radius,
-      //       a1,
-      //       a2,
-      //       thickness: arc.thickness,
-      //     };
-      //   });
-      //   setGeometryFieldSize({
-      //     fieldSizeXMm,
-      //     fieldSizeYMm,
-      //     goalWidthMm,
-      //     goalDepthMm,
-      //     boundaryWidthMm,
-      //     fieldLines,
-      //     fieldArcs,
-      //   });
+        const fieldSizeXMm = message.field.field_length;
+        const fieldSizeYMm = message.field.field_width;
+        const goalWidthMm = message.field.goal_width;
+        const goalDepthMm = message.field.goal_depth;
+        const boundaryWidthMm = message.field.boundary_width;
+        const fieldLines = message.field.field_lines.map((line) => {
+          const p1 = { x: line.p1.x, y: line.p1.y };
+          const p2 = { x: line.p2.x, y: line.p2.y };
+          return { name: line.name, p1, p2, thickness: line.thickness };
+        });
+        const fieldArcs = message.field.field_arcs.map((arc) => {
+          const center = { x: arc.center.x, y: arc.center.y };
+          const radius = arc.radius;
+          const a1 = arc.a1;
+          const a2 = arc.a2;
+          return {
+            name: arc.name,
+            center,
+            radius,
+            a1,
+            a2,
+            thickness: arc.thickness,
+          };
+        });
+        setGeometryFieldSize({
+          fieldSizeXMm,
+          fieldSizeYMm,
+          goalWidthMm,
+          goalDepthMm,
+          boundaryWidthMm,
+          fieldLines,
+          fieldArcs,
+        });
     });
   }, [ros]);
 
