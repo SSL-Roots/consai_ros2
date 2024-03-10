@@ -12,7 +12,7 @@ const BirdView = ({ ros }: BirdViewProps) => {
   const canvasSize = {
     width: 13,
     height: 10,
-    scale: 50,
+    scale: 100,
   };
 
   return (
