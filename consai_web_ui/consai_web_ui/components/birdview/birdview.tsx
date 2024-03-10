@@ -6,13 +6,21 @@ type BirdViewProps = {
 };
 
 const BirdView = ({ ros }: BirdViewProps) => {
+  const canvasSize = {
+    width: 13000,
+    height: 10000,
+    scale: 0.05,
+  };
   return (
     <Stage
-      width={window.innerWidth}
-      height={window.innerHeight}
-      scale={{ x: 0.05, y: 0.05 }}
+      width={canvasSize.width}
+      height={canvasSize.height}
+      offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
+      scale={{ x: canvasSize.scale, y: canvasSize.scale }}
     >
-      <Field ros={ros} />
+      <Layer rotation={0}>
+        <Field ros={ros} />
+      </Layer>
     </Stage>
   );
 };
