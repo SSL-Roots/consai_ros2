@@ -22,6 +22,9 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <title>CON-SAI Web UI</title>
+      </Head>
       <Rosconnection port={9090} setRos={setRos} />
       <h1>Hello consai web ui</h1>
       {/* <MsgBox ros={ros} /> */}
