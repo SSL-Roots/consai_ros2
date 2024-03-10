@@ -1,4 +1,4 @@
-import { Stage, Layer, Circle, Rect, Shape } from "react-konva";
+import { Stage, Layer, Circle, Rect, Shape, Group } from "react-konva";
 import Field from "./field";
 import Robot from "./robot";
 import Ball from "./ball";
@@ -26,8 +26,10 @@ const BirdView = ({ ros }: BirdViewProps) => {
         height={canvasSize.height}
         offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
       >
-        <Field ros={ros} />
-        <DetectionTracked ros={ros} />
+        <Group rotation={0}>
+          <Field ros={ros} />
+          <DetectionTracked ros={ros} />
+        </Group>
       </Layer>
     </Stage>
   );
