@@ -24,11 +24,11 @@ type CircularArc = {
 };
 
 type GeometryFieldSize = {
-  fieldSizeXMm: number;
-  fieldSizeYMm: number;
-  goalWidthMm: number;
-  goalDepthMm: number;
-  boundaryWidthMm: number;
+  fieldSizeXMeter: number;
+  fieldSizeYMeter: number;
+  goalWidthMeter: number;
+  goalDepthMeter: number;
+  boundaryWidthMeter: number;
   fieldLines: LineSegment[];
   fieldArcs: CircularArc[];
 };
@@ -39,11 +39,11 @@ type FieldProps = {
 
 const Field = ({ ros }: FieldProps) => {
   const [geom, setGeometryFieldSize] = useState<GeometryFieldSize>({
-    fieldSizeXMm: 12000,
-    fieldSizeYMm: 9000,
-    goalWidthMm: 1000,
-    goalDepthMm: 500,
-    boundaryWidthMm: 300,
+    fieldSizeXMeter: 12,
+    fieldSizeYMeter: 9,
+    goalWidthMeter: 1,
+    goalDepthMeter: 0.5,
+    boundaryWidthMeter: 0.3,
     fieldLines: [],
     fieldArcs: [],
   });
@@ -58,19 +58,19 @@ const Field = ({ ros }: FieldProps) => {
     });
 
     listener.subscribe((message) => {
-      const fieldSizeXMm = message.field.field_length;
-      const fieldSizeYMm = message.field.field_width;
-      const goalWidthMm = message.field.goal_width;
-      const goalDepthMm = message.field.goal_depth;
-      const boundaryWidthMm = message.field.boundary_width;
+      const fieldSizeXMeter = message.field.field_length / 1000;
+      const fieldSizeYMeter = message.field.field_width / 1000;
+      const goalWidthMeter = message.field.goal_width / 1000;
+      const goalDepthMeter = message.field.goal_depth / 1000;
+      const boundaryWidthMeter = message.field.boundary_width / 1000;
       const fieldLines = message.field.field_lines.map((line) => {
-        const p1 = { x: line.p1.x, y: line.p1.y };
-        const p2 = { x: line.p2.x, y: line.p2.y };
-        return { name: line.name, p1, p2, thickness: line.thickness };
+        const p1 = { x: line.p1.x / 1000, y: line.p1.y / 1000 };
+        const p2 = { x: line.p2.x / 1000, y: line.p2.y / 1000 };
+        return { name: line.name, p1, p2, thickness: line.thickness / 1000 };
       });
       const fieldArcs = message.field.field_arcs.map((arc) => {
-        const center = { x: arc.center.x, y: arc.center.y };
-        const radius = arc.radius;
+        const center = { x: arc.center.x / 1000, y: arc.center.y / 1000 };
+        const radius = arc.radius / 1000;
         const a1 = arc.a1;
         const a2 = arc.a2;
         return {
@@ -79,15 +79,15 @@ const Field = ({ ros }: FieldProps) => {
           radius,
           a1,
           a2,
-          thickness: arc.thickness,
+          thickness: arc.thickness / 1000,
         };
       });
       setGeometryFieldSize({
-        fieldSizeXMm,
-        fieldSizeYMm,
-        goalWidthMm,
-        goalDepthMm,
-        boundaryWidthMm,
+        fieldSizeXMeter: fieldSizeXMeter,
+        fieldSizeYMeter: fieldSizeYMeter,
+        goalWidthMeter: goalWidthMeter,
+        goalDepthMeter: goalDepthMeter,
+        boundaryWidthMeter: boundaryWidthMeter,
         fieldLines,
         fieldArcs,
       });
@@ -129,10 +129,10 @@ const Field = ({ ros }: FieldProps) => {
   return (
     <Group>
       <Rect
-        x={-geom.fieldSizeXMm / 2 - geom.boundaryWidthMm}
-        y={-geom.fieldSizeYMm / 2 - geom.boundaryWidthMm}
-        width={geom.fieldSizeXMm + geom.boundaryWidthMm * 2}
-        height={geom.fieldSizeYMm + geom.boundaryWidthMm * 2}
+        x={-geom.fieldSizeXMeter / 2 - geom.boundaryWidthMeter}
+        y={-geom.fieldSizeYMeter / 2 - geom.boundaryWidthMeter}
+        width={geom.fieldSizeXMeter + geom.boundaryWidthMeter * 2}
+        height={geom.fieldSizeYMeter + geom.boundaryWidthMeter * 2}
         fill="green"
       />
       {lines}

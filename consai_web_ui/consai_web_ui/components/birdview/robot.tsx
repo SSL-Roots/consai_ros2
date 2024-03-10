@@ -10,14 +10,14 @@ type RobotProps = {
 
 const Robot = ({ id, x, y, theta, color }: RobotProps) => {
   const fillColor = color === "blue" ? "#8888ff" : "#ffff33";
-  const fontSize = 120;
+  const fontSize = 0.1;
 
   return (
     <>
       <Shape
         sceneFunc={(context, shape) => {
           context.beginPath();
-          context.arc(0, 0, 90, Math.PI / 4, -Math.PI / 4);
+          context.arc(0, 0, 0.09, Math.PI / 4, -Math.PI / 4);
           context.closePath();
           context.fillStrokeShape(shape);
         }}
@@ -25,7 +25,7 @@ const Robot = ({ id, x, y, theta, color }: RobotProps) => {
         y={y}
         fill={fillColor}
         stroke="black"
-        strokeWidth={10}
+        strokeWidth={0.001}
         rotation={theta * (180 / Math.PI)}
       />
       <Text

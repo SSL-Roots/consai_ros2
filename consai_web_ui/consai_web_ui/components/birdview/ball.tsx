@@ -10,10 +10,10 @@ const Ball = ({ x, y }: BallProps) => {
     <Circle
       x={x}
       y={y}
-      radius={21}
+      radius={0.021}
       fill="orange"
       stroke="black"
-      strokeWidth={5}
+      strokeWidth={0.001}
     />
   );
 };

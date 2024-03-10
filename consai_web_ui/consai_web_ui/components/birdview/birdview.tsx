@@ -1,5 +1,8 @@
 import { Stage, Layer, Circle, Rect, Shape } from "react-konva";
 import Field from "./field";
+import Robot from "./robot";
+import Ball from "./ball";
+import DetectionTracked from "./detectionTracked";
 
 type BirdViewProps = {
   ros: ROSLIB.Ros | null;
@@ -7,30 +10,24 @@ type BirdViewProps = {
 
 const BirdView = ({ ros }: BirdViewProps) => {
   const canvasSize = {
-    width: 13000,
-    height: 10000,
-    scale: 0.1,
+    width: 13,
+    height: 10,
+    scale: 50,
   };
+
   return (
     <Stage
-      width={canvasSize.width}
-      height={canvasSize.height}
-      offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
+      width={window.innerWidth}
+      height={window.innerHeight}
       scale={{ x: canvasSize.scale, y: canvasSize.scale }}
     >
-      <Layer rotation={0}>
+      <Layer
+        width={canvasSize.width}
+        height={canvasSize.height}
+        offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
+      >
         <Field ros={ros} />
-        <Shape
-          sceneFunc={(context, shape) => {
-            context.beginPath();
-            context.arc(0, 0, 90, Math.PI / 4, -Math.PI / 4);
-            context.closePath();
-            context.fillStrokeShape(shape);
-          }}
-          fill="yellow"
-          stroke="black"
-          strokeWidth={10}
-        />
+        <DetectionTracked ros={ros} />
       </Layer>
     </Stage>
   );

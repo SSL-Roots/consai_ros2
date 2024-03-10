@@ -24,7 +24,7 @@ export default function Home() {
     <>
       <Rosconnection port={9090} setRos={setRos} />
       <h1>Hello consai web ui</h1>
-      <MsgBox ros={ros} />
+      {/* <MsgBox ros={ros} /> */}
       <BirdView ros={ros} />
     </>
   );
