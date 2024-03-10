@@ -98,18 +98,22 @@ const DetectionTracked = ({ ros }: DetectionTrackedProps) => {
     });
   }, [ros]);
 
-  const robots = trackedFrame.robots.map((robot, index) => {
-    return (
-      <Robot
-        key={index}
-        id={robot.robot_id.id}
-        x={robot.pos.x}
-        y={robot.pos.y}
-        theta={robot.orientation}
-        color={robot.robot_id.team_color}
-      />
-    );
-  });
+  const robots = trackedFrame.robots
+    .filter((robot) => {
+      return robot.visibility >= 0.1;
+    })
+    .map((robot, index) => {
+      return (
+        <Robot
+          key={index}
+          id={robot.robot_id.id}
+          x={robot.pos.x}
+          y={robot.pos.y}
+          theta={robot.orientation}
+          color={robot.robot_id.team_color}
+        />
+      );
+    });
 
   const balls = trackedFrame.balls.map((ball, index) => {
     return <Ball key={index} x={ball.pos.x} y={ball.pos.y} />;
