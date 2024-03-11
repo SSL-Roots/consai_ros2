@@ -3,12 +3,30 @@ import Field from "./field";
 import Robot from "./robot";
 import Ball from "./ball";
 import DetectionTracked from "./detectionTracked";
+import ROSLIB from "roslib";
 
 type BirdViewProps = {
   ros: ROSLIB.Ros | null;
 };
 
 const BirdView = ({ ros }: BirdViewProps) => {
+  const publishBallReplacement = (pos: Vector2D) => {
+    if (!ros) return;
+
+    const publisher = new ROSLIB.Topic({
+      ros: ros,
+      name: "/replacement",
+      messageType: "robocup_ssl_msgs/msg/Replacement",
+    });
+
+    const message = new ROSLIB.Message({
+      ball: [{ x: [pos.x], y: [pos.y] }],
+      robots: [],
+    });
+
+    publisher.publish(message);
+  };
+
   const canvasSize = {
     width: 13,
     height: 10,
@@ -30,6 +48,11 @@ const BirdView = ({ ros }: BirdViewProps) => {
           rotation={0}
           onDblClick={(e) => {
             console.log(e.currentTarget.getRelativePointerPosition());
+            const pos: Vector2D = {
+              x: e.currentTarget.getRelativePointerPosition().x,
+              y: e.currentTarget.getRelativePointerPosition().y,
+            };
+            publishBallReplacement(pos);
           }}
         >
           <Field ros={ros} />
