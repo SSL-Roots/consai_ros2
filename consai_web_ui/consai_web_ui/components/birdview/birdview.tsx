@@ -26,7 +26,12 @@ const BirdView = ({ ros }: BirdViewProps) => {
         height={canvasSize.height}
         offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
       >
-        <Group rotation={0}>
+        <Group
+          rotation={0}
+          onDblClick={(e) => {
+            console.log(e.currentTarget.getRelativePointerPosition());
+          }}
+        >
           <Field ros={ros} />
           <DetectionTracked ros={ros} />
         </Group>
