@@ -119,8 +119,6 @@ const DetectionTracked = ({ ros }: DetectionTrackedProps) => {
     return <Ball key={index} x={ball.pos.x} y={ball.pos.y} />;
   });
 
-  console.log(robots);
-
   return (
     <Group>
       {robots}
