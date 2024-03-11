@@ -1,5 +1,4 @@
 import Head from "next/head";
-import { Inter } from "next/font/google";
 
 import ROSLIB from "roslib";
 
@@ -9,7 +8,7 @@ import { Rosconnection } from "@/components/RosConnection";
 
 import dynamic from "next/dynamic";
 
-const inter = Inter({ subsets: ["latin"] });
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
 const BirdView = dynamic(() => import("../components/birdview/birdview"), {
   ssr: false,
@@ -25,11 +24,58 @@ export default function Home() {
       </Head>
       <Rosconnection port={9090} setRos={setRos} />
       <h1>Hello consai web ui</h1>
+
+      <CurosrSelector />
       {/* <MsgBox ros={ros} /> */}
       <BirdView ros={ros} />
     </>
   );
 }
+
+const CurosrSelector = () => {
+  const [age, setAge] = useState("");
+
+  const handleChange = (event) => {
+    setAge(event.target.value);
+  };
+
+  const ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const yellows = ids.map((id) => {
+    return (
+      <MenuItem key={id} value={`y${id}`}>
+        Y{id}
+      </MenuItem>
+    );
+  });
+
+  const blues = ids.map((id) => {
+    return (
+      <MenuItem key={id} value={`b${id}`}>
+        B{id}
+      </MenuItem>
+    );
+  });
+
+  return (
+    <>
+      <FormControl size="small">
+        <InputLabel id="demo-simple-select-label">Cursor</InputLabel>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={age}
+          label="Age"
+          onChange={handleChange}
+        >
+          <MenuItem value={"ball"}>Ball</MenuItem>
+          {yellows}
+          {blues}
+        </Select>
+      </FormControl>
+      Age: {age}
+    </>
+  );
+};
 
 const MsgBox = ({ ros }) => {
   const [message, setMessage] = useState("");
