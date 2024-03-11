@@ -39,11 +39,7 @@ const BirdView = ({ ros }: BirdViewProps) => {
       height={window.innerHeight}
       scale={{ x: canvasSize.scale, y: canvasSize.scale }}
     >
-      <Layer
-        width={canvasSize.width}
-        height={canvasSize.height}
-        offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}
-      >
+      <Layer offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}>
         <Group
           rotation={0}
           onDblClick={(e) => {
