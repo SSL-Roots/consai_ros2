@@ -14,6 +14,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import { css } from "@emotion/react";
+import { Box } from "@mui/material";
 
 type BirdViewProps = {
   ros: ROSLIB.Ros | null;
@@ -192,19 +193,21 @@ const CursorSelector = ({ setCursorMode }: CursorSelectorProps) => {
 
   return (
     <>
-      <ToggleButtonGroup
-        value={selection}
-        exclusive
-        onChange={handleClick}
-        aria-label="cursor selector"
-      >
-        <ToggleButton value={"ball"} aria-label={"ball"}>
-          <div css={ballStyle}>B</div>
-        </ToggleButton>
+      <Box component="div" sx={{ overflow: "auto" }}>
+        <ToggleButtonGroup
+          value={selection}
+          exclusive
+          onChange={handleClick}
+          aria-label="cursor selector"
+        >
+          <ToggleButton value={"ball"} aria-label={"ball"}>
+            <div css={ballStyle}>B</div>
+          </ToggleButton>
 
-        {blueButtons}
-        {yellowButtons}
-      </ToggleButtonGroup>
+          {blueButtons}
+          {yellowButtons}
+        </ToggleButtonGroup>
+      </Box>
     </>
   );
 };
