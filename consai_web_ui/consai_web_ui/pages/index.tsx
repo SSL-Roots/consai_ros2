@@ -33,8 +33,8 @@ export default function Home() {
       <Rosconnection port={9090} setRos={setRos} />
 
       <Box component="section">
-        <Grid container spacing={2}>
-          <Grid item xs={10}>
+        <Grid container spacing={2} alignItems="center" justifyContent="center">
+          <Grid item xs={12}>
             <h1>Hello consai web ui</h1>
 
             {/* <MsgBox ros={ros} /> */}
