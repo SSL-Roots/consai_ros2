@@ -31,6 +31,15 @@ const BirdView = ({ ros }: BirdViewProps) => {
     team: null,
     id: null,
   });
+  const [windowWidth, setWindowWidth] = React.useState<number>(
+    window.innerWidth
+  );
+
+  React.useEffect(() => {
+    window.addEventListener("resize", () => {
+      setWindowWidth(window.innerWidth);
+    });
+  }, []);
 
   const publishBallReplacement = (pos: Vector2D) => {
     if (!ros) return;
@@ -78,16 +87,17 @@ const BirdView = ({ ros }: BirdViewProps) => {
   const canvasSize = {
     width: 13,
     height: 10,
-    scale: 100,
   };
+
+  const scale = windowWidth / canvasSize.width;
 
   return (
     <>
       <CursorSelector setCursorMode={setCursorMode} />
       <Stage
-        width={window.innerWidth}
+        width={windowWidth}
         height={window.innerHeight}
-        scale={{ x: canvasSize.scale, y: canvasSize.scale }}
+        scale={{ x: scale, y: scale }}
       >
         <Layer offset={{ x: -canvasSize.width / 2, y: -canvasSize.height / 2 }}>
           <Group

@@ -8,7 +8,15 @@ import { Rosconnection } from "@/components/RosConnection";
 
 import dynamic from "next/dynamic";
 
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  Box,
+  Container,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
+import { Grid } from "@mui/material";
 
 const BirdView = dynamic(() => import("../components/birdview/birdview"), {
   ssr: false,
@@ -23,10 +31,17 @@ export default function Home() {
         <title>CON-SAI Web UI</title>
       </Head>
       <Rosconnection port={9090} setRos={setRos} />
-      <h1>Hello consai web ui</h1>
 
-      {/* <MsgBox ros={ros} /> */}
-      <BirdView ros={ros} />
+      <Box component="section">
+        <Grid container spacing={2}>
+          <Grid item xs={10}>
+            <h1>Hello consai web ui</h1>
+
+            {/* <MsgBox ros={ros} /> */}
+            <BirdView ros={ros} />
+          </Grid>
+        </Grid>
+      </Box>
     </>
   );
 }
