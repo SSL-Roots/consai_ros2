@@ -19,9 +19,22 @@ type BirdViewProps = {
   ros: ROSLIB.Ros | null;
 };
 
+type CursorMode = {
+  type: "ball" | "robot" | "none";
+  team: "blue" | "yellow" | null;
+  id: number | null;
+};
+
 const BirdView = ({ ros }: BirdViewProps) => {
+  const [cursorMode, setCursorMode] = React.useState<CursorMode>({
+    type: "none",
+    team: null,
+    id: null,
+  });
+
   const publishBallReplacement = (pos: Vector2D) => {
     if (!ros) return;
+    if (cursorMode.type === "none") return;
 
     const publisher = new ROSLIB.Topic({
       ros: ros,
@@ -29,12 +42,37 @@ const BirdView = ({ ros }: BirdViewProps) => {
       messageType: "robocup_ssl_msgs/msg/Replacement",
     });
 
-    const message = new ROSLIB.Message({
-      ball: [{ x: [pos.x], y: [pos.y] }],
-      robots: [],
-    });
+    const generateMessage = (): ROSLIB.Message | null => {
+      if (cursorMode.type === "ball") {
+        return new ROSLIB.Message({
+          ball: [{ x: [pos.x], y: [pos.y] }],
+          robots: [],
+        });
+      }
 
-    publisher.publish(message);
+      if (cursorMode.team === null || cursorMode.id === null) return null;
+
+      if (cursorMode.type === "robot") {
+        return new ROSLIB.Message({
+          ball: [],
+          robots: [
+            {
+              x: pos.x,
+              y: pos.y,
+              id: cursorMode.id,
+              yellowteam: cursorMode.team === "yellow",
+            },
+          ],
+        });
+      }
+
+      return null;
+    };
+
+    const message = generateMessage();
+    if (message) {
+      publisher.publish(message);
+    }
   };
 
   const canvasSize = {
@@ -45,7 +83,7 @@ const BirdView = ({ ros }: BirdViewProps) => {
 
   return (
     <>
-      <CursorSelector />
+      <CursorSelector setCursorMode={setCursorMode} />
       <Stage
         width={window.innerWidth}
         height={window.innerHeight}
@@ -55,7 +93,6 @@ const BirdView = ({ ros }: BirdViewProps) => {
           <Group
             rotation={0}
             onDblClick={(e) => {
-              console.log(e.currentTarget.getRelativePointerPosition());
               const pos: Vector2D = {
                 x: e.currentTarget.getRelativePointerPosition().x,
                 y: e.currentTarget.getRelativePointerPosition().y,
@@ -72,14 +109,42 @@ const BirdView = ({ ros }: BirdViewProps) => {
   );
 };
 
-const CursorSelector = () => {
-  const [alignment, setAlignment] = React.useState<string | null>("left");
+type CursorSelectorProps = {
+  setCursorMode: React.Dispatch<React.SetStateAction<CursorMode>>;
+};
+const CursorSelector = ({ setCursorMode }: CursorSelectorProps) => {
+  const [selection, setSelection] = React.useState<string>("none");
 
-  const handleAlignment = (
+  const handleClick = (
     event: React.MouseEvent<HTMLElement>,
-    newAlignment: string | null
+    value: string | null
   ) => {
-    setAlignment(newAlignment);
+    if (!value) return;
+
+    const cursorType = () => {
+      if (value === "none") return "none";
+      if (value === "ball") return "ball";
+      return "robot";
+    };
+
+    const cursorTeam = () => {
+      if (value === "none" || value === "ball") return null;
+      return value.includes("blue") ? "blue" : "yellow";
+    };
+
+    const cursorId = () => {
+      if (value === "none" || value === "ball") return null;
+      return parseInt(value.split("-")[1]);
+    };
+
+    const cursorMode: CursorMode = {
+      type: cursorType(),
+      team: cursorTeam(),
+      id: cursorId(),
+    };
+
+    setCursorMode(cursorMode);
+    setSelection(value);
   };
 
   const buttonBaseStyle = css({
@@ -118,12 +183,12 @@ const CursorSelector = () => {
   return (
     <>
       <ToggleButtonGroup
-        value={alignment}
+        value={selection}
         exclusive
-        onChange={handleAlignment}
+        onChange={handleClick}
         aria-label="cursor selector"
       >
-        <ToggleButton value="ball" aria-label="ball">
+        <ToggleButton value={"ball"} aria-label={"ball"}>
           <div css={ballStyle}>B</div>
         </ToggleButton>
 
