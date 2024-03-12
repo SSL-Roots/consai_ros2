@@ -17,7 +17,7 @@ const Robot = ({ id, x, y, theta, color }: RobotProps) => {
       <Shape
         sceneFunc={(context, shape) => {
           context.beginPath();
-          context.arc(0, 0, 0.09, Math.PI / 4, -Math.PI / 4);
+          context.arc(0, 0, 0.08, Math.PI / 6, -Math.PI / 6);
           context.closePath();
           context.fillStrokeShape(shape);
         }}
@@ -25,7 +25,7 @@ const Robot = ({ id, x, y, theta, color }: RobotProps) => {
         y={y}
         fill={fillColor}
         stroke="black"
-        strokeWidth={0.001}
+        strokeWidth={0.005}
         rotation={theta * (180 / Math.PI)}
       />
       <Text
