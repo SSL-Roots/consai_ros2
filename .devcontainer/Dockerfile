@@ -34,6 +34,11 @@ RUN mkdir -p /home/${USERNAME}/ros2_ws/src
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo "source /home/${USERNAME}/ros2_ws/install/setup.bash" >> ~/.bashrc
 
+# Download rosbridge-suite package
+# original version contains a bug, so we use a forked version
+RUN cd /home/${USERNAME}/ros2_ws/src \
+    && git clone https://github.com/SSL-Roots/rosbridge_suite.git
+
 # Copy source files
 COPY . /home/${USERNAME}/ros2_ws/src/consai_ros2
 
