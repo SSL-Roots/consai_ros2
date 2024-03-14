@@ -39,8 +39,6 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
 RUN cd /home/${USERNAME}/ros2_ws/src \
     && git clone https://github.com/SSL-Roots/rosbridge_suite.git
 
-# Copy source files
-COPY . /home/${USERNAME}/ros2_ws/src/consai_ros2
 
 # Install CONSAI dependent packages
 RUN cd /home/${USERNAME}/ros2_ws/src \
