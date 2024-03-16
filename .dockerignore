@@ -2,3 +2,5 @@
 .github
 .git
 *.md
+**/node_modules
+.devcontainer
