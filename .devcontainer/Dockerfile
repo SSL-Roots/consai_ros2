@@ -1,6 +1,6 @@
 ARG ROS_DISTRO=humble
 
-FROM ros:${ROS_DISTRO}
+FROM ros:${ROS_DISTRO} as devcontainer
 
 # Add vscode user with same UID and GID as your host system
 # (copied from https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user)
@@ -22,10 +22,9 @@ RUN sudo apt update && sudo apt install -y \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/*
 
-# Install ssl-game-controller
-RUN cd /home/${USERNAME} \
-    && curl -L -o ssl-game-controller https://github.com/RoboCup-SSL/ssl-game-controller/releases/download/v3.8.0/ssl-game-controller_v3.8.0_linux_amd64 \
-    && chmod +x ssl-game-controller
+# Install nodejs for consai_web_ui
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
+    sudo apt-get install -y nodejs
 
 # Create ROS2 Workspace
 RUN mkdir -p /home/${USERNAME}/ros2_ws/src
@@ -33,12 +32,6 @@ RUN mkdir -p /home/${USERNAME}/ros2_ws/src
 # Source the ROS setup file
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo "source /home/${USERNAME}/ros2_ws/install/setup.bash" >> ~/.bashrc
-
-# Download rosbridge-suite package
-# original version contains a bug, so we use a forked version
-RUN cd /home/${USERNAME}/ros2_ws/src \
-    && git clone https://github.com/SSL-Roots/rosbridge_suite.git
-
 
 # Install CONSAI dependent packages
 RUN cd /home/${USERNAME}/ros2_ws/src \
@@ -51,3 +44,24 @@ RUN cd /home/${USERNAME}/ros2_ws/src \
 # Build the workspace
 RUN cd /home/${USERNAME}/ros2_ws \
     && . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build --symlink-install
+
+
+FROM devcontainer as rosbridge_server
+
+RUN cd /home/${USERNAME}/ros2_ws/src \
+    && git clone --filter=blob:none --sparse https://github.com/ssl-roots/consai_ros2.git \
+    && cd consai_ros2 \
+    && git sparse-checkout add consai_msgs \
+    && git sparse-checkout add consai_visualizer_msgs \
+    && git sparse-checkout add robocup_ssl_msgs
+RUN  cd /home/${USERNAME}/ros2_ws/src \ 
+    && git clone https://github.com/ssl-roots/rosbridge_suite.git
+RUN  sudo apt update
+RUN  rosdep update
+RUN  cd /home/${USERNAME}/ros2_ws/src \ 
+    && rosdep install -r -y -i --from-paths .
+RUN cd /home/${USERNAME}/ros2_ws \
+    && . /opt/ros/${ROS_DISTRO}/setup.sh \
+    && colcon build --symlink-install
+
+CMD ["sh", "-c", ". /opt/ros/${ROS_DISTRO}/setup.sh && . ~/ros2_ws/install/setup.sh && ros2 launch rosbridge_server rosbridge_websocket_launch.xml"]

@@ -1,11 +1,43 @@
-version: '3'
+version: "3"
 services:
   consai:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+      target: devcontainer
     command: ["bash", "-c", "tail -f /dev/null"]
     volumes:
       - ../:/home/vscode/ros2_ws/src/consai_ros2
+
+  consai_web_ui:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      target: devcontainer
+    command:
+      [
+        "bash",
+        "-c",
+        "cd ~/ros2_ws/src/consai_ros2/consai_web_ui/consai_web_ui && npm run dev",
+      ]
+    volumes:
+      - ../:/home/vscode/ros2_ws/src/consai_ros2
+    ports:
+      - "3000:3000"
+
+  rosbridge_server:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      target: rosbridge_server
+    ports:
+      - "9090:9090"
+
   grsim:
     image: robocupssl/grsim
+
+  ssl-game-controller:
+    image: robocupssl/ssl-game-controller
+    command: ["-address", ":8081"]
+    ports:
+      - "8081:8081"
