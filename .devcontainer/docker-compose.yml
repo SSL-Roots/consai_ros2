@@ -6,7 +6,7 @@ services:
       [
         "bash",
         "-c",
-        "cd ~/ros2_ws/src/consai_ros2/consai_web_ui/consai_web_ui && npm run dev"
+        "cd ~/ros2_ws/src/consai_ros2/consai_web_ui/consai_web_ui && npm install && npm run dev"
       ]
     volumes:
       - ../:/home/vscode/ros2_ws/src/consai_ros2
@@ -19,7 +19,7 @@ services:
       [
         "sh",
         "-c",
-        ". /opt/ros/humble/setup.sh && . ~/ros2_ws/install/setup.sh && ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+        ". /opt/ros/humble/setup.sh && . ~/ros2_ws/install/setup.sh && ros2 launch rosbridge_server rosbridge_websocket_launch.xml",
       ]
     ports:
       - "9090:9090"
@@ -29,6 +29,6 @@ services:
 
   ssl-game-controller:
     image: robocupssl/ssl-game-controller
-    command: [ "-address", ":8081" ]
+    command: ["-address", ":8081"]
     ports:
       - "8081:8081"
