@@ -53,7 +53,3 @@ RUN cd consai_ros2/ \
     && cd ../../ \
     && . /opt/ros/${ROS_DISTRO}/setup.sh \
     && colcon build --symlink-install --packages-skip-build-finished
-
-# Install consai_web_ui dependencies
-RUN cd consai_ros2/consai_web_ui/consai_web_ui \
-    && npm install

@@ -3,6 +3,7 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "consai",
   "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
+  "updateContentCommand": "cd /home/vscode/ros2_ws/consai_ros2/consai_web_ui/consai_web_ui && npm install",
   "forwardPorts": [3000, 8081, 9090],
   "portsAttributes": {
     "3000": {
