@@ -2,12 +2,6 @@ version: "3"
 services:
   consai:
     image: ghcr.io/ssl-roots/consai_ros2:devcontainer
-    command: [ "bash", "-c", "tail -f /dev/null" ]
-    volumes:
-      - ../:/home/vscode/ros2_ws/src/consai_ros2
-
-  consai_web_ui:
-    image: ghcr.io/ssl-roots/consai_ros2:devcontainer
     command:
       [
         "bash",
