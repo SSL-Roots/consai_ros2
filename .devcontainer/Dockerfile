@@ -50,7 +50,7 @@ COPY --chown=${USERNAME}:${USERNAME} . consai_ros2
 # Install consai_ros2
 RUN cd consai_ros2/ \
     && rosdep install -r -y -i --from-paths . \
-    && cd ../ \
+    && cd ../../ \
     && . /opt/ros/${ROS_DISTRO}/setup.sh \
     && colcon build --symlink-install --packages-skip-build-finished
 
