@@ -33,35 +33,19 @@ RUN mkdir -p /home/${USERNAME}/ros2_ws/src
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo "source /home/${USERNAME}/ros2_ws/install/setup.bash" >> ~/.bashrc
 
+# Copy source files
+COPY . /home/${USERNAME}/ros2_ws/src/consai_ros2
+
 # Install CONSAI dependent packages
 RUN cd /home/${USERNAME}/ros2_ws/src \
     && git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git \
     && git clone https://github.com/SSL-Roots/frootspi_msgs.git \
+    && git clone https://github.com/ssl-roots/rosbridge_suite.git \
     && sudo apt update \
     && rosdep update  \
     && rosdep install -r -y -i --from-paths .
 
 # Build the workspace
 RUN cd /home/${USERNAME}/ros2_ws \
-    && . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build --symlink-install
-
-
-FROM devcontainer as rosbridge_server
-
-RUN cd /home/${USERNAME}/ros2_ws/src \
-    && git clone --filter=blob:none --sparse https://github.com/ssl-roots/consai_ros2.git \
-    && cd consai_ros2 \
-    && git sparse-checkout add consai_msgs \
-    && git sparse-checkout add consai_visualizer_msgs \
-    && git sparse-checkout add robocup_ssl_msgs
-RUN  cd /home/${USERNAME}/ros2_ws/src \ 
-    && git clone https://github.com/ssl-roots/rosbridge_suite.git
-RUN  sudo apt update
-RUN  rosdep update
-RUN  cd /home/${USERNAME}/ros2_ws/src \ 
-    && rosdep install -r -y -i --from-paths .
-RUN cd /home/${USERNAME}/ros2_ws \
     && . /opt/ros/${ROS_DISTRO}/setup.sh \
     && colcon build --symlink-install
-
-CMD ["sh", "-c", ". /opt/ros/${ROS_DISTRO}/setup.sh && . ~/ros2_ws/install/setup.sh && ros2 launch rosbridge_server rosbridge_websocket_launch.xml"]

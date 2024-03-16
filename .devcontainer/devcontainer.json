@@ -3,10 +3,5 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "consai",
   "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/node-asdf:0": {
-      "version": "20.11.1"
-    }
-  },
-  "updateContentCommand": ". /opt/ros/humble/setup.sh && cd /home/vscode/ros2_ws/src && sudo apt update && rosdep update && rosdep install -r -y -i --from-paths . && cd ../ && colcon build --symlink-install"
+  "forwardPorts": [3000, 8081, 9090]
 }

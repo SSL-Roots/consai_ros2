@@ -1,24 +1,18 @@
 version: "3"
 services:
   consai:
-    build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
-      target: devcontainer
-    command: ["bash", "-c", "tail -f /dev/null"]
+    image: ghcr.io/ssl-roots/consai_ros2:devcontainer
+    command: [ "bash", "-c", "tail -f /dev/null" ]
     volumes:
       - ../:/home/vscode/ros2_ws/src/consai_ros2
 
   consai_web_ui:
-    build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
-      target: devcontainer
+    image: ghcr.io/ssl-roots/consai_ros2:devcontainer
     command:
       [
         "bash",
         "-c",
-        "cd ~/ros2_ws/src/consai_ros2/consai_web_ui/consai_web_ui && npm run dev",
+        "cd ~/ros2_ws/src/consai_ros2/consai_web_ui/consai_web_ui && npm run dev"
       ]
     volumes:
       - ../:/home/vscode/ros2_ws/src/consai_ros2
@@ -26,10 +20,13 @@ services:
       - "3000:3000"
 
   rosbridge_server:
-    build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
-      target: rosbridge_server
+    image: ghcr.io/ssl-roots/consai_ros2:devcontainer
+    command:
+      [
+        "sh",
+        "-c",
+        ". /opt/ros/humble/setup.sh && . ~/ros2_ws/install/setup.sh && ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+      ]
     ports:
       - "9090:9090"
 
@@ -38,6 +35,6 @@ services:
 
   ssl-game-controller:
     image: robocupssl/ssl-game-controller
-    command: ["-address", ":8081"]
+    command: [ "-address", ":8081" ]
     ports:
       - "8081:8081"
