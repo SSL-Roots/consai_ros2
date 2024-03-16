@@ -20,16 +20,8 @@ export const Rosconnection = ({
         // xxx-yyy-zzz-<port>.app.github.dev
         // ここから<port>の部分をport propsの値に置換して返す
         const parts = hostname.split("-");
-        return (
-          parts[0] +
-          "-" +
-          parts[1] +
-          "-" +
-          parts[2] +
-          "-" +
-          port +
-          ".app.github.dev"
-        );
+        const baseHostName = parts.slice(0, -1).join("-");
+        return baseHostName + "-" + port + ".app.github.dev";
       }
 
       return hostname + ":" + port;
