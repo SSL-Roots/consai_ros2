@@ -16,36 +16,44 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # Switch from root to user
 USER $USERNAME
 
+# Set workdir
+ENV ROS_OVERLAY /home/${USERNAME}/ros2_ws
+RUN mkdir -p $ROS_OVERLAY/src
+WORKDIR $ROS_OVERLAY/src
+
 # Install apt packages
 RUN sudo apt update && sudo apt install -y \
-    curl \
-    && sudo apt clean \
-    && sudo rm -rf /var/lib/apt/lists/*
+    curl
 
 # Install nodejs for consai_web_ui
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
     sudo apt-get install -y nodejs
 
-# Create ROS2 Workspace
-RUN mkdir -p /home/${USERNAME}/ros2_ws/src
-
 # Write sourcing the ROS setup file to .bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo "source /home/${USERNAME}/ros2_ws/install/setup.bash" >> ~/.bashrc
 
-# Copy source files
-COPY . /home/${USERNAME}/ros2_ws/src/consai_ros2
-
 # Install CONSAI dependent packages
-RUN cd /home/${USERNAME}/ros2_ws/src \
-    && git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git \
+RUN git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git \
     && git clone https://github.com/SSL-Roots/frootspi_msgs.git \
     && git clone https://github.com/ssl-roots/rosbridge_suite.git \
     && sudo apt update \
     && rosdep update  \
-    && rosdep install -r -y -i --from-paths .
-
-# Build the workspace
-RUN cd /home/${USERNAME}/ros2_ws \
+    && rosdep install -r -y -i --from-paths . \
+    && cd ../ \
     && . /opt/ros/${ROS_DISTRO}/setup.sh \
     && colcon build --symlink-install
+
+# Copy source files
+COPY --chown=${USERNAME}:${USERNAME} . consai_ros2
+
+# Install consai_ros2
+RUN cd consai_ros2/ \
+    && rosdep install -r -y -i --from-paths . \
+    && cd ../ \
+    && . /opt/ros/${ROS_DISTRO}/setup.sh \
+    && colcon build --symlink-install --packages-skip-build-finished
+
+# Install consai_web_ui dependencies
+RUN cd consai_ros2/consai_web_ui/consai_web_ui \
+    && npm install
