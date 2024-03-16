@@ -29,7 +29,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
 # Create ROS2 Workspace
 RUN mkdir -p /home/${USERNAME}/ros2_ws/src
 
-# Source the ROS setup file
+# Write sourcing the ROS setup file to .bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc \
     && echo "source /home/${USERNAME}/ros2_ws/install/setup.bash" >> ~/.bashrc
 
