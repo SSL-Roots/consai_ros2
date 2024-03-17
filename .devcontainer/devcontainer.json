@@ -3,9 +3,24 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "consai",
   "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/node-asdf:0": {
-      "version": "20.11.1"
+  "forwardPorts": [3000, 8081, 9090],
+  "portsAttributes": {
+    "3000": {
+      "label": "consai_web_ui"
+    },
+    "8081": {
+      "label": "ssl-game-controller"
+    },
+    "9090": {
+      "label": "rosbridge-server"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["mutantdino.resourcemonitor"]
+    },
+    "codespaces": {
+      "openFiles": ["README_devcontainer.md"]
     }
   }
 }
