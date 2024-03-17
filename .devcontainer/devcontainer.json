@@ -14,5 +14,12 @@
     "9090": {
       "label": "rosbridge-server"
     }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "mutantdino.resourcemonitor"
+      ]
+    }
   }
 }
