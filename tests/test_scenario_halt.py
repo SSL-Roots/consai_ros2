@@ -19,6 +19,8 @@ from rcst.communication import Communication
 
 
 def test_halt(rcst_comm: Communication):
+    # Robots should stop within 2 seconds after the HALT command.
+    # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_halt
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
     for i in range(11):
