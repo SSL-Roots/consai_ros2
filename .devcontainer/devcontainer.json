@@ -17,9 +17,10 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "mutantdino.resourcemonitor"
-      ]
+      "extensions": ["mutantdino.resourcemonitor"]
+    },
+    "codespaces": {
+      "openFiles": ["README_devcontainer.md"]
     }
   }
 }
