@@ -64,8 +64,107 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_ball_placement()
 
 
+def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_state: int,
+                     ball_zone_state: int, num_of_zone_roles: int, zone_targets: list[int]):
+    for role, robot_id in assignor.get_assigned_roles_and_ids():
+        # 役割が変わったロボットのみ、行動を更新する
+        # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
+        if robot_id in changed_ids:
+            decisions[role].reset_act_id()
+
+        # ボール状態をセットする
+        decisions[role].set_ball_state(ball_state)
+        # ボール配置状態をセットする
+        decisions[role].set_ball_placement_state(ball_placement_state)
+        # ボールゾーン状態をセットする
+        decisions[role].set_ball_zone_state(ball_zone_state)
+        # ゾーンディフェンスの担当者数をセットする
+        decisions[role].set_num_of_zone_roles(num_of_zone_roles)
+        # ゾーンディフェンスのターゲットをセットする
+        decisions[role].set_zone_targets(zone_targets)
+        # プレースメントを回避する
+        decisions[role].enable_avoid_placement(robot_id)
+        # 障害物を回避する
+        decisions[role].enable_avoid_obstacles(robot_id)
+
+        # レフェリーコマンドに合わせて行動を決定する
+        if referee.halt():
+            decisions[role].halt(robot_id)
+        elif referee.stop():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].stop(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+        elif referee.inplay() or referee.force_start():
+            decisions[role].inplay(robot_id)
+        elif referee.our_pre_kickoff():
+            decisions[role].our_pre_kickoff(robot_id)
+        elif referee.our_kickoff():
+            decisions[role].our_kickoff(robot_id)
+        elif referee.their_pre_kickoff():
+            decisions[role].their_pre_kickoff(robot_id)
+        elif referee.their_kickoff():
+            decisions[role].their_kickoff(robot_id)
+        elif referee.our_pre_penalty():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].our_pre_penalty(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+
+        elif referee.our_penalty():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].our_penalty(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+
+        elif referee.their_pre_penalty():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].their_pre_penalty(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+
+        elif referee.their_penalty():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].their_penalty(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+
+        elif referee.our_penalty_inplay():
+            decisions[role].our_penalty_inplay(robot_id)
+
+        elif referee.their_penalty_inplay():
+            decisions[role].their_penalty_inplay(robot_id)
+
+        elif referee.our_direct():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].our_direct(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+        elif referee.their_direct():
+            decisions[role].enable_stop_game_velocity(robot_id)
+            decisions[role].their_direct(robot_id)
+            decisions[role].disable_stop_game_velocity(robot_id)
+        elif referee.our_indirect():
+            decisions[role].our_indirect(robot_id)
+        elif referee.their_indirect():
+            decisions[role].their_indirect(robot_id)
+        elif referee.our_timeout():
+            decisions[role].our_timeout(robot_id)
+        elif referee.their_timeout():
+            decisions[role].their_timeout(robot_id)
+        elif referee.our_ball_placement():
+            decisions[role].our_ball_placement(
+                robot_id, referee.placement_position())
+        elif referee.their_ball_placement():
+            decisions[role].their_ball_placement(
+                robot_id, referee.placement_position())
+        elif referee.goal_blue():
+            decisions[role].halt(robot_id)
+        elif referee.goal_yellow():
+            decisions[role].halt(robot_id)
+        else:
+            print("UNDEFINED REFEREE COMMAND!!! : {}".format(referee.get_command()))
+
+
 def main():
+    TARGET_PERIOD = 0.01  # 100Hz
+
     while rclpy.ok():
+        start_time = time.time()
 
         if referee.halt():
             # 各decisionsがセットしたNamedTargetを消去する
@@ -86,98 +185,15 @@ def main():
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
 
-        for role, robot_id in assignor.get_assigned_roles_and_ids():
-            # 役割が変わったロボットのみ、行動を更新する
-            # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
-            if robot_id in changed_ids:
-                decisions[role].reset_act_id()
+        update_decisions(changed_ids, ball_state, ball_placement_state,
+                         ball_zone_state, num_of_zone_roles, zone_targets)
 
-            # ボール状態をセットする
-            decisions[role].set_ball_state(ball_state)
-            # ボール配置状態をセットする
-            decisions[role].set_ball_placement_state(ball_placement_state)
-            # ボールゾーン状態をセットする
-            decisions[role].set_ball_zone_state(ball_zone_state)
-            # ゾーンディフェンスの担当者数をセットする
-            decisions[role].set_num_of_zone_roles(num_of_zone_roles)
-            # ゾーンディフェンスのターゲットをセットする
-            decisions[role].set_zone_targets(zone_targets)
-            # プレースメントを回避する
-            decisions[role].enable_avoid_placement(robot_id)
-            # 障害物を回避する
-            decisions[role].enable_avoid_obstacles(robot_id)
-
-            # レフェリーコマンドに合わせて行動を決定する
-            if referee.halt():
-                decisions[role].halt(robot_id)
-            elif referee.stop():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].stop(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-            elif referee.inplay() or referee.force_start():
-                decisions[role].inplay(robot_id)
-            elif referee.our_pre_kickoff():
-                decisions[role].our_pre_kickoff(robot_id)
-            elif referee.our_kickoff():
-                decisions[role].our_kickoff(robot_id)
-            elif referee.their_pre_kickoff():
-                decisions[role].their_pre_kickoff(robot_id)
-            elif referee.their_kickoff():
-                decisions[role].their_kickoff(robot_id)
-            elif referee.our_pre_penalty():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].our_pre_penalty(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-
-            elif referee.our_penalty():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].our_penalty(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-
-            elif referee.their_pre_penalty():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].their_pre_penalty(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-
-            elif referee.their_penalty():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].their_penalty(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-
-            elif referee.our_penalty_inplay():
-                decisions[role].our_penalty_inplay(robot_id)
-
-            elif referee.their_penalty_inplay():
-                decisions[role].their_penalty_inplay(robot_id)
-
-            elif referee.our_direct():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].our_direct(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-            elif referee.their_direct():
-                decisions[role].enable_stop_game_velocity(robot_id)
-                decisions[role].their_direct(robot_id)
-                decisions[role].disable_stop_game_velocity(robot_id)
-            elif referee.our_indirect():
-                decisions[role].our_indirect(robot_id)
-            elif referee.their_indirect():
-                decisions[role].their_indirect(robot_id)
-            elif referee.our_timeout():
-                decisions[role].our_timeout(robot_id)
-            elif referee.their_timeout():
-                decisions[role].their_timeout(robot_id)
-            elif referee.our_ball_placement():
-                decisions[role].our_ball_placement(
-                    robot_id, referee.placement_position())
-            elif referee.their_ball_placement():
-                decisions[role].their_ball_placement(
-                    robot_id, referee.placement_position())
-            elif referee.goal_blue():
-                decisions[role].halt(robot_id)
-            elif referee.goal_yellow():
-                decisions[role].halt(robot_id)
-            else:
-                print("UNDEFINED REFEREE COMMAND!!! : {}".format(referee.get_command()))
+        elapsed_time = time.time() - start_time
+        if elapsed_time < TARGET_PERIOD:
+            time.sleep(TARGET_PERIOD - elapsed_time)
+        else:
+            rclpy.logging.get_logger("game.py").warn(
+                "Update took too long: {}".format(elapsed_time))
 
 
 if __name__ == '__main__':
