@@ -18,20 +18,19 @@ import time
 from rcst.communication import Communication
 
 
-def test_our_kickoff(rcst_comm: Communication):
+def test_our_free_kick(rcst_comm: Communication):
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
     rcst_comm.send_blue_robot(1, -0.5, 0.0, math.radians(0))
 
     rcst_comm.observer.reset()
     rcst_comm.change_referee_command('STOP', 3.0)
-    rcst_comm.change_referee_command('PREPARE_KICKOFF_BLUE', 3.0)
-    rcst_comm.change_referee_command('NORMAL_START', 5.0)
+    rcst_comm.change_referee_command('DIRECT_FREE_BLUE', 5.0)
 
     assert rcst_comm.observer.goal().ball_has_been_in_positive_goal() is True
 
 
-def test_their_kickoff(rcst_comm: Communication):
+def test_their_free_kick(rcst_comm: Communication):
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
     rcst_comm.send_blue_robot(0, -5.5, 0.0, math.radians(0))
@@ -39,8 +38,7 @@ def test_their_kickoff(rcst_comm: Communication):
 
     rcst_comm.observer.reset()
     rcst_comm.change_referee_command('STOP', 3.0)
-    rcst_comm.change_referee_command('PREPARE_KICKOFF_YELLOW', 3.0)
-    rcst_comm.change_referee_command('NORMAL_START', 1.0)
+    rcst_comm.change_referee_command('DIRECT_FREE_YELLOW', 1.0)
 
     # Shoot to our goal.
     rcst_comm.send_ball(0, 0, -6.0, 0.5)
