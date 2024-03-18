@@ -25,7 +25,6 @@ def test_halt(rcst_comm: Communication):
     rcst_comm.send_ball(0, 0)
     for i in range(11):
         rcst_comm.send_blue_robot(i, -1.0, 3.0 - i * 0.5, math.radians(0))
-    time.sleep(3)  # Wait for the robots to be placed.
 
     rcst_comm.change_referee_command('STOP', 3.0)  # Robots are moving
     rcst_comm.change_referee_command('HALT', 2.0)  # Robots should stop

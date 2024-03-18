@@ -7,7 +7,6 @@ def test_our_kickoff(rcst_comm):
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
     rcst_comm.send_blue_robot(1, -0.5, 0.0, math.radians(0))
-    time.sleep(3)  # Wait for the robots to be placed.
 
     rcst_comm.observer.reset()
     rcst_comm.change_referee_command('STOP', 3.0)
@@ -22,7 +21,6 @@ def test_their_kickoff(rcst_comm):
     rcst_comm.send_ball(0, 0)
     rcst_comm.send_blue_robot(0, -5.5, 0.0, math.radians(0))
     rcst_comm.send_yellow_robot(0, 0.1, 0.0, math.radians(180))
-    time.sleep(1)  # Wait for the robots to be placed.
 
     rcst_comm.observer.reset()
     rcst_comm.change_referee_command('STOP', 3.0)
