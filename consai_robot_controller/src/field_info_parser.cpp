@@ -778,7 +778,7 @@ bool FieldInfoParser::control_ball(
     need_dribble = true;
     // ボールのすぐ後ろに目標座標を設定
     parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
-    if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(1.0)) {
+    if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(3.0)) {
       // ロボットが目標座標の方向を向いている場合
       // ドリブルON
       need_kick = true;
