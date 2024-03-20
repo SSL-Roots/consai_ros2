@@ -22,6 +22,7 @@ from rcst.robot import RobotDict
 
 
 # TODO: Implement a motion dribbling the ball to the opponent's side.
+# Issue: https://github.com/SSL-Roots/consai_ros2/issues/186
 
 # def test_our_penalty_shoot(rcst_comm: Communication):
 #     rcst_comm.send_empty_world()
@@ -69,7 +70,6 @@ def test_their_penalty_defend(rcst_comm: Communication):
 #     return True
 
 # TODO: Fix the issue: https://github.com/SSL-Roots/consai_ros2/issues/185
-
 # def test_robots_be_behind_ball(rcst_comm: Communication):
 #     rcst_comm.send_empty_world()
 #     for i in range(11):
