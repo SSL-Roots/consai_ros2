@@ -34,15 +34,6 @@ namespace tools = geometry_tools;
 namespace ctools = control_tools;
 
 const int ROBOT_NUM = 16;
-const auto PARAM_THRESHOLD_LOOKING_BALL_DISTANCE =
-  "control_ball_threshold_looking_ball_distance_m";
-const auto PARAM_THRESHOLD_LOOKING_BALL_THETA =
-  "control_ball_threshold_looking_ball_theta_deg";
-const auto PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE =
-  "control_ball_threshold_can_dribble_distance_m";
-const auto PARAM_THRESHOLD_CAN_SHOOT_THETA = "control_ball_threshold_can_shoot_theta_deg";
-const auto PARAM_DISTANCE_TO_LOOK_BALL = "control_ball_distance_to_look_ball_m";
-const auto PARAM_DISTANCE_TO_ROTATE = "control_ball_distance_to_rotate_m";
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
@@ -58,12 +49,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
-  declare_parameter(PARAM_THRESHOLD_LOOKING_BALL_DISTANCE, 0.4);
-  declare_parameter(PARAM_THRESHOLD_LOOKING_BALL_THETA, 30.0);
-  declare_parameter(PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE, 0.7);
-  declare_parameter(PARAM_THRESHOLD_CAN_SHOOT_THETA, 5.0);
-  declare_parameter(PARAM_DISTANCE_TO_LOOK_BALL, -0.05);
-  declare_parameter(PARAM_DISTANCE_TO_ROTATE, 0.3);
   max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
   max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
   max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
@@ -73,18 +58,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
   param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
 
-  parser_.param_threshold_looking_ball_distance = get_parameter(
-    PARAM_THRESHOLD_LOOKING_BALL_DISTANCE).get_value<double>();
-  parser_.param_threshold_looking_ball_theta = get_parameter(
-    PARAM_THRESHOLD_LOOKING_BALL_THETA).get_value<double>();
-  parser_.param_can_dribble_distance = get_parameter(
-    PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE).get_value<double>();
-  parser_.param_can_shoot_theta = get_parameter(
-    PARAM_THRESHOLD_CAN_SHOOT_THETA).get_value<double>();
-  parser_.param_distance_to_look_ball = get_parameter(
-    PARAM_DISTANCE_TO_LOOK_BALL).get_value<double>();
-  parser_.param_distance_to_rotate = get_parameter(
-    PARAM_DISTANCE_TO_ROTATE).get_value<double>();
 
   parser_.set_invert(get_parameter("invert").get_value<bool>());
   parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
@@ -186,34 +159,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         } else if (parameter.get_name() == "control_a_theta") {
           param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
           RCLCPP_INFO(this->get_logger(), "Update control_a_theta.");
-        } else if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_DISTANCE) {
-          parser_.param_threshold_looking_ball_distance = get_parameter(
-            PARAM_THRESHOLD_LOOKING_BALL_DISTANCE).get_value<double>();
-          RCLCPP_INFO(
-            this->get_logger(), "Update %s",
-            PARAM_THRESHOLD_LOOKING_BALL_DISTANCE);
-        } else if (parameter.get_name() == PARAM_THRESHOLD_LOOKING_BALL_THETA) {
-          parser_.param_threshold_looking_ball_theta = get_parameter(
-            PARAM_THRESHOLD_LOOKING_BALL_THETA).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_LOOKING_BALL_THETA);
-        } else if (parameter.get_name() == PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE) {
-          parser_.param_can_dribble_distance = get_parameter(
-            PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE).get_value<double>();
-          RCLCPP_INFO(
-            this->get_logger(), "Update %s",
-            PARAM_THRESHOLD_CAN_DRIBBLE_DISTANCE);
-        } else if (parameter.get_name() == PARAM_THRESHOLD_CAN_SHOOT_THETA) {
-          parser_.param_can_shoot_theta = get_parameter(
-            PARAM_THRESHOLD_CAN_SHOOT_THETA).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_THRESHOLD_CAN_SHOOT_THETA);
-        } else if (parameter.get_name() == PARAM_DISTANCE_TO_LOOK_BALL) {
-          parser_.param_distance_to_look_ball = get_parameter(
-            PARAM_DISTANCE_TO_LOOK_BALL).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_LOOK_BALL);
-        } else if (parameter.get_name() == PARAM_DISTANCE_TO_ROTATE) {
-          parser_.param_distance_to_rotate = get_parameter(
-            PARAM_DISTANCE_TO_ROTATE).get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update %s", PARAM_DISTANCE_TO_ROTATE);
         }
       }
       return result;
