@@ -80,7 +80,9 @@ private:
   void handle_accepted(
     std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
-  State limit_world_velocity(const State & velocity, const double & max_velocity_xy) const;
+  State limit_world_velocity(
+    const State & velocity, const double & max_velocity_xy,
+    const double & max_velocity_theta) const;
   State limit_world_acceleration(
     const State & velocity, const State & last_velocity,
     const rclcpp::Duration & dt) const;
@@ -112,14 +114,6 @@ private:
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
-  OnSetParametersCallbackHandle::SharedPtr handler_change_param_;
-  double max_acceleration_xy_;
-  double max_acceleration_theta_;
-  double max_velocity_xy_;
-  double max_velocity_theta_;
-  double param_control_range_xy_;
-  double param_control_a_xy_;
-  double param_control_a_theta_;
 };
 
 }  // namespace consai_robot_controller

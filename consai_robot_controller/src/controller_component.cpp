@@ -49,15 +49,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
-  max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
-  max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
-  max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
-  max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
-
-  param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
-  param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
-  param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
-
 
   parser_.set_invert(get_parameter("invert").get_value<bool>());
   parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
@@ -131,39 +122,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     "parsed_referee", 10, std::bind(&Controller::callback_parsed_referee, this, _1));
   sub_named_targets_ = create_subscription<NamedTargets>(
     "named_targets", 10, std::bind(&Controller::callback_named_targets, this, _1));
-
-  auto param_change_callback =
-    [this](std::vector<rclcpp::Parameter> parameters) {
-      // ROSパラメータの更新
-      auto result = rcl_interfaces::msg::SetParametersResult();
-      result.successful = true;
-      for (const auto & parameter : parameters) {
-        if (parameter.get_name() == "max_acceleration_xy") {
-          max_acceleration_xy_ = get_parameter("max_acceleration_xy").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update max_acceleration_xy.");
-        } else if (parameter.get_name() == "max_acceleration_theta") {
-          max_acceleration_theta_ = get_parameter("max_acceleration_theta").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update max_acceleration_theta.");
-        } else if (parameter.get_name() == "max_velocity_xy") {
-          max_velocity_xy_ = get_parameter("max_velocity_xy").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update max_velocity_xy.");
-        } else if (parameter.get_name() == "max_velocity_theta") {
-          max_velocity_theta_ = get_parameter("max_velocity_theta").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update max_velocity_theta.");
-        } else if (parameter.get_name() == "control_range_xy") {
-          param_control_range_xy_ = get_parameter("control_range_xy").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update control_range_xy.");
-        } else if (parameter.get_name() == "control_a_xy") {
-          param_control_a_xy_ = get_parameter("control_a_xy").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update control_a_xy.");
-        } else if (parameter.get_name() == "control_a_theta") {
-          param_control_a_theta_ = get_parameter("control_a_theta").get_value<double>();
-          RCLCPP_INFO(this->get_logger(), "Update control_a_theta.");
-        }
-      }
-      return result;
-    };
-  handler_change_param_ = add_on_set_parameters_callback(param_change_callback);
 }
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
@@ -203,6 +161,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   auto current_time = steady_clock_.now();
   auto duration = current_time - last_update_time_[robot_id];
 
+  const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
+  const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
+
   if (parser_.parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
@@ -235,30 +196,30 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // double a_xy = 1.0;
     // double a_theta = 0.5;
 
+    const auto control_range_xy = get_parameter("control_range_xy").as_double();
+    const auto control_a_xy = get_parameter("control_a_xy").as_double();
+    const auto control_a_theta = get_parameter("control_a_theta").as_double();
+
     // tanh関数を用いた速度制御
     world_vel.x = ctools::velocity_contol_tanh(
-      diff_x, param_control_range_xy_,
-      param_control_a_xy_ * max_velocity_xy_);
+      diff_x, control_range_xy, control_a_xy * max_vel_xy);
     world_vel.y = ctools::velocity_contol_tanh(
-      diff_y, param_control_range_xy_,
-      param_control_a_xy_ * max_velocity_xy_);
+      diff_y, control_range_xy, control_a_xy * max_vel_xy);
     // sin関数を用いた角速度制御
     world_vel.theta = ctools::angular_velocity_contol_sin(
-      diff_theta,
-      param_control_a_theta_ *
-      max_velocity_theta_);
+      diff_theta, control_a_theta * max_vel_theta);
   }
 
   // 最大加速度リミットを適用
   world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
   // 最大速度リミットを適用
-  auto max_velocity_xy = max_velocity_xy_;
+  auto overwritten_max_vel_xy = max_vel_xy;
   // 最大速度リミットを上書きできる
   if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-    max_velocity_xy = std::min(
-      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_velocity_xy_);
+    overwritten_max_vel_xy = std::min(
+      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_vel_xy);
   }
-  world_vel = limit_world_velocity(world_vel, max_velocity_xy);
+  world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
@@ -440,7 +401,8 @@ void Controller::handle_accepted(
 }
 
 State Controller::limit_world_velocity(
-  const State & velocity, const double & max_velocity_xy) const
+  const State & velocity, const double & max_velocity_xy,
+  const double & max_velocity_theta) const
 {
   // ワールド座標系のロボット速度に制限を掛ける
   auto velocity_norm = std::hypot(velocity.x, velocity.y);
@@ -451,7 +413,8 @@ State Controller::limit_world_velocity(
     modified_velocity.x /= velocity_ratio;
     modified_velocity.y /= velocity_ratio;
   }
-  modified_velocity.theta = std::clamp(velocity.theta, -max_velocity_theta_, max_velocity_theta_);
+  modified_velocity.theta = std::clamp(
+    velocity.theta, -max_velocity_theta, max_velocity_theta);
 
   return modified_velocity;
 }
@@ -466,14 +429,16 @@ State Controller::limit_world_acceleration(
   acc.y = (velocity.y - last_velocity.y) / dt.seconds();
   acc.theta = (velocity.theta - last_velocity.theta) / dt.seconds();
 
-  auto acc_norm = std::hypot(acc.x, acc.y);
-  auto acc_ratio = acc_norm / max_acceleration_xy_;
+  const auto max_acc_xy = get_parameter("max_acceleration_xy").as_double();
+  const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+  const auto acc_norm = std::hypot(acc.x, acc.y);
+  const auto acc_ratio = acc_norm / max_acc_xy;
 
   if (acc_ratio > 1.0) {
     acc.x /= acc_ratio;
     acc.y /= acc_ratio;
   }
-  acc.theta = std::clamp(acc.theta, -max_acceleration_theta_, max_acceleration_theta_);
+  acc.theta = std::clamp(acc.theta, -max_acc_theta, max_acc_theta);
 
   State modified_velocity = velocity;
   modified_velocity.x = last_velocity.x + acc.x * dt.seconds();
