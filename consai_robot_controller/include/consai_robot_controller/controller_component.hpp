@@ -61,7 +61,6 @@ public:
 
 protected:
   void on_timer_pub_control_command(const unsigned int robot_id);
-  void on_timer_pub_stop_command(const unsigned int robot_id);
   void on_timer_pub_goal_poses();
 
 private:
@@ -94,7 +93,6 @@ private:
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
-  std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_stop_command_;
   std::vector<bool> control_enable_;
   std::vector<bool> need_response_;
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;

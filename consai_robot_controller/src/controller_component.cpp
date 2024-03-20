@@ -91,12 +91,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         10ms, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
       )
     );
-    timer_pub_control_command_[i]->cancel();  // タイマーを停止
-    timer_pub_stop_command_.push_back(
-      create_wall_timer(
-        100ms, [this, robot_id = i]() {this->on_timer_pub_stop_command(robot_id);}
-      )
-    );
 
     last_world_vel_.push_back(State());
     control_enable_.push_back(false);
@@ -128,16 +122,15 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
   // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
 
-  // 制御が許可されていない場合は、このタイマーを止めて、停止コマンドタイマーを起動する
-  if (control_enable_[robot_id] == false) {
-    timer_pub_control_command_[robot_id]->cancel();
-    timer_pub_stop_command_[robot_id]->reset();
+  if (!goal_handle_[robot_id]) {
+    switch_to_stop_control_mode(robot_id, false, "Goal is not set.");
     return;
   }
 
-  auto command_msg = std::make_unique<RobotCommand>();
-  command_msg->robot_id = robot_id;
-  command_msg->team_is_yellow = team_is_yellow_;
+  if (!control_enable_[robot_id]) {
+    switch_to_stop_control_mode(robot_id, false, "Control is not enabled.");
+    return;
+  }
 
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
@@ -150,6 +143,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     switch_to_stop_control_mode(robot_id, false, error_msg);
     return;
   }
+
+  auto command_msg = std::make_unique<RobotCommand>();
+  command_msg->robot_id = robot_id;
+  command_msg->team_is_yellow = team_is_yellow_;
 
   // 目標値を取得する
   // 目標値を取得できなければ速度0を目標値とする
@@ -274,24 +271,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     if (need_response_[robot_id]) {
       switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
     }
-  }
-}
-
-void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
-{
-  // 停止コマンドをpublishするタイマーコールバック関数
-  // 通信帯域を圧迫しないため、この関数は低周期（例:1s）で実行すること
-  auto command_msg = std::make_unique<RobotCommand>();
-  command_msg->robot_id = robot_id;
-  command_msg->team_is_yellow = team_is_yellow_;
-
-  last_update_time_[robot_id] = steady_clock_.now();
-  pub_command_[robot_id]->publish(std::move(command_msg));
-
-  // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
-  if (control_enable_[robot_id] == true) {
-    timer_pub_stop_command_[robot_id]->cancel();
-    timer_pub_control_command_[robot_id]->reset();
   }
 }
 
@@ -498,14 +477,10 @@ bool Controller::switch_to_stop_control_mode(
     goal_handle_[robot_id]->abort(result);
   }
 
-  // 制御を禁止
   control_enable_[robot_id] = false;
+
   // アクションの応答フラグを無効化
   need_response_[robot_id] = false;
-  // 制御タイマーを停止
-  timer_pub_control_command_[robot_id]->cancel();
-  // ストップ信号タイマーを最下位
-  timer_pub_stop_command_[robot_id]->reset();
   // 停止コマンドを送信する
   auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
