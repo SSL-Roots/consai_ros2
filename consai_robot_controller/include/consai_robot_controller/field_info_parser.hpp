@@ -136,6 +136,7 @@ private:
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
   bool avoid_ball_500mm(
+    const TrackedRobot & my_robot,
     const State & final_goal_pose,
     const State & goal_pose, const TrackedBall & ball,
     State & avoidance_pose) const;
