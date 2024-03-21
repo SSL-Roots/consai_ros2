@@ -61,15 +61,9 @@ public:
 
 protected:
   void on_timer_pub_control_command(const unsigned int robot_id);
-  void on_timer_pub_stop_command(const unsigned int robot_id);
   void on_timer_pub_goal_poses();
 
 private:
-  void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
-  void callback_geometry(const GeometryData::SharedPtr msg);
-  void callback_referee(const Referee::SharedPtr msg);
-  void callback_parsed_referee(const ParsedReferee::SharedPtr msg);
-  void callback_named_targets(const NamedTargets::SharedPtr msg);
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,
@@ -80,7 +74,9 @@ private:
   void handle_accepted(
     std::shared_ptr<GoalHandleRobotControl> goal_handle,
     const unsigned int robot_id);
-  State limit_world_velocity(const State & velocity, const double & max_velocity_xy) const;
+  State limit_world_velocity(
+    const State & velocity, const double & max_velocity_xy,
+    const double & max_velocity_theta) const;
   State limit_world_acceleration(
     const State & velocity, const State & last_velocity,
     const rclcpp::Duration & dt) const;
@@ -92,7 +88,6 @@ private:
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
-  std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_stop_command_;
   std::vector<bool> control_enable_;
   std::vector<bool> need_response_;
   std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
@@ -112,14 +107,6 @@ private:
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
-  OnSetParametersCallbackHandle::SharedPtr handler_change_param_;
-  double max_acceleration_xy_;
-  double max_acceleration_theta_;
-  double max_velocity_xy_;
-  double max_velocity_theta_;
-  double param_control_range_xy_;
-  double param_control_a_xy_;
-  double param_control_a_theta_;
 };
 
 }  // namespace consai_robot_controller
