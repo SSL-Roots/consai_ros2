@@ -107,32 +107,32 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
   auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
-    parser_.set_detection_tracked(msg);
-  };
+      parser_.set_detection_tracked(msg);
+    };
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, detection_callback);
 
   auto geometry_callback = [this](const GeometryData::SharedPtr msg) {
-    parser_.set_geometry(msg);
-  };
+      parser_.set_geometry(msg);
+    };
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, geometry_callback);
 
   auto referee_callback = [this](const Referee::SharedPtr msg) {
-    parser_.set_referee(msg);
-  };
+      parser_.set_referee(msg);
+    };
   sub_referee_ = create_subscription<Referee>(
     "referee", 10, referee_callback);
 
   auto parsed_referee_callback = [this](const ParsedReferee::SharedPtr msg) {
-    parser_.set_parsed_referee(msg);
-  };
+      parser_.set_parsed_referee(msg);
+    };
   sub_parsed_referee_ = create_subscription<ParsedReferee>(
     "parsed_referee", 10, parsed_referee_callback);
 
   auto named_targets_callback = [this](const NamedTargets::SharedPtr msg) {
-    parser_.set_named_targets(msg);
-  };
+      parser_.set_named_targets(msg);
+    };
   sub_named_targets_ = create_subscription<NamedTargets>(
     "named_targets", 10, named_targets_callback);
 }
