@@ -64,11 +64,6 @@ protected:
   void on_timer_pub_goal_poses();
 
 private:
-  void callback_detection_tracked(const TrackedFrame::SharedPtr msg);
-  void callback_geometry(const GeometryData::SharedPtr msg);
-  void callback_referee(const Referee::SharedPtr msg);
-  void callback_parsed_referee(const ParsedReferee::SharedPtr msg);
-  void callback_named_targets(const NamedTargets::SharedPtr msg);
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RobotControl::Goal> goal,

@@ -106,22 +106,40 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   timer_pub_goal_poses_ =
     create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
+  auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
+    parser_.set_detection_tracked(msg);
+  };
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
-    "detection_tracked", 10, std::bind(&Controller::callback_detection_tracked, this, _1));
+    "detection_tracked", 10, detection_callback);
+
+  auto geometry_callback = [this](const GeometryData::SharedPtr msg) {
+    parser_.set_geometry(msg);
+  };
   sub_geometry_ = create_subscription<GeometryData>(
-    "geometry", 10, std::bind(&Controller::callback_geometry, this, _1));
+    "geometry", 10, geometry_callback);
+
+  auto referee_callback = [this](const Referee::SharedPtr msg) {
+    parser_.set_referee(msg);
+  };
   sub_referee_ = create_subscription<Referee>(
-    "referee", 10, std::bind(&Controller::callback_referee, this, _1));
+    "referee", 10, referee_callback);
+
+  auto parsed_referee_callback = [this](const ParsedReferee::SharedPtr msg) {
+    parser_.set_parsed_referee(msg);
+  };
   sub_parsed_referee_ = create_subscription<ParsedReferee>(
-    "parsed_referee", 10, std::bind(&Controller::callback_parsed_referee, this, _1));
+    "parsed_referee", 10, parsed_referee_callback);
+
+  auto named_targets_callback = [this](const NamedTargets::SharedPtr msg) {
+    parser_.set_named_targets(msg);
+  };
   sub_named_targets_ = create_subscription<NamedTargets>(
-    "named_targets", 10, std::bind(&Controller::callback_named_targets, this, _1));
+    "named_targets", 10, named_targets_callback);
 }
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
   // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
-
   if (!goal_handle_[robot_id]) {
     switch_to_stop_control_mode(robot_id, false, "Goal is not set.");
     return;
@@ -144,68 +162,66 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     return;
   }
 
-  auto command_msg = std::make_unique<RobotCommand>();
-  command_msg->robot_id = robot_id;
-  command_msg->team_is_yellow = team_is_yellow_;
-
   // 目標値を取得する
   // 目標値を取得できなければ速度0を目標値とする
   State goal_pose;
   State final_goal_pose;
   double kick_power = 0.0;
   double dribble_power = 0.0;
-  State world_vel;
-  auto current_time = steady_clock_.now();
-  auto duration = current_time - last_update_time_[robot_id];
 
-  const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
-  const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-
-  if (parser_.parse_goal(
+  const auto current_time = steady_clock_.now();
+  const auto duration = current_time - last_update_time_[robot_id];
+  if (!parser_.parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
-    // field_info_parserの衝突回避を無効かする場合は、下記の行をコメントアウトすること
-    goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
-      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
-
-    // 障害物情報を取得
-    auto obstacle_environments = parser_.get_obstacle_environment(
-      goal_handle_[robot_id]->get_goal(), my_robot);
-
-    // 現在位置: my_robot.pos
-    // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
-    // 最終目標位置: goal_pose
-    // 障害物情報: obstacle_environments
-    // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
-
-    // 目標位置と現在位置の差分
-    double diff_x = goal_pose.x - my_robot.pos.x;
-    double diff_y = goal_pose.y - my_robot.pos.y;
-    double diff_theta = tools::normalize_theta(
-      goal_pose.theta -
-      my_robot.orientation);
-
-    // tanhに反応する区間の係数
-    // double range_xy = 1.0;
-    // double range_theta = 0.1;
-    // 最大速度調整用の係数(a < 1)
-    // double a_xy = 1.0;
-    // double a_theta = 0.5;
-
-    const auto control_range_xy = get_parameter("control_range_xy").as_double();
-    const auto control_a_xy = get_parameter("control_a_xy").as_double();
-    const auto control_a_theta = get_parameter("control_a_theta").as_double();
-
-    // tanh関数を用いた速度制御
-    world_vel.x = ctools::velocity_contol_tanh(
-      diff_x, control_range_xy, control_a_xy * max_vel_xy);
-    world_vel.y = ctools::velocity_contol_tanh(
-      diff_y, control_range_xy, control_a_xy * max_vel_xy);
-    // sin関数を用いた角速度制御
-    world_vel.theta = ctools::angular_velocity_contol_sin(
-      diff_theta, control_a_theta * max_vel_theta);
+    RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
+    switch_to_stop_control_mode(robot_id, false, "Failed to parse goal.");
+    return;
   }
+
+  // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
+  goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
+    goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
+
+  // 障害物情報を取得
+  const auto obstacle_environments = parser_.get_obstacle_environment(
+    goal_handle_[robot_id]->get_goal(), my_robot);
+
+  // 現在位置: my_robot.pos
+  // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
+  // 最終目標位置: goal_pose
+  // 障害物情報: obstacle_environments
+  // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
+
+  // 目標位置と現在位置の差分
+  const double diff_x = goal_pose.x - my_robot.pos.x;
+  const double diff_y = goal_pose.y - my_robot.pos.y;
+  const double diff_theta = tools::normalize_theta(
+    goal_pose.theta - my_robot.orientation);
+
+  // tanhに反応する区間の係数
+  // double range_xy = 1.0;
+  // double range_theta = 0.1;
+  // 最大速度調整用の係数(a < 1)
+  // double a_xy = 1.0;
+  // double a_theta = 0.5;
+
+  const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
+  const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
+  const auto control_range_xy = get_parameter("control_range_xy").as_double();
+  const auto control_a_xy = get_parameter("control_a_xy").as_double();
+  const auto control_a_theta = get_parameter("control_a_theta").as_double();
+
+  // tanh関数を用いた速度制御
+  State world_vel;
+  world_vel.x = ctools::velocity_contol_tanh(
+    diff_x, control_range_xy, control_a_xy * max_vel_xy);
+  world_vel.y = ctools::velocity_contol_tanh(
+    diff_y, control_range_xy, control_a_xy * max_vel_xy);
+  // sin関数を用いた角速度制御
+  world_vel.theta = ctools::angular_velocity_contol_sin(
+    diff_theta, control_a_theta * max_vel_theta);
 
   // 最大加速度リミットを適用
   world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
@@ -217,6 +233,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_vel_xy);
   }
   world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
+
+  auto command_msg = std::make_unique<RobotCommand>();
+  command_msg->robot_id = robot_id;
+  command_msg->team_is_yellow = team_is_yellow_;
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   command_msg->velocity_x = std::cos(my_robot.orientation) * world_vel.x + std::sin(
@@ -290,31 +310,6 @@ void Controller::on_timer_pub_goal_poses()
   }
 
   vis_data_handler_->publish_and_reset_vis_goal();
-}
-
-void Controller::callback_detection_tracked(const TrackedFrame::SharedPtr msg)
-{
-  parser_.set_detection_tracked(msg);
-}
-
-void Controller::callback_geometry(const GeometryData::SharedPtr msg)
-{
-  parser_.set_geometry(msg);
-}
-
-void Controller::callback_referee(const Referee::SharedPtr msg)
-{
-  parser_.set_referee(msg);
-}
-
-void Controller::callback_parsed_referee(const ParsedReferee::SharedPtr msg)
-{
-  parser_.set_parsed_referee(msg);
-}
-
-void Controller::callback_named_targets(const NamedTargets::SharedPtr msg)
-{
-  parser_.set_named_targets(msg);
 }
 
 rclcpp_action::GoalResponse Controller::handle_goal(
@@ -475,12 +470,11 @@ bool Controller::switch_to_stop_control_mode(
     result->success = success;
     result->message = error_msg;
     goal_handle_[robot_id]->abort(result);
-  }
 
+    need_response_[robot_id] = false;
+  }
   control_enable_[robot_id] = false;
 
-  // アクションの応答フラグを無効化
-  need_response_[robot_id] = false;
   // 停止コマンドを送信する
   auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
