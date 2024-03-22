@@ -26,9 +26,11 @@ Github Codespacesを使うと、Githubのクラウドマシン上でDevcontainer
 ローカルにcloneしたコードもDevcontainer上で開発できます。
 
 1. VSCodeを起動します。
-2. Ctrl + P →　「Dev Containers: Open Folder in Container...」をクリックします。
+2. Ctrl+Shift+P →　「Dev Containers: Open Folder in Container...」をクリックします。
 3. consai_ros2のフォルダを指定します。
 4. しばらく待つとDevcontainerが起動します。
+5. Devcontainerのポート転送とdocker-composeでのポート転送の衝突を避けるため、VSCodeでのポート転送を停止します。
+    1. Ctrl+Shift+P -> Stop Forwarding Port で、すべてのポートの転送を停止します。
 
 
 ## つかいかた・注意点
