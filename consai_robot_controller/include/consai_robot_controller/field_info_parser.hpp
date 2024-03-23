@@ -33,6 +33,7 @@
 #include "consai_robot_controller/constraint_parser.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
 #include "consai_robot_controller/obstacle_environment.hpp"
+#include "consai_robot_controller/tactic_control_ball.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
@@ -145,6 +146,7 @@ private:
   tactics::BallBoyTactics ball_boy_tactics_;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
   std::shared_ptr<parser::ConstraintParser> constraint_parser_;
+  std::shared_ptr<tactic::ControlBall> control_ball_;
 };
 
 }  // namespace consai_robot_controller

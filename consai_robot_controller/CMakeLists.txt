@@ -37,6 +37,7 @@ add_library(controller_component SHARED
   src/visualization_data_handler.cpp
   src/detection_extractor.cpp
   src/constraint_parser.cpp
+  src/tactic_control_ball.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
@@ -113,6 +114,7 @@ if(BUILD_TESTING)
     src/field_info_parser.cpp
     src/detection_extractor.cpp
     src/constraint_parser.cpp
+    src/tactic_control_ball.cpp
     )
   ament_target_dependencies(field_info_parser_test
     consai_msgs
