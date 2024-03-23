@@ -14,9 +14,6 @@ services:
     image: ghcr.io/ssl-roots/consai_ros2:humble
     container_name: consai
     network_mode: host
-    environment:
-      - CONSAI_YELLOW=false
-      - CONSAI_INVERT=false
     volumes:
       - "../:/root/ros2_ws/src/consai_ros2"  # Mount the repository to the container
     command: |
