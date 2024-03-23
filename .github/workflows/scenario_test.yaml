@@ -58,13 +58,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Debug environment variables
-      run: |
-        echo "CONSAI_YELLOW=${{ matrix.env.CONSAI_YELLOW }}"
-        echo "CONSAI_INVERT=${{ matrix.env.CONSAI_INVERT }}"
-
     - name: Start Docker Compose services
-      run: CONSAI_YELLOW=false docker compose -f .docker/consai-grsim-compose.yml up -d
+      run: docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}

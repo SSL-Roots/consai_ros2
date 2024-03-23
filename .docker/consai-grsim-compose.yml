@@ -20,7 +20,7 @@ services:
       bash -c "
       colcon build --symlink-install &&
       source install/setup.bash &&
-      ros2 launch consai_examples start.launch.py game:=true invert:=false vision_port:=10020 gui:=false yellow:=$$CONSAI_YELLOW invert:=$$CONSAI_INVERT
+      ros2 launch consai_examples start.launch.py game:=true invert:=false vision_port:=10020 gui:=false yellow:=${CONSAI_YELLOW} invert:=${CONSAI_INVERT}
       "
     tty: true
     stdin_open: true
