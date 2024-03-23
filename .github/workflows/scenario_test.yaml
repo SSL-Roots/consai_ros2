@@ -23,6 +23,11 @@ permissions:
 
 jobs:
   scenario_test:
+    strategy:
+      matrix:
+        env:
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_DIR: "tests/test_scenario_*.py"}
+
     runs-on: ubuntu-latest
 
     steps:
@@ -74,7 +79,7 @@ jobs:
         chmod +x ssl-log-recorder
 
     - name: Run pytest
-      run: pytest tests/test_scenario_*.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+      run: pytest ${TEST_DIR} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
 
     - name: Get and print logs
       if: always()
