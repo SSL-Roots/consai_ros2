@@ -64,7 +64,7 @@ jobs:
         echo "CONSAI_INVERT=${{ matrix.env.CONSAI_INVERT }}"
 
     - name: Start Docker Compose services
-      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+      run: CONSAI_YELLOW=false docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
