@@ -59,6 +59,9 @@ jobs:
 
     - name: Start Docker Compose services
       run: docker compose -f .docker/consai-grsim-compose.yml up -d
+      env:
+        CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
+        CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
     - name: Wait for game.py to start
       timeout-minutes: 5
@@ -79,7 +82,7 @@ jobs:
         chmod +x ssl-log-recorder
 
     - name: Run pytest
-      run: pytest ${TEST_DIR} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+      run: pytest ${{ matrix.env.TEST_DIR }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
 
     - name: Get and print logs
       if: always()
