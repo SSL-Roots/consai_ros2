@@ -360,157 +360,27 @@ obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
 
 bool FieldInfoParser::parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const
 {
-  double parsed_x, parsed_y;
-  if (!parse_constraint_xy(pose.xy, parsed_x, parsed_y)) {
-    return false;
-  }
-  parsed_x += pose.offset.x;
-  parsed_y += pose.offset.y;
-
-  double parsed_theta;
-  if (!parse_constraint_theta(pose.theta, parsed_x, parsed_y, parsed_theta)) {
-    return false;
-  }
-
-  parsed_theta = tools::normalize_theta(parsed_theta + pose.offset.theta);
-
-  parsed_pose.x = parsed_x;
-  parsed_pose.y = parsed_y;
-  parsed_pose.theta = parsed_theta;
-
-  return true;
+  return constraint_parser_->parse_constraint_pose(pose, parsed_pose);
 }
 
 bool FieldInfoParser::parse_constraint_line(
   const ConstraintLine & line, State & parsed_pose) const
 {
-  State p1, p2;
-  if (!parse_constraint_xy(line.p1, p1.x, p1.y)) {
-    return false;
-  }
-  if (!parse_constraint_xy(line.p2, p2.x, p2.y)) {
-    return false;
-  }
-
-  State p3, p4;
-  bool has_p3_p4 = false;
-  if (line.p3.size() > 0 && line.p4.size() > 0) {
-    if (parse_constraint_xy(line.p3[0], p3.x, p3.y) &&
-      parse_constraint_xy(line.p4[0], p4.x, p4.y))
-    {
-      has_p3_p4 = true;
-    }
-  }
-
-  // 直線p1->p2の座標系を作成
-  auto angle_p1_to_p2 = tools::calc_angle(p1, p2);
-  tools::Trans trans_1to2(p1, angle_p1_to_p2);
-  if (has_p3_p4) {
-    // p1 ~ p4がセットされていれば、
-    // 直線p1->p2上で、直線p3->p4と交わるところを目標位置とする
-    State intersection = tools::intersection(p1, p2, p3, p4);
-    // 交点が取れなければp1を目標位置とする
-    if (!std::isfinite(intersection.x) || !std::isfinite(intersection.y)) {
-      parsed_pose = p1;
-    } else {
-      auto parsed_pose_1to2 = trans_1to2.transform(intersection);
-      auto p2_1to2 = trans_1to2.transform(p2);
-      // 交点が直線p1->p2をはみ出る場合は、p1 or p2に置き換える
-      if (parsed_pose_1to2.x < 0.0) {
-        parsed_pose_1to2.x = 0.0;
-      } else if (parsed_pose_1to2.x > p2_1to2.x) {
-        parsed_pose_1to2.x = p2_1to2.x;
-      }
-      // オフセットを加算する。オフセットによりp1, p2をはみ出ることが可能
-      if (line.offset_intersection_to_p2.size() > 0) {
-        parsed_pose_1to2.x += line.offset_intersection_to_p2[0];
-      }
-      // 座標系をもとに戻す
-      parsed_pose = trans_1to2.inverted_transform(parsed_pose_1to2);
-    }
-  } else {
-    // 直線p1->p2上で、p1からdistanceだけ離れた位置を目標位置する
-    parsed_pose = trans_1to2.inverted_transform(line.distance, 0, 0);
-  }
-
-  if (!parse_constraint_theta(
-      line.theta, parsed_pose.x, parsed_pose.y,
-      parsed_pose.theta))
-  {
-    return false;
-  }
-
-
-  return true;
+  return constraint_parser_->parse_constraint_line(line, parsed_pose);
 }
 
 bool FieldInfoParser::parse_constraint_xy(
   const ConstraintXY & xy, double & parsed_x,
   double & parsed_y) const
 {
-  State object_pose;
-  if (xy.object.size() > 0) {
-    if (parse_constraint_object(xy.object[0], object_pose)) {
-      parsed_x = object_pose.x;
-      parsed_y = object_pose.y;
-    } else {
-      return false;
-    }
-  }
-
-  if (xy.value_x.size() > 0) {
-    parsed_x = xy.value_x[0];
-  }
-
-  if (xy.value_y.size() > 0) {
-    parsed_y = xy.value_y[0];
-  }
-
-  // フィールドサイズに対してx, yが-1 ~ 1に正規化されている
-  if (xy.normalized) {
-    // フィールド情報がなければfalse
-    if (!geometry_) {
-      return false;
-    }
-
-    parsed_x *= geometry_->field.field_length * 0.5 * 0.001;
-    parsed_y *= geometry_->field.field_width * 0.5 * 0.001;
-  }
-  return true;
+  return constraint_parser_->parse_constraint_xy(xy, parsed_x, parsed_y);
 }
 
 bool FieldInfoParser::parse_constraint_theta(
   const ConstraintTheta & theta, const double goal_x,
   const double goal_y, double & parsed_theta) const
 {
-  State object_pose;
-  if (theta.object.size() > 0) {
-    if (parse_constraint_object(theta.object[0], object_pose)) {
-      if (theta.param == ConstraintTheta::PARAM_THETA) {
-        parsed_theta = object_pose.theta;
-        return true;
-      } else if (theta.param == ConstraintTheta::PARAM_LOOK_TO) {
-        State goal_pose;
-        goal_pose.x = goal_x;
-        goal_pose.y = goal_y;
-        parsed_theta = tools::calc_angle(goal_pose, object_pose);
-        return true;
-      } else if (theta.param == ConstraintTheta::PARAM_LOOK_FROM) {
-        State goal_pose;
-        goal_pose.x = goal_x;
-        goal_pose.y = goal_y;
-        parsed_theta = tools::calc_angle(object_pose, goal_pose);
-        return true;
-      }
-    }
-  }
-
-  if (theta.value_theta.size() > 0) {
-    parsed_theta = theta.value_theta[0];
-    return true;
-  }
-
-  return false;
+  return constraint_parser_->parse_constraint_theta(theta, goal_x, goal_y, parsed_theta);
 }
 
 bool FieldInfoParser::parse_constraint_object(
