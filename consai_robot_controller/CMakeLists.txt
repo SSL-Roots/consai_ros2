@@ -35,6 +35,7 @@ add_library(controller_component SHARED
   src/geometry_tools.cpp
   src/control_tools.cpp
   src/visualization_data_handler.cpp
+  src/detection_extractor.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
@@ -108,7 +109,9 @@ if(BUILD_TESTING)
     test/field_info_parser_test.cpp
     src/ball_boy_tactics.cpp
     src/geometry_tools.cpp
-    src/field_info_parser.cpp)
+    src/field_info_parser.cpp
+    src/detection_extractor.cpp
+    )
   ament_target_dependencies(field_info_parser_test
     consai_msgs
     rclcpp

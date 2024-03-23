@@ -51,6 +51,9 @@ FieldInfoParser::FieldInfoParser()
   geometry_->field.goal_width = 1800;
   geometry_->field.goal_depth = 180;
   geometry_->field.boundary_width = 300;
+
+  const auto visibility_threshold = 0.01;
+  detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
 }
 
 void FieldInfoParser::set_invert(const bool & invert)
@@ -66,6 +69,7 @@ void FieldInfoParser::set_team_is_yellow(const bool & team_is_yellow)
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
   detection_tracked_ = detection_tracked;
+  detection_extractor_->set_detection_tracked(detection_tracked);
 }
 
 void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
@@ -99,50 +103,12 @@ bool FieldInfoParser::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
 {
-  // detection_trackedから指定された色とIDのロボット情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  for (const auto & robot : detection_tracked_->robots) {
-    if (robot_id != robot.robot_id.id) {
-      continue;
-    }
-    bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-    bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-    if (!is_yellow && !is_blue) {
-      continue;
-    }
-    // if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
-    //    (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
-    //   continue;
-    // }
-    if (robot.visibility.size() == 0) {
-      return false;
-    }
-    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-      return false;
-    }
-
-    my_robot = robot;
-    break;
-  }
-  return true;
+  return detection_extractor_->extract_robot(robot_id, team_is_yellow, my_robot);
 }
 
 bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
 {
-  // detection_trackedからボール情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  for (const auto & ball : detection_tracked_->balls) {
-    if (ball.visibility.size() == 0) {
-      return false;
-    }
-    if (ball.visibility[0] < VISIBILITY_THRESHOLD) {
-      return false;
-    }
-
-    my_ball = ball;
-    break;
-  }
-  return true;
+  return detection_extractor_->extract_ball(my_ball);
 }
 
 bool FieldInfoParser::parse_goal(

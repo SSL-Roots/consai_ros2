@@ -30,6 +30,7 @@
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/ball_boy_tactics.hpp"
+#include "consai_robot_controller/detection_extractor.hpp"
 #include "consai_robot_controller/obstacle_environment.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
@@ -141,6 +142,7 @@ private:
   bool team_is_yellow_;
   std::map<std::string, State> named_targets_;
   tactics::BallBoyTactics ball_boy_tactics_;
+  std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
 };
 
 }  // namespace consai_robot_controller
