@@ -54,6 +54,8 @@ FieldInfoParser::FieldInfoParser()
 
   const auto visibility_threshold = 0.01;
   detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
+  constraint_parser_ = std::make_shared<parser::ConstraintParser>(
+    detection_extractor_, team_is_yellow_);
 }
 
 void FieldInfoParser::set_invert(const bool & invert)
@@ -89,6 +91,8 @@ void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_r
 
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
+  constraint_parser_->set_named_targets(msg);
+
   // トピックを受け取るたびに初期化する
   named_targets_.clear();
 
@@ -513,45 +517,7 @@ bool FieldInfoParser::parse_constraint_object(
   const ConstraintObject & object,
   State & object_pose) const
 {
-  TrackedBall ball;
-  TrackedRobot robot;
-
-  // NOLINTについて
-  // ament_uncrustifyとament_cpplintが競合するので、lintのチェックをスキップする
-  // Ref: https://github.com/ament/ament_lint/issues/158
-  if (object.type == ConstraintObject::BALL && extract_ball(ball)) {
-    object_pose.x = ball.pos.x;
-    object_pose.y = ball.pos.y;
-    return true;
-  } else if (  // NOLINT
-    (object.type == ConstraintObject::BLUE_ROBOT && extract_robot(object.robot_id, false, robot)) ||
-    (object.type == ConstraintObject::YELLOW_ROBOT &&
-    extract_robot(object.robot_id, true, robot)) ||
-    (object.type == ConstraintObject::OUR_ROBOT &&
-    extract_robot(object.robot_id, team_is_yellow_, robot)) ||
-    (object.type == ConstraintObject::THEIR_ROBOT &&
-    extract_robot(object.robot_id, !team_is_yellow_, robot)))
-  {
-    object_pose.x = robot.pos.x;
-    object_pose.y = robot.pos.y;
-    object_pose.theta = robot.orientation;
-    return true;
-  } else if (object.type == ConstraintObject::NAMED_TARGET &&  // NOLINT
-    named_targets_.find(object.name) != named_targets_.end())
-  {
-    object_pose = named_targets_.at(object.name);
-    return true;
-  } else if (object.type == ConstraintObject::OUR_GOAL) {
-    object_pose.x = -geometry_->field.field_length * 0.5 * 0.001;
-    object_pose.y = 0.0;
-    return true;
-  } else if (object.type == ConstraintObject::THEIR_GOAL) {
-    object_pose.x = geometry_->field.field_length * 0.5 * 0.001;
-    object_pose.y = 0.0;
-    return true;
-  }
-
-  return false;
+  return constraint_parser_->parse_constraint_object(object, object_pose);
 }
 
 bool FieldInfoParser::parse_kick(
