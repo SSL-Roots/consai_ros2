@@ -364,7 +364,7 @@ void Controller::handle_accepted(
     // アクションを完了する
     auto result = std::make_shared<RobotControl::Result>();
     result->success = true;
-    result->message = "Success!";
+    result->message = "Keep control action received.";
     goal_handle->succeed(result);
   } else {
     need_response_[robot_id] = true;
