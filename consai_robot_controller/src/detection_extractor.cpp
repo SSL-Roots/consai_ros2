@@ -33,6 +33,9 @@ bool DetectionExtractor::extract_robot(
   const unsigned int robot_id, const bool team_is_yellow,
   TrackedRobot & my_robot) const
 {
+  if (!detection_tracked_) {
+    return false;
+  }
   // detection_trackedから指定された色とIDのロボット情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   for (const auto & robot : detection_tracked_->robots) {
@@ -62,6 +65,9 @@ bool DetectionExtractor::extract_robot(
 
 bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
 {
+  if (!detection_tracked_) {
+    return false;
+  }
   // detection_trackedからボール情報を抽出する
   // visibilityが低いときは情報が無いと判定する
   for (const auto & ball : detection_tracked_->balls) {
@@ -80,6 +86,10 @@ bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
 
 std::vector<TrackedRobot> DetectionExtractor::extract_robots() const
 {
+  if (!detection_tracked_) {
+    return std::vector<TrackedRobot>();
+  }
+
   std::vector<TrackedRobot> robots;
   for (const auto & robot : detection_tracked_->robots) {
     if (robot.visibility.size() == 0) {
@@ -96,25 +106,27 @@ std::vector<TrackedRobot> DetectionExtractor::extract_robots() const
 
 std::vector<unsigned int> DetectionExtractor::active_robot_id_list(const bool team_is_yellow) const
 {
+  if (!detection_tracked_) {
+    return std::vector<unsigned int>();
+  }
+
   // 存在しているロボットのIDリストを返す
   std::vector<unsigned int> id_list;
-  if (detection_tracked_) {
-    for (const auto & robot : detection_tracked_->robots) {
-      bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-      bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-      if (!is_yellow && !is_blue) {
-        continue;
-      }
-
-      if (robot.visibility.size() == 0) {
-        continue;
-      }
-      if (robot.visibility[0] < visibility_threshold_) {
-        continue;
-      }
-
-      id_list.push_back(robot.robot_id.id);
+  for (const auto & robot : detection_tracked_->robots) {
+    bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
+    bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
+    if (!is_yellow && !is_blue) {
+      continue;
     }
+
+    if (robot.visibility.size() == 0) {
+      continue;
+    }
+    if (robot.visibility[0] < visibility_threshold_) {
+      continue;
+    }
+
+    id_list.push_back(robot.robot_id.id);
   }
   return id_list;
 }

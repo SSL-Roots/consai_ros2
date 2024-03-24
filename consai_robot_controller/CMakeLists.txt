@@ -112,15 +112,12 @@ if(BUILD_TESTING)
     test/control_tools_test.cpp
     src/tools/control_tools.cpp
   )
-  ament_add_gtest(field_info_parser_test
-    test/field_info_parser_test.cpp
+
+  ament_add_gtest(obstacle_observer_test
+    test/obstacle_observer_test.cpp
   )
-  target_link_libraries(field_info_parser_test controller_component)
-  ament_target_dependencies(field_info_parser_test
-    consai_msgs
-    rclcpp
-    robocup_ssl_msgs
-  )
+  target_link_libraries(obstacle_observer_test controller_component)
+
   ament_add_gtest(obstacle_environment_test test/obstacle_environment_test.cpp)
 endif()
 
