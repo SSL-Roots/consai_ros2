@@ -53,7 +53,9 @@ void ConstraintParser::set_named_targets(const NamedTargets::SharedPtr msg)
   }
 }
 
-bool ConstraintParser::parse_constraint_object(const ConstraintObject & object, State & object_pose) const
+bool ConstraintParser::parse_constraint_object(
+  const ConstraintObject & object,
+  State & object_pose) const
 {
   TrackedBall ball;
   TrackedRobot robot;
@@ -66,7 +68,8 @@ bool ConstraintParser::parse_constraint_object(const ConstraintObject & object, 
     object_pose.y = ball.pos.y;
     return true;
   } else if (  // NOLINT
-    (object.type == ConstraintObject::BLUE_ROBOT && detection_->extract_robot(object.robot_id, false, robot)) ||
+    (object.type == ConstraintObject::BLUE_ROBOT &&
+    detection_->extract_robot(object.robot_id, false, robot)) ||
     (object.type == ConstraintObject::YELLOW_ROBOT &&
     detection_->extract_robot(object.robot_id, true, robot)) ||
     (object.type == ConstraintObject::OUR_ROBOT &&

@@ -36,7 +36,7 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class ObstacleAvoidance
 {
- public:
+public:
   explicit ObstacleAvoidance(const std::shared_ptr<DetectionExtractor> & detection_extractor);
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
@@ -54,7 +54,7 @@ class ObstacleAvoidance
     const State & goal_pose, const TrackedBall & ball,
     State & avoidance_pose) const;
 
- private:
+private:
   std::shared_ptr<DetectionExtractor> detection_;
 
   const double field_half_length_ = 6.0;
@@ -62,9 +62,6 @@ class ObstacleAvoidance
   const double field_boundary_width_ = 0.3;
 };
 
+}  // namespace tactic
 
-}
-
-
-
-#endif  // CONSAI_ROBOT_CONTROLLER__TACTION_OBSTACLE_AVOIDANCE_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__TACTIC_OBSTACLE_AVOIDANCE_HPP_

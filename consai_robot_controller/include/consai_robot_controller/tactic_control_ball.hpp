@@ -30,7 +30,7 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class ControlBall
 {
- public:
+public:
   ControlBall() = default;
 
   bool control_ball(
@@ -48,7 +48,7 @@ class ControlBall
     const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
     double & parsed_dribble_power) const;
 
- private:
+private:
   double max_shoot_speed_ = 5.0;  // m/s
   double max_pass_speed_ = 4.0;  // m/s
 };

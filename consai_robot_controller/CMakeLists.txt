@@ -119,7 +119,7 @@ if(BUILD_TESTING)
     src/tactic_control_ball.cpp
     src/tactic_obstacle_avoidance.cpp
     src/obstacle_observer.cpp
-    )
+  )
   ament_target_dependencies(field_info_parser_test
     consai_msgs
     rclcpp

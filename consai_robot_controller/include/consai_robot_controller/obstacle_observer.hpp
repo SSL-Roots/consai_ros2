@@ -30,7 +30,7 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class ObstacleObserver
 {
- public:
+public:
   ObstacleObserver(
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
 
@@ -38,7 +38,7 @@ class ObstacleObserver
     const std::shared_ptr<const RobotControl::Goal> goal,
     const TrackedRobot & my_robot) const;
 
- private:
+private:
   std::shared_ptr<parser::DetectionExtractor> detection_;
 };
 

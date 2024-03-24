@@ -26,7 +26,8 @@ const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
 const double MAX_KICK_POWER_PASS = 4.0;  // m/s
 const double MIN_KICK_POWER_PASS = 2.0;  // m/s
 
-FieldInfoParser::FieldInfoParser(const bool team_is_yellow, const bool invert,
+FieldInfoParser::FieldInfoParser(
+  const bool team_is_yellow, const bool invert,
   const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
 : team_is_yellow_(team_is_yellow), invert_(invert), detection_extractor_(detection_extractor)
 {
@@ -116,7 +117,8 @@ bool FieldInfoParser::parse_goal(
   State target;
   bool result = false;
   if (goal->reflect_shoot &&
-    constraint_parser_->parse_constraint_xy(goal->kick_target, target.x, target.y) ) {
+    constraint_parser_->parse_constraint_xy(goal->kick_target, target.x, target.y) )
+  {
     // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
     result = tactic_control_ball_->reflect_kick(
       target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power,
@@ -144,8 +146,8 @@ bool FieldInfoParser::parse_goal(
   }
 
   if (goal->ball_boy_dribble_enable &&  // NOLINT
-    constraint_parser_->parse_constraint_xy(goal->dribble_target, target.x, target.y)
-    && result == false)
+    constraint_parser_->parse_constraint_xy(goal->dribble_target, target.x, target.y) &&
+    result == false)
   {
     ball_boy_tactics_.update(target, my_robot, ball, parsed_pose, dribble_power);
   }

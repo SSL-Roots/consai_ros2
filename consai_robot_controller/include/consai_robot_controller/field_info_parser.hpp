@@ -51,7 +51,8 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 class FieldInfoParser
 {
 public:
-  FieldInfoParser(const bool team_is_yellow, const bool invert,
+  FieldInfoParser(
+    const bool team_is_yellow, const bool invert,
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);

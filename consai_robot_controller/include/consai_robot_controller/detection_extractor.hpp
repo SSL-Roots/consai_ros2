@@ -32,10 +32,11 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class DetectionExtractor
 {
- public:
+public:
   explicit DetectionExtractor(const double visibility_threshold = 0.01);
 
-  void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked) {
+  void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
+  {
     detection_tracked_ = detection_tracked;
   }
   bool extract_robot(
@@ -45,7 +46,7 @@ class DetectionExtractor
   std::vector<TrackedRobot> extract_robots() const;
   std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
 
- private:
+private:
   double visibility_threshold_ = 0.01;
   std::shared_ptr<TrackedFrame> detection_tracked_;
 };

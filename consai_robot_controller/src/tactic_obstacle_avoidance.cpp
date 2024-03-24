@@ -321,10 +321,10 @@ bool ObstacleAvoidance::avoid_ball_500mm(
         ball_pose, tools::calc_angle(ball_pose, avoidance_pose));
       const auto gain_x =
         std::clamp(
-          (std::fabs(avoidance_pose.x) - field_half_length_) / field_boundary_width_, 0.0, 1.0);
+        (std::fabs(avoidance_pose.x) - field_half_length_) / field_boundary_width_, 0.0, 1.0);
       const auto gain_y =
         std::clamp(
-          (std::fabs(avoidance_pose.y) - field_half_width_) / field_boundary_width_, 0.0, 1.0);
+        (std::fabs(avoidance_pose.y) - field_half_width_) / field_boundary_width_, 0.0, 1.0);
 
       if (gain_x > 0.0) {
         auto add_angle = std::copysign(gain_x * M_PI * 0.5, avoidance_pose.y);

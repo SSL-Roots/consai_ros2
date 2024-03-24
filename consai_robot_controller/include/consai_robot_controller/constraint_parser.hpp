@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__CONTRAINT_PARSER_HPP_
-#define CONSAI_ROBOT_CONTROLLER__CONTRAINT_PARSER_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__CONSTRAINT_PARSER_HPP_
+#define CONSAI_ROBOT_CONTROLLER__CONSTRAINT_PARSER_HPP_
 
 #include <map>
 #include <memory>
@@ -46,7 +46,7 @@ using DetectionExtractor = parser::DetectionExtractor;
 
 class ConstraintParser
 {
- public:
+public:
   explicit ConstraintParser(
     const std::shared_ptr<DetectionExtractor> & detection_extractor,
     const bool team_is_yellow);
@@ -60,7 +60,7 @@ class ConstraintParser
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
   bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
 
- private:
+private:
   std::shared_ptr<DetectionExtractor> detection_;
   std::map<std::string, State> named_targets_;
 
@@ -72,4 +72,4 @@ class ConstraintParser
 }  // namespace parser
 
 
-#endif  // CONSAI_ROBOT_CONTROLLER__CONTRAINT_PARSER_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__CONSTRAINT_PARSER_HPP_
