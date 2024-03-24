@@ -25,7 +25,7 @@
 #include "consai_robot_controller/ball_boy_tactics.hpp"
 #include "consai_robot_controller/constraint_parser.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
+#include "consai_robot_controller/obstacle/obstacle_environment.hpp"
 #include "consai_robot_controller/tactic_control_ball.hpp"
 #include "consai_robot_controller/tactic_obstacle_avoidance.hpp"
 #include "rclcpp/rclcpp.hpp"

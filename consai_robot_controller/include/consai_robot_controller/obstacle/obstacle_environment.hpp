@@ -17,9 +17,9 @@
 
 #include <vector>
 
-#include "obstacle_robot.hpp"
-#include "obstacle_ball.hpp"
-#include "prohibited_area.hpp"
+#include "consai_robot_controller/obstacle/obstacle_robot.hpp"
+#include "consai_robot_controller/obstacle/obstacle_ball.hpp"
+#include "consai_robot_controller/obstacle/prohibited_area.hpp"
 
 namespace obstacle
 {

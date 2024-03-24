@@ -16,7 +16,8 @@
 #define CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
 
 #include <memory>
-#include "obstacle_typedef.hpp"
+
+#include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
 
 namespace obstacle
 {

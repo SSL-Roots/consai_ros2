@@ -31,7 +31,7 @@
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
-#include "consai_robot_controller/obstacle_observer.hpp"
+#include "consai_robot_controller/obstacle/obstacle_observer.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"

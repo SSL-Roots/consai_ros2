@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "consai_robot_controller/obstacle_observer.hpp"
-#include "consai_robot_controller/obstacle_ball.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
-#include "consai_robot_controller/obstacle_robot.hpp"
-#include "consai_robot_controller/obstacle_typedef.hpp"
-#include "consai_robot_controller/prohibited_area.hpp"
+#include "consai_robot_controller/obstacle/obstacle_observer.hpp"
+#include "consai_robot_controller/obstacle/obstacle_ball.hpp"
+#include "consai_robot_controller/obstacle/obstacle_environment.hpp"
+#include "consai_robot_controller/obstacle/obstacle_robot.hpp"
+#include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
+#include "consai_robot_controller/obstacle/prohibited_area.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 
 namespace obstacle

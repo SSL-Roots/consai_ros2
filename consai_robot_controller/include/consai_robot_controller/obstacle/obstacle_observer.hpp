@@ -18,8 +18,8 @@
 #include <memory>
 
 #include "consai_msgs/action/robot_control.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
+#include "consai_robot_controller/obstacle/obstacle_environment.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 namespace obstacle

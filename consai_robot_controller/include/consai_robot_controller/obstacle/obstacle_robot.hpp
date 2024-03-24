@@ -15,7 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
 #define CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
 
-#include "obstacle_typedef.hpp"
+#include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
 
 namespace obstacle
 {
