@@ -61,33 +61,11 @@ void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
   constraint_parser_->set_named_targets(msg);
 }
 
-bool FieldInfoParser::parse_goal(
-  const std::shared_ptr<const RobotControl::Goal> goal,
-  State & parsed_pose) const
+bool FieldInfoParser::is_parsable(
+  const std::shared_ptr<const RobotControl::Goal> goal) const
 {
-  // RobotControlのgoalを解析し、目標姿勢を出力する
-  // 解析に失敗したらfalseを返す
-  // ここではキック処理や、レシーブ処理をしない
-
-  // 目標姿勢を算出
   State target_pose;
-  bool parse_succeeded = false;
-  if (goal->pose.size() > 0) {
-    if (constraint_parser_->parse_constraint_pose(goal->pose[0], target_pose)) {
-      parse_succeeded = true;
-    }
-  }
-  if (goal->line.size() > 0) {
-    if (constraint_parser_->parse_constraint_line(goal->line[0], target_pose)) {
-      parse_succeeded = true;
-    }
-  }
-
-  if (parse_succeeded == false) {
-    return false;
-  }
-  parsed_pose = target_pose;
-  return true;
+  return parse_constraints(goal, target_pose);
 }
 
 bool FieldInfoParser::parse_goal(
@@ -100,7 +78,7 @@ bool FieldInfoParser::parse_goal(
   // 衝突回避やキック、レシーブの処理も実施する
 
   // 目標姿勢を算出
-  if (!parse_goal(goal, parsed_pose)) {
+  if (!parse_constraints(goal, parsed_pose)) {
     return false;
   }
 
@@ -226,6 +204,22 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   return avoidance_pose;
+}
+
+bool FieldInfoParser::parse_constraints(
+  const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const
+{
+  if (goal->pose.size() > 0) {
+    if (constraint_parser_->parse_constraint_pose(goal->pose[0], parsed_pose)) {
+      return true;
+    }
+  }
+  if (goal->line.size() > 0) {
+    if (constraint_parser_->parse_constraint_line(goal->line[0], parsed_pose)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool FieldInfoParser::parse_kick(

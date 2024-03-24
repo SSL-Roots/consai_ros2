@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__TACTIC_CONTROL_BALL_HPP_
-#define CONSAI_ROBOT_CONTROLLER__TACTIC_CONTROL_BALL_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__TACTIC__TACTIC_CONTROL_BALL_HPP_
+#define CONSAI_ROBOT_CONTROLLER__TACTIC__TACTIC_CONTROL_BALL_HPP_
 
 #include "consai_msgs/msg/state2_d.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
@@ -55,4 +55,4 @@ private:
 
 }  // namespace tactic
 
-#endif  // CONSAI_ROBOT_CONTROLLER__TACTIC_CONTROL_BALL_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__TACTIC__TACTIC_CONTROL_BALL_HPP_

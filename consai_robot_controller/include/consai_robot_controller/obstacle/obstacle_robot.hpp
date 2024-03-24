@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
-#define CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE__OBSTACLE_ROBOT_HPP_
+#define CONSAI_ROBOT_CONTROLLER__OBSTACLE__OBSTACLE_ROBOT_HPP_
 
 #include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
 
@@ -45,4 +45,4 @@ private:
 
 }  // namespace obstacle
 
-#endif  // CONSAI_ROBOT_CONTROLLER__OBSTACLE_ROBOT_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__OBSTACLE__OBSTACLE_ROBOT_HPP_

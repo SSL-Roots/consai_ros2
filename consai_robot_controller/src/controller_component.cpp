@@ -330,8 +330,7 @@ rclcpp_action::GoalResponse Controller::handle_goal(
   }
 
   // 目標値の解析に失敗したらReject
-  State goal_pose;
-  if (!parser_->parse_goal(goal, goal_pose)) {
+  if (!parser_->is_parsable(goal)) {
     return rclcpp_action::GoalResponse::REJECT;
   }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;

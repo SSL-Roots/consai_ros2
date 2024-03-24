@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__CONTROL_TOOLS_HPP_
-#define CONSAI_ROBOT_CONTROLLER__CONTROL_TOOLS_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__TOOLS__CONTROL_TOOLS_HPP_
+#define CONSAI_ROBOT_CONTROLLER__TOOLS__CONTROL_TOOLS_HPP_
 
 #include <complex>
 #include <algorithm>
@@ -26,4 +26,4 @@ double angular_velocity_contol_sin(const double diff, const double max_vel);
 
 }  // namespace control_tools
 
-#endif  // CONSAI_ROBOT_CONTROLLER__CONTROL_TOOLS_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__TOOLS__CONTROL_TOOLS_HPP_

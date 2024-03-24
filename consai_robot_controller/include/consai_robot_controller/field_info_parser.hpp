@@ -59,7 +59,7 @@ public:
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);
-  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
+  bool is_parsable(const std::shared_ptr<const RobotControl::Goal> goal) const;
   bool parse_goal(
     const std::shared_ptr<const RobotControl::Goal> goal,
     const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
@@ -70,6 +70,8 @@ public:
     const State & goal_pose, const State & final_goal_pose) const;
 
 private:
+  bool parse_constraints(
+    const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
   bool parse_kick(
     const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const bool & kick_pass, const bool & kick_setplay,
