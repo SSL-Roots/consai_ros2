@@ -15,17 +15,10 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 #define CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "consai_msgs/action/robot_control.hpp"
-#include "consai_msgs/msg/constraint_line.hpp"
-#include "consai_msgs/msg/constraint_object.hpp"
-#include "consai_msgs/msg/constraint_pose.hpp"
-#include "consai_msgs/msg/constraint_theta.hpp"
-#include "consai_msgs/msg/constraint_xy.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
@@ -46,11 +39,6 @@ namespace consai_robot_controller
 {
 
 using RobotControl = consai_msgs::action::RobotControl;
-using ConstraintLine = consai_msgs::msg::ConstraintLine;
-using ConstraintObject = consai_msgs::msg::ConstraintObject;
-using ConstraintPose = consai_msgs::msg::ConstraintPose;
-using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
-using ConstraintXY = consai_msgs::msg::ConstraintXY;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
@@ -88,23 +76,13 @@ private:
   bool parse_dribble(
     const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
-  bool control_ball(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const double & dribble_distance, State & parsed_pose, bool & need_kick,
-    bool & need_dribble) const;
-  bool control_ball_at_setplay(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, bool & need_kick, bool & need_dribble) const;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
 
-  std::shared_ptr<TrackedFrame> detection_tracked_;
-  std::shared_ptr<GeometryData> geometry_;
   std::shared_ptr<Referee> referee_;
   std::shared_ptr<ParsedReferee> parsed_referee_;
-  std::map<std::string, State> named_targets_;
   tactics::BallBoyTactics ball_boy_tactics_;
   std::shared_ptr<parser::ConstraintParser> constraint_parser_;
   std::shared_ptr<tactic::ControlBall> tactic_control_ball_;

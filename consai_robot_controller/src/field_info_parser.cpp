@@ -12,29 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <memory>
-#include <vector>
 
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/geometry_tools.hpp"
-#include "consai_robot_controller/obstacle_ball.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
-#include "consai_robot_controller/obstacle_robot.hpp"
-#include "consai_robot_controller/obstacle_typedef.hpp"
-#include "consai_robot_controller/prohibited_area.hpp"
-#include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 namespace consai_robot_controller
 {
 
-using ObstArea = obstacle::ProhibitedArea;
-using ObstBall = obstacle::ObstacleBall;
-using ObstEnv = obstacle::ObstacleEnvironment;
-using ObstPos = obstacle::Position;
-using ObstRadius = obstacle::Radius;
-using ObstRobot = obstacle::ObstacleRobot;
-using RobotId = robocup_ssl_msgs::msg::RobotId;
 namespace tools = geometry_tools;
 const double VISIBILITY_THRESHOLD = 0.01;
 const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
@@ -45,14 +30,6 @@ FieldInfoParser::FieldInfoParser(const bool team_is_yellow, const bool invert,
   const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
 : team_is_yellow_(team_is_yellow), invert_(invert), detection_extractor_(detection_extractor)
 {
-  // 不正な値を参照しないように、フィールド情報の初期値をセットする
-  geometry_ = std::make_shared<GeometryData>();
-  geometry_->field.field_length = 12000;
-  geometry_->field.field_width = 9000;
-  geometry_->field.goal_width = 1800;
-  geometry_->field.goal_depth = 180;
-  geometry_->field.boundary_width = 300;
-
   constraint_parser_ = std::make_shared<parser::ConstraintParser>(
     detection_extractor_, team_is_yellow_);
   tactic_control_ball_ = std::make_shared<tactic::ControlBall>();
@@ -61,13 +38,11 @@ FieldInfoParser::FieldInfoParser(const bool team_is_yellow, const bool invert,
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
-  detection_tracked_ = detection_tracked;
   detection_extractor_->set_detection_tracked(detection_tracked);
 }
 
 void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
 {
-  geometry_ = geometry;
 }
 
 void FieldInfoParser::set_referee(const Referee::SharedPtr referee)
@@ -83,15 +58,6 @@ void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_r
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
   constraint_parser_->set_named_targets(msg);
-
-  // トピックを受け取るたびに初期化する
-  named_targets_.clear();
-
-  for (std::size_t i = 0; i < msg->name.size(); ++i) {
-    auto name = msg->name[i];
-    auto pose = msg->pose[i];
-    named_targets_[name] = pose;
-  }
 }
 
 bool FieldInfoParser::parse_goal(
