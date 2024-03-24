@@ -78,4 +78,20 @@ bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
   return true;
 }
 
+std::vector<TrackedRobot> DetectionExtractor::extract_robots() const
+{
+  std::vector<TrackedRobot> robots;
+  for (const auto & robot : detection_tracked_->robots) {
+    if (robot.visibility.size() == 0) {
+      continue;
+    }
+    if (robot.visibility[0] < visibility_threshold_) {
+      continue;
+    }
+
+    robots.push_back(robot);
+  }
+  return robots;
+}
+
 }  // namespace parser

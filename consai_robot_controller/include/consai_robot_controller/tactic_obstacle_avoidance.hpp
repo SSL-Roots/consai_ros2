@@ -12,44 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__DETECTION_EXTRACTOR_HPP_
-#define CONSAI_ROBOT_CONTROLLER__DETECTION_EXTRACTOR_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__TACTIC_OBSTACLE_AVOIDANCE_HPP_
+#define CONSAI_ROBOT_CONTROLLER__TACTIC_OBSTACLE_AVOIDANCE_HPP_
 
 #include <memory>
-#include <vector>
 
+#include "consai_msgs/msg/state2_d.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
+#include "consai_robot_controller/detection_extractor.hpp"
 
-namespace parser
+namespace tactic
 {
 
+using DetectionExtractor = parser::DetectionExtractor;
+
+using State = consai_msgs::msg::State2D;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
-class DetectionExtractor
+class ObstacleAvoidance
 {
  public:
-  explicit DetectionExtractor(const double visibility_threshold = 0.01);
-
-  void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked) {
-    detection_tracked_ = detection_tracked;
-  }
-  bool extract_robot(
-    const unsigned int robot_id, const bool team_is_yellow,
-    TrackedRobot & my_robot) const;
-  bool extract_ball(TrackedBall & my_ball) const;
-  std::vector<TrackedRobot> extract_robots() const;
+  explicit ObstacleAvoidance(const std::shared_ptr<DetectionExtractor> & detection_extractor);
+  bool avoid_obstacles(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool & avoid_ball, State & avoidance_pose) const;
 
  private:
-  double visibility_threshold_ = 0.01;
-  std::shared_ptr<TrackedFrame> detection_tracked_;
+  std::shared_ptr<DetectionExtractor> detection_;
 };
 
-}  // namespace parser
+
+}
 
 
-#endif  // CONSAI_ROBOT_CONTROLLER__DETECTION_EXTRACTOR_HPP_
+
+#endif  // CONSAI_ROBOT_CONTROLLER__TACTION_OBSTACLE_AVOIDANCE_HPP_
