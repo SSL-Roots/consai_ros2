@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
-#define CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
+#ifndef CONSAI_ROBOT_CONTROLLER__OBSTACLE__PROHIBITED_AREA_HPP_
+#define CONSAI_ROBOT_CONTROLLER__OBSTACLE__PROHIBITED_AREA_HPP_
 
 #include <memory>
-#include "obstacle_typedef.hpp"
+
+#include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
 
 namespace obstacle
 {
@@ -77,4 +78,4 @@ private:
 
 }  // namespace obstacle
 
-#endif  // CONSAI_ROBOT_CONTROLLER__PROHIBITED_AREA_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__OBSTACLE__PROHIBITED_AREA_HPP_
