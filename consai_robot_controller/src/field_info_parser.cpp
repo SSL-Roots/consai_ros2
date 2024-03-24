@@ -15,16 +15,9 @@
 #include <memory>
 
 #include "consai_robot_controller/field_info_parser.hpp"
-#include "consai_robot_controller/tools/geometry_tools.hpp"
 
 namespace consai_robot_controller
 {
-
-namespace tools = geometry_tools;
-const double VISIBILITY_THRESHOLD = 0.01;
-const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
-const double MAX_KICK_POWER_PASS = 4.0;  // m/s
-const double MIN_KICK_POWER_PASS = 2.0;  // m/s
 
 FieldInfoParser::FieldInfoParser(
   const bool team_is_yellow, const bool invert,
@@ -92,42 +85,55 @@ bool FieldInfoParser::parse_goal(
     return true;
   }
 
-  State target;
-  bool result = false;
-  if (goal->reflect_shoot &&
-    constraint_parser_->parse_constraint_xy(goal->kick_target, target.x, target.y) )
-  {
+  State kick_target;
+  State dribble_target;
+  const auto has_kick_target = constraint_parser_->parse_constraint_xy(
+    goal->kick_target, kick_target.x, kick_target.y);
+  const auto has_dribble_target = constraint_parser_->parse_constraint_xy(
+    goal->dribble_target, dribble_target.x, dribble_target.y);
+
+  if (goal->reflect_shoot && has_kick_target) {
     // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
-    result = tactic_control_ball_->reflect_kick(
-      target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power,
-      dribble_power);
-  }
-
-  if (goal->receive_ball && result == false) {
-    // 転がっているボールを受け取る
-    result = tactic_control_ball_->receive_ball(my_robot, ball, parsed_pose, dribble_power);
-  }
-
-  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7 && result == false) {
-    // 目標姿勢とボールが近ければ、ボールを操作する
-    if (goal->kick_enable &&
-      constraint_parser_->parse_constraint_xy(goal->kick_target, target.x, target.y))
+    if (tactic_control_ball_->reflect_kick(
+        kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power))
     {
-      parse_kick(
-        target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose,
-        kick_power, dribble_power);
-    } else if (goal->dribble_enable &&  // NOLINT
-      constraint_parser_->parse_constraint_xy(goal->dribble_target, target.x, target.y))
-    {
-      parse_dribble(target, my_robot, ball, parsed_pose, dribble_power);
+      return true;
     }
   }
 
-  if (goal->ball_boy_dribble_enable &&  // NOLINT
-    constraint_parser_->parse_constraint_xy(goal->dribble_target, target.x, target.y) &&
-    result == false)
-  {
-    ball_boy_tactics_.update(target, my_robot, ball, parsed_pose, dribble_power);
+  if (goal->receive_ball) {
+    // 転がっているボールを受け取る
+    if (tactic_control_ball_->receive_ball(my_robot, ball, parsed_pose, dribble_power)) {
+      return true;
+    }
+  }
+
+  if (goal->kick_enable && has_kick_target) {
+    if (goal->kick_setplay) {
+      if (tactic_control_ball_->kick_ball_at_setplay(
+          kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power))
+      {
+        return true;
+      }
+    }
+
+    if (tactic_control_ball_->kick_ball(
+        kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power))
+    {
+      return true;
+    }
+  }
+
+  if (goal->dribble_enable && has_dribble_target) {
+    if (tactic_control_ball_->dribble_ball(
+        dribble_target, my_robot, ball, parsed_pose, dribble_power))
+    {
+      return true;
+    }
+  }
+
+  if (goal->ball_boy_dribble_enable && has_dribble_target) {
+    ball_boy_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
   }
 
   return true;
@@ -220,74 +226,6 @@ bool FieldInfoParser::parse_constraints(
     }
   }
   return false;
-}
-
-bool FieldInfoParser::parse_kick(
-  const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  const bool & kick_pass, const bool & kick_setplay,
-  State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const
-{
-  const double DRIBBLE_DISTANCE = 0.0;
-  const double DRIBBLE_POWER = 1.0;
-  bool need_kick = false;
-  bool need_dribble = false;
-
-  auto robot_pose = tools::pose_state(my_robot);
-  double distance = tools::distance(robot_pose, kick_target);
-
-  // パス速度を設定
-  double kick_power_pass = MAX_KICK_POWER_PASS;
-  if (distance < 1.0) {
-    kick_power_pass = MIN_KICK_POWER_PASS;
-  } else {
-    // 2.0m離れてたら 2.0 m/sでける
-    kick_power_pass = std::min(distance, MAX_KICK_POWER_PASS);
-  }
-
-  if (kick_setplay) {
-    tactic_control_ball_->control_ball_at_setplay(
-      kick_target, my_robot, ball, parsed_pose, need_kick, need_dribble);
-  } else {
-    tactic_control_ball_->control_ball(
-      kick_target, my_robot, ball, DRIBBLE_DISTANCE, parsed_pose, need_kick, need_dribble);
-  }
-
-  if (need_dribble) {
-    parsed_dribble_power = DRIBBLE_POWER;
-  } else {
-    parsed_dribble_power = 0.0;
-  }
-
-  if (need_kick) {
-    if (kick_pass) {
-      parsed_kick_power = kick_power_pass;
-    } else {
-      parsed_kick_power = MAX_KICK_POWER_SHOOT;
-    }
-  } else {
-    parsed_kick_power = 0.0;
-  }
-  return true;
-}
-
-bool FieldInfoParser::parse_dribble(
-  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  State & parsed_pose, double & parsed_dribble_power) const
-{
-  const double DRIBBLE_DISTANCE = 0.15;
-  const double DRIBBLE_POWER = 1.0;
-  bool need_kick = false;
-  bool need_dribble = false;
-
-  tactic_control_ball_->control_ball(
-    dribble_target, my_robot, ball, DRIBBLE_DISTANCE, parsed_pose, need_kick, need_dribble);
-
-  if (need_dribble) {
-    parsed_dribble_power = DRIBBLE_POWER;
-  } else {
-    parsed_dribble_power = 0.0;
-  }
-  return true;
 }
 
 

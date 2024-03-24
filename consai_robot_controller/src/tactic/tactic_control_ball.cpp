@@ -21,70 +21,50 @@ namespace tactic
 
 namespace tools = geometry_tools;
 
-bool ControlBall::control_ball(
+bool ControlBall::kick_ball(
   const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  const double & dribble_distance, State & parsed_pose, bool & need_kick, bool & need_dribble) const
+  const bool is_pass, State & parsed_pose,
+  double & parsed_kick_power, double & parsed_dribble_power) const
 {
-  // ボールを操作する関数
-  // キック、パス、ドリブルの操作が可能
-
-  // 変数の初期化
-  need_kick = false;
-  need_dribble = false;
-
-  auto ball_pose = tools::pose_state(ball);
-  auto robot_pose = tools::pose_state(my_robot);
-
-  // ボールの半径
-  const double BALL_RADIUS = 0.043 * 0.5;
-  // ロボットの半径
-  const double ROBOT_RADIUS = 0.180 * 0.5;
-  const double MAX_X = BALL_RADIUS + 0.2;
-  const double MAX_Y = BALL_RADIUS + 0.2;
-
-  // // ボールからターゲットを見た座標系を生成
-  auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
-  tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
-  auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
-
-  // ロボットから見たボールまでの角度を算出
-  auto angle_robot_to_ball_BtoT =
-    tools::calc_angle(robot_pose_BtoT, trans_BtoT.transform(ball_pose));
-
-  // ボールより前方にロボットが存在する場合
-  if (0.0 < robot_pose_BtoT.x) {
-    // ボールの斜め後ろに目標座標を設定
-    parsed_pose = trans_BtoT.inverted_transform(
-      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), angle_robot_to_ball_BtoT);
-  } else if (BALL_RADIUS < std::fabs(robot_pose_BtoT.y)) {
-    // ボールの後ろにロボットが存在しない場合
-    // ボールの後ろに目標座標を設定
-    //   角度はボールの方向を向く
-    parsed_pose = trans_BtoT.inverted_transform(-MAX_X, 0.0, angle_robot_to_ball_BtoT);
-  } else {
-    // ボールの後ろにロボットが存在する場合
-    // ドリブルON
-    need_dribble = true;
-    // ボールのすぐ後ろに目標座標を設定
-    parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
-    if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(3.0)) {
-      // ロボットが目標座標の方向を向いている場合
-      // ドリブルON
-      need_kick = true;
-    }
+  if (!can_control_ball(ball, parsed_pose)) {
+    return false;
   }
-  return true;
+
+  const double DRIBBLE_DISTANCE = 0.0;  // TODO(ShotaAk): 位置を使わずに前進速度を決めたい
+  return control_ball(
+    target, my_robot, ball, DRIBBLE_DISTANCE, is_pass,
+    parsed_pose, parsed_kick_power, parsed_dribble_power);
 }
 
-bool ControlBall::control_ball_at_setplay(
+bool ControlBall::dribble_ball(
   const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  State & parsed_pose, bool & need_kick, bool & need_dribble) const
+  State & parsed_pose, double & parsed_dribble_power) const
+{
+  if (!can_control_ball(ball, parsed_pose)) {
+    return false;
+  }
+
+  const double DRIBBLE_DISTANCE = 0.15;  // TODO(ShotaAk): 位置を使わずに前進速度を決めたい
+  const bool is_pass = false;
+  double parsed_kick_power = 0.0;
+  return control_ball(
+    target, my_robot, ball, DRIBBLE_DISTANCE, is_pass,
+    parsed_pose, parsed_kick_power, parsed_dribble_power);
+}
+
+bool ControlBall::kick_ball_at_setplay(
+  const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  const bool is_pass, State & parsed_pose,
+  double & parsed_kick_power, double & parsed_dribble_power) const
 {
   // セットプレイ用の落ち着いたキックを実施
+  if (!can_control_ball(ball, parsed_pose)) {
+    return false;
+  }
 
   // 変数の初期化
-  need_kick = false;
-  need_dribble = false;
+  parsed_kick_power = 0.0;
+  parsed_dribble_power = 0.0;
 
   auto ball_pose = tools::pose_state(ball);
   auto robot_pose = tools::pose_state(my_robot);
@@ -99,7 +79,7 @@ bool ControlBall::control_ball_at_setplay(
 
   if (can_kick) {
     parsed_pose = trans_BtoT.inverted_transform(0.02, 0.0, 0.0);
-    need_kick = true;
+    parsed_kick_power = kick_speed(is_pass, my_robot, target);
   } else {
     parsed_pose = trans_BtoT.inverted_transform(-0.3, 0.0, 0.0);
   }
@@ -111,7 +91,6 @@ bool ControlBall::receive_ball(
   State & parsed_pose, double & parsed_dribble_power) const
 {
   // 転がっているボールを受け取る
-  const double DRIBBLE_POWER = 1.0;
 
   // ボール情報に速度情報がなければ終了
   if (ball.vel.size() == 0) {
@@ -142,7 +121,7 @@ bool ControlBall::receive_ball(
   robot_pose_BtoV.y = 0.0;
   robot_pose_BtoV.theta = M_PI;
   parsed_pose = trans_BtoV.inverted_transform(robot_pose_BtoV);
-  parsed_dribble_power = DRIBBLE_POWER;
+  parsed_dribble_power = max_dribble_power_;
 
   return true;
 }
@@ -225,6 +204,89 @@ bool ControlBall::reflect_kick(
   }
 
   return true;
+}
+
+bool ControlBall::can_control_ball(const TrackedBall & ball, const State & parsed_pose) const
+{
+  const auto ball_pose = tools::pose_state(ball);
+  if (tools::distance(ball_pose, parsed_pose) < can_control_distance_) {
+    return true;
+  }
+  return false;
+}
+
+bool ControlBall::control_ball(
+  const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+  const double & dribble_distance, const bool is_pass,
+  State & parsed_pose,
+  double & parsed_kick_power, double & parsed_dribble_power) const
+{
+  // ボールを操作する関数
+  // キック、パス、ドリブルの操作が可能
+
+  // 変数の初期化
+  parsed_dribble_power = 0.0;
+  parsed_kick_power = 0.0;
+
+  auto ball_pose = tools::pose_state(ball);
+  auto robot_pose = tools::pose_state(my_robot);
+
+  // ボールの半径
+  const double BALL_RADIUS = 0.043 * 0.5;
+  // ロボットの半径
+  const double ROBOT_RADIUS = 0.180 * 0.5;
+  const double MAX_X = BALL_RADIUS + 0.2;
+  const double MAX_Y = BALL_RADIUS + 0.2;
+
+  // // ボールからターゲットを見た座標系を生成
+  auto angle_ball_to_target = tools::calc_angle(ball_pose, target);
+  tools::Trans trans_BtoT(ball_pose, angle_ball_to_target);
+  auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
+
+  // ロボットから見たボールまでの角度を算出
+  auto angle_robot_to_ball_BtoT =
+    tools::calc_angle(robot_pose_BtoT, trans_BtoT.transform(ball_pose));
+
+  // ボールより前方にロボットが存在する場合
+  if (0.0 < robot_pose_BtoT.x) {
+    // ボールの斜め後ろに目標座標を設定
+    parsed_pose = trans_BtoT.inverted_transform(
+      -MAX_X, std::copysign(MAX_Y, robot_pose_BtoT.y), angle_robot_to_ball_BtoT);
+  } else if (BALL_RADIUS < std::fabs(robot_pose_BtoT.y)) {
+    // ボールの後ろにロボットが存在しない場合
+    // ボールの後ろに目標座標を設定
+    //   角度はボールの方向を向く
+    parsed_pose = trans_BtoT.inverted_transform(-MAX_X, 0.0, angle_robot_to_ball_BtoT);
+  } else {
+    // ボールの後ろにロボットが存在する場合
+    // ドリブルON
+    parsed_dribble_power = max_dribble_power_;
+    // ボールのすぐ後ろに目標座標を設定
+    parsed_pose = trans_BtoT.inverted_transform(-BALL_RADIUS, 0.0, 0.0);
+    if (std::fabs(angle_robot_to_ball_BtoT) < tools::to_radians(3.0)) {
+      // ロボットが目標座標の方向を向いている場合
+      parsed_kick_power = kick_speed(is_pass, my_robot, target);
+    }
+  }
+  return true;
+}
+
+
+double ControlBall::kick_speed(
+  const bool is_pass, const TrackedRobot & my_robot, const State & target) const
+{
+  const double MIN_PASS_DISTANCE = 1.0;  // meters
+  if (!is_pass) {
+    return max_shoot_speed_;
+  }
+
+  const auto robot_pose = tools::pose_state(my_robot);
+  const double distance = tools::distance(robot_pose, target);
+  if (distance < MIN_PASS_DISTANCE) {
+    return min_pass_speed_;
+  }
+
+  return std::min(distance, max_pass_speed_);
 }
 
 

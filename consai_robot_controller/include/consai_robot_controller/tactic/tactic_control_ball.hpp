@@ -33,13 +33,17 @@ class ControlBall
 public:
   ControlBall() = default;
 
-  bool control_ball(
+  bool kick_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const double & dribble_distance, State & parsed_pose, bool & need_kick,
-    bool & need_dribble) const;
-  bool control_ball_at_setplay(
+    const bool is_pass, State & parsed_pose,
+    double & parsed_kick_power, double & parsed_dribble_power) const;
+  bool dribble_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, bool & need_kick, bool & need_dribble) const;
+    State & parsed_pose, double & parsed_dribble_power) const;
+  bool kick_ball_at_setplay(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const bool is_pass, State & parsed_pose,
+    double & parsed_kick_power, double & parsed_dribble_power) const;
   bool receive_ball(
     const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, double & parsed_dribble_power) const;
@@ -49,8 +53,20 @@ public:
     double & parsed_dribble_power) const;
 
 private:
+  bool can_control_ball(const TrackedBall & ball, const State & parsed_pose) const;
+  bool control_ball(
+    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
+    const double & dribble_distance, const bool is_pass, State & parsed_pose,
+    double & parsed_kick_power, double & parsed_dribble_power) const;
+  double kick_speed(const bool is_pass, const TrackedRobot & my_robot, const State & target) const;
+
+  double can_control_distance_ = 0.7;  // m
+
   double max_shoot_speed_ = 5.0;  // m/s
   double max_pass_speed_ = 4.0;  // m/s
+  double min_pass_speed_ = 2.0;  // m/s
+
+  double max_dribble_power_ = 1.0;
 };
 
 }  // namespace tactic

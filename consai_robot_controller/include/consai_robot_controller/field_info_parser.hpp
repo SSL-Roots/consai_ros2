@@ -72,13 +72,6 @@ public:
 private:
   bool parse_constraints(
     const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
-  bool parse_kick(
-    const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass, const bool & kick_setplay,
-    State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
-  bool parse_dribble(
-    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;
