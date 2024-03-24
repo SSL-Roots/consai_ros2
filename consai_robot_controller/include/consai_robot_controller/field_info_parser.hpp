@@ -85,13 +85,6 @@ public:
     const TrackedRobot & my_robot) const;
 
 private:
-  bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
-  bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
-  bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
-  bool parse_constraint_theta(
-    const ConstraintTheta & theta, const double goal_x,
-    const double goal_y, double & parsed_theta) const;
-  bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
   bool parse_kick(
     const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const bool & kick_pass, const bool & kick_setplay,
@@ -109,28 +102,6 @@ private:
   bool control_ball_at_setplay(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
     State & parsed_pose, bool & need_kick, bool & need_dribble) const;
-  bool receive_ball(
-    const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const;
-  bool reflect_kick(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
-    double & parsed_dribble_power) const;
-  bool avoid_obstacles(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const bool & avoid_ball, State & avoidance_pose) const;
-  bool avoid_placement_area(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const bool avoid_kick_receive_area,
-    const State & designated_position, State & avoidance_pose) const;
-  bool avoid_robots(
-    const TrackedRobot & my_robot, const State & goal_pose,
-    State & avoidance_pose) const;
-  bool avoid_ball_500mm(
-    const TrackedRobot & my_robot,
-    const State & final_goal_pose,
-    const State & goal_pose, const TrackedBall & ball,
-    State & avoidance_pose) const;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;

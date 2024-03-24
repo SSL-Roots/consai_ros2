@@ -41,9 +41,25 @@ class ObstacleAvoidance
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const bool & avoid_ball, State & avoidance_pose) const;
+  bool avoid_placement_area(
+    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+    const bool avoid_kick_receive_area,
+    const State & designated_position, State & avoidance_pose) const;
+  bool avoid_robots(
+    const TrackedRobot & my_robot, const State & goal_pose,
+    State & avoidance_pose) const;
+  bool avoid_ball_500mm(
+    const TrackedRobot & my_robot,
+    const State & final_goal_pose,
+    const State & goal_pose, const TrackedBall & ball,
+    State & avoidance_pose) const;
 
  private:
   std::shared_ptr<DetectionExtractor> detection_;
+
+  const double field_half_length_ = 6.0;
+  const double field_half_width_ = 4.5;
+  const double field_boundary_width_ = 0.3;
 };
 
 
