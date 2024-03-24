@@ -39,6 +39,7 @@ add_library(controller_component SHARED
   src/constraint_parser.cpp
   src/tactic_control_ball.cpp
   src/tactic_obstacle_avoidance.cpp
+  src/obstacle_observer.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
@@ -117,6 +118,7 @@ if(BUILD_TESTING)
     src/constraint_parser.cpp
     src/tactic_control_ball.cpp
     src/tactic_obstacle_avoidance.cpp
+    src/obstacle_observer.cpp
     )
   ament_target_dependencies(field_info_parser_test
     consai_msgs

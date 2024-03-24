@@ -43,6 +43,7 @@ class DetectionExtractor
     TrackedRobot & my_robot) const;
   bool extract_ball(TrackedBall & my_ball) const;
   std::vector<TrackedRobot> extract_robots() const;
+  std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
 
  private:
   double visibility_threshold_ = 0.01;

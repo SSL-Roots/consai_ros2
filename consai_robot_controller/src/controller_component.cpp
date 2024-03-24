@@ -56,8 +56,9 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     get_parameter("team_is_yellow").get_value<bool>(),
     get_parameter("invert").get_value<bool>(),
     detection_extractor_);
-  team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
+  obstacle_observer_ = std::make_shared<obstacle::ObstacleObserver>(detection_extractor_);
 
+  team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
 
   std::string team_color = "blue";
@@ -189,7 +190,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
 
   // 障害物情報を取得
-  const auto obstacle_environments = parser_->get_obstacle_environment(
+  const auto obstacle_environments = obstacle_observer_->get_obstacle_environment(
     goal_handle_[robot_id]->get_goal(), my_robot);
 
   // 現在位置: my_robot.pos
@@ -301,7 +302,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 void Controller::on_timer_pub_goal_poses()
 {
   // 目標位置・姿勢を描画情報として出力する
-  for (const auto & robot_id : parser_->active_robot_id_list(team_is_yellow_)) {
+  for (const auto & robot_id : detection_extractor_->active_robot_id_list(team_is_yellow_)) {
     TrackedRobot my_robot;
     if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
       continue;

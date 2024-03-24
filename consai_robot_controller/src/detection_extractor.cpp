@@ -94,4 +94,29 @@ std::vector<TrackedRobot> DetectionExtractor::extract_robots() const
   return robots;
 }
 
+std::vector<unsigned int> DetectionExtractor::active_robot_id_list(const bool team_is_yellow) const
+{
+  // 存在しているロボットのIDリストを返す
+  std::vector<unsigned int> id_list;
+  if (detection_tracked_) {
+    for (const auto & robot : detection_tracked_->robots) {
+      bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
+      bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
+      if (!is_yellow && !is_blue) {
+        continue;
+      }
+
+      if (robot.visibility.size() == 0) {
+        continue;
+      }
+      if (robot.visibility[0] < visibility_threshold_) {
+        continue;
+      }
+
+      id_list.push_back(robot.robot_id.id);
+    }
+  }
+  return id_list;
+}
+
 }  // namespace parser

@@ -187,31 +187,6 @@ bool FieldInfoParser::parse_goal(
   return true;
 }
 
-std::vector<unsigned int> FieldInfoParser::active_robot_id_list(const bool team_is_yellow) const
-{
-  // 存在しているロボットのIDリストを返す
-  std::vector<unsigned int> id_list;
-  if (detection_tracked_) {
-    for (const auto & robot : detection_tracked_->robots) {
-      bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-      bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-      if (!is_yellow && !is_blue) {
-        continue;
-      }
-
-      if (robot.visibility.size() == 0) {
-        continue;
-      }
-      if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-        continue;
-      }
-
-      id_list.push_back(robot.robot_id.id);
-    }
-  }
-  return id_list;
-}
-
 State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   const std::shared_ptr<const RobotControl::Goal> goal,
   const TrackedRobot & my_robot,
@@ -285,62 +260,6 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   return avoidance_pose;
 }
 
-obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
-  const std::shared_ptr<const RobotControl::Goal> goal,
-  const TrackedRobot & my_robot) const
-{
-  constexpr ObstRadius BALL_RADIUS(0.0215);
-  constexpr ObstRadius ROBOT_RADIUS(0.09);
-
-  // goalから障害物環境を作成する
-  ObstEnv environment;
-
-  // 衝突回避しない場合は空の環境を返す
-  if (!goal->avoid_obstacles) {
-    return environment;
-  }
-
-  // ロボット、ボール情報がない場合は空の環境を返す
-  if (!detection_tracked_) {
-    return environment;
-  }
-
-  // インプレイと自チームセットプレイ以外ではボールから離れる
-  // TODO(ShotaAk): ここは戦略側で判断できそう
-  if (parsed_referee_) {
-    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
-      TrackedBall ball;
-      if (detection_extractor_->extract_ball(ball)) {
-        environment.append_obstacle_ball(ObstBall(ObstPos(ball.pos.x, ball.pos.y), BALL_RADIUS));
-      }
-    }
-  }
-
-  // ロボットを障害物として扱う
-  for (const auto & robot : detection_tracked_->robots) {
-    if (robot.visibility.size() == 0) {
-      continue;
-    }
-    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-      continue;
-    }
-
-    // 自身の情報は除外する
-    if (robot.robot_id.id == my_robot.robot_id.id &&
-      robot.robot_id.team_color == my_robot.robot_id.team_color)
-    {
-      continue;
-    }
-
-    environment.append_obstacle_robot(
-      ObstRobot(ObstPos(robot.pos.x, robot.pos.y), ROBOT_RADIUS));
-  }
-
-  // TODO(ShotaAk): ボールプレースメント回避エリアとディフェンスエリアを障害物に追加する
-
-  return environment;
-}
-
 bool FieldInfoParser::parse_kick(
   const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
   const bool & kick_pass, const bool & kick_setplay,
@@ -409,79 +328,5 @@ bool FieldInfoParser::parse_dribble(
   return true;
 }
 
-bool FieldInfoParser::parse_ball_boy_dribble(
-  const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  State & parsed_pose, double & parsed_dribble_power) const
-{
-  // ボールボーイロボ用のドリブル関数
-  const double BALL_ARRIVAL_DISTANCE = 0.1;
-  const double RELEASE_DISTANCE = 0.5;
-  const double CATCH_DISTANCE = 0.2;
-
-  const double DRIBBLE_CATCH_POWER = 1.0;
-  const double DRIBBLE_RELEASE_POWER = 0.0;
-  const double ROBOT_RADIUS = 0.180 * 0.5;
-  const auto center_pose = State();
-  const auto ball_pose = tools::pose_state(ball);
-  const auto robot_pose = tools::pose_state(my_robot);
-
-  // ボールが目標位置に到着したら、ボールから離れた位置に移動する
-  if (tools::distance(ball_pose, dribble_target) < BALL_ARRIVAL_DISTANCE) {
-    const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
-    tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
-    parsed_pose = trans_TtoR.inverted_transform(RELEASE_DISTANCE, 0.0, -M_PI);
-    parsed_dribble_power = DRIBBLE_RELEASE_POWER;
-    return true;
-  }
-
-  // ロボットがボールを見ていたら、目標位置に向かって進む
-  const auto angle_robot_to_ball = tools::calc_angle(robot_pose, ball_pose);
-  const tools::Trans trans_RtoB(robot_pose, angle_robot_to_ball);
-  const auto robot_pose_RtoB = trans_RtoB.transform(robot_pose);
-
-  // 早めにキャッチャーを動かす
-  std::cout << "theta:" << tools::to_degrees(std::fabs(robot_pose_RtoB.theta)) << std::endl;
-  std::cout << "distance:" << tools::distance(robot_pose, ball_pose) << std::endl;
-
-  const auto distance_RtoB = tools::distance(robot_pose, ball_pose);
-
-  // if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
-  //     distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE) {
-  //   std::cout << "PRE CATCH!!!" << std::endl;
-  //   parsed_dribble_power = DRIBBLE_CATCH_POWER;
-  // } else {
-  //   parsed_dribble_power = DRIBBLE_RELEASE_POWER;
-  // }
-
-  if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
-    distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.0)
-  {
-    parsed_dribble_power = DRIBBLE_CATCH_POWER;
-
-    const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
-    tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
-    parsed_pose = trans_TtoR.inverted_transform(CATCH_DISTANCE, 0.0, -M_PI);
-    return true;
-  } else {
-    parsed_dribble_power = DRIBBLE_RELEASE_POWER;
-  }
-
-  // if (std::fabs(robot_pose_RtoB.theta) < tools::to_radians(10) &&
-  //     distance_RtoB > ROBOT_RADIUS && distance_RtoB < CATCH_DISTANCE * 1.2) {
-  //   std::cout << "CATCH!!!" << std::endl;
-  //   const auto angle_target_to_robot = tools::calc_angle(dribble_target, robot_pose);
-  //   tools::Trans trans_TtoR(dribble_target, angle_target_to_robot);
-  //   parsed_pose = trans_TtoR.inverted_transform(CATCH_DISTANCE, 0.0, -M_PI);
-  //   parsed_dribble_power = DRIBBLE_CATCH_POWER;
-  //   return true;
-  // }
-
-  // ロボットがボールをキャッチできそうな場合
-  const auto angle_ball_to_center = tools::calc_angle(ball_pose, center_pose);
-  tools::Trans trans_BtoC(ball_pose, angle_ball_to_center);
-  parsed_pose = trans_BtoC.inverted_transform(CATCH_DISTANCE * 0.8, 0.0, -M_PI);
-
-  return true;
-}
 
 }  // namespace consai_robot_controller
