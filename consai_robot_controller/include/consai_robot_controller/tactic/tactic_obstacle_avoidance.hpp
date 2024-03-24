@@ -18,11 +18,11 @@
 #include <memory>
 
 #include "consai_msgs/msg/state2_d.hpp"
+#include "consai_robot_controller/detection_extractor.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
-#include "consai_robot_controller/detection_extractor.hpp"
 
 namespace tactic
 {

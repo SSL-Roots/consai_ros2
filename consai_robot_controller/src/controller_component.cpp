@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "consai_robot_controller/controller_component.hpp"
-#include "consai_robot_controller/geometry_tools.hpp"
-#include "consai_robot_controller/control_tools.hpp"
+#include "consai_robot_controller/tools/control_tools.hpp"
+#include "consai_robot_controller/tools/geometry_tools.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace consai_robot_controller

@@ -29,17 +29,17 @@ include_directories(include)
 
 # Controller Component
 add_library(controller_component SHARED
-  src/ball_boy_tactics.cpp
   src/controller_component.cpp
   src/field_info_parser.cpp
-  src/geometry_tools.cpp
-  src/control_tools.cpp
   src/visualization_data_handler.cpp
   src/detection_extractor.cpp
   src/constraint_parser.cpp
-  src/tactic_control_ball.cpp
-  src/tactic_obstacle_avoidance.cpp
   src/obstacle/obstacle_observer.cpp
+  src/tactic/ball_boy_tactics.cpp
+  src/tactic/tactic_control_ball.cpp
+  src/tactic/tactic_obstacle_avoidance.cpp
+  src/tools/control_tools.cpp
+  src/tools/geometry_tools.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
@@ -108,7 +108,10 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
   find_package(ament_cmake_gtest)
-  ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
+  ament_add_gtest(control_tools_test
+    test/control_tools_test.cpp
+    src/tools/control_tools.cpp
+  )
   ament_add_gtest(field_info_parser_test
     test/field_info_parser_test.cpp
   )

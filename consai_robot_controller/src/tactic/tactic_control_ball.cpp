@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-#include "consai_robot_controller/tactic_control_ball.hpp"
-#include "consai_robot_controller/geometry_tools.hpp"
+#include "consai_robot_controller/tactic/tactic_control_ball.hpp"
+#include "consai_robot_controller/tools/geometry_tools.hpp"
 
 namespace tactic
 {

@@ -16,7 +16,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "consai_robot_controller/control_tools.hpp"
+#include "consai_robot_controller/tools/control_tools.hpp"
 
 namespace control_tools
 {
