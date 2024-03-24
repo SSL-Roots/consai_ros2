@@ -111,15 +111,8 @@ if(BUILD_TESTING)
   ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
   ament_add_gtest(field_info_parser_test
     test/field_info_parser_test.cpp
-    src/ball_boy_tactics.cpp
-    src/geometry_tools.cpp
-    src/field_info_parser.cpp
-    src/detection_extractor.cpp
-    src/constraint_parser.cpp
-    src/tactic_control_ball.cpp
-    src/tactic_obstacle_avoidance.cpp
-    src/obstacle_observer.cpp
   )
+  target_link_libraries(field_info_parser_test controller_component)
   ament_target_dependencies(field_info_parser_test
     consai_msgs
     rclcpp
