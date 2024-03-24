@@ -50,8 +50,12 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
 
-  parser_.set_invert(get_parameter("invert").get_value<bool>());
-  parser_.set_team_is_yellow(get_parameter("team_is_yellow").get_value<bool>());
+  const auto visibility_threshold = 0.01;
+  detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
+  parser_ = std::make_shared<FieldInfoParser>(
+    get_parameter("team_is_yellow").get_value<bool>(),
+    get_parameter("invert").get_value<bool>(),
+    detection_extractor_);
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
 
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
@@ -107,31 +111,31 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
   auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
-      parser_.set_detection_tracked(msg);
+      parser_->set_detection_tracked(msg);
     };
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, detection_callback);
 
   auto geometry_callback = [this](const GeometryData::SharedPtr msg) {
-      parser_.set_geometry(msg);
+      parser_->set_geometry(msg);
     };
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, geometry_callback);
 
   auto referee_callback = [this](const Referee::SharedPtr msg) {
-      parser_.set_referee(msg);
+      parser_->set_referee(msg);
     };
   sub_referee_ = create_subscription<Referee>(
     "referee", 10, referee_callback);
 
   auto parsed_referee_callback = [this](const ParsedReferee::SharedPtr msg) {
-      parser_.set_parsed_referee(msg);
+      parser_->set_parsed_referee(msg);
     };
   sub_parsed_referee_ = create_subscription<ParsedReferee>(
     "parsed_referee", 10, parsed_referee_callback);
 
   auto named_targets_callback = [this](const NamedTargets::SharedPtr msg) {
-      parser_.set_named_targets(msg);
+      parser_->set_named_targets(msg);
     };
   sub_named_targets_ = create_subscription<NamedTargets>(
     "named_targets", 10, named_targets_callback);
@@ -153,7 +157,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 制御するロボットの情報を得る
   // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
-  if (!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)) {
+  if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
     std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) +
       " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg.c_str());
@@ -171,7 +175,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   const auto current_time = steady_clock_.now();
   const auto duration = current_time - last_update_time_[robot_id];
-  if (!parser_.parse_goal(
+  if (!parser_->parse_goal(
       goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
       dribble_power))
   {
@@ -181,11 +185,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
-  goal_pose = parser_.modify_goal_pose_to_avoid_obstacles(
+  goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
     goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
 
   // 障害物情報を取得
-  const auto obstacle_environments = parser_.get_obstacle_environment(
+  const auto obstacle_environments = parser_->get_obstacle_environment(
     goal_handle_[robot_id]->get_goal(), my_robot);
 
   // 現在位置: my_robot.pos
@@ -297,9 +301,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 void Controller::on_timer_pub_goal_poses()
 {
   // 目標位置・姿勢を描画情報として出力する
-  for (const auto & robot_id : parser_.active_robot_id_list(team_is_yellow_)) {
+  for (const auto & robot_id : parser_->active_robot_id_list(team_is_yellow_)) {
     TrackedRobot my_robot;
-    if (!parser_.extract_robot(robot_id, team_is_yellow_, my_robot)) {
+    if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
       continue;
     }
 
@@ -326,7 +330,7 @@ rclcpp_action::GoalResponse Controller::handle_goal(
 
   // 目標値の解析に失敗したらReject
   State goal_pose;
-  if (!parser_.parse_goal(goal, goal_pose)) {
+  if (!parser_->parse_goal(goal, goal_pose)) {
     return rclcpp_action::GoalResponse::REJECT;
   }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;

@@ -41,8 +41,9 @@ const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
 const double MAX_KICK_POWER_PASS = 4.0;  // m/s
 const double MIN_KICK_POWER_PASS = 2.0;  // m/s
 
-FieldInfoParser::FieldInfoParser()
-: invert_(false), team_is_yellow_(false)
+FieldInfoParser::FieldInfoParser(const bool team_is_yellow, const bool invert,
+  const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
+: team_is_yellow_(team_is_yellow), invert_(invert), detection_extractor_(detection_extractor)
 {
   // 不正な値を参照しないように、フィールド情報の初期値をセットする
   geometry_ = std::make_shared<GeometryData>();
@@ -52,21 +53,9 @@ FieldInfoParser::FieldInfoParser()
   geometry_->field.goal_depth = 180;
   geometry_->field.boundary_width = 300;
 
-  const auto visibility_threshold = 0.01;
-  detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
   constraint_parser_ = std::make_shared<parser::ConstraintParser>(
     detection_extractor_, team_is_yellow_);
   control_ball_ = std::make_shared<tactic::ControlBall>();
-}
-
-void FieldInfoParser::set_invert(const bool & invert)
-{
-  invert_ = invert;
-}
-
-void FieldInfoParser::set_team_is_yellow(const bool & team_is_yellow)
-{
-  team_is_yellow_ = team_is_yellow;
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
@@ -102,18 +91,6 @@ void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
     auto pose = msg->pose[i];
     named_targets_[name] = pose;
   }
-}
-
-bool FieldInfoParser::extract_robot(
-  const unsigned int robot_id, const bool team_is_yellow,
-  TrackedRobot & my_robot) const
-{
-  return detection_extractor_->extract_robot(robot_id, team_is_yellow, my_robot);
-}
-
-bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
-{
-  return detection_extractor_->extract_ball(my_ball);
 }
 
 bool FieldInfoParser::parse_goal(
@@ -164,7 +141,7 @@ bool FieldInfoParser::parse_goal(
 
   // 以下、ボールが関わる処理のためボール情報を取得する
   TrackedBall ball;
-  if (!extract_ball(ball)) {
+  if (!detection_extractor_->extract_ball(ball)) {
     // ボール情報を取得できなくても正常終了
     return true;
   }
@@ -244,7 +221,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   TrackedBall ball;
-  if (!extract_ball(ball)) {
+  if (!detection_extractor_->extract_ball(ball)) {
     return avoidance_pose;
   }
 
@@ -328,7 +305,7 @@ obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
   if (parsed_referee_) {
     if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
       TrackedBall ball;
-      if (extract_ball(ball)) {
+      if (detection_extractor_->extract_ball(ball)) {
         environment.append_obstacle_ball(ObstBall(ObstPos(ball.pos.x, ball.pos.y), BALL_RADIUS));
       }
     }

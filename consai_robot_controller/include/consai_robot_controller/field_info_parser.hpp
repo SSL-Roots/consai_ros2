@@ -62,18 +62,13 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 class FieldInfoParser
 {
 public:
-  FieldInfoParser();
-  void set_invert(const bool & invert);
-  void set_team_is_yellow(const bool & team_is_yellow);
+  FieldInfoParser(const bool team_is_yellow, const bool invert,
+    const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);
-  bool extract_robot(
-    const unsigned int robot_id, const bool team_is_yellow,
-    TrackedRobot & my_robot) const;
-  bool extract_ball(TrackedBall & my_ball) const;
   bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
   bool parse_goal(
     const std::shared_ptr<const RobotControl::Goal> goal,
@@ -136,15 +131,16 @@ private:
     const State & goal_pose, const TrackedBall & ball,
     State & avoidance_pose) const;
 
+  bool team_is_yellow_ = false;
+  bool invert_ = false;
+  std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
+
   std::shared_ptr<TrackedFrame> detection_tracked_;
   std::shared_ptr<GeometryData> geometry_;
   std::shared_ptr<Referee> referee_;
   std::shared_ptr<ParsedReferee> parsed_referee_;
-  bool invert_;
-  bool team_is_yellow_;
   std::map<std::string, State> named_targets_;
   tactics::BallBoyTactics ball_boy_tactics_;
-  std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
   std::shared_ptr<parser::ConstraintParser> constraint_parser_;
   std::shared_ptr<tactic::ControlBall> control_ball_;
 };
