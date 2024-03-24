@@ -114,7 +114,7 @@ jobs:
         fi
 
     - name: Comment PR with Artifact URL
-      if: steps.check-artifact.outputs.skip_comment != 'true'
+      if: always() && steps.check-artifact.outputs.skip_comment != 'true'
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
