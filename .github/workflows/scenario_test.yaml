@@ -113,6 +113,12 @@ jobs:
           echo "skip_comment=false" >> $GITHUB_OUTPUT
         fi
 
+    - name: debug print
+      if: always()
+      run: |
+        echo "skip_comment: ${{ steps.check-artifact.outputs.skip_comment }}"
+        echo "artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}"
+
     - name: Comment PR with Artifact URL
       if: steps.check-artifact.outputs.skip_comment != 'true'
       uses: peter-evans/create-or-update-comment@v4
