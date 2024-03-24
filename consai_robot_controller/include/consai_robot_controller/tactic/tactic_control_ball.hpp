@@ -62,7 +62,7 @@ private:
 
   double can_control_distance_ = 0.7;  // m
 
-  double max_shoot_speed_ = 5.0;  // m/s
+  double max_shoot_speed_ = 5.5;  // m/s
   double max_pass_speed_ = 4.0;  // m/s
   double min_pass_speed_ = 2.0;  // m/s
 
