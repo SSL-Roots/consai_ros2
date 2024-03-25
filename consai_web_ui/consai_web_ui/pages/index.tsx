@@ -17,6 +17,7 @@ import {
   Select,
 } from "@mui/material";
 import { Grid } from "@mui/material";
+import SideMenu from "@/components/sideMenu/SideMenu";
 
 const BirdView = dynamic(() => import("../components/birdview/birdview"), {
   ssr: false,
@@ -33,9 +34,12 @@ export default function Home() {
       <Rosconnection port={9090} setRos={setRos} />
 
       <Box component="section">
-        <Grid container spacing={2} alignItems="center" justifyContent="center">
-          <Grid item xs={12}>
+        <Grid container spacing={2} alignItems="flex-start" justifyContent="center">
+          <Grid item xs={9}>
             <BirdView ros={ros} />
+          </Grid>
+          <Grid item xs={3} alignItems="flex-start">
+            <SideMenu />
           </Grid>
         </Grid>
       </Box>
