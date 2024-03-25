@@ -35,9 +35,6 @@ export default function Home() {
       <Box component="section">
         <Grid container spacing={2} alignItems="center" justifyContent="center">
           <Grid item xs={12}>
-            <h1>Hello consai web ui</h1>
-
-            {/* <MsgBox ros={ros} /> */}
             <BirdView ros={ros} />
           </Grid>
         </Grid>
@@ -45,28 +42,3 @@ export default function Home() {
     </>
   );
 }
-
-const MsgBox = ({ ros }) => {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (!ros) return;
-
-    const listener = new ROSLIB.Topic({
-      ros: ros,
-      name: "/chatter",
-      messageType: "std_msgs/String",
-    });
-
-    listener.subscribe((message) => {
-      // console.log(JSON.stringify(message));
-      setMessage(message.data);
-    });
-  }, [ros]);
-
-  return (
-    <div>
-      <h1>{message}</h1>
-    </div>
-  );
-};
