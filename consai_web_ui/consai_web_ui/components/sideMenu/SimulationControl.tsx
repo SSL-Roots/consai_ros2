@@ -1,10 +1,10 @@
 import { ROBOT_IDS } from "@/utils/constants";
-import { PlaceSharp } from "@mui/icons-material";
+import { DisabledByDefault, PlaceSharp } from "@mui/icons-material";
 import { Box, Button, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Switch, ToggleButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { BirdViewMouseEvent } from "../birdview/birdview";
 import ROSLIB from "roslib";
-import { publishReplacement } from "@/utils/consaiInterfaces";
+import { publishReplacement, publishRobotsOff, publishRobotsOn } from "@/utils/consaiInterfaces";
 
 type SimulationControlProps = {
     ros: ROSLIB.Ros;
@@ -23,6 +23,7 @@ const SimulationControl = ({ ros, mouseEvent }: SimulationControlProps) => {
         robotId: null
     });
 
+    /* ダブルクリック時に Replacement を送信するEffect */
     useEffect(() => {
         if (mouseEvent?.type === "dblclick") {
             if (selectedCursor.type === null) return;
@@ -65,8 +66,8 @@ const SimulationControl = ({ ros, mouseEvent }: SimulationControlProps) => {
     return (
         <div>
             <BallControl selected={selectedBall()} selectBall={selectBall} />
-            <TeamRobotsControl color="blue" mouseEvent={mouseEvent} selectedRobotId={selectedBlueRobot()} selectRobot={selectRobot} />
-            <TeamRobotsControl color="yellow" mouseEvent={mouseEvent} selectedRobotId={selectedYellowRobot()} selectRobot={selectRobot} />
+            <TeamRobotsControl ros={ros} color="blue" mouseEvent={mouseEvent} selectedRobotId={selectedBlueRobot()} selectRobot={selectRobot} />
+            <TeamRobotsControl ros={ros} color="yellow" mouseEvent={mouseEvent} selectedRobotId={selectedYellowRobot()} selectRobot={selectRobot} />
         </div>
     )
 };
@@ -83,19 +84,20 @@ const BallControl = ({ selected, selectBall }: BallControlProps) => {
                 <ListItemText>
                     Ball
                 </ListItemText>
-                <RobotCursorButton selected={selected} onChangeFunc={selectBall} />
+                <RobotCursorButton selected={selected} onChangeFunc={selectBall} disabled={false} />
             </ListItem>
         </List>
     )
 }
 
 type TeamRobotsControlProps = {
+    ros: ROSLIB.Ros;
     color: "blue" | "yellow";
     mouseEvent: BirdViewMouseEvent | null;
     selectedRobotId: number | null;
     selectRobot: (color: "blue" | "yellow", robotId: number) => void;
 };
-const TeamRobotsControl = ({ color, mouseEvent, selectedRobotId, selectRobot }: TeamRobotsControlProps) => {
+const TeamRobotsControl = ({ ros, color, mouseEvent, selectedRobotId, selectRobot }: TeamRobotsControlProps) => {
     const [enabledRobots, setEnabledRobots] = useState<{ [key: number]: boolean }>(
         // ROBOT_IDS の各要素をキーとし、true を値とするオブジェクトを生成
         Object.fromEntries(ROBOT_IDS.map((robotId) => [robotId, true]))
@@ -103,17 +105,33 @@ const TeamRobotsControl = ({ color, mouseEvent, selectedRobotId, selectRobot }: 
     const [enableAll, setEnableAll] = useState(true);
 
     const handleEnableAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        // ステートを更新
         setEnableAll(event.target.checked);
         setEnabledRobots(
             Object.fromEntries(ROBOT_IDS.map((robotId) => [robotId, event.target.checked]))
         );
+
+        // シミュレーターにロボット配置信号を送信
+        if (event.target.checked) {
+            publishRobotsOn(ros, color, ROBOT_IDS);
+        } else {
+            publishRobotsOff(ros, color, ROBOT_IDS);
+        }
     }
 
     const setEnabled = (robotId: number, enabled: boolean) => {
+        // ステートを更新
         setEnabledRobots({
             ...enabledRobots,
             [robotId]: enabled
         });
+
+        // シミュレーターにロボット配置信号を送信
+        if (enabled) {
+            publishRobotsOn(ros, color, [robotId]);
+        } else {
+            publishRobotsOff(ros, color, [robotId]);
+        }
     }
     const selectColoredRobot = (robotId: number) => {
         selectRobot(color, robotId);
@@ -130,7 +148,7 @@ const TeamRobotsControl = ({ color, mouseEvent, selectedRobotId, selectRobot }: 
                     onChange={handleEnableAll}
                 />
                 <Box sx={{ visibility: "hidden" }}> {/* 列を揃えるためのダミー */}
-                    <RobotCursorButton selected={false} onChangeFunc={() => { }} />
+                    <RobotCursorButton selected={false} onChangeFunc={() => { }} disabled={true} />
                 </Box>
             </ListItem>
         )
@@ -169,7 +187,7 @@ const SingleRobotControl = ({ color, robotId, enabled, setEnabled, selected, sel
                 {robotId}
             </ListItemText>
             <RobotSwitch checked={enabled} setChecked={setChecked} />
-            <RobotCursorButton selected={selected} onChangeFunc={selectFunc} />
+            <RobotCursorButton selected={selected} onChangeFunc={selectFunc} disabled={!enabled} />
         </ListItem>
     )
 }
@@ -194,15 +212,17 @@ const RobotSwitch = ({ checked, setChecked }: RobotSwitchProps) => {
 type RobotCursorButtonProps = {
     selected: boolean;
     onChangeFunc: () => void;
+    disabled: boolean;
 };
 
-const RobotCursorButton = ({ selected, onChangeFunc }: RobotCursorButtonProps) => {
+const RobotCursorButton = ({ selected, onChangeFunc, disabled }: RobotCursorButtonProps) => {
     return (
         <ToggleButton
             size="small"
             value="check"
             selected={selected}
             onChange={onChangeFunc}
+            disabled={disabled}
         >
             <PlaceSharp />
         </ToggleButton>
