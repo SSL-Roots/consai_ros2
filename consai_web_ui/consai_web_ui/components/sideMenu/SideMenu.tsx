@@ -1,12 +1,16 @@
 import { BottomNavigation, BottomNavigationAction, Box, Tab, Tabs } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import RestoreIcon from '@mui/icons-material/Restore';
 import SimulationControlDrawer from "./SimulationControl";
 import SimulationControl from "./SimulationControl";
 
-const SideMenu = () => {
+type SideMenuProps = {
+    children?: Array<React.ReactNode>;
+};
+
+const SideMenu = ({ children }: SideMenuProps) => {
     const [value, setValue] = useState(0);
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
@@ -21,7 +25,7 @@ const SideMenu = () => {
                 </TabList>
 
                 <TabPanel value="1">
-                    <SimulationControl />
+                    {children[0]}
                 </TabPanel>
             </TabContext>
         </Box>

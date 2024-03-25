@@ -2,29 +2,53 @@ import { ROBOT_IDS } from "@/utils/constants";
 import { PlaceSharp } from "@mui/icons-material";
 import { List, ListItem, ListItemIcon, ListItemText, ListSubheader, Switch } from "@mui/material";
 import { useState } from "react";
+import { BirdViewMouseEvent } from "../birdview/birdview";
 
-const SimulationControl = () => {
+type SimulationControlProps = {
+    mouseEvent: BirdViewMouseEvent | null;
+};
+
+const SimulationControl = ({ mouseEvent }: SimulationControlProps) => {
     return (
         <div>
-            <List subheader={<ListSubheader>Blue</ListSubheader>}>
-                {ROBOT_IDS.map((robotId) => (
-                    <RobotControl color="blue" robotId={robotId} />
-                ))}
-            </List>
-            <List subheader={<ListSubheader>Yellow</ListSubheader>}>
-                {ROBOT_IDS.map((robotId) => (
-                    <RobotControl color="yellow" robotId={robotId} />
-                ))}
-            </List>
+            <TeamRobotsControl color="blue" mouseEvent={mouseEvent} />
+            <TeamRobotsControl color="yellow" mouseEvent={mouseEvent} />
         </div>
     )
 };
 
-type RobotControlProps = {
+type TeamRobotsControlProps = {
+    color: "blue" | "yellow";
+    mouseEvent: BirdViewMouseEvent | null;
+};
+const TeamRobotsControl = ({ color }: TeamRobotsControlProps) => {
+    const allControl = () => {
+        return (
+            <ListItem>
+                <ListItemIcon>
+                    All
+                </ListItemIcon>
+                <RobotSwitch />
+            </ListItem>
+        )
+    };
+
+    return (
+        <List subheader={<ListSubheader>{color}</ListSubheader>}>
+            {allControl()}
+            {ROBOT_IDS.map((robotId) => (
+                <SingleRobotControl color={color} robotId={robotId} />
+            ))}
+        </List>
+    )
+}
+
+
+type SingleRobotControlProps = {
     color: "blue" | "yellow";
     robotId: number;
 };
-const RobotControl = ({ color, robotId }: RobotControlProps) => {
+const SingleRobotControl = ({ color, robotId }: SingleRobotControlProps) => {
     return (
         <ListItem>
             <ListItemIcon>

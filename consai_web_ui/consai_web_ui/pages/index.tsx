@@ -18,6 +18,8 @@ import {
 } from "@mui/material";
 import { Grid } from "@mui/material";
 import SideMenu from "@/components/sideMenu/SideMenu";
+import { BirdViewMouseEvent } from "../components/birdview/birdview";
+import SimulationControl from "@/components/sideMenu/SimulationControl";
 
 const BirdView = dynamic(() => import("../components/birdview/birdview"), {
   ssr: false,
@@ -25,6 +27,7 @@ const BirdView = dynamic(() => import("../components/birdview/birdview"), {
 
 export default function Home() {
   const [ros, setRos] = useState(null);
+  const [mouseEvent, setMouseEvent] = useState<BirdViewMouseEvent | null>(null);
 
   return (
     <>
@@ -36,10 +39,13 @@ export default function Home() {
       <Box component="section">
         <Grid container spacing={2} alignItems="flex-start" justifyContent="center">
           <Grid item xs={9}>
-            <BirdView ros={ros} />
+            <BirdView ros={ros} setMouseEvent={setMouseEvent} />
           </Grid>
           <Grid item xs={3} alignItems="flex-start">
-            <SideMenu />
+            <SideMenu
+              children={[
+                <SimulationControl mouseEvent={mouseEvent} />,
+              ]} />
           </Grid>
         </Grid>
       </Box>

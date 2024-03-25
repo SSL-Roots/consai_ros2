@@ -16,8 +16,17 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { css } from "@emotion/react";
 import { Box } from "@mui/material";
 
+export type BirdViewMouseEvent = {
+  type: "click" | "dblclick" | "drag";
+  x0: number;
+  y0: number;
+  x1: number | null;
+  y1: number | null;
+};
+
 type BirdViewProps = {
   ros: ROSLIB.Ros | null;
+  setMouseEvent: React.Dispatch<React.SetStateAction<BirdViewMouseEvent | null>>;
 };
 
 type CursorMode = {
@@ -26,7 +35,7 @@ type CursorMode = {
   id: number | null;
 };
 
-const BirdView = ({ ros }: BirdViewProps) => {
+const BirdView = ({ ros, setMouseEvent }: BirdViewProps) => {
   const [cursorMode, setCursorMode] = React.useState<CursorMode>({
     type: "none",
     team: null,
@@ -121,6 +130,13 @@ const BirdView = ({ ros }: BirdViewProps) => {
                 y: e.currentTarget.getRelativePointerPosition().y,
               };
               publishBallReplacement(pos);
+              setMouseEvent({
+                type: "dblclick",
+                x0: pos.x,
+                y0: pos.y,
+                x1: null,
+                y1: null,
+              });
             }}
           >
             <Field ros={ros} />
