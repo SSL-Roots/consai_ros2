@@ -38,10 +38,10 @@ export default function Home() {
 
       <Box component="section">
         <Grid container spacing={2} alignItems="flex-start" justifyContent="center">
-          <Grid item xs={9}>
+          <Grid item xs={10}>
             <BirdView ros={ros} setMouseEvent={setMouseEvent} />
           </Grid>
-          <Grid item xs={3} alignItems="flex-start">
+          <Grid item xs={2} alignItems="flex-start">
             <SideMenu
               children={[
                 <SimulationControl ros={ros} mouseEvent={mouseEvent} />,
