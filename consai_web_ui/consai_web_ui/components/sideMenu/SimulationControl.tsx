@@ -1,18 +1,18 @@
+import { ROBOT_IDS } from "@/utils/constants";
 import { PlaceSharp } from "@mui/icons-material";
 import { List, ListItem, ListItemIcon, ListItemText, ListSubheader, Switch } from "@mui/material";
 import { useState } from "react";
 
 const SimulationControl = () => {
-    const robotIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return (
         <div>
             <List subheader={<ListSubheader>Blue</ListSubheader>}>
-                {robotIds.map((robotId) => (
+                {ROBOT_IDS.map((robotId) => (
                     <RobotControl color="blue" robotId={robotId} />
                 ))}
             </List>
             <List subheader={<ListSubheader>Yellow</ListSubheader>}>
-                {robotIds.map((robotId) => (
+                {ROBOT_IDS.map((robotId) => (
                     <RobotControl color="yellow" robotId={robotId} />
                 ))}
             </List>
