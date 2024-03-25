@@ -37,9 +37,21 @@ const BirdView = ({ ros }: BirdViewProps) => {
   );
 
   React.useEffect(() => {
+    const getContainerSize = () => {
+      const container = document.querySelector('#birdViewContainer');
+      const containerWidth = container?.offsetWidth;
+      const containerHeight = container?.offsetHeight;
+      return { containerWidth, containerHeight };
+    }
+
     window.addEventListener("resize", () => {
-      setWindowWidth(window.innerWidth);
+      const containerSize = getContainerSize();
+      setWindowWidth(containerSize.containerWidth || 0);
     });
+
+    // 初回レンダリング時にも実行
+    const containerSize = getContainerSize();
+    setWindowWidth(containerSize.containerWidth || 0);
   }, []);
 
   const publishBallReplacement = (pos: Vector2D) => {
@@ -93,7 +105,7 @@ const BirdView = ({ ros }: BirdViewProps) => {
   const scale = windowWidth / canvasSize.width;
 
   return (
-    <>
+    <div id="birdViewContainer">
       <CursorSelector setCursorMode={setCursorMode} />
       <Stage
         width={windowWidth}
@@ -116,7 +128,7 @@ const BirdView = ({ ros }: BirdViewProps) => {
           </Group>
         </Layer>
       </Stage>
-    </>
+    </div>
   );
 };
 
