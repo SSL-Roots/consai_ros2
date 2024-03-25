@@ -22,13 +22,36 @@ type TeamRobotsControlProps = {
     mouseEvent: BirdViewMouseEvent | null;
 };
 const TeamRobotsControl = ({ color }: TeamRobotsControlProps) => {
+    const [enabledRobots, setEnabledRobots] = useState<{ [key: number]: boolean }>(
+        // ROBOT_IDS の各要素をキーとし、true を値とするオブジェクトを生成
+        Object.fromEntries(ROBOT_IDS.map((robotId) => [robotId, true]))
+    );
+    const [enableAll, setEnableAll] = useState(true);
+
+    const handleEnableAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setEnableAll(event.target.checked);
+        setEnabledRobots(
+            Object.fromEntries(ROBOT_IDS.map((robotId) => [robotId, event.target.checked]))
+        );
+    }
+
+    const setEnabled = (robotId: number, enabled: boolean) => {
+        setEnabledRobots({
+            ...enabledRobots,
+            [robotId]: enabled
+        });
+    }
+
     const allControl = () => {
         return (
             <ListItem>
                 <ListItemIcon>
                     All
                 </ListItemIcon>
-                <RobotSwitch />
+                <Switch
+                    checked={enableAll}
+                    onChange={handleEnableAll}
+                />
             </ListItem>
         )
     };
@@ -37,7 +60,7 @@ const TeamRobotsControl = ({ color }: TeamRobotsControlProps) => {
         <List subheader={<ListSubheader>{color}</ListSubheader>}>
             {allControl()}
             {ROBOT_IDS.map((robotId) => (
-                <SingleRobotControl color={color} robotId={robotId} />
+                <SingleRobotControl color={color} robotId={robotId} enabled={enabledRobots[robotId]} setEnabled={setEnabled} />
             ))}
         </List>
     )
@@ -47,8 +70,14 @@ const TeamRobotsControl = ({ color }: TeamRobotsControlProps) => {
 type SingleRobotControlProps = {
     color: "blue" | "yellow";
     robotId: number;
+    enabled: boolean;
+    setEnabled: (robotId: number, enabled: boolean) => void;
 };
-const SingleRobotControl = ({ color, robotId }: SingleRobotControlProps) => {
+const SingleRobotControl = ({ color, robotId, enabled, setEnabled }: SingleRobotControlProps) => {
+    const setChecked = (checked: boolean) => {
+        setEnabled(robotId, checked);
+    }
+
     return (
         <ListItem>
             <ListItemIcon>
@@ -57,15 +86,17 @@ const SingleRobotControl = ({ color, robotId }: SingleRobotControlProps) => {
             {/* <ListItemText>
                 Robot: {robotId}
             </ListItemText> */}
-            <RobotSwitch />
+            <RobotSwitch checked={enabled} setChecked={setChecked} />
             <RobotCursor />
         </ListItem>
     )
 }
 
-const RobotSwitch = () => {
-    const [checked, setChecked] = useState(false);
-
+type RobotSwitchProps = {
+    checked: boolean;
+    setChecked: (checked: boolean) => void;
+};
+const RobotSwitch = ({ checked, setChecked }: RobotSwitchProps) => {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
     };
