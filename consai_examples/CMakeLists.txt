@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/ball_boy_test.py
+    ${PROJECT_NAME}/constraint_hasher.py
     ${PROJECT_NAME}/control.py
     ${PROJECT_NAME}/control_by_referee.py
     ${PROJECT_NAME}/control_with_role.py
