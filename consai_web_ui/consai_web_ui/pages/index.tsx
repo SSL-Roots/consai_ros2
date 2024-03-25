@@ -44,7 +44,11 @@ export default function Home() {
           <Grid item xs={2} alignItems="flex-start">
             <SideMenu
               children={[
-                <SimulationControl ros={ros} mouseEvent={mouseEvent} />,
+                {
+                  label: "Simulation Control",
+                  value: "simulation_control",
+                  component: < SimulationControl ros={ros} mouseEvent={mouseEvent} />
+                }
               ]} />
           </Grid>
         </Grid>

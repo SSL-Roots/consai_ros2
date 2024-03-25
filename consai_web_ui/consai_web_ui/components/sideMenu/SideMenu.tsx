@@ -6,27 +6,43 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import SimulationControlDrawer from "./SimulationControl";
 import SimulationControl from "./SimulationControl";
 
+export type Child = {
+    label: string
+    value: string
+    component: React.ReactNode
+};
+
 type SideMenuProps = {
-    children?: Array<React.ReactNode>;
+    children?: Array<Child>
 };
 
 const SideMenu = ({ children }: SideMenuProps) => {
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(children ? children[0].value : "");
 
-    const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    const handleChange = (event: React.ChangeEvent<{}>, newValue: string) => {
         setValue(newValue);
     };
+
+    const tabs = children?.map((child) => {
+        return (
+            <Tab label={child.label} value={child.value} />
+        )
+    });
+    const tabPanels = children?.map((child) => {
+        return (
+            <TabPanel value={child.value}>
+                {child.component}
+            </TabPanel>
+        )
+    });
 
     return (
         <Box sx={{ overflow: 'auto', height: "100vh" }}>
             <TabContext value={value}>
                 <TabList onChange={handleChange}>
-                    <Tab label="Simulation Control" value="1" />
+                    {tabs}
                 </TabList>
-
-                <TabPanel value="1">
-                    {children[0]}
-                </TabPanel>
+                {tabPanels}
             </TabContext>
         </Box>
     )
