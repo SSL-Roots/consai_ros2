@@ -14,10 +14,10 @@ const SideMenu = () => {
     };
 
     return (
-        <>
+        <Box sx={{ overflow: 'auto', height: "100%" }}>
             <TabContext value={value}>
                 <TabList onChange={handleChange}>
-                    <Tab label="Tab 1" value="1" />
+                    <Tab label="Simulation Control" value="1" />
                     <Tab label="Tab 2" value="2" />
                 </TabList>
 
@@ -28,7 +28,7 @@ const SideMenu = () => {
                     <h1> tab2 desu</h1>
                 </TabPanel>
             </TabContext>
-        </>
+        </Box>
     )
 };
 
