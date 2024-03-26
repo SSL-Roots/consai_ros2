@@ -32,6 +32,14 @@ def test_get_hash():
     assert hash1 != hash3
 
 
+def test_stop():
+    goal = Operation().get_goal()
+    assert goal.stop is False
+
+    goal = Operation().stop().get_goal()
+    assert goal.stop is True
+
+
 def test_immutability():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation.overwrite_pose_x(1.0)
