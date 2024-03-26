@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples import robot_control_hasher
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
@@ -132,6 +133,9 @@ class Operation():
 
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
+
+    def get_hash(self) -> int:
+        return robot_control_hasher.hash_goal(self._goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':

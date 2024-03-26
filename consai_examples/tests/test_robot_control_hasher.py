@@ -26,4 +26,4 @@ def test_hash_robot_control():
     goal2.pose.append(ConstraintPose())
     goal2.line.append(ConstraintLine())
 
-    assert hasher.hash_robot_control(goal1) != hasher.hash_robot_control(goal2)
+    assert hasher.hash_goal(goal1) != hasher.hash_goal(goal2)

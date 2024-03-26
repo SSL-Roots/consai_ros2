@@ -17,7 +17,7 @@ from consai_msgs.action import RobotControl
 from consai_examples import constraint_hasher as hasher
 
 
-def hash_robot_control(goal: RobotControl.Goal) -> int:
+def hash_goal(goal: RobotControl.Goal) -> int:
     pose_hash = tuple(hasher.hash_constraint_pose(pose) for pose in goal.pose)
     line_hash = tuple(hasher.hash_constraint_line(line) for line in goal.line)
 

@@ -21,6 +21,17 @@ from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintTheta
 
 
+def test_get_hash():
+    operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    hash1 = operation.get_hash()
+    hash2 = operation.get_hash()
+    assert hash1 == hash2
+
+    operation = OneShotOperation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+    hash3 = operation.get_hash()
+    assert hash1 != hash3
+
+
 def test_immutability():
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation.overwrite_pose_x(1.0)
