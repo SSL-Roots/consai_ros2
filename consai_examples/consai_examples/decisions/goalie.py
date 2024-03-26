@@ -106,9 +106,9 @@ def generate_defend_function():
 
 
 defend_func_names = [
-    'our_penalty_inplay', 'their_penalty_inplay',
     'our_pre_kickoff', 'our_kickoff', 'their_pre_kickoff', 'their_kickoff',
     'our_pre_penalty', 'our_penalty',
+    'our_penalty_inplay', 'their_penalty_inplay',
     'our_direct', 'their_direct', 'our_indirect', 'their_indirect',
     'our_ball_placement', 'their_ball_placement'
 ]

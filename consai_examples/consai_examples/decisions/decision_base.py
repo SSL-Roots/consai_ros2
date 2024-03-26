@@ -106,9 +106,10 @@ def generate_function():
 
 
 function_names = [
-    'halt', 'stop', 'inplay', 'our_penalty_inplay', 'their_penalty_inplay',
+    'halt', 'stop', 'inplay',
     'our_pre_kickoff', 'our_kickoff', 'their_pre_kickoff', 'their_kickoff',
     'our_pre_penalty', 'our_penalty', 'their_pre_penalty', 'their_penalty',
+    'our_penalty_inplay', 'their_penalty_inplay',
     'our_direct', 'their_direct', 'our_indirect', 'their_indirect',
     'our_timeout', 'their_timeout'
 ]
