@@ -225,21 +225,11 @@ def gen_their_penalty_function():
     return function
 
 
-chase_ball_func_names = [
-    'our_pre_kickoff', 'their_pre_kickoff', 'their_kickoff',
-    'our_pre_penalty',
-]
-for name in chase_ball_func_names:
+for name in ['our_pre_kickoff', 'their_pre_kickoff', 'their_kickoff', 'our_pre_penalty']:
     setattr(AttackerDecision, name, gen_chase_ball_function())
 
-setplay_shoot_func_names = [
-    'our_kickoff', 'our_penalty', 'our_direct', 'our_indirect',
-]
-for name in setplay_shoot_func_names:
+for name in ['our_kickoff', 'our_penalty', 'our_direct', 'our_indirect']:
     setattr(AttackerDecision, name, gen_setplay_shoot_function())
 
-their_penalty_func_names = [
-    'their_pre_penalty', 'their_penalty', 'their_penalty_inplay',
-]
-for name in their_penalty_func_names:
+for name in ['their_pre_penalty', 'their_penalty', 'their_penalty_inplay']:
     setattr(AttackerDecision, name, gen_their_penalty_function())
