@@ -28,6 +28,7 @@ from consai_msgs.msg import NamedTargets
 from consai_msgs.msg import State2D
 from rclpy.action import ActionClient
 from rclpy.node import Node
+import time
 
 
 # consai_robot_controllerに指令を送るノード
@@ -54,6 +55,8 @@ class RobotOperator(Node):
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._avoid_placement_enabled = [True] * ROBOT_NUM
+        self._prev_operation_timestamp = [time.time()] * ROBOT_NUM
+        self._prev_operation_hash = [0] * ROBOT_NUM 
 
         # 名前付きターゲット格納用の辞書
         # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
@@ -790,7 +793,21 @@ class RobotOperator(Node):
         self._set_goal(robot_id, goal)
 
     def operate(self, robot_id: int, operation: Operation):
+        # 前回と違うOperationが来たときのみ、Goalを設定する
+        hash_goal = operation.get_hash()
+        if self._prev_operation_hash[robot_id] == hash_goal:
+            return
+
         self._set_goal(robot_id, operation.get_goal())
+        self._prev_operation_hash[robot_id] = hash_goal
+
+        # 短い期間でoperateする場合は警告を出す
+        THRESHOLD = 0.1  # seconds
+        present_time = time.time()
+        if present_time - self._prev_operation_timestamp[robot_id] < THRESHOLD:
+            self.get_logger().warn(
+                'Robot {} is operated too frequently'.format(robot_id))
+        self._prev_operation_timestamp[robot_id] = present_time
 
     def _set_goal(self, robot_id, goal_msg):
         # アクションのゴールを設定する
