@@ -797,6 +797,8 @@ class RobotOperator(Node):
         hash_goal = operation.get_hash()
         if self._prev_operation_hash[robot_id] == hash_goal:
             return
+        self.get_logger().info(
+            'New operation for Robot {}'.format(robot_id))
 
         self._set_goal(robot_id, operation.get_goal())
         self._prev_operation_hash[robot_id] = hash_goal

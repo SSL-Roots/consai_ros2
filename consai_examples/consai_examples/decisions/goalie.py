@@ -51,55 +51,43 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def stop(self, robot_id):
-        if self._act_id != self.ACT_ID_STOP:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_STOP
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
-        ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
-        ID_IN_PLAY = self.ACT_ID_INPLAY + 1
-
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA \
            and not self._field_observer.ball_is_moving():
-            if self._act_id != ID_IN_DEFENSE:
-                # レシーバ候補のロボットIDリストを取得
-                can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
-                    can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
+            # レシーバ候補のロボットIDリストを取得
+            can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
+                can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
-                move_to_behind_ball = Operation().move_on_line(
-                    TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
-                move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
+            move_to_behind_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
+            move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
 
-                # リストが空でない場合
-                if 0 < len(can_pass_id_list):
-                    # リストの先頭のロボットにパス
-                    passing = move_to_behind_ball.with_passing_to(
-                        TargetXY.our_robot(can_pass_id_list[0]))
-                    self._operator.operate(robot_id, passing)
-                # リストが空の場合
+            # リストが空でない場合
+            if 0 < len(can_pass_id_list):
+                # リストの先頭のロボットにパス
+                passing = move_to_behind_ball.with_passing_to(
+                    TargetXY.our_robot(can_pass_id_list[0]))
+                self._operator.operate(robot_id, passing)
+            # リストが空の場合
+            else:
+                # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
+                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                    clear_ball = move_to_behind_ball.with_shooting_to(
+                        TargetXY.their_top_corner())
                 else:
-                    # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                    if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                                 FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-                        clear_ball = move_to_behind_ball.with_shooting_to(
-                            TargetXY.their_top_corner())
-                    else:
-                        clear_ball = move_to_behind_ball.with_shooting_to(
-                            TargetXY.their_bottom_corner())
-                    self._operator.operate(robot_id, clear_ball)
-
-                # ACT IDを更新
-                self._act_id = ID_IN_DEFENSE
+                    clear_ball = move_to_behind_ball.with_shooting_to(
+                        TargetXY.their_bottom_corner())
+                self._operator.operate(robot_id, clear_ball)
             return
 
-        if self._act_id != ID_IN_PLAY:
-            # ボールとゴールを結ぶ直線上を守る
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            # ACT IDを更新
-            self._act_id = ID_IN_PLAY
+        # ボールとゴールを結ぶ直線上を守る
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
 
     def our_pre_kickoff(self, robot_id):
         if self._act_id != self.ACT_ID_PRE_KICKOFF:
