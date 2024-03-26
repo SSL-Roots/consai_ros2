@@ -56,7 +56,7 @@ class RobotOperator(Node):
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._avoid_placement_enabled = [True] * ROBOT_NUM
         self._prev_operation_timestamp = [time.time()] * ROBOT_NUM
-        self._prev_operation_hash = [0] * ROBOT_NUM 
+        self._prev_operation_hash = [None] * ROBOT_NUM 
 
         # 名前付きターゲット格納用の辞書
         # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
@@ -792,7 +792,11 @@ class RobotOperator(Node):
 
         self._set_goal(robot_id, goal)
 
-    def operate(self, robot_id: int, operation: Operation):
+    def reset_operation(self, robot_id: int) -> None:
+        self._prev_operation_hash[robot_id] = None
+        self._prev_operation_timestamp[robot_id] = 0.0
+
+    def operate(self, robot_id: int, operation: Operation) -> None:
         # 前回と違うOperationが来たときのみ、Goalを設定する
         hash_goal = operation.get_hash()
         if self._prev_operation_hash[robot_id] == hash_goal:

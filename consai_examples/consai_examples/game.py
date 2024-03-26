@@ -71,6 +71,7 @@ def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_sta
         # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
         if robot_id in changed_ids:
             decisions[role].reset_act_id()
+            decisions[role].reset_operation(robot_id)
 
         # ボール状態をセットする
         decisions[role].set_ball_state(ball_state)

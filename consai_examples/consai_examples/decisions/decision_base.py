@@ -82,6 +82,9 @@ class DecisionBase(object):
     def reset_act_id(self):
         self._act_id = self.ACT_ID_INIT
 
+    def reset_operation(self, robot_id: int) -> None:
+        self._operator.reset_operation(robot_id)
+
 
 def generate_function():
     def function(self, robot_id):
