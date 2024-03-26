@@ -89,98 +89,28 @@ class GoaleDecision(DecisionBase):
         defend_our_goal = self._defend_goal_operation()
         self._operator.operate(robot_id, defend_our_goal)
 
-    def our_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
-
-    def our_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_KICKOFF
-
-    def their_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
-
-    def their_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_KICKOFF
-
-    def our_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def our_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PENALTY
-
     def their_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            penalty_defend = self._penalty_defend_operation()
-            self._operator.operate(robot_id, penalty_defend)
-            self._act_id = self.ACT_ID_PRE_PENALTY
+        penalty_defend = self._penalty_defend_operation()
+        self._operator.operate(robot_id, penalty_defend)
 
     def their_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            penalty_defend = self._penalty_defend_operation()
-            self._operator.operate(robot_id, penalty_defend)
-            self._act_id = self.ACT_ID_PENALTY
+        penalty_defend = self._penalty_defend_operation()
+        self._operator.operate(robot_id, penalty_defend)
 
-    def our_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INPLAY
 
-    def their_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INPLAY
+def generate_defend_function():
+    def function(self, robot_id, placement_pos=None):
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
+    return function
 
-    def our_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_DIRECT
 
-    def their_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_DIRECT
-
-    def our_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INDIRECT
-
-    def their_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INDIRECT
-
-    def our_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_OUR_PLACEMENT
-
-    def their_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_THEIR_PLACEMENT
+defend_func_names = [
+    'our_penalty_inplay', 'their_penalty_inplay',
+    'our_pre_kickoff', 'our_kickoff', 'their_pre_kickoff', 'their_kickoff',
+    'our_pre_penalty', 'our_penalty',
+    'our_direct', 'their_direct', 'our_indirect', 'their_indirect',
+    'our_ball_placement', 'their_ball_placement'
+]
+for name in defend_func_names:
+    setattr(GoaleDecision, name, generate_defend_function())
