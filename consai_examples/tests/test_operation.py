@@ -32,11 +32,11 @@ def test_get_hash():
     assert hash1 != hash3
 
 
-def test_stop():
+def test_halt():
     goal = Operation().get_goal()
     assert goal.stop is False
 
-    goal = Operation().stop().get_goal()
+    goal = Operation().halt().get_goal()
     assert goal.stop is True
 
 

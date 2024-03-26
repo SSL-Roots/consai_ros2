@@ -137,7 +137,7 @@ class Operation():
     def get_hash(self) -> int:
         return robot_control_hasher.hash_goal(self._goal)
 
-    def stop(self) -> 'Operation':
+    def halt(self) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.stop = True
         return Operation(goal)
