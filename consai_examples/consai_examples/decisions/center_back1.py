@@ -52,14 +52,11 @@ class CenterBack1Decision(DecisionBase):
         # ボールが左上にあれば上側をまもる
         if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
             operation = self._defend_upper_top_operation()
-            operation = operation.with_ball_receiving()
-            operation = operation.with_reflecting_to(TargetXY.their_goal())
-            self._operator.operate(robot_id, operation)
         else:
             operation = self._defend_upper_front_operation()
-            operation = operation.with_ball_receiving()
-            operation = operation.with_reflecting_to(TargetXY.their_goal())
-            self._operator.operate(robot_id, operation)
+        operation = operation.with_ball_receiving()
+        operation = operation.with_reflecting_to(TargetXY.their_goal())
+        self._operator.operate(robot_id, operation)
 
     def stop(self, robot_id):
         # self._defend_upper_front_defense_area(robot_id)
