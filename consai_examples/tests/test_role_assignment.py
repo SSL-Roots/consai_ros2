@@ -77,14 +77,14 @@ def test_update_roleは更新されたロボットのIDを返すこと(rclpy_ini
 
     # ロボットを減らす
     # 誰も役割は変わらないので、空リストが返ってくる
-    frame_publisher.publish_valid_robots(blue_ids=[0, 1])
+    frame_publisher.publish_valid_robots(blue_ids=[1])
     rclpy.spin_once(assignor, timeout_sec=1.0)
     assert assignor.update_role() == []
 
     # ロボットを増やす
     frame_publisher.publish_valid_robots(blue_ids=[0, 1, 2, 3, 4, 5])
     rclpy.spin_once(assignor, timeout_sec=1.0)
-    assert assignor.update_role() == [2, 3, 4, 5]
+    assert assignor.update_role() == [0, 2, 3, 4, 5]
 
     # ロボットを減らして増やす
     # 空きロールに新しいIDがセットされるの
