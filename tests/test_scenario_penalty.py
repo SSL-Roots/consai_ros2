@@ -20,6 +20,7 @@ from rcst import calc
 from rcst.ball import Ball
 from rcst.robot import RobotDict
 
+from utils_for_placement import init_placement
 
 # TODO: Implement a motion dribbling the ball to the opponent's side.
 # Issue: https://github.com/SSL-Roots/consai_ros2/issues/186
@@ -157,6 +158,44 @@ def test_goalie_on_the_goal_line(rcst_comm: Communication):
 
     rcst_comm.observer.customized().register_sticky_true_callback(
         "test", goalie_on_the_goal_line)
+
+    success = False
+    for _ in range(10):
+        if rcst_comm.observer.customized().get_result("test"):
+            success = True
+            break
+        time.sleep(1)
+    assert success is True
+
+def test_ボールプレースメント時に進入禁止エリアに侵入しないこと(rcst_comm: Communication):
+    target_x = 0.0
+    target_y = 0.0
+    ball_x = -4.0
+    ball_y = 0.0
+    init_placement(
+        rcst_comm, color="yellow", target_x=target_x, target_y=target_y,num_of_robots=11, ball_x=ball_x, ball_y=ball_y
+    )
+    time.sleep(3)
+
+    def blue_robots_are_out_of_placement_position(
+            ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
+        DISTANCE = 0.5  # meters
+        GOALIE_ID = 0
+
+        for robot in blue_robots.values():
+            if robot.id == GOALIE_ID:
+                continue
+
+            distance = calc.distance_point_c_to_line_ab(
+                target_x, target_y, ball.x, ball.y, robot.x, robot.y
+            )
+
+            if distance < DISTANCE:
+                return False
+        return True
+
+    rcst_comm.observer.customized().register_sticky_true_callback(
+        "test", blue_robots_are_out_of_placement_position)
 
     success = False
     for _ in range(10):
