@@ -16,15 +16,13 @@
 # limitations under the License.
 
 import argparse
-import threading
-
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
+from consai_examples.robot_operator import RobotOperator
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
-from robot_operator import RobotOperator
-
-from operation import Operation
-from operation import TargetXY
-from operation import TargetTheta
+import threading
 
 
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):

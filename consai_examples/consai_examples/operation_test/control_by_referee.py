@@ -16,13 +16,15 @@
 # limitations under the License.
 
 import argparse
-import threading
-import time
-
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
+from consai_examples.referee_parser import RefereeParser
+from consai_examples.robot_operator import RobotOperator
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
-from referee_parser import RefereeParser
-from robot_operator import RobotOperator
+import threading
+import time
 
 
 def print_command():
@@ -73,7 +75,7 @@ def print_command():
         print('none')
 
 
-def stop_operation():
+def stop_operation(args: argparse.Namespace) -> None:
     # RefereeコマンドがSTOPのときの動作
     # 0番のロボットをボール近くへ動かす
 
@@ -82,7 +84,10 @@ def stop_operation():
     print('STOPでは、全てのロボットは1.5 m/s未満に減速しなければなりません')
     print('全てのロボットはボールから0.5メートルの距離を取らなければなりません')
     print('ボールを蹴ったりドリブルしたりしてはいけません')
-    operator_node.chase_ball(0, -0.6, 0.0, 0.0, False, True)
+    operation = Operation().move_to_pose(
+        TargetXY.ball(), TargetTheta.look_ball())
+    operation = operation.offset_pose_x(-0.6)
+    operator_node.operate(args.id, operation)
 
     while referee_parser.stop():
         time.sleep(1)  # コマンドが変わるまで待機
@@ -116,7 +121,7 @@ def main():
         if referee_parser.halt():
             halt_operation()
         elif referee_parser.stop():
-            stop_operation()
+            stop_operation(args)
         else:
             default_operation()
 
@@ -131,6 +136,10 @@ if __name__ == '__main__':
                             default=False,
                             action='store_true',
                             help='ball placementの目標座標を反転する場合にセットする')
+    arg_parser.add_argument('--id',
+                            default=0,
+                            type=int,
+                            help='ロボットID')
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
