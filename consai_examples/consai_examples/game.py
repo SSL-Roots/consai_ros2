@@ -66,9 +66,7 @@ def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_sta
                      ball_zone_state: int, num_of_zone_roles: int, zone_targets: list[int]):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
-        # 頻繁に行動を更新すると、controllerの負荷が高まり制御に遅延が発生します
         if robot_id in changed_ids:
-            decisions[role].reset_act_id()
             decisions[role].reset_operation(robot_id)
 
         # ボール状態をセットする

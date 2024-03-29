@@ -20,20 +20,6 @@ from operation import Operation
 
 
 class DecisionBase(object):
-    MAX_VELOCITY_AT_STOP_GAME = 1.5  # m/s
-    ACT_ID_INIT = -1
-    ACT_ID_HALT = 10
-    ACT_ID_STOP = 20
-    ACT_ID_INPLAY = 30
-    ACT_ID_PRE_KICKOFF = 40
-    ACT_ID_KICKOFF = 50
-    ACT_ID_PRE_PENALTY = 60
-    ACT_ID_PENALTY = 70
-    ACT_ID_DIRECT = 80
-    ACT_ID_INDIRECT = 90
-    ACT_ID_TIMEOUT = 100
-    ACT_ID_OUR_PLACEMENT = 110
-    ACT_ID_THEIR_PLACEMENT = 120
 
     def __init__(self, robot_operator, field_observer):
         self._operator = robot_operator
@@ -43,7 +29,6 @@ class DecisionBase(object):
         self._ball_zone_state = FieldObserver.BALL_ZONE_NONE
         self._num_of_zone_roles = 0
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
-        self._act_id = self.ACT_ID_INIT
         self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
     def enable_stop_game_velocity(self, robot_id):
@@ -78,9 +63,6 @@ class DecisionBase(object):
 
     def set_zone_targets(self, zone_targets):
         self._zone_targets = zone_targets
-
-    def reset_act_id(self):
-        self._act_id = self.ACT_ID_INIT
 
     def reset_operation(self, robot_id: int) -> None:
         self._operator.reset_operation(robot_id)
