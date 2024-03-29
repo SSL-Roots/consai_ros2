@@ -24,7 +24,6 @@ install(PROGRAMS
     ${PROJECT_NAME}/constraint_hasher.py
     ${PROJECT_NAME}/control.py
     ${PROJECT_NAME}/control_by_referee.py
-    ${PROJECT_NAME}/control_with_role.py
     ${PROJECT_NAME}/field_observer.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
