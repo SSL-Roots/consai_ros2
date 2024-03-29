@@ -64,18 +64,23 @@ ros2 run consai_examples control.py
 
 `control.py`は`consai_robot_controller`の使い方を知るためのスクリプトです。
 
-`main()`内のコメントをON/OFFすることで、様々な動きを試せます。
+引数の`example`をセットするとロボットの動きを変更できます。
 
-```python
-def main(target_is_yellow=False):
-    # test_move_to()
-    # test_move_to_normalized(3)
-    # test_chase_ball()
-    # test_chase_robot()
-    # test_for_config_pid(test_theta=True)
-    # test_shoot(1.0, 0.0)
-    # test_pass_two_robots()
-    test_pass_four_robots()
+```sh
+# ヘルプの表示
+ros2 run consai_examples control.py --help
+...
+--example EXAMPLE  実行したい関数の番号
+                     0: move_to
+                     1: chase_ball
+                     2: wait_ball_and_shoot
+                     3: receive_ball_and_shoot
+                     4: pass_ball_between_robots
+                     5: move_to_between_ball_and_center
+                     6: defend_our_goal
+
+# 2: wait_ball_and_shootを実行
+ros2 run consai_examples control.py --example=2
 ```
 
 ## ロボット、ボール情報を上下左右反転する

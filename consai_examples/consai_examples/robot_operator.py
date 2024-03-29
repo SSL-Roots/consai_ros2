@@ -55,7 +55,7 @@ class RobotOperator(Node):
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._avoid_placement_enabled = [True] * ROBOT_NUM
-        self._prev_operation_timestamp = [time.time()] * ROBOT_NUM
+        self._prev_operation_timestamp = [0] * ROBOT_NUM
         self._prev_operation_hash = [None] * ROBOT_NUM
 
         # 名前付きターゲット格納用の辞書
