@@ -104,6 +104,14 @@ class TargetXY(NamedTuple):
         constraint.value_y.insert(0, -1.0)
         return cls(constraint)
 
+    @classmethod
+    def our_side_center(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, -0.5)
+        constraint.value_y.insert(0, 0.0)
+        return cls(constraint)
+
 
 class TargetTheta(NamedTuple):
     constraint: ConstraintTheta

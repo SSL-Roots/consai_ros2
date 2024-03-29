@@ -117,7 +117,7 @@ class SubAttackerDecision(DecisionBase):
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0),
+            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):

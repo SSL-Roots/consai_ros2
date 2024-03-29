@@ -19,6 +19,9 @@
 from enum import Enum
 
 from decisions.decision_base import DecisionBase
+from operation import Operation
+from operation import TargetXY
+from operation import TargetTheta
 
 
 class WingID(Enum):
@@ -44,15 +47,20 @@ class SideWingDecision(DecisionBase):
         p1_y = (1.8 + 0.5) * (-1 if self._wing_id.value > 0 else 1)
         p2_x = -6.0 + 1.8 + 0.3
         p2_y = (1.8 + 0.5) * (-1 if self._wing_id.value > 0 else 1)
-        self._operator.move_to_line_to_defend_our_goal(
-            robot_id, p1_x, p1_y, p2_x, p2_y)
+        operation = Operation().move_to_intersection(
+            TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
+        operation = operation.with_ball_receiving()
+        self._operator.operate(robot_id, operation)
 
     def _defend_our_half_way(self, robot_id):
         # Half-wayラインの自陣側で待機
         target_x = -1.0
         target_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
-        self._operator.move_to_reflect_shoot_to_their_goal(
-                    robot_id, target_x, target_y)
+        operation = Operation().move_to_pose(
+            TargetXY.value(target_x, target_y), TargetTheta.look_ball())
+        operation = operation.with_reflecting_to(TargetXY.their_goal())
+        self._operator.operate(robot_id, operation)
 
     def _offend_upper_defense_area(self, robot_id):
         # 相手フィールドで待機する
@@ -60,105 +68,85 @@ class SideWingDecision(DecisionBase):
         p1_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
         p2_x = 5.0
         p2_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
-        # self._operator.move_to_cross_line_our_center_and_ball_with_reflect(
-        # robot_id, p1_x, p1_y, p2_x, p2_y)
-        self._operator.move_to_cross_line_our_center_and_ball(
-            robot_id, p1_x, p1_y, p2_x, p2_y)
+        operation = Operation().move_to_intersection(
+            TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+            TargetXY.our_side_center(), TargetXY.ball(), TargetTheta.look_ball())
+        operation = operation.with_ball_receiving()
+        self._operator.operate(robot_id, operation)
 
     def stop(self, robot_id):
-        if self._act_id != self.ACT_ID_STOP:
-            # self._defend_our_half_way(robot_id)
-            self._offend_upper_defense_area(robot_id)
-            self._act_id = self.ACT_ID_STOP
+        self._offend_upper_defense_area(robot_id)
 
     def inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._offend_upper_defense_area(robot_id)
-            # self._defend_upper_defense_area(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+        self._offend_upper_defense_area(robot_id)
 
     def our_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
+        self._defend_our_half_way(robot_id)
 
     def our_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_KICKOFF
+        self._defend_our_half_way(robot_id)
 
     def their_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
+        self._defend_our_half_way(robot_id)
 
     def their_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_KICKOFF
-
-    def our_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def our_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._our_penalty_pos_x, self._our_penalty_pos_y)
-            self._act_id = self.ACT_ID_PENALTY
-
-    def their_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def their_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._their_penalty_pos_x, self._their_penalty_pos_y)
-            self._act_id = self.ACT_ID_PENALTY
-
-    def our_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.stop(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
-
-    def their_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.stop(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+        self._defend_our_half_way(robot_id)
 
     def our_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_DIRECT
+        self._defend_our_half_way(robot_id)
 
     def their_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_DIRECT
+        self._defend_our_half_way(robot_id)
 
     def our_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_INDIRECT
+        self._defend_our_half_way(robot_id)
 
     def their_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            self._defend_our_half_way(robot_id)
-            self._act_id = self.ACT_ID_INDIRECT
+        self._defend_our_half_way(robot_id)
 
-    def our_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            self._operator.move_to_look_ball(
-                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
-            self._act_id = self.ACT_ID_OUR_PLACEMENT
+    def _our_penalty_operation(self):
+        return Operation().move_to_pose(
+            TargetXY.value(self._our_penalty_pos_x, self._our_penalty_pos_y),
+            TargetTheta.look_ball())
 
-    def their_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(
-                robot_id, self._ball_placement_pos_x, self._ball_placement_pos_y)
-            self._act_id = self.ACT_ID_THEIR_PLACEMENT
+    def _their_penalty_operation(self):
+        return Operation().move_to_pose(
+            TargetXY.value(self._their_penalty_pos_x, self._their_penalty_pos_y),
+            TargetTheta.look_ball())
+
+    def _ball_placement_operation(self):
+        return Operation().move_to_pose(
+            TargetXY.value(
+                self._ball_placement_pos_x, self._ball_placement_pos_y),
+            TargetTheta.look_ball())
+
+
+def gen_our_penalty_function():
+    def function(self, robot_id):
+        operation = self._our_penalty_operation()
+        self._operator.operate(robot_id, operation)
+    return function
+
+
+def gen_their_penalty_function():
+    def function(self, robot_id):
+        operation = self._their_penalty_operation()
+        self._operator.operate(robot_id, operation)
+    return function
+
+
+def gen_ball_placement_function():
+    def function(self, robot_id, placement_pos=None):
+        operation = self._ball_placement_operation()
+        self._operator.operate(robot_id, operation)
+    return function
+
+
+for name in ['our_pre_penalty', 'our_penalty', 'our_penalty_inplay']:
+    setattr(SideWingDecision, name, gen_our_penalty_function())
+
+for name in ['their_pre_penalty', 'their_penalty', 'their_penalty_inplay']:
+    setattr(SideWingDecision, name, gen_their_penalty_function())
+
+for name in ['our_ball_placement', 'their_ball_placement']:
+    setattr(SideWingDecision, name, gen_ball_placement_function())
