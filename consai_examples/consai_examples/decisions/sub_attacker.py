@@ -97,7 +97,7 @@ class SubAttackerDecision(DecisionBase):
             move_to_behind_target = Operation().move_on_line(
                 TargetXY.value(placement_pos.x, placement_pos.y),
                 TargetXY.ball(),
-                0.1,
+                -0.1,
                 TargetTheta.look_ball())
             move_to_behind_target = move_to_behind_target.with_ball_receiving()
             self._operator.operate(robot_id, move_to_behind_target)
@@ -111,13 +111,13 @@ class SubAttackerDecision(DecisionBase):
 
     def their_ball_placement(self, robot_id, placement_pos):
         operation = Operation().move_to_pose(
-            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 1.0),
+            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 3.0),
             TargetTheta.look_ball())
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
+            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 4.0),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):

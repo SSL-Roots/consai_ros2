@@ -83,14 +83,14 @@ class CenterBack2Decision(DecisionBase):
 
 def gen_defend_lower_front_function():
     def function(self, robot_id):
-        operation = self._defend_lower_front_operation()
+        operation = self._defend_lower_front_defense_operation()
         self._operator.operate(robot_id, operation)
     return function
 
 
 def gen_defend_lower_front_with_receiving_function():
     def function(self, robot_id):
-        operation = self._defend_lower_front_operation()
+        operation = self._defend_lower_front_defense_operation()
         operation = operation.with_ball_receiving()
         self._operator.operate(robot_id, operation)
     return function
