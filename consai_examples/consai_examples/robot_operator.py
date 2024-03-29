@@ -56,7 +56,7 @@ class RobotOperator(Node):
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._avoid_placement_enabled = [True] * ROBOT_NUM
         self._prev_operation_timestamp = [time.time()] * ROBOT_NUM
-        self._prev_operation_hash = [None] * ROBOT_NUM 
+        self._prev_operation_hash = [None] * ROBOT_NUM
 
         # 名前付きターゲット格納用の辞書
         # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
