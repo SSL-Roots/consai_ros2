@@ -64,14 +64,14 @@ def test_move_on_line():
 def test_move_to_intersection():
     goal = Operation().move_to_intersection(
         TargetXY.our_goal(), TargetXY.ball(),
-        TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball()).get_goal()
+        TargetXY.our_robot(0), TargetXY.their_robot(1), TargetTheta.look_ball()).get_goal()
     assert len(goal.line) >= 1
     assert goal.line[0].p1.object[0].type == ConstraintObject.OUR_GOAL
     assert goal.line[0].p2.object[0].type == ConstraintObject.BALL
     assert len(goal.line[0].p3) >= 1
     assert goal.line[0].p3[0].object[0].type == ConstraintObject.OUR_ROBOT
     assert len(goal.line[0].p4) >= 1
-    assert goal.line[0].p4[0].object[0].type == ConstraintObject.OUR_ROBOT
+    assert goal.line[0].p4[0].object[0].type == ConstraintObject.THEIR_ROBOT
     assert len(goal.line[0].offset_intersection_to_p2) >= 1
     assert goal.line[0].offset_intersection_to_p2[0] == 0.0
     assert goal.line[0].theta.object[0].type == ConstraintObject.BALL
