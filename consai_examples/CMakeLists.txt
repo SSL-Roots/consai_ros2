@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/ball_boy_test.py
+    ${PROJECT_NAME}/constraint_hasher.py
     ${PROJECT_NAME}/control.py
     ${PROJECT_NAME}/control_by_referee.py
     ${PROJECT_NAME}/control_with_role.py
@@ -29,6 +30,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/referee_visualize_parser.py
+    ${PROJECT_NAME}/robot_control_hasher.py
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
@@ -36,8 +38,6 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
-    ${PROJECT_NAME}/decisions/side_back1.py
-    ${PROJECT_NAME}/decisions/side_back2.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
@@ -62,6 +62,8 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_field_observer tests/test_field_observer.py)
   ament_add_pytest_test(test_operation tests/test_operation.py)
+  ament_add_pytest_test(test_constraint_hasher tests/test_constraint_hasher.py)
+  ament_add_pytest_test(test_robot_control_hasher tests/test_robot_control_hasher.py)
 endif()
 
 ament_package()

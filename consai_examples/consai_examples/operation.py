@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples import robot_control_hasher
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
@@ -78,6 +79,16 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
+    def their_robot(cls, robot_id: int) -> 'TargetXY':
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.THEIR_ROBOT
+        obj.robot_id = robot_id
+
+        constraint = ConstraintXY()
+        constraint.object.append(obj)
+        return cls(constraint)
+
+    @classmethod
     def their_top_corner(cls) -> 'TargetXY':
         constraint = ConstraintXY()
         constraint.normalized = True
@@ -91,6 +102,14 @@ class TargetXY(NamedTuple):
         constraint.normalized = True
         constraint.value_x.insert(0, 1.0)
         constraint.value_y.insert(0, -1.0)
+        return cls(constraint)
+
+    @classmethod
+    def our_side_center(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, -0.5)
+        constraint.value_y.insert(0, 0.0)
         return cls(constraint)
 
 
@@ -132,6 +151,14 @@ class Operation():
 
     def get_goal(self) -> RobotControl.Goal:
         return self._goal
+
+    def get_hash(self) -> int:
+        return robot_control_hasher.hash_goal(self._goal)
+
+    def halt(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.stop = True
+        return Operation(goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':

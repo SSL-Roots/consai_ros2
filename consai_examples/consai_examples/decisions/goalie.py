@@ -51,148 +51,66 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def stop(self, robot_id):
-        if self._act_id != self.ACT_ID_STOP:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_STOP
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
-        ID_IN_DEFENSE = self.ACT_ID_INPLAY + 0
-        ID_IN_PLAY = self.ACT_ID_INPLAY + 1
-
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA \
            and not self._field_observer.ball_is_moving():
-            if self._act_id != ID_IN_DEFENSE:
-                # レシーバ候補のロボットIDリストを取得
-                can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
-                    can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
+            # レシーバ候補のロボットIDリストを取得
+            can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
+                can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
 
-                move_to_behind_ball = Operation().move_on_line(
-                    TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
-                move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
+            move_to_behind_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
+            move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
 
-                # リストが空でない場合
-                if 0 < len(can_pass_id_list):
-                    # リストの先頭のロボットにパス
-                    passing = move_to_behind_ball.with_passing_to(
-                        TargetXY.our_robot(can_pass_id_list[0]))
-                    self._operator.operate(robot_id, passing)
-                # リストが空の場合
+            # リストが空でない場合
+            if 0 < len(can_pass_id_list):
+                # リストの先頭のロボットにパス
+                passing = move_to_behind_ball.with_passing_to(
+                    TargetXY.our_robot(can_pass_id_list[0]))
+                self._operator.operate(robot_id, passing)
+            # リストが空の場合
+            else:
+                # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
+                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
+                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                    clear_ball = move_to_behind_ball.with_shooting_to(
+                        TargetXY.their_top_corner())
                 else:
-                    # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                    if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                                 FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
-                        clear_ball = move_to_behind_ball.with_shooting_to(
-                            TargetXY.their_top_corner())
-                    else:
-                        clear_ball = move_to_behind_ball.with_shooting_to(
-                            TargetXY.their_bottom_corner())
-                    self._operator.operate(robot_id, clear_ball)
-
-                # ACT IDを更新
-                self._act_id = ID_IN_DEFENSE
+                    clear_ball = move_to_behind_ball.with_shooting_to(
+                        TargetXY.their_bottom_corner())
+                self._operator.operate(robot_id, clear_ball)
             return
 
-        if self._act_id != ID_IN_PLAY:
-            # ボールとゴールを結ぶ直線上を守る
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            # ACT IDを更新
-            self._act_id = ID_IN_PLAY
-
-    def our_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
-
-    def our_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_KICKOFF
-
-    def their_pre_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_KICKOFF
-
-    def their_kickoff(self, robot_id):
-        if self._act_id != self.ACT_ID_KICKOFF:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_KICKOFF
-
-    def our_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def our_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_PENALTY
+        # ボールとゴールを結ぶ直線上を守る
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
 
     def their_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            penalty_defend = self._penalty_defend_operation()
-            self._operator.operate(robot_id, penalty_defend)
-            self._act_id = self.ACT_ID_PRE_PENALTY
+        penalty_defend = self._penalty_defend_operation()
+        self._operator.operate(robot_id, penalty_defend)
 
     def their_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PENALTY:
-            penalty_defend = self._penalty_defend_operation()
-            self._operator.operate(robot_id, penalty_defend)
-            self._act_id = self.ACT_ID_PENALTY
+        penalty_defend = self._penalty_defend_operation()
+        self._operator.operate(robot_id, penalty_defend)
 
-    def our_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INPLAY
 
-    def their_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INPLAY
+def generate_defend_function():
+    def function(self, robot_id, placement_pos=None):
+        defend_our_goal = self._defend_goal_operation()
+        self._operator.operate(robot_id, defend_our_goal)
+    return function
 
-    def our_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_DIRECT
 
-    def their_direct(self, robot_id):
-        if self._act_id != self.ACT_ID_DIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_DIRECT
-
-    def our_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INDIRECT
-
-    def their_indirect(self, robot_id):
-        if self._act_id != self.ACT_ID_INDIRECT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_INDIRECT
-
-    def our_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_OUR_PLACEMENT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_OUR_PLACEMENT
-
-    def their_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            defend_our_goal = self._defend_goal_operation()
-            self._operator.operate(robot_id, defend_our_goal)
-            self._act_id = self.ACT_ID_THEIR_PLACEMENT
+defend_func_names = [
+    'our_pre_kickoff', 'our_kickoff', 'their_pre_kickoff', 'their_kickoff',
+    'our_pre_penalty', 'our_penalty',
+    'our_penalty_inplay', 'their_penalty_inplay',
+    'our_direct', 'their_direct', 'our_indirect', 'their_indirect',
+    'our_ball_placement', 'their_ball_placement'
+]
+for name in defend_func_names:
+    setattr(GoaleDecision, name, generate_defend_function())
