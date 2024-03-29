@@ -20,10 +20,7 @@ find_package(ament_cmake REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
-    ${PROJECT_NAME}/ball_boy_test.py
     ${PROJECT_NAME}/constraint_hasher.py
-    ${PROJECT_NAME}/control.py
-    ${PROJECT_NAME}/control_by_referee.py
     ${PROJECT_NAME}/field_observer.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
@@ -41,6 +38,9 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
     ${PROJECT_NAME}/decisions/side_wing.py
+    ${PROJECT_NAME}/operation_test/ball_boy_test.py
+    ${PROJECT_NAME}/operation_test/control.py
+    ${PROJECT_NAME}/operation_test/control_by_referee.py
     ${PROJECT_NAME}/operation_test/test_move_to.py
     ${PROJECT_NAME}/operation_test/pass_shoot_test.py
     ${PROJECT_NAME}/operation_test/shoot_to_their_test.py
