@@ -24,8 +24,6 @@ from decisions.attacker import AttackerDecision
 from decisions.center_back1 import CenterBack1Decision
 from decisions.center_back2 import CenterBack2Decision
 from decisions.goalie import GoaleDecision
-from decisions.side_back1 import SideBack1Decision
-from decisions.side_back2 import SideBack2Decision
 from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
@@ -240,8 +238,6 @@ if __name__ == '__main__':
         RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),
         RoleName.ZONE3: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE3),
         RoleName.ZONE4: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE4),
-        RoleName.SIDE_BACK1: SideBack1Decision(operator, observer),
-        RoleName.SIDE_BACK2: SideBack2Decision(operator, observer),
         RoleName.LEFT_WING: SideWingDecision(operator, observer, WingID.LEFT),
         RoleName.RIGHT_WING: SideWingDecision(operator, observer, WingID.RIGHT),
         RoleName.SUBSTITUTE: SubstituteDecision(operator, observer, args.invert),
