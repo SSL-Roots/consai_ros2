@@ -157,7 +157,7 @@ class AttackerDecision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         # プレースメントを回避しない
-        self._operator.disable_avoid_placement(robot_id)
+        operation = Operation().disable_avoid_placement_area()
 
         ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
@@ -169,7 +169,7 @@ class AttackerDecision(DecisionBase):
             outside_kick_pos = self._field_observer.get_near_outside_ball_placement(
                 ball_state, placement_pos)
             # 壁際に蹴る
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+            move_to_ball = operation.move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             put_ball_back = move_to_ball.with_shooting_for_setplay_to(
                 TargetXY.value(outside_kick_pos.x, outside_kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
@@ -177,7 +177,7 @@ class AttackerDecision(DecisionBase):
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
             # ボール位置が配置目標位置から離れているときはパスする
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+            move_to_ball = operation.move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             passing = move_to_ball.with_passing_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             self._operator.operate(robot_id, passing)
@@ -185,7 +185,7 @@ class AttackerDecision(DecisionBase):
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボール位置が配置目標位置に近づいたときはドリブルする
-            move_to_behind_ball = Operation().move_on_line(
+            move_to_behind_ball = operation.move_on_line(
                 TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y), -0.3,
                 TargetTheta.look_ball())
             dribbling = move_to_behind_ball.with_dribbling_to(
@@ -195,7 +195,7 @@ class AttackerDecision(DecisionBase):
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
-            avoid_ball = Operation().move_on_line(
+            avoid_ball = operation.move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
             self._operator.operate(robot_id, avoid_ball)
 
