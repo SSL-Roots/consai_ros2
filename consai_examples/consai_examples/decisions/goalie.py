@@ -97,9 +97,19 @@ class GoaleDecision(DecisionBase):
         penalty_defend = self._penalty_defend_operation()
         self._operator.operate(robot_id, penalty_defend)
 
+    def our_ball_placement(self, robot_id, placement_pos):
+        defend_our_goal = self._defend_goal_operation()
+        defend_our_goal = defend_our_goal.enable_avoid_placement_area()
+        self._operator.operate(robot_id, defend_our_goal)
+
+    def their_ball_placement(self, robot_id, placement_pos):
+        defend_our_goal = self._defend_goal_operation()
+        defend_our_goal = defend_our_goal.enable_avoid_placement_area()
+        self._operator.operate(robot_id, defend_our_goal)
+
 
 def generate_defend_function():
-    def function(self, robot_id, placement_pos=None):
+    def function(self, robot_id):
         defend_our_goal = self._defend_goal_operation()
         self._operator.operate(robot_id, defend_our_goal)
     return function
@@ -110,7 +120,6 @@ defend_func_names = [
     'our_pre_penalty', 'our_penalty',
     'our_penalty_inplay', 'their_penalty_inplay',
     'our_direct', 'their_direct', 'our_indirect', 'their_indirect',
-    'our_ball_placement', 'their_ball_placement'
 ]
 for name in defend_func_names:
     setattr(GoaleDecision, name, generate_defend_function())

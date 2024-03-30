@@ -35,9 +35,8 @@ bool receive_ball false
 # リフレクトシュート
 bool reflect_shoot false
 
-# 衝突回避は安全のためデフォルトでtrue
-bool avoid_obstacles true
-bool avoid_placement true
+bool avoid_obstacles true  # 衝突回避は安全のためデフォルトでtrue
+bool avoid_placement_area false  # 回避の機会は限定的なのでデフォルトでfalse
 
 ---
 bool success

@@ -160,9 +160,9 @@ class Operation():
         goal.stop = True
         return Operation(goal)
 
-    def disable_avoid_placement_area(self) -> 'Operation':
+    def enable_avoid_placement_area(self) -> 'Operation':
         goal = deepcopy(self._goal)
-        goal.avoid_placement = False
+        goal.avoid_placement_area = True
         return Operation(goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,

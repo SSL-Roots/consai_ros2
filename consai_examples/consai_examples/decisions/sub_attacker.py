@@ -88,13 +88,10 @@ class SubAttackerDecision(DecisionBase):
         self._offend(robot_id)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        # プレースメントを回避しない
-        operation = Operation().disable_avoid_placement_area()
-
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
            self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
             # ボールを受け取る
-            move_to_behind_target = operation.move_on_line(
+            move_to_behind_target = Operation().move_on_line(
                 TargetXY.value(placement_pos.x, placement_pos.y),
                 TargetXY.ball(),
                 -0.1,
@@ -105,7 +102,7 @@ class SubAttackerDecision(DecisionBase):
 
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
             # ボール位置が配置目標位置に到着したらボールから離れる
-            avoid_ball = operation.move_on_line(
+            avoid_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
             self._operator.operate(robot_id, avoid_ball)
 

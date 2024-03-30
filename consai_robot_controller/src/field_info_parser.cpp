@@ -172,9 +172,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   // ボールプレイスメントエリアを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE)
-  {
+  if (goal->avoid_placement_area) {
     if (referee_->designated_position.size() > 0) {
       State designated_position;
       designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
@@ -195,11 +193,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
       if (is_our_placement) {
         avoid_kick_receive_area = false;
       }
-      if (goal->avoid_placement) {
-        tactic_obstacle_avoidance_->avoid_placement_area(
-          my_robot, avoidance_pose, ball, avoid_kick_receive_area,
-          designated_position, avoidance_pose);
-      }
+
+      tactic_obstacle_avoidance_->avoid_placement_area(
+        my_robot, avoidance_pose, ball, avoid_kick_receive_area,
+        designated_position, avoidance_pose);
     }
   }
 
