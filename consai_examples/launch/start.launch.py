@@ -16,6 +16,7 @@ from ament_index_python.packages import get_package_share_directory
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.actions.shutdown_action import Shutdown
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -116,6 +117,7 @@ def generate_launch_description():
                          '--goalie', LaunchConfiguration('goalie')
                      ],
                      condition=IfCondition(LaunchConfiguration('game')),
+                     on_exit=Shutdown(),
                      )
 
     return launch.LaunchDescription([
