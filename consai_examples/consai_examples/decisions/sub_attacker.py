@@ -110,6 +110,7 @@ class SubAttackerDecision(DecisionBase):
         operation = Operation().move_to_pose(
             TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 3.0),
             TargetTheta.look_ball())
+        operation = operation.enable_avoid_placement_area(placement_pos)
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):

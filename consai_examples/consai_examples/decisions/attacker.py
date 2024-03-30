@@ -153,6 +153,7 @@ class AttackerDecision(DecisionBase):
         operation = Operation().move_to_pose(
             TargetXY.value(-6.0 + 2.0, 1.8),
             TargetTheta.look_ball())
+        operation = operation.enable_avoid_placement_area(placement_pos)
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):

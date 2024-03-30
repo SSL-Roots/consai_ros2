@@ -20,6 +20,7 @@ from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
+from consai_msgs.msg import State2D
 from copy import deepcopy
 from typing import NamedTuple
 
@@ -160,9 +161,10 @@ class Operation():
         goal.stop = True
         return Operation(goal)
 
-    def enable_avoid_placement_area(self) -> 'Operation':
+    def enable_avoid_placement_area(self, placement_pos: State2D) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.avoid_placement_area = True
+        goal.placement_pos = placement_pos
         return Operation(goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,

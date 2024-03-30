@@ -76,10 +76,9 @@ class CenterBack2Decision(DecisionBase):
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
-        operation = Operation().move_to_pose(
+        return Operation().move_to_pose(
             TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 2.0),
             TargetTheta.look_ball())
-        return operation.enable_avoid_placement_area()
 
 
 def gen_defend_lower_front_function():
@@ -112,8 +111,9 @@ def gen_their_penalty_function():
 
 
 def gen_ball_placement_function():
-    def function(self, robot_id, placement_pos=None):
+    def function(self, robot_id, placement_pos):
         operation = self._ball_placement_operation()
+        operation = operation.enable_avoid_placement_area(placement_pos)
         self._operator.operate(robot_id, operation)
     return function
 
