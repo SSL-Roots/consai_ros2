@@ -280,12 +280,12 @@ bool ObstacleAvoidance::avoid_ball_500mm(
 
       // 自分と目標位置間にボールがなければ終了
       if (ball_pose_RtoG.x < 0.0 || ball_pose_RtoG.x > goal_pose_RtoG.x) {
-        return true;
+        return false;
       }
 
       // ボールが離れていれば終了
       if (std::fabs(ball_pose_RtoG.y) > DISTANCE_TO_AVOID_THRESHOLD) {
-        return true;
+        return false;
       }
 
       // 回避位置を生成
@@ -299,7 +299,7 @@ bool ObstacleAvoidance::avoid_ball_500mm(
       const auto distance_BtoA = tools::distance(ball_pose, avoidance_pose);
       // 目標位置がボールから離れていれば終了
       if (distance_BtoA > DISTANCE_TO_AVOID_THRESHOLD) {
-        return true;
+        return false;
       }
 
       // 目標位置とボールを結ぶ直線上で、目標位置をボールから離す
@@ -344,9 +344,9 @@ bool ObstacleAvoidance::avoid_ball_500mm(
   // 障害物がなければ、目標位置を回避位置とする
   avoidance_pose = goal_pose;
 
-  avoidance_on_line_robot_to_goal();
-  make_a_gap_from_ball();
-  avoid_outside_of_field();
+  if (avoidance_on_line_robot_to_goal() || make_a_gap_from_ball()) {
+    avoid_outside_of_field();
+  }
 
   avoidance_pose.theta = final_goal_pose.theta;
 
