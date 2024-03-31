@@ -147,7 +147,6 @@ bool ObstacleAvoidance::avoid_obstacles(
 
 bool ObstacleAvoidance::avoid_placement_area(
   const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-  const bool avoid_kick_receive_area,
   const State & designated_position, State & avoidance_pose) const
 {
   // プレースメント範囲を回避する
@@ -167,17 +166,12 @@ bool ObstacleAvoidance::avoid_placement_area(
   // 0.5 m 離れなければならない
   // 現在位置と目標位置がともにプレースメントエリアにある場合、回避点を生成する
 
-  // 自チームのプレースメント時は、ボールを蹴る位置、受け取る位置を避けない
-  double threshold_x = 0.0;
-  if (avoid_kick_receive_area) {
-    threshold_x = THRESHOLD_X;
-  }
   bool my_pose_is_in_area = std::fabs(robot_pose_BtoD.y) < THRESHOLD_Y &&
-    robot_pose_BtoD.x > -threshold_x &&
-    robot_pose_BtoD.x < designated_BtoD.x + threshold_x;
+    robot_pose_BtoD.x > -THRESHOLD_X &&
+    robot_pose_BtoD.x < designated_BtoD.x + THRESHOLD_X;
   bool goal_pose_is_in_area = std::fabs(goal_pose_BtoD.y) < THRESHOLD_Y &&
-    goal_pose_BtoD.x > -threshold_x &&
-    goal_pose_BtoD.x < designated_BtoD.x + threshold_x;
+    goal_pose_BtoD.x > -THRESHOLD_X &&
+    goal_pose_BtoD.x < designated_BtoD.x + THRESHOLD_X;
 
   if (my_pose_is_in_area || goal_pose_is_in_area) {
     auto avoid_y = std::copysign(AVOIDANCE_POS_Y, robot_pose_BtoD.y);
@@ -218,7 +212,7 @@ bool ObstacleAvoidance::avoid_placement_area(
   return true;
 }
 
-bool ObstacleAvoidance::avoid_robots(
+bool ObstacleAvoidance::avoid_pushing_robots(
   const TrackedRobot & my_robot, const State & goal_pose,
   State & avoidance_pose) const
 {

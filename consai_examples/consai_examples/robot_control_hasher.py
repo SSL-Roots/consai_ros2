@@ -37,6 +37,10 @@ def hash_goal(goal: RobotControl.Goal) -> int:
         goal.receive_ball,
         goal.reflect_shoot,
         goal.avoid_obstacles,
-        goal.avoid_placement
+        goal.avoid_placement_area,
+        goal.placement_pos.x,
+        goal.placement_pos.y,
+        goal.avoid_ball,
+        goal.avoid_pushing_robots,
     )
     return hash(target)

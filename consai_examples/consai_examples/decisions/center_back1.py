@@ -59,8 +59,9 @@ class CenterBack1Decision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def stop(self, robot_id):
-        # self._defend_upper_front_defense_area(robot_id)
         operation = self._defend_upper_front_operation()
+        operation = operation.enable_avoid_ball()
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
@@ -82,17 +83,19 @@ class CenterBack1Decision(DecisionBase):
             TargetTheta.look_ball())
 
 
-def gen_defend_upper_front_function():
+def gen_kickoff_function():
     def function(self, robot_id):
         operation = self._defend_upper_front_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
 
-def gen_defend_upper_front_with_receiving_function():
+def gen_setplay_function():
     def function(self, robot_id):
         operation = self._defend_upper_front_operation()
         operation = operation.with_ball_receiving()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
@@ -100,6 +103,7 @@ def gen_defend_upper_front_with_receiving_function():
 def gen_our_penalty_function():
     def function(self, robot_id):
         operation = self._our_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
@@ -107,22 +111,25 @@ def gen_our_penalty_function():
 def gen_their_penalty_function():
     def function(self, robot_id):
         operation = self._their_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
 
 def gen_ball_placement_function():
-    def function(self, robot_id, placement_pos=None):
+    def function(self, robot_id, placement_pos):
         operation = self._ball_placement_operation()
+        operation = operation.enable_avoid_placement_area(placement_pos)
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
     return function
 
 
 for name in ['our_pre_kickoff', 'our_kickoff', 'their_pre_kickoff']:
-    setattr(CenterBack1Decision, name, gen_defend_upper_front_function())
+    setattr(CenterBack1Decision, name, gen_kickoff_function())
 
 for name in ['their_kickoff', 'our_direct', 'their_direct', 'our_indirect', 'their_indirect']:
-    setattr(CenterBack1Decision, name, gen_defend_upper_front_with_receiving_function())
+    setattr(CenterBack1Decision, name, gen_setplay_function())
 
 for name in ['our_pre_penalty', 'our_penalty', 'our_penalty_inplay']:
     setattr(CenterBack1Decision, name, gen_our_penalty_function())

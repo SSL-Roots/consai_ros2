@@ -32,6 +32,9 @@ class AttackerDecision(DecisionBase):
 
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        move_to_ball = move_to_ball.enable_avoid_ball()
+        move_to_ball = move_to_ball.enable_avoid_pushing_robots()
+
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
            FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
@@ -141,24 +144,25 @@ class AttackerDecision(DecisionBase):
         prevent_direct_shooting = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
         prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
+        prevent_direct_shooting = prevent_direct_shooting.enable_avoid_ball()
         self._operator.operate(robot_id, prevent_direct_shooting)
 
     def their_indirect(self, robot_id):
         prevent_direct_shooting = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_goal(), 0.9, TargetTheta.look_ball())
         prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
+        prevent_direct_shooting = prevent_direct_shooting.enable_avoid_ball()
         self._operator.operate(robot_id, prevent_direct_shooting)
 
     def their_ball_placement(self, robot_id, placement_pos):
         operation = Operation().move_to_pose(
             TargetXY.value(-6.0 + 2.0, 1.8),
             TargetTheta.look_ball())
+        operation = operation.enable_avoid_placement_area(placement_pos)
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        # プレースメントを回避しない
-        self._operator.disable_avoid_placement(robot_id)
-
         ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
         if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X,
@@ -204,6 +208,7 @@ def gen_chase_ball_function():
     def function(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         chase_ball = move_to_ball.offset_pose_x(-0.6)
+        chase_ball = chase_ball.enable_avoid_ball()
         self._operator.operate(robot_id, chase_ball)
     return function
 
@@ -221,6 +226,7 @@ def gen_their_penalty_function():
         operation = Operation().move_to_pose(
             TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 0.0),
             TargetTheta.look_ball())
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 

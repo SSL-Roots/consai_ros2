@@ -155,64 +155,19 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     return avoidance_pose;
   }
 
-  bool avoid_ball = false;
-  // STOP_GAME中はボールから離れる
-  // TODO(ShotaAk): ここは戦略側から指示をもらうべし
-  if (parsed_referee_) {
-    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
-      avoid_ball = true;
-    }
-  }
-
   tactic_obstacle_avoidance_->avoid_obstacles(
-    my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+    my_robot, goal_pose, ball, goal->avoid_ball, avoidance_pose);
 
-  if (!referee_) {
-    return avoidance_pose;
+  if (goal->avoid_placement_area) {
+    tactic_obstacle_avoidance_->avoid_placement_area(
+      my_robot, avoidance_pose, ball, goal->placement_pos, avoidance_pose);
   }
 
-  // ボールプレイスメントエリアを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE)
-  {
-    if (referee_->designated_position.size() > 0) {
-      State designated_position;
-      designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
-      designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
-
-      // サイド反転
-      if (invert_) {
-        designated_position.x *= -1.0;
-        designated_position.y *= -1.0;
-      }
-
-      bool is_our_placement =
-        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW &&
-        team_is_yellow_ == true) ||
-        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
-      bool avoid_kick_receive_area = true;
-      // 自チームのプレースメント時は、キック、レシーブエリアを避けない
-      if (is_our_placement) {
-        avoid_kick_receive_area = false;
-      }
-      if (goal->avoid_placement) {
-        tactic_obstacle_avoidance_->avoid_placement_area(
-          my_robot, avoidance_pose, ball, avoid_kick_receive_area,
-          designated_position, avoidance_pose);
-      }
-    }
+  if (goal->avoid_pushing_robots) {
+    tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, avoidance_pose, avoidance_pose);
   }
 
-  // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
-    referee_->command == Referee::COMMAND_STOP)
-  {
-    tactic_obstacle_avoidance_->avoid_robots(my_robot, avoidance_pose, avoidance_pose);
-  }
-
-  // STOP_GAME中はボールから離れる
-  if (avoid_ball) {
+  if (goal->avoid_ball) {
     tactic_obstacle_avoidance_->avoid_ball_500mm(
       my_robot, final_goal_pose, avoidance_pose, ball, avoidance_pose);
   }

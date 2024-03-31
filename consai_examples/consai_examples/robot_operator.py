@@ -49,7 +49,6 @@ class RobotOperator(Node):
         self._target_is_yellow = target_is_yellow
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
         self._avoid_obstacles_enabled = [True] * ROBOT_NUM
-        self._avoid_placement_enabled = [True] * ROBOT_NUM
         self._prev_operation_timestamp = [0] * ROBOT_NUM
         self._prev_operation_hash = [None] * ROBOT_NUM
 
@@ -74,12 +73,6 @@ class RobotOperator(Node):
 
     def disable_avoid_obstacles(self, robot_id):
         self._avoid_obstacles_enabled[robot_id] = False
-
-    def enable_avoid_placement(self, robot_id):
-        self._avoid_placement_enabled[robot_id] = True
-
-    def disable_avoid_placement(self, robot_id):
-        self._avoid_placement_enabled[robot_id] = False
 
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
@@ -154,7 +147,6 @@ class RobotOperator(Node):
             goal_msg.max_velocity_xy.append(self.STOP_GAME_VELOCITY)
 
         goal_msg.avoid_obstacles = self._avoid_obstacles_enabled[robot_id]
-        goal_msg.avoid_placement = self._avoid_placement_enabled[robot_id]
 
         self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
             goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))

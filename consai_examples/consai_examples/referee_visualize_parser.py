@@ -17,17 +17,17 @@
 import math
 
 from consai_msgs.msg import ParsedReferee
+from consai_msgs.msg import State2D
 from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeAnnotation
 from consai_visualizer_msgs.msg import ShapeCircle
 from consai_visualizer_msgs.msg import ShapeTube
-from robocup_ssl_msgs.msg import Point
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import Vector3
 
 
 def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
-             placement_pos: Point):
+             placement_pos: State2D):
     # レフェリー情報を描画オブジェクトに変換する
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
