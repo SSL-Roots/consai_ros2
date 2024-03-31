@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from consai_examples import robot_control_hasher as hasher
+from consai_tools.hasher import robot_control_hasher as hasher
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintPose

@@ -14,7 +14,7 @@
 
 
 from consai_msgs.action import RobotControl
-from consai_examples import constraint_hasher as hasher
+from consai_tools.hasher import constraint_hasher as hasher
 
 
 def hash_goal(goal: RobotControl.Goal) -> int:

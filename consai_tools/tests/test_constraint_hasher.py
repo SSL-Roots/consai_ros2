@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from consai_examples import constraint_hasher as hasher
+from consai_tools.hasher import constraint_hasher as hasher
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose

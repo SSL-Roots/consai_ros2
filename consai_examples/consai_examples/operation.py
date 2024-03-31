@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples import robot_control_hasher
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
@@ -21,6 +20,7 @@ from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from consai_msgs.msg import State2D
+from consai_tools.hasher import robot_control_hasher
 from copy import deepcopy
 from typing import NamedTuple
 
