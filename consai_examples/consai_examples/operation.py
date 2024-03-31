@@ -172,6 +172,11 @@ class Operation():
         goal.avoid_ball = True
         return Operation(goal)
 
+    def enable_avoid_pushing_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_pushing_robots = True
+        return Operation(goal)
+
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':
         line = ConstraintLine()

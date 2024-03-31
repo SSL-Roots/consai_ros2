@@ -176,6 +176,7 @@ class ZoneDefenseDecision(DecisionBase):
     def stop(self, robot_id):
         operation = self._zone_defense_operation(without_mark=True)
         operation = operation.enable_avoid_ball()
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
@@ -257,6 +258,7 @@ def gen_ball_placement_function():
     def function(self, robot_id, placement_pos=None):
         operation = self._ball_placement_operation()
         operation = operation.enable_avoid_placement_area(placement_pos)
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
     return function
 

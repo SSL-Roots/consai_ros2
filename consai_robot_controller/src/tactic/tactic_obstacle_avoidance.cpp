@@ -212,7 +212,7 @@ bool ObstacleAvoidance::avoid_placement_area(
   return true;
 }
 
-bool ObstacleAvoidance::avoid_robots(
+bool ObstacleAvoidance::avoid_pushing_robots(
   const TrackedRobot & my_robot, const State & goal_pose,
   State & avoidance_pose) const
 {

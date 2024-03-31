@@ -53,6 +53,7 @@ class GoaleDecision(DecisionBase):
     def stop(self, robot_id):
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_ball()
+        defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
@@ -101,11 +102,13 @@ class GoaleDecision(DecisionBase):
     def our_ball_placement(self, robot_id, placement_pos):
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_placement_area(placement_pos)
+        defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, defend_our_goal)
 
     def their_ball_placement(self, robot_id, placement_pos):
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_placement_area(placement_pos)
+        defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, defend_our_goal)
 
 

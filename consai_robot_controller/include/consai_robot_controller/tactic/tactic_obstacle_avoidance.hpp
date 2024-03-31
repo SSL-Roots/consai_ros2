@@ -44,7 +44,7 @@ public:
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const State & designated_position, State & avoidance_pose) const;
-  bool avoid_robots(
+  bool avoid_pushing_robots(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
   bool avoid_ball_500mm(

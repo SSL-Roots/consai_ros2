@@ -158,20 +158,13 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   tactic_obstacle_avoidance_->avoid_obstacles(
     my_robot, goal_pose, ball, goal->avoid_ball, avoidance_pose);
 
-  if (!referee_) {
-    return avoidance_pose;
-  }
-
   if (goal->avoid_placement_area) {
     tactic_obstacle_avoidance_->avoid_placement_area(
       my_robot, avoidance_pose, ball, goal->placement_pos, avoidance_pose);
   }
 
-  // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
-    referee_->command == Referee::COMMAND_STOP) {
-    tactic_obstacle_avoidance_->avoid_robots(my_robot, avoidance_pose, avoidance_pose);
+  if (goal->avoid_pushing_robots) {
+    tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, avoidance_pose, avoidance_pose);
   }
 
   if (goal->avoid_ball) {

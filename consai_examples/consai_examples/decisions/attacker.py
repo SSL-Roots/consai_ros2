@@ -33,6 +33,7 @@ class AttackerDecision(DecisionBase):
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.enable_avoid_ball()
+        move_to_ball = move_to_ball.enable_avoid_pushing_robots()
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._ball_state in [
@@ -158,6 +159,7 @@ class AttackerDecision(DecisionBase):
             TargetXY.value(-6.0 + 2.0, 1.8),
             TargetTheta.look_ball())
         operation = operation.enable_avoid_placement_area(placement_pos)
+        operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
