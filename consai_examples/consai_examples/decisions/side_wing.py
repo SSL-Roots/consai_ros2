@@ -53,16 +53,16 @@ class SideWingDecision(DecisionBase):
         operation = operation.with_ball_receiving()
         self._operator.operate(robot_id, operation)
 
-    def _defend_our_half_way(self, robot_id):
+    def _defend_our_half_way_operation(self):
         # Half-wayラインの自陣側で待機
         target_x = -1.0
         target_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
         operation = Operation().move_to_pose(
             TargetXY.value(target_x, target_y), TargetTheta.look_ball())
         operation = operation.with_reflecting_to(TargetXY.their_goal())
-        self._operator.operate(robot_id, operation)
+        return operation
 
-    def _offend_upper_defense_area(self, robot_id):
+    def _offend_upper_defense_area_operation(self):
         # 相手フィールドで待機する
         p1_x = 2.0
         p1_y = 4.0 * (-1 if self._wing_id.value > 0 else 1)
@@ -72,37 +72,54 @@ class SideWingDecision(DecisionBase):
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_side_center(), TargetXY.ball(), TargetTheta.look_ball())
         operation = operation.with_ball_receiving()
-        self._operator.operate(robot_id, operation)
+        return operation
 
     def stop(self, robot_id):
-        self._offend_upper_defense_area(robot_id)
+        operation = self._offend_upper_defense_area_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
-        self._offend_upper_defense_area(robot_id)
+        operation = self._offend_upper_defense_area_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_kickoff(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        self._operator.operate(robot_id, operation)
 
     def their_pre_kickoff(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_kickoff(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_direct(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_direct(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_indirect(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_indirect(self, robot_id):
-        self._defend_our_half_way(robot_id)
+        operation = self._defend_our_half_way_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
@@ -124,6 +141,7 @@ class SideWingDecision(DecisionBase):
 def gen_our_penalty_function():
     def function(self, robot_id):
         operation = self._our_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
@@ -131,6 +149,7 @@ def gen_our_penalty_function():
 def gen_their_penalty_function():
     def function(self, robot_id):
         operation = self._their_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 

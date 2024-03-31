@@ -45,7 +45,7 @@ class ZoneDefenseDecision(DecisionBase):
         self._ball_placement_pos_x = -6.0 + 2.0
         self._ball_placement_pos_y = 1.8 - 0.3 * (4.0 + self._zone_id.value)
 
-    def _zone_defense(self, robot_id, without_mark=False):
+    def _zone_defense_operation(self, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
         ZONE_TARGET = self._zone_id.value
 
@@ -64,16 +64,13 @@ class ZoneDefenseDecision(DecisionBase):
                 TargetXY.their_robot(self._zone_targets[ZONE_TARGET]), TargetXY.ball(),
                 distance_from_p1=0.5, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
-            self._operator.operate(robot_id, operation)
-            return
-
-        # ゾーン内で待機する
-        target_x, target_y = self._get_zone_target_xy()
-        operation = Operation().move_to_pose(
-            TargetXY.value(target_x, target_y), TargetTheta.look_ball())
-        operation = operation.with_reflecting_to(TargetXY.their_goal())
-        self._operator.operate(robot_id, operation)
-        return
+        else:
+            # ゾーン内で待機する
+            target_x, target_y = self._get_zone_target_xy()
+            operation = Operation().move_to_pose(
+                TargetXY.value(target_x, target_y), TargetTheta.look_ball())
+            operation = operation.with_reflecting_to(TargetXY.their_goal())
+        return operation
 
     def _get_zone_target_xy(self):
         # 待機場所をそれぞれの関数で算出する
@@ -177,34 +174,51 @@ class ZoneDefenseDecision(DecisionBase):
         return False
 
     def stop(self, robot_id):
-        self._zone_defense(robot_id, without_mark=True)
+        operation = self._zone_defense_operation(without_mark=True)
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
-        self._zone_defense(robot_id)
+        operation = self._zone_defense_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, without_mark=True)
+        operation = self._zone_defense_operation(without_mark=True)
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_kickoff(self, robot_id):
-        self._zone_defense(robot_id, without_mark=True)
+        operation = self._zone_defense_operation(without_mark=True)
+        self._operator.operate(robot_id, operation)
 
     def their_pre_kickoff(self, robot_id):
-        self._zone_defense(robot_id, without_mark=True)
+        operation = self._zone_defense_operation(without_mark=True)
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_kickoff(self, robot_id):
-        self._zone_defense(robot_id, without_mark=True)
+        operation = self._zone_defense_operation(without_mark=True)
+        self._operator.operate(robot_id, operation)
 
     def our_direct(self, robot_id):
-        self._zone_defense(robot_id)
+        operation = self._zone_defense_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_direct(self, robot_id):
-        self._zone_defense(robot_id)
+        operation = self._zone_defense_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_indirect(self, robot_id):
-        self._zone_defense(robot_id)
+        operation = self._zone_defense_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_indirect(self, robot_id):
-        self._zone_defense(robot_id)
+        operation = self._zone_defense_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
@@ -226,6 +240,7 @@ class ZoneDefenseDecision(DecisionBase):
 def gen_our_penalty_function():
     def function(self, robot_id):
         operation = self._our_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
@@ -233,6 +248,7 @@ def gen_our_penalty_function():
 def gen_their_penalty_function():
     def function(self, robot_id):
         operation = self._their_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 

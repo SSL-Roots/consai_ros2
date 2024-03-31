@@ -38,6 +38,7 @@ bool reflect_shoot false
 bool avoid_obstacles true  # 衝突回避は安全のためデフォルトでtrue
 bool avoid_placement_area false  # 回避の機会は限定的なのでデフォルトでfalse
 State2D placement_pos
+bool avoid_ball false  # ボールを避ける機会は限定的なのでデフォルトでfalse
 
 ---
 bool success

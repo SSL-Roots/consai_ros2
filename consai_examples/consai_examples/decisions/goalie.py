@@ -52,6 +52,7 @@ class GoaleDecision(DecisionBase):
 
     def stop(self, robot_id):
         defend_our_goal = self._defend_goal_operation()
+        defend_our_goal = defend_our_goal.enable_avoid_ball()
         self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):

@@ -155,17 +155,8 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     return avoidance_pose;
   }
 
-  bool avoid_ball = false;
-  // STOP_GAME中はボールから離れる
-  // TODO(ShotaAk): ここは戦略側から指示をもらうべし
-  if (parsed_referee_) {
-    if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
-      avoid_ball = true;
-    }
-  }
-
   tactic_obstacle_avoidance_->avoid_obstacles(
-    my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+    my_robot, goal_pose, ball, goal->avoid_ball, avoidance_pose);
 
   if (!referee_) {
     return avoidance_pose;
@@ -179,13 +170,11 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
   if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
     referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
-    referee_->command == Referee::COMMAND_STOP)
-  {
+    referee_->command == Referee::COMMAND_STOP) {
     tactic_obstacle_avoidance_->avoid_robots(my_robot, avoidance_pose, avoidance_pose);
   }
 
-  // STOP_GAME中はボールから離れる
-  if (avoid_ball) {
+  if (goal->avoid_ball) {
     tactic_obstacle_avoidance_->avoid_ball_500mm(
       my_robot, final_goal_pose, avoidance_pose, ball, avoidance_pose);
   }

@@ -37,16 +37,16 @@ class SubAttackerDecision(DecisionBase):
         self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM,
                                   FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
 
-    def _offend(self, robot_id):
+    def _offend_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         if self._ball_zone_state in self._ZONE_TOPS:
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
         else:
             move_to_ball = move_to_ball.overwrite_pose_y(2.5)
-        self._operator.operate(robot_id, move_to_ball)
+        return move_to_ball
 
-    def _offend_our_side(self, robot_id):
+    def _offend_our_side_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         if self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
@@ -55,37 +55,54 @@ class SubAttackerDecision(DecisionBase):
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
 
         move_to_ball = move_to_ball.offset_pose_x(-0.3)
-        self._operator.operate(robot_id, move_to_ball)
+        return move_to_ball
 
     def stop(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
-        self._offend_our_side(robot_id)
+        operation = self._offend_our_side_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_kickoff(self, robot_id):
-        self._offend_our_side(robot_id)
+        operation = self._offend_our_side_operation()
+        self._operator.operate(robot_id, operation)
 
     def their_pre_kickoff(self, robot_id):
-        self._offend_our_side(robot_id)
+        operation = self._offend_our_side_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_kickoff(self, robot_id):
-        self._offend_our_side(robot_id)
+        operation = self._offend_our_side_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_direct(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_direct(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_indirect(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_indirect(self, robot_id):
-        self._offend(robot_id)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
         if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
@@ -127,6 +144,7 @@ class SubAttackerDecision(DecisionBase):
 def gen_our_penalty_function():
     def function(self, robot_id):
         operation = self._our_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
@@ -134,6 +152,7 @@ def gen_our_penalty_function():
 def gen_their_penalty_function():
     def function(self, robot_id):
         operation = self._their_penalty_operation()
+        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 
