@@ -20,13 +20,11 @@ find_package(ament_cmake REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
-    ${PROJECT_NAME}/constraint_hasher.py
     ${PROJECT_NAME}/field_observer.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
     ${PROJECT_NAME}/referee_visualize_parser.py
-    ${PROJECT_NAME}/robot_control_hasher.py
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
@@ -61,8 +59,6 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_field_observer tests/test_field_observer.py)
   ament_add_pytest_test(test_operation tests/test_operation.py)
-  ament_add_pytest_test(test_constraint_hasher tests/test_constraint_hasher.py)
-  ament_add_pytest_test(test_robot_control_hasher tests/test_robot_control_hasher.py)
 endif()
 
 ament_package()
