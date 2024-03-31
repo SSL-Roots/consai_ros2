@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-import math
-import consai_examples.geometry_tools as tool
-
 from consai_msgs.msg import State2D
+from consai_tools.geometry import geometry_tools as tool
+import math
+import pytest
 
 
 def test_trans_class():

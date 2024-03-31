@@ -14,6 +14,7 @@ find_package(ament_cmake REQUIRED)
 
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
+    ${PROJECT_NAME}/geometry/geometry_tools.py
     ${PROJECT_NAME}/hasher/constraint_hasher.py
     ${PROJECT_NAME}/hasher/robot_control_hasher.py
     DESTINATION lib/${PROJECT_NAME})
@@ -23,6 +24,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_constraint_hasher tests/test_constraint_hasher.py)
   ament_add_pytest_test(test_robot_control_hasher tests/test_robot_control_hasher.py)
 endif()

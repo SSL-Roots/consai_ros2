@@ -26,7 +26,7 @@ from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedRobot
 
 from consai_msgs.msg import State2D
-import consai_examples.geometry_tools as tool
+from consai_tools.geometry import geometry_tools as tool
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
