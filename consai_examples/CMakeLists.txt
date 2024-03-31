@@ -36,6 +36,8 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
     ${PROJECT_NAME}/decisions/side_wing.py
+    ${PROJECT_NAME}/observer/detection_wrapper.py
+    ${PROJECT_NAME}/observer/pos_vel.py
     ${PROJECT_NAME}/operation_test/ball_boy_test.py
     ${PROJECT_NAME}/operation_test/control.py
     ${PROJECT_NAME}/operation_test/control_by_referee.py
@@ -58,6 +60,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
   ament_add_pytest_test(test_field_observer tests/test_field_observer.py)
   ament_add_pytest_test(test_operation tests/test_operation.py)
+  ament_add_pytest_test(test_detection_wrapper tests/test_detection_wrapper.py)
 endif()
 
 ament_package()
