@@ -58,7 +58,7 @@ class GoaleDecision(DecisionBase):
 
     def inplay(self, robot_id):
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA \
+        if self._field_observer.ball_position().is_in_our_defense_area() \
            and not self._field_observer.ball_is_moving():
             # レシーバ候補のロボットIDリストを取得
             can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \

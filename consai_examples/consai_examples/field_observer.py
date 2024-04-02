@@ -37,10 +37,6 @@ from consai_examples.observer.ball_position_state_observer import BallPositionSt
 
 class FieldObserver(Node):
     BALL_NONE = 0
-    BALL_IS_IN_OUR_DEFENSE_AREA = 5
-    BALL_IS_IN_OUR_SIDE = 6
-    BALL_IS_IN_THEIR_SIDE = 7
-    BALL_IS_IN_THEIR_DEFENSE_AREA = 8
 
     # 壁際に近いか判定
     BALL_IS_NEAR_OUTSIDE_FRONT_X = 21
@@ -182,48 +178,6 @@ class FieldObserver(Node):
             self._ball_state = _is_near_outside
             return
 
-        # 自チームディフェンスエリア侵入判定
-        if self._check_is_ball_in_defense_area(ball.pos, our_area=True):
-            self._ball_state = self.BALL_IS_IN_OUR_DEFENSE_AREA
-            return
-
-        # 相手チームディフェンスエリア侵入判定
-        if self._check_is_ball_in_defense_area(ball.pos, our_area=False):
-            self._ball_state = self.BALL_IS_IN_THEIR_DEFENSE_AREA
-            return
-
-        # 自チームエリア侵入判定
-        if self._check_is_ball_in_our_side(ball.pos):
-            self._ball_state = self.BALL_IS_IN_OUR_SIDE
-            return
-
-        # 条件に入らなければ、相手チームエリアに侵入したと判定
-        self._ball_state = self.BALL_IS_IN_THEIR_SIDE
-
-    def _check_is_ball_in_defense_area(self, ball_pos, our_area=True):
-        # ボールがディフェンスエリアに入ったか判定
-        threshold_x = self._field_half_x - self._field_defense_x
-        threshold_y = self._field_defense_half_y + 0.1  # ロボットの半径分マージンをとる
-        if self.ball_is_in_our_defense_area() or self.ball_is_in_their_defense_area():
-            threshold_x -= self.THRESHOLD_MARGIN
-            threshold_y += self.THRESHOLD_MARGIN
-
-        if our_area and ball_pos.x < -threshold_x and math.fabs(ball_pos.y) < threshold_y:
-            return True
-        elif not our_area and ball_pos.x > threshold_x and math.fabs(ball_pos.y) < threshold_y:
-            return True
-        return False
-
-    def _check_is_ball_in_our_side(self, ball_pos):
-        # ボールがディフェンスエリアに入ったか判定
-        threshold_x = 0.0
-        if self.ball_is_in_our_side():
-            threshold_x += self.THRESHOLD_MARGIN
-
-        if ball_pos.x < threshold_x:
-            return True
-        return False
-
     def _check_near_outside(self, ball_pos):
         # ボールが壁際に近いか判定
         flag = 0
@@ -269,7 +223,7 @@ class FieldObserver(Node):
         ZONE_THRESHOLD = 0.2  # meters
         # ボールがどのZONEに存在するのかを判定する
         threshold_x = 0.0
-        if self.ball_is_in_our_side():
+        if self.ball_position().is_in_our_side():
             threshold_x += ZONE_THRESHOLD
 
         threshold_y_top = self._field_quarter_y
@@ -527,15 +481,6 @@ class FieldObserver(Node):
 
     def get_ball_state(self):
         return self._ball_state
-
-    def ball_is_in_our_defense_area(self):
-        return self._ball_state == self.BALL_IS_IN_OUR_DEFENSE_AREA
-
-    def ball_is_in_their_defense_area(self):
-        return self._ball_state == self.BALL_IS_IN_THEIR_DEFENSE_AREA
-
-    def ball_is_in_our_side(self):
-        return self._ball_state == self.BALL_IS_IN_OUR_SIDE
 
     def ball_is_moving(self):
         return self._ball_is_moving

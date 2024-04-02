@@ -57,3 +57,9 @@ class BallPositionStateObserver:
         in_y = math.fabs(self._ball_pos.y) < self._defense_area_half_width
         in_x = self._ball_pos.x > self._field_half_length - self._defense_area_length
         return in_y and in_x
+
+    def is_in_our_side(self):
+        return self._ball_pos.x < 0
+
+    def is_in_their_side(self):
+        return self._ball_pos.x > 0

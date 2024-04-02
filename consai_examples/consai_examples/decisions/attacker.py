@@ -89,7 +89,7 @@ class AttackerDecision(DecisionBase):
 
         # シュート可能かつ相手エリアにいる場合
         if len(shoot_point_list) > 0 \
-           and self._ball_state == FieldObserver.BALL_IS_IN_THEIR_SIDE:
+                and self._field_observer.ball_position().is_in_their_side():
             # 指定座標に向けてシュートする
             shooting = move_to_ball.with_shooting_to(TargetXY.named_target("shoot"))
             self._operator.operate(robot_id, shooting)

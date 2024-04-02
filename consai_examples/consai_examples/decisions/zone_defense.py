@@ -130,7 +130,7 @@ class ZoneDefenseDecision(DecisionBase):
         return False
 
     def _ball_is_in_zone1(self):
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        if self._field_observer.ball_position().is_in_our_side():
             if self._num_of_zone_roles == 1:
                 return True
             elif self._num_of_zone_roles == 2:
@@ -143,7 +143,7 @@ class ZoneDefenseDecision(DecisionBase):
         return False
 
     def _ball_is_in_zone2(self):
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        if self._field_observer.ball_position().is_in_our_side():
             if self._num_of_zone_roles == 2:
                 if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM,
                                              FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
@@ -158,7 +158,7 @@ class ZoneDefenseDecision(DecisionBase):
         return False
 
     def _ball_is_in_zone3(self):
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        if self._field_observer.ball_position().is_in_our_side():
             if self._num_of_zone_roles == 3:
                 if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                     return True
@@ -168,7 +168,7 @@ class ZoneDefenseDecision(DecisionBase):
         return False
 
     def _ball_is_in_zone4(self):
-        if self._ball_state == FieldObserver.BALL_IS_IN_OUR_SIDE:
+        if self._field_observer.ball_position().is_in_our_side():
             if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
                 return True
         return False
