@@ -29,7 +29,7 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
 from consai_examples.observer.detection_wrapper import DetectionWrapper
 from consai_examples.observer.pos_vel import PosVel
-from consai_examples.observer.ball_position_state_observer import BallPositionStateObserver
+from consai_examples.observer.ball_position_observer import BallPositionObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -123,9 +123,9 @@ class FieldObserver(Node):
         self.goal_vel_list = [None] * 5
 
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
-        self._ball_position_state_observer = BallPositionStateObserver()
+        self._ball_position_state_observer = BallPositionObserver()
 
-    def ball_position(self) -> BallPositionStateObserver:
+    def ball_position(self) -> BallPositionObserver:
         return self._ball_position_state_observer
 
     def _detection_tracked_callback(self, msg):

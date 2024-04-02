@@ -17,7 +17,7 @@ from consai_msgs.msg import State2D
 import math
 
 
-class BallPositionStateObserver:
+class BallPositionObserver:
     def __init__(self):
         self._field_half_length = 6.0
         self._field_half_width = 4.5
