@@ -38,12 +38,6 @@ from consai_examples.observer.ball_position_observer import BallPositionObserver
 class FieldObserver(Node):
     BALL_NONE = 0
 
-    # 壁際に近いか判定
-    BALL_IS_NEAR_OUTSIDE_FRONT_X = 21
-    BALL_IS_NEAR_OUTSIDE_BACK_X = 22
-    BALL_IS_NEAR_OUTSIDE_RIGHT_Y = 23
-    BALL_IS_NEAR_OUTSIDE_LEFT_Y = 24
-
     BALL_PLACEMENT_NONE = 0
     BALL_PLACEMENT_FAR_FROM_TARGET = 1
     BALL_PLACEMENT_NEAR_TARGET = 2
@@ -125,8 +119,20 @@ class FieldObserver(Node):
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
 
+    def detection(self) -> DetectionWrapper:
+        return self._detection_wrapper
+
     def ball_position(self) -> BallPositionObserver:
         return self._ball_position_state_observer
+
+    def field_half_length(self) -> float:
+        return self._field_half_x
+
+    def field_half_width(self) -> float:
+        return self._field_half_y
+
+    def field_margin_to_wall(self) -> float:
+        return 0.3
 
     def _detection_tracked_callback(self, msg):
         self._detection = msg
@@ -136,7 +142,6 @@ class FieldObserver(Node):
             self._detection_wrapper.ball().pos())
 
         if len(msg.balls) > 0:
-            self._update_ball_state(msg.balls[0])
             self._update_ball_moving_state(msg.balls[0])
             self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
@@ -170,29 +175,6 @@ class FieldObserver(Node):
                                                              y=robot.vel[0].y,
                                                              theta=robot.vel_angular[0])
             eval("self." + team_str + "_robot_id_list").append(robot_id)
-
-    def _update_ball_state(self, ball):
-        # ball placement時に壁際かどうか判定
-        _is_near_outside = self._check_near_outside(ball.pos)
-        if _is_near_outside:
-            self._ball_state = _is_near_outside
-            return
-
-    def _check_near_outside(self, ball_pos):
-        # ボールが壁際に近いか判定
-        flag = 0
-        # 壁際に近いと判定する距離
-        threshold = 0.0
-
-        if ball_pos.x < -self._field_half_x + threshold:
-            flag = self.BALL_IS_NEAR_OUTSIDE_BACK_X
-        elif self._field_half_x - threshold < ball_pos.x:
-            flag = self.BALL_IS_NEAR_OUTSIDE_FRONT_X
-        elif ball_pos.y < -self._field_half_y + threshold:
-            flag = self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y
-        elif self._field_half_y - threshold < ball_pos.y:
-            flag = self.BALL_IS_NEAR_OUTSIDE_LEFT_Y
-        return flag
 
     def _update_ball_moving_state(self, ball):
         BALL_MOVING_THRESHOLD = 1.0  # m/s
@@ -546,43 +528,6 @@ class FieldObserver(Node):
     def get_ball_placement_state(self, placement_position):
         self._update_ball_placement_state(placement_position)
         return self._ball_placement_state
-
-    def get_near_outside_ball_placement(self, ball_state, placement_position):
-
-        margin = 0.5
-        ball_pos = self._ball.pos
-
-        if ball_state == self.BALL_IS_NEAR_OUTSIDE_FRONT_X:
-            x = self._field_half_x + margin
-            if ball_pos.y < placement_position.y:
-                y = ball_pos.y + margin
-            else:
-                y = ball_pos.y - margin
-
-        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_BACK_X:
-            x = -self._field_half_x - margin
-            if ball_pos.y < placement_position.y:
-                y = ball_pos.y + margin
-            else:
-                y = ball_pos.y - margin
-
-        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_LEFT_Y:
-            y = self._field_half_y + margin
-            if ball_pos.x < placement_position.x:
-                x = ball_pos.x + margin
-            else:
-                x = ball_pos.x - margin
-
-        elif ball_state == self.BALL_IS_NEAR_OUTSIDE_RIGHT_Y:
-            y = -self._field_half_y - margin
-            if ball_pos.x < placement_position.x:
-                x = ball_pos.x + margin
-            else:
-                x = ball_pos.x - margin
-
-        outside_kick_pos = State2D(x=x, y=y)
-
-        return outside_kick_pos
 
     def get_ball_pos(self):
         return self._ball.pos

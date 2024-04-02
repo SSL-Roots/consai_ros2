@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_msgs.msg import State2D
 from decisions.decision_base import DecisionBase
 from field_observer import FieldObserver
 from operation import Operation
@@ -154,20 +155,44 @@ class AttackerDecision(DecisionBase):
         operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
+    def _kick_pos_to_reflect_on_wall(self, placement_pos: State2D) -> State2D:
+        # 壁に向かってボールを蹴り、反射させるためのシュート目標位置を生成する
+        ball_pos = self._field_observer.detection().ball().pos()
+        wall_x = self._field_observer.field_half_length() \
+            + self._field_observer.field_margin_to_wall()
+        wall_y = self._field_observer.field_half_width() \
+            + self._field_observer.field_margin_to_wall()
+        offset = 0.2  # ボールからのオフセット距離。値が大きいほどキック角度が浅くなる
+
+        if self._field_observer.ball_position().is_outside_of_left():
+            if ball_pos.y > placement_pos.y:
+                return State2D(x=-wall_x, y=ball_pos.y - offset)
+            else:
+                return State2D(x=-wall_x, y=ball_pos.y + offset)
+        elif self._field_observer.ball_position().is_outside_of_right():
+            if ball_pos.y > placement_pos.y:
+                return State2D(x=wall_x, y=ball_pos.y - offset)
+            else:
+                return State2D(x=wall_x, y=ball_pos.y + offset)
+        elif self._field_observer.ball_position().is_outside_of_top():
+            if ball_pos.x > placement_pos.x:
+                return State2D(x=ball_pos.x - offset, y=wall_y)
+            else:
+                return State2D(x=ball_pos.x + offset, y=wall_y)
+        else:
+            if ball_pos.x > placement_pos.x:
+                return State2D(x=ball_pos.x - offset, y=-wall_y)
+            else:
+                return State2D(x=ball_pos.x + offset, y=-wall_y)
+
     def our_ball_placement(self, robot_id, placement_pos):
-        ball_state = self._field_observer.get_ball_state()
         # 壁際にあると判定した場合
-        if ball_state in [FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X,
-                          FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X,
-                          FieldObserver.BALL_IS_NEAR_OUTSIDE_LEFT_Y,
-                          FieldObserver.BALL_IS_NEAR_OUTSIDE_RIGHT_Y]:
-            # 壁際に蹴る位置を取得
-            outside_kick_pos = self._field_observer.get_near_outside_ball_placement(
-                ball_state, placement_pos)
-            # 壁際に蹴る
+        # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
+        if self._field_observer.ball_position().is_outside():
+            kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             put_ball_back = move_to_ball.with_shooting_for_setplay_to(
-                TargetXY.value(outside_kick_pos.x, outside_kick_pos.y))
+                TargetXY.value(kick_pos.x, kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
             return
 
