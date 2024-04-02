@@ -36,19 +36,15 @@ class AttackerDecision(DecisionBase):
         move_to_ball = move_to_ball.enable_avoid_pushing_robots()
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [
-           FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
-           FieldObserver.BALL_IS_OUTSIDE_BACK_X,
-           FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
+        if self._field_observer.ball_position().is_in_our_defense_area() or \
+           self._field_observer.ball_position().is_outside_of_left():
             move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
             self._operator.operate(robot_id, move_to_ball)
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [
-           FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
-           FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
-           FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        if self._field_observer.ball_position().is_in_their_defense_area() or \
+           self._field_observer.ball_position().is_outside_of_right():
             move_to_ball = move_to_ball.overwrite_pose_x(3.0)
             self._operator.operate(robot_id, move_to_ball)
             return
@@ -62,18 +58,15 @@ class AttackerDecision(DecisionBase):
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [
-           FieldObserver.BALL_IS_IN_OUR_DEFENSE_AREA,
-           FieldObserver.BALL_IS_OUTSIDE_BACK_X,
-           FieldObserver.BALL_IS_NEAR_OUTSIDE_BACK_X]:
+        if self._field_observer.ball_position().is_in_our_defense_area() or \
+           self._field_observer.ball_position().is_outside_of_left():
             move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
             self._operator.operate(robot_id, move_to_ball)
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
-                                FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
-                                FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        if self._field_observer.ball_position().is_in_their_defense_area() or \
+           self._field_observer.ball_position().is_outside_of_right():
             move_to_ball = move_to_ball.overwrite_pose_x(3.0)
             self._operator.operate(robot_id, move_to_ball)
             return
@@ -129,9 +122,8 @@ class AttackerDecision(DecisionBase):
 
     def our_penalty_inplay(self, robot_id):
         # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する
-        if self._ball_state in [FieldObserver.BALL_IS_IN_THEIR_DEFENSE_AREA,
-                                FieldObserver.BALL_IS_OUTSIDE_FRONT_X,
-                                FieldObserver.BALL_IS_NEAR_OUTSIDE_FRONT_X]:
+        if self._field_observer.ball_position().is_in_their_defense_area() or \
+           self._field_observer.ball_position().is_outside_of_right():
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             move_to_ball = move_to_ball.overwrite_pose_x(3.0)
             self._operator.operate(robot_id, move_to_ball)
