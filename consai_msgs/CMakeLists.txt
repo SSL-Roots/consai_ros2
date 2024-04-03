@@ -31,6 +31,7 @@ set(msg_files
   "msg/GoalPoses.msg"
   "msg/NamedTargets.msg"
   "msg/ParsedReferee.msg"
+  "msg/RobotControlMsg.msg"
   "msg/RobotLocalVelocities.msg"
   "msg/RobotLocalVelocity.msg"
   "msg/State2D.msg"

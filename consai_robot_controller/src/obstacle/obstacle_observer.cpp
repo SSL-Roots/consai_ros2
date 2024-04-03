@@ -40,7 +40,7 @@ ObstacleObserver::ObstacleObserver(
 }
 
 ObstacleEnvironment ObstacleObserver::get_obstacle_environment(
-  const std::shared_ptr<const RobotControl::Goal> goal,
+  const RobotControlMsg::SharedPtr goal,
   const TrackedRobot & my_robot) const
 {
   // constexpr ObstRadius BALL_RADIUS(0.0215);

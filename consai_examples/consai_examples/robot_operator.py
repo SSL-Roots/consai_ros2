@@ -20,6 +20,7 @@ from functools import partial
 from consai_examples.operation import Operation
 from consai_msgs.action import RobotControl
 from consai_msgs.msg import NamedTargets
+from consai_msgs.msg import RobotControlMsg
 from consai_msgs.msg import State2D
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -36,12 +37,15 @@ class RobotOperator(Node):
 
         ROBOT_NUM = 16
         self._action_clients = []
+        self._pub_robot_control = []
         team_color = 'blue'
         if target_is_yellow:
             team_color = 'yellow'
         for i in range(ROBOT_NUM):
             action_name = team_color + str(i) + '/control'
             self._action_clients.append(ActionClient(self, RobotControl, action_name))
+            self._pub_robot_control.append(
+                self.create_publisher(RobotControlMsg, team_color + str(i) + '/control', 1))
 
         self._robot_is_free = [True] * ROBOT_NUM
         self._send_goal_future = [None] * ROBOT_NUM
@@ -126,7 +130,8 @@ class RobotOperator(Node):
         self.get_logger().debug(
             'New operation for Robot {}'.format(robot_id))
 
-        self._set_goal(robot_id, operation.get_goal())
+        # self._set_goal(robot_id, operation.get_goal())
+        self._pub_robot_control[robot_id].publish(operation.get_goal())
         self._prev_operation_hash[robot_id] = hash_goal
 
         # 短い期間でoperateする場合は警告を出す

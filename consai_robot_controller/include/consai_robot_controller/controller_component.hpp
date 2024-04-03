@@ -26,6 +26,7 @@
 #include "consai_msgs/msg/goal_poses.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
+#include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/visibility_control.h"
@@ -47,6 +48,7 @@ using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControl = consai_msgs::action::RobotControl;
+using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
@@ -54,6 +56,7 @@ using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using GoalPosesMap = std::map<unsigned int, GoalPose>;
+using RobotControlMap = std::map<unsigned int, RobotControlMsg::SharedPtr>;
 
 class Controller : public rclcpp::Node
 {
@@ -88,6 +91,7 @@ private:
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
   std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
+  std::vector<rclcpp::Subscription<RobotControlMsg>::SharedPtr> sub_robot_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
   std::vector<bool> control_enable_;
@@ -108,6 +112,8 @@ private:
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_final_goal_poses_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;
   std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
+
+  RobotControlMap robot_control_map_;
   GoalPosesMap goal_poses_map_;
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;

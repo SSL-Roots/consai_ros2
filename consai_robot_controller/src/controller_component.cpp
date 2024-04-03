@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -87,6 +88,18 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         std::bind(&Controller::handle_accepted, this, _1, i))
     );
 
+    robot_control_map_[i] = std::make_shared<RobotControlMsg>();
+
+    auto robot_control_callback = [this](
+      const RobotControlMsg::SharedPtr msg, const unsigned int robot_id) {
+        this->robot_control_map_[robot_id] = msg;
+      };
+    // Can not use auto. Ref: https://github.com/ros2/rclcpp/issues/273
+    std::function<void(const RobotControlMsg::SharedPtr msg)> fcn = std::bind(
+      robot_control_callback, _1, i);
+    sub_robot_control_.push_back(create_subscription<RobotControlMsg>(
+        name_space + "/control", 10, fcn));
+
     last_update_time_.push_back(steady_clock_.now());
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
@@ -144,14 +157,25 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
-  // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
-  if (!goal_handle_[robot_id]) {
-    switch_to_stop_control_mode(robot_id, false, "Goal is not set.");
+  // // 制御器を更新し、コマンドをpublishするタイマーコールバック関数
+  // if (!goal_handle_[robot_id]) {
+  //   switch_to_stop_control_mode(robot_id, false, "Goal is not set.");
+  //   return;
+  // }
+
+  // if (!control_enable_[robot_id]) {
+  //   switch_to_stop_control_mode(robot_id, false, "Control is not enabled.");
+  //   return;
+  // }
+
+
+  if (robot_control_map_[robot_id]->stop) {
+    switch_to_stop_control_mode(robot_id, true, "RobotControlMsg.stopがセットされました");
     return;
   }
 
-  if (!control_enable_[robot_id]) {
-    switch_to_stop_control_mode(robot_id, false, "Control is not enabled.");
+  if (!parser_->is_parsable(robot_control_map_[robot_id])) {
+    switch_to_stop_control_mode(robot_id, false, "Failed to parse RobotControlMsg.");
     return;
   }
 
@@ -177,8 +201,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   const auto current_time = steady_clock_.now();
   const auto duration = current_time - last_update_time_[robot_id];
   if (!parser_->parse_goal(
-      goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose, kick_power,
-      dribble_power))
+    robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose, kick_power, dribble_power))
   {
     RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
     switch_to_stop_control_mode(robot_id, false, "Failed to parse goal.");
@@ -187,11 +210,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
   goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-    goal_handle_[robot_id]->get_goal(), my_robot, goal_pose, final_goal_pose);
+    robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
 
   // 障害物情報を取得
   const auto obstacle_environments = obstacle_observer_->get_obstacle_environment(
-    goal_handle_[robot_id]->get_goal(), my_robot);
+    robot_control_map_[robot_id], my_robot);
 
   // 現在位置: my_robot.pos
   // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
@@ -233,9 +256,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 最大速度リミットを適用
   auto overwritten_max_vel_xy = max_vel_xy;
   // 最大速度リミットを上書きできる
-  if (goal_handle_[robot_id]->get_goal()->max_velocity_xy.size() > 0) {
-    overwritten_max_vel_xy = std::min(
-      goal_handle_[robot_id]->get_goal()->max_velocity_xy[0], max_vel_xy);
+  if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
+    overwritten_max_vel_xy = std::min(robot_control_map_[robot_id]->max_velocity_xy[0], max_vel_xy);
   }
   world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
 
@@ -275,28 +297,29 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   final_goal_poses_map_[robot_id] = final_goal_pose_msg;
 
   // 途中経過を報告する
-  if (need_response_[robot_id]) {
-    auto feedback = std::make_shared<RobotControl::Feedback>();
-    feedback->remaining_pose.x = goal_pose.x - my_robot.pos.x;
-    feedback->remaining_pose.y = goal_pose.y - my_robot.pos.y;
-    feedback->remaining_pose.theta = tools::normalize_theta(goal_pose.theta - my_robot.orientation);
-    if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
-      feedback->present_velocity.x = my_robot.vel[0].x;
-      feedback->present_velocity.y = my_robot.vel[0].y;
-      feedback->present_velocity.theta = my_robot.vel_angular[0];
-    }
+  // if (need_response_[robot_id]) {
+  //   auto feedback = std::make_shared<RobotControl::Feedback>();
+  //   feedback->remaining_pose.x = goal_pose.x - my_robot.pos.x;
+  //   feedback->remaining_pose.y = goal_pose.y - my_robot.pos.y;
+  //   feedback->remaining_pose.theta = tools::normalize_theta(goal_pose.theta - my_robot.orientation);
+  //   if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
+  //     feedback->present_velocity.x = my_robot.vel[0].x;
+  //     feedback->present_velocity.y = my_robot.vel[0].y;
+  //     feedback->present_velocity.theta = my_robot.vel_angular[0];
+  //   }
 
-    goal_handle_[robot_id]->publish_feedback(feedback);
-  }
+  //   goal_handle_[robot_id]->publish_feedback(feedback);
+  // }
 
-  if (arrived(my_robot, goal_pose)) {
-    // アクションクライアントへの応答が必要な場合は、
-    // 目標値に到達した後に制御完了応答を返し、
-    // 速度指令値を0にする
-    if (need_response_[robot_id]) {
-      switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
-    }
-  }
+  // if (arrived(my_robot, goal_pose)) {
+  //   // アクションクライアントへの応答が必要な場合は、
+  //   // 目標値に到達した後に制御完了応答を返し、
+  //   // 速度指令値を0にする
+  //   if (need_response_[robot_id]) {
+  //     switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
+  //   }
+  // }
+
 }
 
 void Controller::on_timer_pub_goal_poses()
@@ -330,9 +353,9 @@ rclcpp_action::GoalResponse Controller::handle_goal(
   }
 
   // 目標値の解析に失敗したらReject
-  if (!parser_->is_parsable(goal)) {
-    return rclcpp_action::GoalResponse::REJECT;
-  }
+  // if (!parser_->is_parsable(goal)) {
+  //   return rclcpp_action::GoalResponse::REJECT;
+  // }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 

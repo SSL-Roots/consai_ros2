@@ -21,6 +21,7 @@
 #include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
+#include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/constraint_parser.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
@@ -39,6 +40,7 @@ namespace consai_robot_controller
 {
 
 using RobotControl = consai_msgs::action::RobotControl;
+using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
@@ -59,19 +61,19 @@ public:
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);
-  bool is_parsable(const std::shared_ptr<const RobotControl::Goal> goal) const;
+  bool is_parsable(const RobotControlMsg::SharedPtr goal) const;
   bool parse_goal(
-    const std::shared_ptr<const RobotControl::Goal> goal,
+    const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
     double & kick_power, double & dribble_power);
   State modify_goal_pose_to_avoid_obstacles(
-    const std::shared_ptr<const RobotControl::Goal> goal,
+    const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot,
     const State & goal_pose, const State & final_goal_pose) const;
 
 private:
   bool parse_constraints(
-    const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
+    const RobotControlMsg::SharedPtr goal, State & parsed_pose) const;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;

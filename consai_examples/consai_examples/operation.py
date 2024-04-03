@@ -20,6 +20,7 @@ from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from consai_msgs.msg import State2D
+from consai_msgs.msg import RobotControlMsg
 from consai_tools.hasher import robot_control_hasher
 from copy import deepcopy
 from typing import NamedTuple
@@ -143,18 +144,18 @@ class TargetTheta(NamedTuple):
 
 
 class Operation():
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         if goal:
             self._goal = goal
         else:
-            self._goal = RobotControl.Goal()
+            self._goal = RobotControlMsg()
             self._goal.keep_control = True
 
-    def get_goal(self) -> RobotControl.Goal:
+    def get_goal(self) -> RobotControlMsg:
         return self._goal
 
     def get_hash(self) -> int:
-        return robot_control_hasher.hash_goal(self._goal)
+        return robot_control_hasher.hash_robot_control(self._goal)
 
     def halt(self) -> 'Operation':
         goal = deepcopy(self._goal)

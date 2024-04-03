@@ -14,6 +14,7 @@
 
 
 from consai_msgs.action import RobotControl
+from consai_msgs.msg import RobotControlMsg
 from consai_tools.hasher import constraint_hasher as hasher
 
 
@@ -42,5 +43,34 @@ def hash_goal(goal: RobotControl.Goal) -> int:
         goal.placement_pos.y,
         goal.avoid_ball,
         goal.avoid_pushing_robots,
+    )
+    return hash(target)
+
+
+def hash_robot_control(msg: RobotControlMsg) -> int:
+    pose_hash = tuple(hasher.hash_constraint_pose(pose) for pose in msg.pose)
+    line_hash = tuple(hasher.hash_constraint_line(line) for line in msg.line)
+
+    target = (
+        msg.stop,
+        msg.keep_control,
+        tuple(msg.max_velocity_xy),
+        pose_hash,
+        line_hash,
+        msg.kick_enable,
+        msg.kick_pass,
+        msg.kick_setplay,
+        hasher.hash_constraint_xy(msg.kick_target),
+        msg.dribble_enable,
+        msg.ball_boy_dribble_enable,
+        hasher.hash_constraint_xy(msg.dribble_target),
+        msg.receive_ball,
+        msg.reflect_shoot,
+        msg.avoid_obstacles,
+        msg.avoid_placement_area,
+        msg.placement_pos.x,
+        msg.placement_pos.y,
+        msg.avoid_ball,
+        msg.avoid_pushing_robots,
     )
     return hash(target)
