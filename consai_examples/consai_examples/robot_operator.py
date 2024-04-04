@@ -15,13 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import partial
-
 from consai_examples.operation import Operation
-from consai_msgs.action import RobotControl
 from consai_msgs.msg import NamedTargets
+from consai_msgs.msg import RobotControlMsg
 from consai_msgs.msg import State2D
-from rclpy.action import ActionClient
 from rclpy.node import Node
 import time
 
@@ -36,19 +33,17 @@ class RobotOperator(Node):
 
         ROBOT_NUM = 16
         self._action_clients = []
+        self._pub_robot_control = []
         team_color = 'blue'
         if target_is_yellow:
             team_color = 'yellow'
         for i in range(ROBOT_NUM):
-            action_name = team_color + str(i) + '/control'
-            self._action_clients.append(ActionClient(self, RobotControl, action_name))
+            self._pub_robot_control.append(
+                self.create_publisher(RobotControlMsg, team_color + str(i) + '/control', 1))
 
         self._robot_is_free = [True] * ROBOT_NUM
-        self._send_goal_future = [None] * ROBOT_NUM
-        self._get_result_future = [None] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
-        self._avoid_obstacles_enabled = [True] * ROBOT_NUM
         self._prev_operation_timestamp = [0] * ROBOT_NUM
         self._prev_operation_hash = [None] * ROBOT_NUM
 
@@ -67,12 +62,6 @@ class RobotOperator(Node):
 
     def disable_stop_game_velocity(self, robot_id):
         self._stop_game_velocity_has_enabled[robot_id] = False
-
-    def enable_avoid_obstacles(self, robot_id):
-        self._avoid_obstacles_enabled[robot_id] = True
-
-    def disable_avoid_obstacles(self, robot_id):
-        self._avoid_obstacles_enabled[robot_id] = False
 
     def target_is_yellow(self):
         # 操作するロボットのチームカラーがyellowならtrue、blueならfalseを返す
@@ -108,12 +97,6 @@ class RobotOperator(Node):
             msg.pose.append(pose)
         self._pub_named_targets.publish(msg)
 
-    def stop(self, robot_id):
-        # 指定されたIDの制御を停止する
-        goal_msg = RobotControl.Goal()
-        goal_msg.stop = True
-        return self._set_goal(robot_id, goal_msg)
-
     def reset_operation(self, robot_id: int) -> None:
         self._prev_operation_hash[robot_id] = None
         self._prev_operation_timestamp[robot_id] = 0.0
@@ -126,7 +109,10 @@ class RobotOperator(Node):
         self.get_logger().debug(
             'New operation for Robot {}'.format(robot_id))
 
-        self._set_goal(robot_id, operation.get_goal())
+        if self._stop_game_velocity_has_enabled[robot_id]:
+            operation = operation.restrict_velocity_xy(self.STOP_GAME_VELOCITY)
+
+        self._pub_robot_control[robot_id].publish(operation.get_goal())
         self._prev_operation_hash[robot_id] = hash_goal
 
         # 短い期間でoperateする場合は警告を出す
@@ -136,47 +122,3 @@ class RobotOperator(Node):
             self.get_logger().warn(
                 'Robot {} is operated too frequently'.format(robot_id))
         self._prev_operation_timestamp[robot_id] = present_time
-
-    def _set_goal(self, robot_id, goal_msg):
-        # アクションのゴールを設定する
-        if not self._action_clients[robot_id].wait_for_server(5):
-            self.get_logger().error('TIMEOUT: wait_for_server')
-            return False
-
-        if self._stop_game_velocity_has_enabled[robot_id]:
-            goal_msg.max_velocity_xy.append(self.STOP_GAME_VELOCITY)
-
-        goal_msg.avoid_obstacles = self._avoid_obstacles_enabled[robot_id]
-
-        self._send_goal_future[robot_id] = self._action_clients[robot_id].send_goal_async(
-            goal_msg, feedback_callback=partial(self._feedback_callback, robot_id=robot_id))
-
-        self._send_goal_future[robot_id].add_done_callback(
-            partial(self._goal_response_callback, robot_id=robot_id))
-        self._robot_is_free[robot_id] = False
-
-    def _goal_response_callback(self, future, robot_id):
-        # アクションサーバへゴールを送信した後の応答を受信したら実行される関数
-        goal_handle = future.result()
-
-        if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected')
-            self._robot_is_free[robot_id] = True
-            return
-
-        self.get_logger().debug('Goal accepted')
-        self._get_result_future[robot_id] = goal_handle.get_result_async()
-        self._get_result_future[robot_id].add_done_callback(
-            partial(self._get_result_callback, robot_id=robot_id))
-
-    def _feedback_callback(self, feedback_msg, robot_id):
-        # アクションサーバからのフィードバックを受信したら実行される関数
-        feedback = feedback_msg.feedback
-        (feedback)
-
-    def _get_result_callback(self, future, robot_id):
-        # アクションサーバからの行動完了通知を受信したら実行される関数
-        result = future.result().result
-        self.get_logger().debug('RobotId: {}, Result: {}, Message: {}'.format(
-            robot_id, result.success, result.message))
-        self._robot_is_free[robot_id] = True

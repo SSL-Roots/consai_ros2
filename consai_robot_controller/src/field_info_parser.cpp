@@ -54,15 +54,14 @@ void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
   constraint_parser_->set_named_targets(msg);
 }
 
-bool FieldInfoParser::is_parsable(
-  const std::shared_ptr<const RobotControl::Goal> goal) const
+bool FieldInfoParser::is_parsable(const RobotControlMsg::SharedPtr goal) const
 {
   State target_pose;
   return parse_constraints(goal, target_pose);
 }
 
 bool FieldInfoParser::parse_goal(
-  const std::shared_ptr<const RobotControl::Goal> goal,
+  const RobotControlMsg::SharedPtr goal,
   const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
   double & kick_power, double & dribble_power)
 {
@@ -140,7 +139,7 @@ bool FieldInfoParser::parse_goal(
 }
 
 State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
-  const std::shared_ptr<const RobotControl::Goal> goal,
+  const RobotControlMsg::SharedPtr goal,
   const TrackedRobot & my_robot,
   const State & goal_pose, const State & final_goal_pose) const
 {
@@ -176,7 +175,7 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
 }
 
 bool FieldInfoParser::parse_constraints(
-  const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const
+  const RobotControlMsg::SharedPtr goal, State & parsed_pose) const
 {
   if (goal->pose.size() > 0) {
     if (constraint_parser_->parse_constraint_pose(goal->pose[0], parsed_pose)) {

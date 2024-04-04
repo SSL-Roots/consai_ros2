@@ -79,8 +79,6 @@ def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_sta
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
         # ゾーンディフェンスのターゲットをセットする
         decisions[role].set_zone_targets(zone_targets)
-        # 障害物を回避する
-        decisions[role].enable_avoid_obstacles(robot_id)
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():

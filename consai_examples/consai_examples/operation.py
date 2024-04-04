@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
 from consai_msgs.msg import State2D
+from consai_msgs.msg import RobotControlMsg
 from consai_tools.hasher import robot_control_hasher
 from copy import deepcopy
 from typing import NamedTuple
@@ -143,18 +143,18 @@ class TargetTheta(NamedTuple):
 
 
 class Operation():
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         if goal:
             self._goal = goal
         else:
-            self._goal = RobotControl.Goal()
+            self._goal = RobotControlMsg()
             self._goal.keep_control = True
 
-    def get_goal(self) -> RobotControl.Goal:
+    def get_goal(self) -> RobotControlMsg:
         return self._goal
 
     def get_hash(self) -> int:
-        return robot_control_hasher.hash_goal(self._goal)
+        return robot_control_hasher.hash_robot_control(self._goal)
 
     def halt(self) -> 'Operation':
         goal = deepcopy(self._goal)
@@ -175,6 +175,11 @@ class Operation():
     def enable_avoid_pushing_robots(self) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.avoid_pushing_robots = True
+        return Operation(goal)
+
+    def restrict_velocity_xy(self, velocity: float) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.max_velocity_xy.insert(0, velocity)
         return Operation(goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
@@ -297,7 +302,7 @@ class Operation():
 
 
 class OneShotOperation(Operation):
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         super().__init__(goal)
 
         # 目標姿勢にたどり着いたら制御を終える
