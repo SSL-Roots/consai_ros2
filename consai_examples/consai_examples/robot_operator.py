@@ -130,7 +130,9 @@ class RobotOperator(Node):
         self.get_logger().debug(
             'New operation for Robot {}'.format(robot_id))
 
-        # self._set_goal(robot_id, operation.get_goal())
+        if self._stop_game_velocity_has_enabled[robot_id]:
+            operation = operation.restrict_velocity_xy(self.STOP_GAME_VELOCITY)
+
         self._pub_robot_control[robot_id].publish(operation.get_goal())
         self._prev_operation_hash[robot_id] = hash_goal
 
