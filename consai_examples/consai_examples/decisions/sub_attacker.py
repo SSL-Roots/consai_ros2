@@ -106,8 +106,8 @@ class SubAttackerDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
-           self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
+        if self._field_observer.ball_placement().is_far_from(placement_pos) or \
+           not self._field_observer.ball_placement().is_arrived_at(placement_pos):
             # ボールを受け取る
             move_to_behind_target = Operation().move_on_line(
                 TargetXY.value(placement_pos.x, placement_pos.y),
@@ -118,11 +118,10 @@ class SubAttackerDecision(DecisionBase):
             self._operator.operate(robot_id, move_to_behind_target)
             return
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            # ボール位置が配置目標位置に到着したらボールから離れる
-            avoid_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
-            self._operator.operate(robot_id, avoid_ball)
+        # ボール位置が配置目標位置に到着したらボールから離れる
+        avoid_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+        self._operator.operate(robot_id, avoid_ball)
 
     def their_ball_placement(self, robot_id, placement_pos):
         operation = Operation().move_to_pose(

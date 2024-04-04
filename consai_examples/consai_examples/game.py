@@ -59,7 +59,7 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_ball_placement()
 
 
-def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_state: int,
+def update_decisions(changed_ids: list[int], ball_state: int, 
                      ball_zone_state: int, num_of_zone_roles: int, zone_targets: list[int]):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
@@ -68,8 +68,6 @@ def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_sta
 
         # ボール状態をセットする
         decisions[role].set_ball_state(ball_state)
-        # ボール配置状態をセットする
-        decisions[role].set_ball_placement_state(ball_placement_state)
         # ボールゾーン状態をセットする
         decisions[role].set_ball_zone_state(ball_zone_state)
         # ゾーンディフェンスの担当者数をセットする
@@ -162,7 +160,6 @@ def main():
             operator.publish_named_targets()
 
         ball_state = observer.get_ball_state()
-        ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
         ball_zone_state = observer.get_ball_zone_state()
 
         # ロボットの役割の更新する
@@ -175,7 +172,7 @@ def main():
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         zone_targets = observer.update_zone_targets(num_of_zone_roles)
 
-        update_decisions(changed_ids, ball_state, ball_placement_state,
+        update_decisions(changed_ids, ball_state,
                          ball_zone_state, num_of_zone_roles, zone_targets)
 
         elapsed_time = time.time() - start_time

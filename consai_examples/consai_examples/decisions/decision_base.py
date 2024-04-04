@@ -25,7 +25,6 @@ class DecisionBase(object):
         self._operator = robot_operator
         self._field_observer = field_observer
         self._ball_state = FieldObserver.BALL_NONE
-        self._ball_placement_state = FieldObserver.BALL_PLACEMENT_NONE
         self._ball_zone_state = FieldObserver.BALL_ZONE_NONE
         self._num_of_zone_roles = 0
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
@@ -45,9 +44,6 @@ class DecisionBase(object):
 
     def set_ball_state(self, ball_state):
         self._ball_state = ball_state
-
-    def set_ball_placement_state(self, ball_placement_state):
-        self._ball_placement_state = ball_placement_state
 
     def set_ball_zone_state(self, ball_zone_state):
         self._ball_zone_state = ball_zone_state

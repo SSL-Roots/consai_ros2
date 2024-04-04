@@ -22,7 +22,7 @@ import numpy
 from consai_msgs.msg import State2D
 
 
-def get_diff_xy(pose1, pose2):
+def get_diff_xy(pose1: State2D, pose2: State2D) -> State2D:
 
     diff_pose = State2D()
 
@@ -33,7 +33,7 @@ def get_diff_xy(pose1, pose2):
     return diff_pose
 
 
-def get_distance(pose1, pose2):
+def get_distance(pose1: State2D, pose2: State2D) -> float:
     # 2点間の距離を取る関数
     diff = get_diff_xy(pose1, pose2)
 

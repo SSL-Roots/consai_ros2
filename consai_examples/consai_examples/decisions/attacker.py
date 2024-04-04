@@ -196,7 +196,7 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, put_ball_back)
             return
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET:
+        if self._field_observer.ball_placement().is_far_from(placement_pos):
             # ボール位置が配置目標位置から離れているときはパスする
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             passing = move_to_ball.with_passing_to(TargetXY.value(
@@ -204,7 +204,7 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, passing)
             return
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
+        if not self._field_observer.ball_placement().is_arrived_at(placement_pos):
             # ボール位置が配置目標位置に近づいたときはドリブルする
             move_to_behind_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y), -0.3,
@@ -214,11 +214,10 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, dribbling)
             return
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            # ボール位置が配置目標位置に到着したらボールから離れる
-            avoid_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
-            self._operator.operate(robot_id, avoid_ball)
+        # ボール位置が配置目標位置に到着したらボールから離れる
+        avoid_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+        self._operator.operate(robot_id, avoid_ball)
 
 
 def gen_chase_ball_function():

@@ -30,6 +30,7 @@ from consai_tools.geometry import geometry_tools as tool
 from consai_examples.observer.detection_wrapper import DetectionWrapper
 from consai_examples.observer.pos_vel import PosVel
 from consai_examples.observer.ball_position_observer import BallPositionObserver
+from consai_examples.observer.ball_placement_observer import BallPlacementObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -37,11 +38,6 @@ from consai_examples.observer.ball_position_observer import BallPositionObserver
 
 class FieldObserver(Node):
     BALL_NONE = 0
-
-    BALL_PLACEMENT_NONE = 0
-    BALL_PLACEMENT_FAR_FROM_TARGET = 1
-    BALL_PLACEMENT_NEAR_TARGET = 2
-    BALL_PLACEMENT_ARRIVED_AT_TARGET = 3
 
     BALL_ZONE_NONE = 0
     BALL_ZONE_LEFT_TOP = 1
@@ -76,7 +72,6 @@ class FieldObserver(Node):
 
         self._our_team_is_yellow = our_team_is_yellow
         self._ball_state = self.BALL_NONE
-        self._ball_placement_state = self.BALL_PLACEMENT_NONE
         self._ball_zone_state = self.BALL_ZONE_NONE
         self._ball_is_moving = False
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
@@ -118,12 +113,16 @@ class FieldObserver(Node):
 
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
+        self._ball_placement_observer = BallPlacementObserver()
 
     def detection(self) -> DetectionWrapper:
         return self._detection_wrapper
 
     def ball_position(self) -> BallPositionObserver:
         return self._ball_position_state_observer
+
+    def ball_placement(self) -> BallPlacementObserver:
+        return self._ball_placement_observer
 
     def field_half_length(self) -> float:
         return self._field_half_x
@@ -140,6 +139,7 @@ class FieldObserver(Node):
         self._detection_wrapper.update(msg)
         self._ball_position_state_observer.update(
             self._detection_wrapper.ball().pos())
+        self._ball_placement_observer.update(self._detection_wrapper.ball())
 
         if len(msg.balls) > 0:
             self._update_ball_moving_state(msg.balls[0])
@@ -496,38 +496,6 @@ class FieldObserver(Node):
 
     def ball_is_in_right_bottom_zone(self):
         return self._ball_zone_state == self.BALL_ZONE_RIGHT_BOTTOM
-
-    def _update_ball_placement_state(self, placement_position):
-        ARRIVED_THRESHOLD = 0.13  # meters
-        ARRIVED_VELOCTY_THRESHOLD = 0.2  # m/s
-        NEAR_THRESHOLD = 3.0
-        THRESHOLD_MARGIN = 0.02
-        diff_x = placement_position.x - self._ball.pos.x
-        diff_y = placement_position.y - self._ball.pos.y
-        distance = math.hypot(diff_x, diff_y)
-        # ボール速度が小さければ、目標位置にたどり着いたと判定する
-        velocity_norm = 0.0
-        if len(self._ball.vel) > 0:
-            velocity_norm = math.hypot(
-                self._ball.vel[0].x, self._ball.vel[0].y)
-
-        arrived_threshold = ARRIVED_THRESHOLD
-        near_threshold = NEAR_THRESHOLD
-        if self._ball_placement_state == self.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            arrived_threshold += THRESHOLD_MARGIN
-        elif self._ball_placement_state == self.BALL_PLACEMENT_NEAR_TARGET:
-            near_threshold += THRESHOLD_MARGIN
-
-        if distance < arrived_threshold and velocity_norm < ARRIVED_VELOCTY_THRESHOLD:
-            self._ball_placement_state = self.BALL_PLACEMENT_ARRIVED_AT_TARGET
-        elif distance < near_threshold:
-            self._ball_placement_state = self.BALL_PLACEMENT_NEAR_TARGET
-        else:
-            self._ball_placement_state = self.BALL_PLACEMENT_FAR_FROM_TARGET
-
-    def get_ball_placement_state(self, placement_position):
-        self._update_ball_placement_state(placement_position)
-        return self._ball_placement_state
 
     def get_ball_pos(self):
         return self._ball.pos
