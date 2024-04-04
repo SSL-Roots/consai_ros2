@@ -14,7 +14,6 @@
 
 #include <gtest/gtest.h>
 #include <memory>
-#include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_robot_controller/obstacle/obstacle_observer.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
@@ -24,7 +23,6 @@
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 
 
-using RobotControl = consai_msgs::action::RobotControl;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using RobotId = robocup_ssl_msgs::msg::RobotId;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;

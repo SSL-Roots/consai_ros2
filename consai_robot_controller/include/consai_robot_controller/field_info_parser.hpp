@@ -18,7 +18,6 @@
 #include <memory>
 #include <string>
 
-#include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
@@ -39,7 +38,6 @@
 namespace consai_robot_controller
 {
 
-using RobotControl = consai_msgs::action::RobotControl;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;

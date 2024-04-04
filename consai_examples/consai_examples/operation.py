@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
@@ -298,7 +297,7 @@ class Operation():
 
 
 class OneShotOperation(Operation):
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         super().__init__(goal)
 
         # 目標姿勢にたどり着いたら制御を終える

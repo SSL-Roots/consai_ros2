@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
-#include "consai_msgs/action/robot_control.hpp"
 #include "consai_msgs/msg/goal_pose.hpp"
 #include "consai_msgs/msg/goal_poses.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
@@ -47,9 +46,7 @@ using GoalPoses = consai_msgs::msg::GoalPoses;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
-using RobotControl = consai_msgs::action::RobotControl;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
-using GoalHandleRobotControl = rclcpp_action::ServerGoalHandle<RobotControl>;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
@@ -69,16 +66,6 @@ protected:
   void on_timer_pub_goal_poses();
 
 private:
-  rclcpp_action::GoalResponse handle_goal(
-    const rclcpp_action::GoalUUID & uuid,
-    std::shared_ptr<const RobotControl::Goal> goal,
-    const unsigned int robot_id);
-  rclcpp_action::CancelResponse handle_cancel(
-    const std::shared_ptr<GoalHandleRobotControl> goal_handle,
-    const unsigned int robot_id);
-  void handle_accepted(
-    std::shared_ptr<GoalHandleRobotControl> goal_handle,
-    const unsigned int robot_id);
   State limit_world_velocity(
     const State & velocity, const double & max_velocity_xy,
     const double & max_velocity_theta) const;
@@ -86,17 +73,12 @@ private:
     const State & velocity, const State & last_velocity,
     const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
-  bool switch_to_stop_control_mode(
-    const unsigned int robot_id, const bool success, const std::string & error_msg);
+  bool publish_stop_command(const unsigned int robot_id);
 
   std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
-  std::vector<rclcpp_action::Server<RobotControl>::SharedPtr> server_control_;
   std::vector<rclcpp::Subscription<RobotControlMsg>::SharedPtr> sub_robot_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
-  std::vector<bool> control_enable_;
-  std::vector<bool> need_response_;
-  std::vector<std::shared_ptr<GoalHandleRobotControl>> goal_handle_;
   std::vector<State> last_world_vel_;
 
   std::shared_ptr<consai_robot_controller::FieldInfoParser> parser_;
