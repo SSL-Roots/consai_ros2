@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "consai_msgs/action/robot_control.hpp"
+#include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
 #include "consai_robot_controller/obstacle/obstacle_environment.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -25,7 +25,7 @@
 namespace obstacle
 {
 
-using RobotControl = consai_msgs::action::RobotControl;
+using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 
 class ObstacleObserver
@@ -35,7 +35,7 @@ public:
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
 
   ObstacleEnvironment get_obstacle_environment(
-    const std::shared_ptr<const RobotControl::Goal> goal,
+    const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot) const;
 
 private:

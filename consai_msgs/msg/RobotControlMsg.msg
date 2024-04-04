@@ -1,0 +1,42 @@
+# 制御を停止する場合はstopをtrue
+# actionは瞬時に完了する
+bool stop false
+# 目標値に到達しても制御を続けてほしいときはtrue
+# actionは瞬時に完了する
+bool keep_control false
+
+# XY方向の最大速度m/s を制限する
+# STOPゲーム中は走行速度を抑えなくてはならない
+float64[<=1] max_velocity_xy
+
+# 移動の目標値
+ConstraintPose[<=1] pose
+ConstraintLine[<=1] line
+
+# ボール操作関連のフラグ
+# kick_enable = trueでボールを蹴る
+bool kick_enable false
+# kick_pass = falseで最大速度でボールを蹴る
+# kick_pass = trueで低速度でボールを蹴る
+bool kick_pass false
+# kick_setplay = true でセットプレイ用の落ち着いたキックを実行する
+bool kick_setplay false
+# キックの目標地点
+ConstraintXY kick_target
+
+# dribble_enable = trueで、dribble_targetに向かってボールを運ぶ
+bool dribble_enable false
+bool ball_boy_dribble_enable false
+ConstraintXY dribble_target
+
+# 転がっているボールを受け取るときはtrue
+bool receive_ball false
+
+# リフレクトシュート
+bool reflect_shoot false
+
+bool avoid_obstacles true  # 衝突回避は安全のためデフォルトでtrue
+bool avoid_placement_area false  # 回避の機会は限定的なのでデフォルトでfalse
+State2D placement_pos
+bool avoid_ball false  # ボールを避ける機会は限定的なのでデフォルトでfalse
+bool avoid_pushing_robots false  # ロボット同士の押し合いを避ける機会は限定的なのでデフォルトでfalse
