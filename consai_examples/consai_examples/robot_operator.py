@@ -44,7 +44,6 @@ class RobotOperator(Node):
         self._robot_is_free = [True] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
         self._stop_game_velocity_has_enabled = [False] * ROBOT_NUM
-        self._prev_operation_timestamp = [0] * ROBOT_NUM
         self._prev_operation_hash = [None] * ROBOT_NUM
 
         # 名前付きターゲット格納用の辞書
@@ -99,7 +98,6 @@ class RobotOperator(Node):
 
     def reset_operation(self, robot_id: int) -> None:
         self._prev_operation_hash[robot_id] = None
-        self._prev_operation_timestamp[robot_id] = 0.0
 
     def operate(self, robot_id: int, operation: Operation) -> None:
         # 前回と違うOperationが来たときのみ、Goalを設定する
@@ -114,11 +112,3 @@ class RobotOperator(Node):
 
         self._pub_robot_control[robot_id].publish(operation.get_goal())
         self._prev_operation_hash[robot_id] = hash_goal
-
-        # 短い期間でoperateする場合は警告を出す
-        THRESHOLD = 0.1  # seconds
-        present_time = time.time()
-        if present_time - self._prev_operation_timestamp[robot_id] < THRESHOLD:
-            self.get_logger().warn(
-                'Robot {} is operated too frequently'.format(robot_id))
-        self._prev_operation_timestamp[robot_id] = present_time
