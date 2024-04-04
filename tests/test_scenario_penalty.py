@@ -186,7 +186,7 @@ def test_ボールプレースメント時に進入禁止エリアに侵入し�
             if robot.id == GOALIE_ID:
                 continue
 
-            distance = calc.distance_point_c_to_line_ab(
+            distance = calc.distance_line_ab_to_point_c(
                 target_x, target_y, ball.x, ball.y, robot.x, robot.y
             )
 
