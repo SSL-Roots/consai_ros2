@@ -20,7 +20,6 @@ from rcst import calc
 from rcst.ball import Ball
 from rcst.robot import RobotDict
 
-from utils_for_placement import init_placement
 
 # TODO: Implement a motion dribbling the ball to the opponent's side.
 # Issue: https://github.com/SSL-Roots/consai_ros2/issues/186
