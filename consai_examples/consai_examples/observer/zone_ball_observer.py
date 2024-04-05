@@ -15,7 +15,7 @@
 from consai_msgs.msg import State2D
 
 
-class ZoneObserver():
+class ZoneBallObserver():
     BALL_ZONE_NONE = 0
     BALL_ZONE_LEFT_TOP = 1
     BALL_ZONE_LEFT_MID_TOP = 2

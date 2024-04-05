@@ -40,7 +40,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/ball_position_observer.py
     ${PROJECT_NAME}/observer/detection_wrapper.py
     ${PROJECT_NAME}/observer/pos_vel.py
-    ${PROJECT_NAME}/observer/zone_observer.py
+    ${PROJECT_NAME}/observer/zone_ball_observer.py
     ${PROJECT_NAME}/operation_test/ball_boy_test.py
     ${PROJECT_NAME}/operation_test/control.py
     ${PROJECT_NAME}/operation_test/control_by_referee.py

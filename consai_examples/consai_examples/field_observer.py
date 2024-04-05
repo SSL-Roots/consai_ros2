@@ -31,7 +31,7 @@ from consai_examples.observer.detection_wrapper import DetectionWrapper
 from consai_examples.observer.pos_vel import PosVel
 from consai_examples.observer.ball_position_observer import BallPositionObserver
 from consai_examples.observer.ball_placement_observer import BallPlacementObserver
-from consai_examples.observer.zone_observer import ZoneObserver
+from consai_examples.observer.zone_ball_observer import ZoneBallObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -104,7 +104,7 @@ class FieldObserver(Node):
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
         self._ball_placement_observer = BallPlacementObserver()
-        self._zone_observer = ZoneObserver()
+        self._zone_ball_observer = ZoneBallObserver()
 
     def detection(self) -> DetectionWrapper:
         return self._detection_wrapper
@@ -115,8 +115,8 @@ class FieldObserver(Node):
     def ball_placement(self) -> BallPlacementObserver:
         return self._ball_placement_observer
 
-    def zone(self) -> ZoneObserver:
-        return self._zone_observer
+    def zone(self) -> ZoneBallObserver:
+        return self._zone_ball_observer
 
     def field_half_length(self) -> float:
         return self._field_half_x
@@ -134,7 +134,7 @@ class FieldObserver(Node):
         self._ball_position_state_observer.update(
             self._detection_wrapper.ball().pos())
         self._ball_placement_observer.update(self._detection_wrapper.ball())
-        self._zone_observer.update(
+        self._zone_ball_observer.update(
             self._detection_wrapper.ball().pos(),
             self.ball_position().is_in_our_side())
 
