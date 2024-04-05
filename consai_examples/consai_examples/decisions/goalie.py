@@ -77,8 +77,8 @@ class GoaleDecision(DecisionBase):
             # リストが空の場合
             else:
                 # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                if self._field_observer.zone().ball_is_in_left_top() or \
+                     self._field_observer.zone().ball_is_in_left_mid_top():
                     clear_ball = move_to_behind_ball.with_shooting_to(
                         TargetXY.their_top_corner())
                 else:

@@ -134,42 +134,42 @@ class ZoneDefenseDecision(DecisionBase):
             if self._num_of_zone_roles == 1:
                 return True
             elif self._num_of_zone_roles == 2:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                if self._field_observer.zone().ball_is_in_left_top() or \
+                        self._field_observer.zone().ball_is_in_left_mid_top():
                     return True
             elif self._num_of_zone_roles == 3 or self._num_of_zone_roles == 4:
-                if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
+                if self._field_observer.zone().ball_is_in_left_top():
                     return True
         return False
 
     def _ball_is_in_zone2(self):
         if self._field_observer.ball_position().is_in_our_side():
             if self._num_of_zone_roles == 2:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM,
-                                             FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+                if self._field_observer.zone().ball_is_in_left_bottom() or \
+                        self._field_observer.zone().ball_is_in_left_mid_bottom():
                     return True
             elif self._num_of_zone_roles == 3:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP,
-                                             FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
+                if self._field_observer.zone().ball_is_in_left_mid_top() or \
+                        self._field_observer.zone().ball_is_in_left_mid_bottom():
                     return True
             else:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_TOP]:
+                if self._field_observer.zone().ball_is_in_left_mid_top():
                     return True
         return False
 
     def _ball_is_in_zone3(self):
         if self._field_observer.ball_position().is_in_our_side():
             if self._num_of_zone_roles == 3:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+                if self._field_observer.zone().ball_is_in_left_bottom():
                     return True
             else:
-                if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]:
+                if self._field_observer.zone().ball_is_in_left_mid_bottom():
                     return True
         return False
 
     def _ball_is_in_zone4(self):
         if self._field_observer.ball_position().is_in_our_side():
-            if self._ball_zone_state in [FieldObserver.BALL_ZONE_LEFT_BOTTOM]:
+            if self._field_observer.zone().ball_is_in_left_bottom():
                 return True
         return False
 

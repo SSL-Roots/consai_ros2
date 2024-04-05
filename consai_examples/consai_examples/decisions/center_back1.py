@@ -50,7 +50,7 @@ class CenterBack1Decision(DecisionBase):
     def _defend_upper_defense_area(self, robot_id):
         # ディフェンスエリアの上半分を守る
         # ボールが左上にあれば上側をまもる
-        if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_TOP:
+        if self._field_observer.zone().ball_is_in_left_top():
             operation = self._defend_upper_top_operation()
         else:
             operation = self._defend_upper_front_operation()

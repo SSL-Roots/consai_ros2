@@ -31,6 +31,7 @@ from consai_examples.observer.detection_wrapper import DetectionWrapper
 from consai_examples.observer.pos_vel import PosVel
 from consai_examples.observer.ball_position_observer import BallPositionObserver
 from consai_examples.observer.ball_placement_observer import BallPlacementObserver
+from consai_examples.observer.zone_observer import ZoneObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -38,16 +39,6 @@ from consai_examples.observer.ball_placement_observer import BallPlacementObserv
 
 class FieldObserver(Node):
     BALL_NONE = 0
-
-    BALL_ZONE_NONE = 0
-    BALL_ZONE_LEFT_TOP = 1
-    BALL_ZONE_LEFT_MID_TOP = 2
-    BALL_ZONE_LEFT_MID_BOTTOM = 3
-    BALL_ZONE_LEFT_BOTTOM = 4
-    BALL_ZONE_RIGHT_TOP = 5
-    BALL_ZONE_RIGHT_MID_TOP = 6
-    BALL_ZONE_RIGHT_MID_BOTTOM = 7
-    BALL_ZONE_RIGHT_BOTTOM = 8
 
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
@@ -72,7 +63,6 @@ class FieldObserver(Node):
 
         self._our_team_is_yellow = our_team_is_yellow
         self._ball_state = self.BALL_NONE
-        self._ball_zone_state = self.BALL_ZONE_NONE
         self._ball_is_moving = False
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._ball = TrackedBall()
@@ -114,6 +104,7 @@ class FieldObserver(Node):
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
         self._ball_placement_observer = BallPlacementObserver()
+        self._zone_observer = ZoneObserver()
 
     def detection(self) -> DetectionWrapper:
         return self._detection_wrapper
@@ -123,6 +114,9 @@ class FieldObserver(Node):
 
     def ball_placement(self) -> BallPlacementObserver:
         return self._ball_placement_observer
+
+    def zone(self) -> ZoneObserver:
+        return self._zone_observer
 
     def field_half_length(self) -> float:
         return self._field_half_x
@@ -140,10 +134,12 @@ class FieldObserver(Node):
         self._ball_position_state_observer.update(
             self._detection_wrapper.ball().pos())
         self._ball_placement_observer.update(self._detection_wrapper.ball())
+        self._zone_observer.update(
+            self._detection_wrapper.ball().pos(),
+            self.ball_position().is_in_our_side())
 
         if len(msg.balls) > 0:
             self._update_ball_moving_state(msg.balls[0])
-            self._update_ball_zone_state(msg.balls[0].pos)
             self._ball = msg.balls[0]
 
         # 位置・速度・IDのリストを初期化
@@ -200,44 +196,6 @@ class FieldObserver(Node):
             self._ball_to_our_field = True
         else:
             self._ball_to_our_field = False
-
-    def _update_ball_zone_state(self, ball_pos):
-        ZONE_THRESHOLD = 0.2  # meters
-        # ボールがどのZONEに存在するのかを判定する
-        threshold_x = 0.0
-        if self.ball_position().is_in_our_side():
-            threshold_x += ZONE_THRESHOLD
-
-        threshold_y_top = self._field_quarter_y
-        if self.ball_is_in_right_top_zone() or self.ball_is_in_left_top_zone():
-            threshold_y_top -= ZONE_THRESHOLD
-
-        threshold_y_mid_top = 0.0
-        if self.ball_is_in_right_mid_top_zone() or self.ball_is_in_left_mid_top_zone():
-            threshold_y_mid_top -= ZONE_THRESHOLD
-
-        threshold_y_mid_bottom = -self._field_quarter_y
-        if self.ball_is_in_right_mid_bottom_zone() or self.ball_is_in_left_mid_bottom_zone():
-            threshold_y_mid_bottom -= ZONE_THRESHOLD
-
-        if ball_pos.x > threshold_x:
-            if ball_pos.y > threshold_y_top:
-                self._ball_zone_state = self.BALL_ZONE_RIGHT_TOP
-            elif ball_pos.y > threshold_y_mid_top:
-                self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_TOP
-            elif ball_pos.y > threshold_y_mid_bottom:
-                self._ball_zone_state = self.BALL_ZONE_RIGHT_MID_BOTTOM
-            else:
-                self._ball_zone_state = self.BALL_ZONE_RIGHT_BOTTOM
-        else:
-            if ball_pos.y > threshold_y_top:
-                self._ball_zone_state = self.BALL_ZONE_LEFT_TOP
-            elif ball_pos.y > threshold_y_mid_top:
-                self._ball_zone_state = self.BALL_ZONE_LEFT_MID_TOP
-            elif ball_pos.y > threshold_y_mid_bottom:
-                self._ball_zone_state = self.BALL_ZONE_LEFT_MID_BOTTOM
-            else:
-                self._ball_zone_state = self.BALL_ZONE_LEFT_BOTTOM
 
     def update_zone_targets(self, number_of_zone_roles):
         # ゾーンディフェンス担当者に合わせて、マンマークする相手ロボットを検出する
@@ -469,33 +427,6 @@ class FieldObserver(Node):
 
     def ball_to_our_field(self):
         return self._ball_to_our_field
-
-    def get_ball_zone_state(self):
-        return self._ball_zone_state
-
-    def ball_is_in_left_top_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_LEFT_TOP
-
-    def ball_is_in_left_mid_top_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_LEFT_MID_TOP
-
-    def ball_is_in_left_mid_bottom_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_LEFT_MID_BOTTOM
-
-    def ball_is_in_left_bottom_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_LEFT_BOTTOM
-
-    def ball_is_in_right_top_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_RIGHT_TOP
-
-    def ball_is_in_right_mid_top_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_RIGHT_MID_TOP
-
-    def ball_is_in_right_mid_bottom_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_RIGHT_MID_BOTTOM
-
-    def ball_is_in_right_bottom_zone(self):
-        return self._ball_zone_state == self.BALL_ZONE_RIGHT_BOTTOM
 
     def get_ball_pos(self):
         return self._ball.pos

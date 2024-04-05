@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
@@ -27,20 +26,10 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_TOP,
-                           FieldObserver.BALL_ZONE_LEFT_MID_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
-
-        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                               FieldObserver.BALL_ZONE_LEFT_MID_TOP]
-        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM,
-                                  FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
-
     def _offend_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        if self._ball_zone_state in self._ZONE_TOPS:
+        if self._field_observer.zone().ball_is_in_top():
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
         else:
             move_to_ball = move_to_ball.overwrite_pose_y(2.5)
@@ -49,7 +38,8 @@ class SubAttackerDecision(DecisionBase):
     def _offend_our_side_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        if self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
+        if self._field_observer.zone().ball_is_in_left_bottom() or \
+                self._field_observer.zone().ball_is_in_left_mid_bottom():
             move_to_ball = move_to_ball.overwrite_pose_y(2.5)
         else:
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)

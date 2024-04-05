@@ -50,7 +50,7 @@ class CenterBack2Decision(DecisionBase):
     def _defend_lower_defense_area(self, robot_id):
         # ディフェンスエリアの下半分を守る
         # ボールが左下にあれば下側をまもる
-        if self._ball_zone_state == FieldObserver.BALL_ZONE_LEFT_BOTTOM:
+        if self._field_observer.zone().ball_is_in_left_bottom():
             operation = self._defend_lower_bottom_defense_operation()
         else:
             operation = self._defend_lower_front_defense_operation()
