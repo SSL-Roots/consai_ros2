@@ -33,7 +33,7 @@ def test_ボールプレースメント時に進入禁止エリアに侵入し�
     )
     time.sleep(3)
 
-    def blue_robots_are_out_of_placement_position(
+    def robot_is_invading_the_placement_area(
             ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
         DISTANCE = 0.5  # meters
         GOALIE_ID = 0
@@ -47,16 +47,16 @@ def test_ボールプレースメント時に進入禁止エリアに侵入し�
             )
 
             if distance < DISTANCE:
-                return False
-        return True
+                return True
+        return False
 
     rcst_comm.observer.customized().register_sticky_true_callback(
-        "test", blue_robots_are_out_of_placement_position)
+        "test", robot_is_invading_the_placement_area)
 
-    success = False
+    success = True
     for _ in range(10):
         if rcst_comm.observer.customized().get_result("test"):
-            success = True
+            success = False
             break
         time.sleep(1)
     assert success is True
