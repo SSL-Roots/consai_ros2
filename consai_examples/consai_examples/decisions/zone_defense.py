@@ -47,21 +47,18 @@ class ZoneDefenseDecision(DecisionBase):
 
     def _zone_defense_operation(self, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
-        ZONE_TARGET = self._zone_id.value
+        ZONE_ID = self._zone_id.value
 
         # ゾーン内にボールがあるか判定
         # ボールを追いかける処理は行ってない（アタッカーと取り合いになるため）
         # FIXME: アタッカーと取り合いにならない程度にボールは追いかけてほしい
         # ball_is_in_my_zone = self._ball_is_in_zone()
 
-        # ゾーン内の相手ロボットがいる、かつボールが自分サイドになければ、ボールとロボットの間に移動する
-        # if self._zone_targets[ZONE_TARGET] is not None \
-        #    and without_mark is False \
-        #    and ball_is_in_my_zone is False:
         # ゾーン内の相手ロボットがいる、ボールとロボットの間に移動する
-        if self._zone_targets[ZONE_TARGET] is not None and without_mark is False:
+        if self._field_observer.zone_target().has_zone_target(ZONE_ID) and without_mark is False:
+            target_id = self._field_observer.zone_target().get_zone_target_id(ZONE_ID)
             operation = Operation().move_on_line(
-                TargetXY.their_robot(self._zone_targets[ZONE_TARGET]), TargetXY.ball(),
+                TargetXY.their_robot(target_id), TargetXY.ball(),
                 distance_from_p1=0.5, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:

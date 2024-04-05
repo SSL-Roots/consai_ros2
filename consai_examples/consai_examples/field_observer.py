@@ -32,6 +32,7 @@ from consai_examples.observer.pos_vel import PosVel
 from consai_examples.observer.ball_position_observer import BallPositionObserver
 from consai_examples.observer.ball_placement_observer import BallPlacementObserver
 from consai_examples.observer.zone_ball_observer import ZoneBallObserver
+from consai_examples.observer.zone_target_observer import ZoneTargetObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -64,7 +65,6 @@ class FieldObserver(Node):
         self._our_team_is_yellow = our_team_is_yellow
         self._ball_state = self.BALL_NONE
         self._ball_is_moving = False
-        self._zone_targets = {0: None, 1: None, 2: None, 3: None}
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
 
@@ -105,6 +105,9 @@ class FieldObserver(Node):
         self._ball_position_state_observer = BallPositionObserver()
         self._ball_placement_observer = BallPlacementObserver()
         self._zone_ball_observer = ZoneBallObserver()
+        self._zone_target_observer = ZoneTargetObserver()
+
+        self._num_of_zone_roles = 0
 
     def detection(self) -> DetectionWrapper:
         return self._detection_wrapper
@@ -117,6 +120,12 @@ class FieldObserver(Node):
 
     def zone(self) -> ZoneBallObserver:
         return self._zone_ball_observer
+
+    def zone_target(self) -> ZoneTargetObserver:
+        return self._zone_target_observer
+
+    def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
+        self._num_of_zone_roles = num_of_zone_roles
 
     def field_half_length(self) -> float:
         return self._field_half_x
@@ -137,6 +146,8 @@ class FieldObserver(Node):
         self._zone_ball_observer.update(
             self._detection_wrapper.ball().pos(),
             self.ball_position().is_in_our_side())
+        self._zone_target_observer.update(
+            self._detection_wrapper.their_robots(), self._num_of_zone_roles)
 
         if len(msg.balls) > 0:
             self._update_ball_moving_state(msg.balls[0])
@@ -196,228 +207,6 @@ class FieldObserver(Node):
             self._ball_to_our_field = True
         else:
             self._ball_to_our_field = False
-
-    def update_zone_targets(self, number_of_zone_roles):
-        # ゾーンディフェンス担当者に合わせて、マンマークする相手ロボットを検出する
-        # 存在しない場合はNoneをセットする
-        their_robots = []
-        for robot in self._detection.robots:
-            # 相手チームのロボットを抽出
-            target_is_blue = self._our_team_is_yellow \
-                and robot.robot_id.team_color == RobotId.TEAM_COLOR_BLUE
-            target_is_yellow = not self._our_team_is_yellow \
-                and robot.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
-            if target_is_blue or target_is_yellow:
-                their_robots.append(robot)
-
-        self._reset_zone_targets()
-        if number_of_zone_roles == 1:
-            self._update_zone1_targets(their_robots)
-        elif number_of_zone_roles == 2:
-            self._update_zone2_targets(their_robots)
-        elif number_of_zone_roles == 3:
-            self._update_zone3_targets(their_robots)
-        elif number_of_zone_roles == 4:
-            self._update_zone4_targets(their_robots)
-        return self._zone_targets
-
-    def _reset_zone_targets(self):
-        # ZONEターゲットを初期化する
-        self._zone_targets = {0: None, 1: None, 2: None, 3: None}
-
-    def _update_zone1_targets(self, their_robots):
-        # ZONE1に属するターゲットを抽出する
-        nearest_x = 10.0
-        nearest_id = None
-        for robot in their_robots:
-            if self._is_in_zone1_0(robot.pos):
-                if robot.pos.x < nearest_x:
-                    nearest_x = robot.pos.x
-                    nearest_id = robot.robot_id.id
-
-        self._zone_targets[0] = nearest_id
-
-    def _update_zone2_targets(self, their_robots):
-        # ZONE2に属するターゲットを抽出する
-        nearest_x0 = 10.0
-        nearest_x1 = 10.0
-        nearest_id0 = None
-        nearest_id1 = None
-        for robot in their_robots:
-            if self._is_in_zone2_0(robot.pos):
-                if robot.pos.x < nearest_x0:
-                    nearest_x0 = robot.pos.x
-                    nearest_id0 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone2_1(robot.pos):
-                if robot.pos.x < nearest_x1:
-                    nearest_x1 = robot.pos.x
-                    nearest_id1 = robot.robot_id.id
-                continue
-
-        self._zone_targets[0] = nearest_id0
-        self._zone_targets[1] = nearest_id1
-
-    def _update_zone3_targets(self, their_robots):
-        # ZONE3に属するターゲットを抽出する
-        nearest_x0 = 10.0
-        nearest_x1 = 10.0
-        nearest_x2 = 10.0
-        nearest_id0 = None
-        nearest_id1 = None
-        nearest_id2 = None
-        for robot in their_robots:
-            if self._is_in_zone3_0(robot.pos):
-                if robot.pos.x < nearest_x0:
-                    nearest_x0 = robot.pos.x
-                    nearest_id0 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone3_1(robot.pos):
-                if robot.pos.x < nearest_x1:
-                    nearest_x1 = robot.pos.x
-                    nearest_id1 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone3_2(robot.pos):
-                if robot.pos.x < nearest_x2:
-                    nearest_x2 = robot.pos.x
-                    nearest_id2 = robot.robot_id.id
-                continue
-
-        self._zone_targets[0] = nearest_id0
-        self._zone_targets[1] = nearest_id1
-        self._zone_targets[2] = nearest_id2
-
-    def _update_zone4_targets(self, their_robots):
-        # ZONE4に属するターゲットを抽出する
-        nearest_x0 = 10.0
-        nearest_x1 = 10.0
-        nearest_x2 = 10.0
-        nearest_x3 = 10.0
-        nearest_id0 = None
-        nearest_id1 = None
-        nearest_id2 = None
-        nearest_id3 = None
-        for robot in their_robots:
-            if self._is_in_zone4_0(robot.pos):
-                if robot.pos.x < nearest_x0:
-                    nearest_x0 = robot.pos.x
-                    nearest_id0 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone4_1(robot.pos):
-                if robot.pos.x < nearest_x1:
-                    nearest_x1 = robot.pos.x
-                    nearest_id1 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone4_2(robot.pos):
-                if robot.pos.x < nearest_x2:
-                    nearest_x2 = robot.pos.x
-                    nearest_id2 = robot.robot_id.id
-                continue
-
-            if self._is_in_zone4_3(robot.pos):
-                if robot.pos.x < nearest_x3:
-                    nearest_x3 = robot.pos.x
-                    nearest_id3 = robot.robot_id.id
-                continue
-
-        self._zone_targets[0] = nearest_id0
-        self._zone_targets[1] = nearest_id1
-        self._zone_targets[2] = nearest_id2
-        self._zone_targets[3] = nearest_id3
-
-    def _is_in_defence_area(self, pos):
-        # ディフェンスエリアに入ってたらtrue
-        defense_x = -6.0 + 1.8 + 0.6  # 0.4はロボットの直径x2
-        defense_y = 1.8 + 0.6  # 0.4はロボットの直径x2
-        if pos.x < defense_x and math.fabs(pos.y) < defense_y:
-            return True
-        return False
-
-    def _is_in_zone1_0(self, pos):
-        # ZONE1 (左サイドの全部)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-
-        if pos.x < 0.0:
-            return True
-        return False
-
-    def _is_in_zone2_0(self, pos):
-        # ZONE2 (左サイドの上半分)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y > 0.0:
-            return True
-        return False
-
-    def _is_in_zone2_1(self, pos):
-        # ZONE2 (左サイドの下半分)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y <= 0.0:
-            return True
-        return False
-
-    def _is_in_zone3_0(self, pos):
-        # ZONE3 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y > 4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone3_1(self, pos):
-        # ZONE3 (左サイドの真ん中)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and math.fabs(pos.y) <= 4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone3_2(self, pos):
-        # ZONE3 (左サイドの下半分の下)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y < -4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone4_0(self, pos):
-        # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y > 4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone4_1(self, pos):
-        # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y > 0.0 and pos.y <= 4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone4_2(self, pos):
-        # ZONE4 (左サイドの下半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y <= 0.0 and pos.y > -4.5 * 0.5:
-            return True
-        return False
-
-    def _is_in_zone4_3(self, pos):
-        # ZONE4 (左サイドの下半分の下)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
-            return False
-        if pos.x < 0.0 and pos.y <= -4.5 * 0.5:
-            return True
-        return False
 
     def get_ball_state(self):
         return self._ball_state

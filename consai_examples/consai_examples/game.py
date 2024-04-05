@@ -59,8 +59,7 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_ball_placement()
 
 
-def update_decisions(changed_ids: list[int], ball_state: int, 
-                     num_of_zone_roles: int, zone_targets: list[int]):
+def update_decisions(changed_ids: list[int], ball_state: int, num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
         if robot_id in changed_ids:
@@ -70,8 +69,6 @@ def update_decisions(changed_ids: list[int], ball_state: int,
         decisions[role].set_ball_state(ball_state)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
-        # ゾーンディフェンスのターゲットをセットする
-        decisions[role].set_zone_targets(zone_targets)
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():
@@ -167,10 +164,9 @@ def main():
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
-        zone_targets = observer.update_zone_targets(num_of_zone_roles)
+        observer.set_num_of_zone_roles(num_of_zone_roles)
 
-        update_decisions(changed_ids, ball_state,
-                         num_of_zone_roles, zone_targets)
+        update_decisions(changed_ids, ball_state, num_of_zone_roles)
 
         elapsed_time = time.time() - start_time
         if elapsed_time < TARGET_PERIOD:

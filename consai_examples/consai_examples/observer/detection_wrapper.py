@@ -26,8 +26,6 @@ class DetectionWrapper:
         self._visibility_threshold = visibility_threshold
 
         self._visible_ball = PosVel()
-        self._visible_blue_robots: dict[int, PosVel] = {}
-        self._visible_yellow_robots: dict[int, PosVel] = {}
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
 
@@ -40,6 +38,8 @@ class DetectionWrapper:
                 continue
             self._visible_ball = self._extract_ball(ball)
 
+        visible_blue_robots: dict[int, PosVel] = {}
+        visible_yellow_robots: dict[int, PosVel] = {}
         for robot in detection_tracked.robots:
             if len(robot.visibility) <= 0:
                 continue
@@ -48,16 +48,16 @@ class DetectionWrapper:
             pos_vel = self._extract_robot(robot)
 
             if robot.robot_id.team_color == RobotId.TEAM_COLOR_BLUE:
-                self._visible_blue_robots[robot.robot_id.id] = pos_vel
+                visible_blue_robots[robot.robot_id.id] = pos_vel
             else:
-                self._visible_yellow_robots[robot.robot_id.id] = pos_vel
+                visible_yellow_robots[robot.robot_id.id] = pos_vel
 
         if self._our_team_is_yellow:
-            self._our_robots = self._visible_yellow_robots
-            self._their_robots = self._visible_blue_robots
+            self._our_robots = visible_yellow_robots
+            self._their_robots = visible_blue_robots
         else:
-            self._our_robots = self._visible_blue_robots
-            self._their_robots = self._visible_yellow_robots
+            self._our_robots = visible_blue_robots
+            self._their_robots = visible_yellow_robots
 
     def ball(self) -> PosVel:
         return self._visible_ball
