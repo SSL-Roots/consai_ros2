@@ -36,6 +36,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
     ${PROJECT_NAME}/decisions/side_wing.py
+    ${PROJECT_NAME}/observer/ball_motion_observer.py
     ${PROJECT_NAME}/observer/ball_placement_observer.py
     ${PROJECT_NAME}/observer/ball_position_observer.py
     ${PROJECT_NAME}/observer/detection_wrapper.py

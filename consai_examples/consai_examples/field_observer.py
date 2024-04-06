@@ -33,6 +33,7 @@ from consai_examples.observer.ball_position_observer import BallPositionObserver
 from consai_examples.observer.ball_placement_observer import BallPlacementObserver
 from consai_examples.observer.zone_ball_observer import ZoneBallObserver
 from consai_examples.observer.zone_target_observer import ZoneTargetObserver
+from consai_examples.observer.ball_motion_observer import BallMotionObserver
 
 # フィールド状況を観察し、ボールの位置を判断したり
 # ロボットに一番近いロボットを判定する
@@ -64,7 +65,6 @@ class FieldObserver(Node):
 
         self._our_team_is_yellow = our_team_is_yellow
         self._ball_state = self.BALL_NONE
-        self._ball_is_moving = False
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
 
@@ -106,6 +106,7 @@ class FieldObserver(Node):
         self._ball_placement_observer = BallPlacementObserver()
         self._zone_ball_observer = ZoneBallObserver()
         self._zone_target_observer = ZoneTargetObserver()
+        self._ball_motion_observer = BallMotionObserver()
 
         self._num_of_zone_roles = 0
 
@@ -123,6 +124,9 @@ class FieldObserver(Node):
 
     def zone_target(self) -> ZoneTargetObserver:
         return self._zone_target_observer
+
+    def ball_motion(self) -> BallMotionObserver:
+        return self._ball_motion_observer
 
     def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
         self._num_of_zone_roles = num_of_zone_roles
@@ -148,9 +152,9 @@ class FieldObserver(Node):
             self.ball_position().is_in_our_side())
         self._zone_target_observer.update(
             self._detection_wrapper.their_robots(), self._num_of_zone_roles)
+        self._ball_motion_observer.update(self._detection_wrapper.ball())
 
         if len(msg.balls) > 0:
-            self._update_ball_moving_state(msg.balls[0])
             self._ball = msg.balls[0]
 
         # 位置・速度・IDのリストを初期化
@@ -183,39 +187,8 @@ class FieldObserver(Node):
                                                              theta=robot.vel_angular[0])
             eval("self." + team_str + "_robot_id_list").append(robot_id)
 
-    def _update_ball_moving_state(self, ball):
-        BALL_MOVING_THRESHOLD = 1.0  # m/s
-        BALL_MOVING_HYSTERESIS = 0.3  # m/s
-
-        # ボールが動いているか判定する
-        if len(ball.vel) == 0:
-            self._ball_is_moving = False
-            return
-        velocity_norm = math.hypot(ball.vel[0].x, ball.vel[0].y)
-
-        # ボール速度がしきい値付近で揺れても、判定が切り替わらないようにヒステリシスを設ける
-        threshold = BALL_MOVING_THRESHOLD
-        if self._ball_is_moving:
-            threshold = BALL_MOVING_THRESHOLD - BALL_MOVING_HYSTERESIS
-
-        if velocity_norm > threshold:
-            self._ball_is_moving = True
-        else:
-            self._ball_is_moving = False
-
-        if ball.vel[0].x < 0:
-            self._ball_to_our_field = True
-        else:
-            self._ball_to_our_field = False
-
     def get_ball_state(self):
         return self._ball_state
-
-    def ball_is_moving(self):
-        return self._ball_is_moving
-
-    def ball_to_our_field(self):
-        return self._ball_to_our_field
 
     def get_ball_pos(self):
         return self._ball.pos

@@ -50,7 +50,7 @@ def enable_update_attacker_by_ball_pos():
     # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
     return not observer.ball_position().is_in_our_defense_area() and \
         not observer.ball_position().is_outside() and \
-        not observer.ball_is_moving() and \
+        not observer.ball_motion().is_moving() and \
         not referee.our_ball_placement() and \
         not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
