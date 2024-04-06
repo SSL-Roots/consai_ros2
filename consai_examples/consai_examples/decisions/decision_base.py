@@ -21,10 +21,9 @@ from operation import Operation
 
 class DecisionBase(object):
 
-    def __init__(self, robot_operator, field_observer):
+    def __init__(self, robot_operator, field_observer: FieldObserver):
         self._operator = robot_operator
         self._field_observer = field_observer
-        self._ball_state = FieldObserver.BALL_NONE
         self._num_of_zone_roles = 0
         self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
@@ -39,9 +38,6 @@ class DecisionBase(object):
 
     def disable_avoid_obstacles(self, robot_id):
         self._operator.disable_avoid_obstacles(robot_id)
-
-    def set_ball_state(self, ball_state):
-        self._ball_state = ball_state
 
     def set_num_of_zone_roles(self, num_of_zone_roles):
         self._num_of_zone_roles = num_of_zone_roles

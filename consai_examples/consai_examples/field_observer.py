@@ -40,8 +40,6 @@ from consai_examples.observer.ball_motion_observer import BallMotionObserver
 
 
 class FieldObserver(Node):
-    BALL_NONE = 0
-
     THRESHOLD_MARGIN = 0.05  # meters. 状態変化のしきい値にヒステリシスをもたせる
     MAX_ROBOT_NUM = 16
 
@@ -64,7 +62,6 @@ class FieldObserver(Node):
         super().__init__('field_observer')
 
         self._our_team_is_yellow = our_team_is_yellow
-        self._ball_state = self.BALL_NONE
         self._ball = TrackedBall()
         self._detection = TrackedFrame()
 
@@ -186,9 +183,6 @@ class FieldObserver(Node):
                                                              y=robot.vel[0].y,
                                                              theta=robot.vel_angular[0])
             eval("self." + team_str + "_robot_id_list").append(robot_id)
-
-    def get_ball_state(self):
-        return self._ball_state
 
     def get_ball_pos(self):
         return self._ball.pos
