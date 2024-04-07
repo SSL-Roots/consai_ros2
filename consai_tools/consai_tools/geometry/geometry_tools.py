@@ -94,7 +94,7 @@ def is_on_line(pose: State2D, line_pose1: State2D,
 
     if pose_P1toP2.x < 0.0:
         return False
-    
+
     if pose_P1toP2.x > p2_P1toP2.x:
         return False
 
