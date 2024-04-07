@@ -26,6 +26,7 @@ from consai_examples.observer.zone_target_observer import ZoneTargetObserver
 from consai_examples.observer.ball_motion_observer import BallMotionObserver
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
 
+
 class FieldObserver(Node):
 
     def __init__(self, our_team_is_yellow=False):

@@ -16,49 +16,9 @@
 # limitations under the License.
 
 from consai_examples.observer.detection_wrapper import DetectionWrapper
-import math
 import pytest
 
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedBall
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-
-
-class TrackedFrameWrapper():
-    def __init__(self):
-        self._frame = TrackedFrame()
-
-    def append_valid_robots(self, blue_robots: list[int], yellow_robots: list[int]):
-        self._append_robots(blue_robots, yellow_robots, 1.0)
-
-    def append_invalid_robots(self, blue_robots: list[int], yellow_robots: list[int]):
-        self._append_robots(blue_robots, yellow_robots, 0.0)
-
-    def _append_robots(self, blue_robots: list[int], yellow_robots: list[int], visibility: float):
-        for blue_id in blue_robots:
-            robot = TrackedRobot()
-            robot.robot_id.id = blue_id
-            robot.robot_id.team_color = RobotId.TEAM_COLOR_BLUE
-            robot.visibility.append(visibility)
-            self._frame.robots.append(robot)
-
-        for yellow_id in yellow_robots:
-            robot = TrackedRobot()
-            robot.robot_id.id = yellow_id
-            robot.robot_id.team_color = RobotId.TEAM_COLOR_YELLOW
-            robot.visibility.append(visibility)
-            self._frame.robots.append(robot)
-
-    def append_valid_ball(self, pos_x: float, pos_y: float):
-        ball = TrackedBall()
-        ball.visibility.append(1.0)
-        ball.pos.x = pos_x
-        ball.pos.y = pos_y
-        self._frame.balls.append(ball)
-
-    def get_frame(self) -> TrackedFrame:
-        return self._frame
+from tracked_frame_wrapper import TrackedFrameWrapper
 
 
 def test_initialize():

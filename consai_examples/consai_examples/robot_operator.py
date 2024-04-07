@@ -20,7 +20,6 @@ from consai_msgs.msg import NamedTargets
 from consai_msgs.msg import RobotControlMsg
 from consai_msgs.msg import State2D
 from rclpy.node import Node
-import time
 
 
 # consai_robot_controllerに指令を送るノード

@@ -19,7 +19,6 @@
 from enum import Enum
 
 from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
