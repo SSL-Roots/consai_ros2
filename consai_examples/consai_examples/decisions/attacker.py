@@ -68,6 +68,14 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, move_to_ball)
             return
 
+        # シュートできる場合はシュートする
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        if len(shoot_pos_list) > 0:
+            shooting = move_to_ball.with_shooting_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+            self._operator.operate(robot_id, shooting)
+            return
+
         # パス可能なIDのリストを取得
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
 
@@ -77,12 +85,13 @@ class AttackerDecision(DecisionBase):
                 TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
             return
-        else:
-            shoot_pos = self._field_observer.pass_shoot().search_shoot_pos(robot_id)
-            shooting = move_to_ball.with_shooting_to(
-                TargetXY.value(shoot_pos.x, shoot_pos.y))
-            self._operator.operate(robot_id, shooting)
-            return
+
+        # TODO(Roots):シュートもパスもできない場合の動きを考える
+        # 後ろにドリブルとかしたいね
+        dribbling = move_to_ball.with_dribbling_to(
+            TargetXY.their_goal())
+        self._operator.operate(robot_id, dribbling)
+        return
 
     def our_penalty_inplay(self, robot_id):
         # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する

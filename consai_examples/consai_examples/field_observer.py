@@ -96,4 +96,6 @@ class FieldObserver(Node):
             self._detection_wrapper.their_robots(), self._num_of_zone_roles)
         self._ball_motion_observer.update(self._detection_wrapper.ball())
         self._pass_shoot_observer.update(
-            self._detection_wrapper.our_robots(), self._detection_wrapper.their_robots())
+            self._detection_wrapper.ball(),
+            self._detection_wrapper.our_robots(),
+            self._detection_wrapper.their_robots())

@@ -30,14 +30,18 @@ class PassShootObserver:
             State2D(x=self._field_half_length, y=-0.45)
         ]
 
-    def update(self, our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:
+        self._present_shoot_pos_list: list[State2D] = []
+
+    def update(self, ball: PosVel,
+               our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:
+        self._ball = ball
         self._our_robots = our_robots
         self._their_robots = their_robots
 
-    def search_shoot_pos(self, my_robot_id: int) -> State2D:
-        # シュートポジションを返す関数
-        # TODO(Roots): 探索処理を実装すること
-        return self._goal_pos_list[0]
+        self._present_shoot_pos_list = self._search_shoot_pos_list()
+
+    def get_shoot_pos_list(self) -> list[State2D]:
+        return self._present_shoot_pos_list
 
     def search_receivers_list(self, my_robot_id: int) -> list[int]:
         # パス可能なロボットIDのリストを返す関数
@@ -153,6 +157,28 @@ class PassShootObserver:
             return search(pos, self._our_robots)
         else:
             return search(pos, self._their_robots)
+
+    def _search_shoot_pos_list(self) -> list[State2D]:
+        # ボールからの直線上にロボットがいないシュート位置リストを返す
+        TOLERANCE = 0.1  # ロボット半径 + alpha
+
+        shoot_pos_list = []
+
+        def obstacle_exists(target: State2D, robots: dict[int, PosVel]) -> bool:
+            # ロボットがシュートポジションを妨害しているか判定
+            for robot in robots.values():
+                if tool.is_on_line(robot.pos(), self._ball.pos(), target, TOLERANCE):
+                    return True
+            return False
+
+        for target in self._goal_pos_list:
+            if obstacle_exists(target, self._our_robots):
+                continue
+            if obstacle_exists(target, self._their_robots):
+                continue
+            shoot_pos_list.append(target)
+
+        return shoot_pos_list
 
     # def _forward_robots_id(
     #         self, my_robot_id, my_robot_pos, robots_id, robots_pos,
