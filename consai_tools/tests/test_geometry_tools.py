@@ -132,3 +132,15 @@ def test_angle_normalize():
 
     angle = tool.angle_normalize(-3 * math.pi)
     assert math.isclose(angle, float(-math.pi), abs_tol=0.01)
+
+
+def test_is_on_line():
+    p1 = State2D(x=-1.0, y=-1.0)
+    p2 = State2D(x=3.0, y=3.0)
+
+    assert tool.is_on_line(State2D(x=0.0, y=0.0), p1, p2, 0.01) is True
+    assert tool.is_on_line(State2D(x=-2.0, y=-2.0), p1, p2, 0.01) is False
+    assert tool.is_on_line(State2D(x=4.0, y=4.0), p1, p2, 0.01) is False
+
+    assert tool.is_on_line(State2D(x=2.0, y=1.0), p1, p2, 0.01) is False
+    assert tool.is_on_line(State2D(x=2.0, y=1.0), p1, p2, 2.0) is True

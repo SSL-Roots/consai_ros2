@@ -174,6 +174,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     RCLCPP_WARN(this->get_logger(), error_msg.c_str());
 
     publish_stop_command(robot_id);
+    robot_control_map_[robot_id]->stop = true;
     return;
   }
 

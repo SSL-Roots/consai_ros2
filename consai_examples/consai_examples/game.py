@@ -48,12 +48,9 @@ def num_of_active_zone_roles(active_roles):
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
     # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
-    return not observer.ball_is_in_our_defense_area() and \
-        not observer.ball_is_outside_back_x() and \
-        not observer.ball_is_outside_front_x() and \
-        not observer.ball_is_outside_right_y() and \
-        not observer.ball_is_outside_left_y() and \
-        not observer.ball_is_moving() and \
+    return not observer.ball_position().is_in_our_defense_area() and \
+        not observer.ball_position().is_outside() and \
+        not observer.ball_motion().is_moving() and \
         not referee.our_ball_placement() and \
         not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
@@ -62,23 +59,14 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_ball_placement()
 
 
-def update_decisions(changed_ids: list[int], ball_state: int, ball_placement_state: int,
-                     ball_zone_state: int, num_of_zone_roles: int, zone_targets: list[int]):
+def update_decisions(changed_ids: list[int], num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
         if robot_id in changed_ids:
             decisions[role].reset_operation(robot_id)
 
-        # ボール状態をセットする
-        decisions[role].set_ball_state(ball_state)
-        # ボール配置状態をセットする
-        decisions[role].set_ball_placement_state(ball_placement_state)
-        # ボールゾーン状態をセットする
-        decisions[role].set_ball_zone_state(ball_zone_state)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
-        # ゾーンディフェンスのターゲットをセットする
-        decisions[role].set_zone_targets(zone_targets)
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():
@@ -164,10 +152,6 @@ def main():
             operator.clear_named_targets()
             operator.publish_named_targets()
 
-        ball_state = observer.get_ball_state()
-        ball_placement_state = observer.get_ball_placement_state(referee.placement_position())
-        ball_zone_state = observer.get_ball_zone_state()
-
         # ロボットの役割の更新する
         changed_ids = assignor.update_role(
             enable_update_attacker_by_ball_pos(),
@@ -176,10 +160,9 @@ def main():
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
-        zone_targets = observer.update_zone_targets(num_of_zone_roles)
+        observer.set_num_of_zone_roles(num_of_zone_roles)
 
-        update_decisions(changed_ids, ball_state, ball_placement_state,
-                         ball_zone_state, num_of_zone_roles, zone_targets)
+        update_decisions(changed_ids, num_of_zone_roles)
 
         elapsed_time = time.time() - start_time
         if elapsed_time < TARGET_PERIOD:

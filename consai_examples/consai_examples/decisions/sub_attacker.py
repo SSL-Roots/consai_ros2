@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
@@ -27,20 +26,10 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
 
-        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_TOP,
-                           FieldObserver.BALL_ZONE_LEFT_MID_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
-
-        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                               FieldObserver.BALL_ZONE_LEFT_MID_TOP]
-        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM,
-                                  FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
-
     def _offend_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        if self._ball_zone_state in self._ZONE_TOPS:
+        if self._field_observer.zone().ball_is_in_top():
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
         else:
             move_to_ball = move_to_ball.overwrite_pose_y(2.5)
@@ -49,7 +38,8 @@ class SubAttackerDecision(DecisionBase):
     def _offend_our_side_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        if self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
+        if self._field_observer.zone().ball_is_in_left_bottom() or \
+                self._field_observer.zone().ball_is_in_left_mid_bottom():
             move_to_ball = move_to_ball.overwrite_pose_y(2.5)
         else:
             move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
@@ -106,8 +96,8 @@ class SubAttackerDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
-           self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
+        if self._field_observer.ball_placement().is_far_from(placement_pos) or \
+           not self._field_observer.ball_placement().is_arrived_at(placement_pos):
             # ボールを受け取る
             move_to_behind_target = Operation().move_on_line(
                 TargetXY.value(placement_pos.x, placement_pos.y),
@@ -118,11 +108,10 @@ class SubAttackerDecision(DecisionBase):
             self._operator.operate(robot_id, move_to_behind_target)
             return
 
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
-            # ボール位置が配置目標位置に到着したらボールから離れる
-            avoid_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
-            self._operator.operate(robot_id, avoid_ball)
+        # ボール位置が配置目標位置に到着したらボールから離れる
+        avoid_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+        self._operator.operate(robot_id, avoid_ball)
 
     def their_ball_placement(self, robot_id, placement_pos):
         operation = Operation().move_to_pose(
