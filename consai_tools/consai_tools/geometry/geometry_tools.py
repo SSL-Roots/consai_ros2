@@ -83,6 +83,27 @@ def angle_normalize(angle):
     return angle
 
 
+def is_on_line(pose: State2D, line_pose1: State2D,
+               line_pose2: State2D, tolerance: float) -> bool:
+    # poseがline_pose1とline_pose2を結ぶ直線上にあるかを判定する関数
+    # toleranceは許容誤差
+
+    trans_p1_to_p2 = Trans(line_pose1, get_angle(line_pose1, line_pose2))
+    pose_P1toP2 = trans_p1_to_p2.transform(pose)
+    p2_P1toP2 = trans_p1_to_p2.transform(line_pose2)
+
+    if pose_P1toP2.x < 0.0:
+        return False
+    
+    if pose_P1toP2.x > p2_P1toP2.x:
+        return False
+
+    if abs(pose_P1toP2.y) > tolerance:
+        return False
+
+    return True
+
+
 class Trans():
     # 座標系を移動、回転するクラス
     def __init__(self, center, theta):
