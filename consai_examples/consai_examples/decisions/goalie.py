@@ -60,21 +60,19 @@ class GoaleDecision(DecisionBase):
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._field_observer.ball_position().is_in_our_defense_area() \
            and not self._field_observer.ball_motion().is_moving():
-            # レシーバ候補のロボットIDリストを取得
-            can_pass_id_list, can_pass_pos_list, can_shoot_id_list, \
-                can_shoot_pos_list = self._field_observer.get_open_path_id_list(robot_id)
+
+            # パス可能なIDのリストを取得
+            receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
 
             move_to_behind_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
 
-            # リストが空でない場合
-            if 0 < len(can_pass_id_list):
-                # リストの先頭のロボットにパス
+            if len(receivers_id_list) > 0:
                 passing = move_to_behind_ball.with_passing_to(
-                    TargetXY.our_robot(can_pass_id_list[0]))
+                    TargetXY.our_robot(receivers_id_list[0]))
                 self._operator.operate(robot_id, passing)
-            # リストが空の場合
+                return
             else:
                 # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
                 if self._field_observer.zone().ball_is_in_left_top() or \
