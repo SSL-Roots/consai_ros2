@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(consai_frootspi_msgs REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_tools REQUIRED)
 find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -46,6 +47,7 @@ target_compile_definitions(controller_component
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
+  consai_tools
   consai_visualizer_msgs
   rclcpp
   rclcpp_action
