@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(consai_frootspi_msgs REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_tools REQUIRED)
 find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -39,13 +40,13 @@ add_library(controller_component SHARED
   src/tactic/tactic_control_ball.cpp
   src/tactic/tactic_obstacle_avoidance.cpp
   src/tools/control_tools.cpp
-  src/tools/geometry_tools.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
+  consai_tools
   consai_visualizer_msgs
   rclcpp
   rclcpp_action

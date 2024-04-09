@@ -1,4 +1,4 @@
-// Copyright 2021 Roots
+// Copyright 2024 Roots
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONSAI_ROBOT_CONTROLLER__TOOLS__GEOMETRY_TOOLS_HPP_
-#define CONSAI_ROBOT_CONTROLLER__TOOLS__GEOMETRY_TOOLS_HPP_
+#ifndef CONSAI_TOOLS__GEOMETRY_TOOLS_HPP_
+#define CONSAI_TOOLS__GEOMETRY_TOOLS_HPP_
 
 #include <complex>
 #include <algorithm>
@@ -56,4 +56,4 @@ private:
 
 }  // namespace geometry_tools
 
-#endif  // CONSAI_ROBOT_CONTROLLER__TOOLS__GEOMETRY_TOOLS_HPP_
+#endif  // CONSAI_TOOLS__GEOMETRY_TOOLS_HPP_

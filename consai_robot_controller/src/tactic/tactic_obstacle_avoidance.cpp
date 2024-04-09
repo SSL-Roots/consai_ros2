@@ -16,7 +16,7 @@
 #include <algorithm>
 
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
-#include "consai_robot_controller/tools/geometry_tools.hpp"
+#include "consai_tools/geometry_tools.hpp"
 
 namespace tactic
 {

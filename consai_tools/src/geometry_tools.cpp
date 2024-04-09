@@ -1,4 +1,4 @@
-// Copyright 2021 Roots
+// Copyright 2024 Roots
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "consai_robot_controller/tools/geometry_tools.hpp"
+#include "consai_tools/geometry_tools.hpp"
 
 namespace geometry_tools
 {
