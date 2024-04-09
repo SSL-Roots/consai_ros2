@@ -124,11 +124,7 @@ bool FieldInfoParser::parse_goal(
   }
 
   if (goal->dribble_enable && has_dribble_target) {
-    if (tactic_control_ball_->dribble_ball(
-        dribble_target, my_robot, ball, parsed_pose, dribble_power))
-    {
-      return true;
-    }
+    dribble_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
   }
 
   if (goal->ball_boy_dribble_enable && has_dribble_target) {
