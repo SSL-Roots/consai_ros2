@@ -99,6 +99,19 @@ State intersection(const State & p1, const State & p2, const State & p3, const S
   return output;
 }
 
+bool is_same(
+  const State & p1, const State & p2,
+  const double distance_threshold, const double theta_threshold)
+{
+  if (distance(p1, p2) < distance_threshold &&
+    std::fabs(normalize_theta(p1.theta - p2.theta)) < theta_threshold)
+  {
+    return true;
+  }
+
+  return false;
+}
+
 Trans::Trans(const State & center, const double theta)
 {
   center_ = std::complex<double>(center.x, center.y);

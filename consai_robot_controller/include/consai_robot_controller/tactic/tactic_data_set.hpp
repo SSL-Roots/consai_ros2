@@ -31,28 +31,44 @@ class TacticDataSet
 {
 public:
   TacticDataSet(
-    const State & parsed_pose, const State & dribble_target,
-    const TrackedRobot & my_robot, const TrackedBall & ball)
-  : parsed_pose_(parsed_pose), dribble_target_(dribble_target), my_robot_(my_robot), ball_(ball)
+    const TrackedRobot & my_robot, const TrackedBall & ball,
+    const State & target,
+    const State & parsed_pose,
+    const double & parsed_kick_power,
+    const double & parsed_dribble_power
+    )
+  : 
+  my_robot_(my_robot), ball_(ball),
+  target_(target),
+  parsed_pose_(parsed_pose),
+  parsed_kick_power_(parsed_kick_power),
+  parsed_dribble_power_(parsed_dribble_power)
   {}
 
   void set_parsed_pose(const State & parsed_pose) {parsed_pose_ = parsed_pose;}
+  void set_parsed_kick_power(const double & parsed_kick_power)
+  {
+    parsed_kick_power_ = parsed_kick_power;
+  }
   void set_parsed_dribble_power(const double & parsed_dribble_power)
   {
     parsed_dribble_power_ = parsed_dribble_power;
   }
-  State get_parsed_pose(void) {return parsed_pose_;}
-  double get_parsed_dribble_power(void) {return parsed_dribble_power_;}
-  State get_dribble_target(void) {return dribble_target_;}
+
   TrackedRobot get_my_robot(void) {return my_robot_;}
   TrackedBall get_ball(void) {return ball_;}
+  State get_target(void) {return target_;}
+  State get_parsed_pose(void) {return parsed_pose_;}
+  double get_parsed_kick_power(void) {return parsed_kick_power_;}
+  double get_parsed_dribble_power(void) {return parsed_dribble_power_;}
 
 private:
-  State parsed_pose_;
-  double parsed_dribble_power_;
-  State dribble_target_;
   TrackedRobot my_robot_;
   TrackedBall ball_;
+  State target_;
+  State parsed_pose_;
+  double parsed_kick_power_;
+  double parsed_dribble_power_;
 };
 
 }  // namespace tactics

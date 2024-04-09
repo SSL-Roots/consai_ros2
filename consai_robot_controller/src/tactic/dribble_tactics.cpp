@@ -22,12 +22,36 @@ namespace dribble_tactics
 
 namespace tools = geometry_tools;
 
+static constexpr double ROBOT_RADIUS = 0.09;  // ロボットの半径
+static constexpr double DRIBBLE_CATCH = 1.0;
+static constexpr double DRIBBLE_RELEASE = 0.0;
+static constexpr auto APPROACH = "APPROACH";
+
 
 DribbleTactics::DribbleTactics()
 {
-  tactic_functions_["APPROACH"] = [this](TacticDataSet & data_set) -> TacticName {
-    std::cout << "Approaching the ball" << std::endl;
-    return "CATCH";
+  tactic_functions_[APPROACH] = [this](TacticDataSet & data_set) -> TacticName {
+    // 現在位置からボールに対してまっすぐ進む
+    constexpr auto THRESHOLD_DISTANCE = 0.2;
+    constexpr auto THRESHOLD_THETA = 1.0;  // Ignore theta
+
+    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+    const auto ball_pose = tools::pose_state(data_set.get_ball());
+
+    const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 2.0, 0.0, -M_PI);
+
+    data_set.set_parsed_pose(new_pose);
+    data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+
+    if (tools::is_same(robot_pose, new_pose, THRESHOLD_DISTANCE, THRESHOLD_THETA)) {
+      std::cout << "Approached" << std::endl;
+      return APPROACH;
+    }
+
+    std::cout << "Approaching" << std::endl;
+    
+    return APPROACH;
   };
 
   tactic_functions_["CATCH"] = [this](TacticDataSet & data_set) -> TacticName {
@@ -58,12 +82,18 @@ bool DribbleTactics::update(
   const auto robot_id = my_robot.robot_id.id;
   // If the robot is not in the map, initialize the tactic state.
   if (tactic_name_.find(robot_id) == tactic_name_.end()) {
-    tactic_name_[robot_id] = "APPROACH";
+    tactic_name_[robot_id] = APPROACH;
   }
 
   // Execute the tactic fuction.
-  TacticDataSet data_set(parsed_pose, dribble_target, my_robot, ball);
-  tactic_name_[robot_id] = tactic_functions_[tactic_name_[robot_id]](data_set);
+  TacticDataSet data_set(my_robot, ball, dribble_target, parsed_pose, 0.0, parsed_dribble_power);
+  const auto next_tactic = tactic_functions_[tactic_name_[robot_id]](data_set);
+
+  if (tactic_name_[robot_id] != next_tactic) {
+    // Reset timestamp
+    tactic_name_[robot_id] = next_tactic;
+    tactic_time_[robot_id] = std::chrono::system_clock::now();
+  }
 
   parsed_pose = data_set.get_parsed_pose();
   parsed_dribble_power = data_set.get_parsed_dribble_power();
