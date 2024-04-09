@@ -57,6 +57,13 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_constraint_hasher tests/test_constraint_hasher.py)
   ament_add_pytest_test(test_robot_control_hasher tests/test_robot_control_hasher.py)
+
+  find_package(ament_cmake_gtest)
+  ament_add_gtest(geometry_tools_test
+    tests/cpp/test_geometry_tools.cpp
+  )
+  target_link_libraries(geometry_tools_test
+    geometry_tools)
 endif()
 
 ament_package()
