@@ -40,7 +40,6 @@ add_library(controller_component SHARED
   src/tactic/tactic_control_ball.cpp
   src/tactic/tactic_obstacle_avoidance.cpp
   src/tools/control_tools.cpp
-  src/tools/geometry_tools.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")

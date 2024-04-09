@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "consai_robot_controller/constraint_parser.hpp"
-#include "consai_robot_controller/tools/geometry_tools.hpp"
+#include "consai_tools/geometry_tools.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
