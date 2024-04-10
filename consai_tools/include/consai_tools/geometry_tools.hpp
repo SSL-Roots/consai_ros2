@@ -37,6 +37,9 @@ State pose_state(const TrackedBall & ball);
 double to_radians(const double degrees);
 double to_degrees(const double radians);
 State intersection(const State & p1, const State & p2, const State & p3, const State & p4);
+bool is_same(
+  const State & p1, const State & p2,
+  const double distance_threshold = 0.01, const double theta_threshold = 0.17);
 
 class Trans
 {
