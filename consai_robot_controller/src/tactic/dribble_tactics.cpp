@@ -82,7 +82,7 @@ DribbleTactics::DribbleTactics()
 
   tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
     // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
-    constexpr auto DISTANCE_THRESHOLD = 0.01;  // meters
+    constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
     const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
     const auto robot_pose = tools::pose_state(data_set.get_my_robot());
@@ -99,20 +99,36 @@ DribbleTactics::DribbleTactics()
       return CARRY;
     }
 
-    std::cout << "Rotating" << std::endl;
-
     return ROTATE;
   };
 
   tactic_functions_[CARRY] = [this](TacticDataSet & data_set) -> TacticName {
-    std::cout << "Releasing the ball" << std::endl;
-    std::cout << "Carrying" << std::endl;
+    // ボールが目的地に着くまで前進する
+    constexpr auto DISTANCE_THRESHOLD = 0.01;  // meters
+    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+
+    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+    const auto target_pose = data_set.get_target();
+
+    // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
+    const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
+    const auto new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS, 0.0, -M_PI);
+
+    data_set.set_parsed_pose(new_pose);
+    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+
+    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+      return RELEASE;
+    }
+
     return CARRY;
   };
 
-  tactic_functions_["FINISH"] = [this](TacticDataSet & data_set) -> TacticName {
-    std::cout << "Dribbling is finished." << std::endl;
-    return "FINISH";
+  tactic_functions_[RELEASE] = [this](TacticDataSet & data_set) -> TacticName {
+    // ドリブラーをオフし、その場にとどまる
+    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+
+    return RELEASE;
   };
 }
 
@@ -123,6 +139,11 @@ bool DribbleTactics::update(
   const auto robot_id = my_robot.robot_id.id;
   // If the robot is not in the map, initialize the tactic state.
   if (tactic_name_.find(robot_id) == tactic_name_.end()) {
+    tactic_name_[robot_id] = APPROACH;
+  }
+
+  // ロボットボールが大きく離れたらリセットする
+  if (tools::distance(tools::pose_state(my_robot), tools::pose_state(ball)) > 0.5) {
     tactic_name_[robot_id] = APPROACH;
   }
 
