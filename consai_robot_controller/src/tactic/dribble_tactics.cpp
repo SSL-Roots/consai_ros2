@@ -28,13 +28,18 @@ static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr auto APPROACH = "APPROACH";
 static constexpr auto CATCH = "CATCH";
+static constexpr auto ROTATE = "ROTATE";
 static constexpr auto CARRY = "CARRY";
+static constexpr auto RELEASE = "RELEASE";
 
 
 DribbleTactics::DribbleTactics()
 {
   tactic_functions_[APPROACH] = [this](TacticDataSet & data_set) -> TacticName {
     // 現在位置からボールに対してまっすぐ進む
+    constexpr auto DISTANCE_THRESHOLD = 0.1;  // meters
+    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+
     const auto robot_pose = tools::pose_state(data_set.get_my_robot());
     const auto ball_pose = tools::pose_state(data_set.get_ball());
 
@@ -44,12 +49,10 @@ DribbleTactics::DribbleTactics()
     data_set.set_parsed_pose(new_pose);
     data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
-    if (tools::is_same(robot_pose, new_pose, 0.1, tools::to_radians(5.0))) {
+    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
       return CATCH;
     }
 
-    std::cout << "Approaching" << std::endl;
-    
     return APPROACH;
   };
 
@@ -70,39 +73,41 @@ DribbleTactics::DribbleTactics()
     const auto robot_id = data_set.get_my_robot().robot_id.id;
     const auto elapsed = chrono::duration<double>(chrono::system_clock::now() - tactic_time_[robot_id]).count();
 
-    // if (tools::is_same(robot_pose, new_pose, 0.1, tools::to_radians(5.0)) &&
     if( elapsed > CATCHING_TIME) {
-      std::cout << "Catched" << std::endl;
-      return CARRY;
+      return ROTATE;
     }
-
-    std::cout << "Catching" << std::endl;
-    std::cout << "elapsed: " << elapsed << std::endl;
     
     return CATCH;
   };
 
-  tactic_functions_[CARRY] = [this](TacticDataSet & data_set) -> TacticName {
-    // Debug
+  tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
+    // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
+    constexpr auto DISTANCE_THRESHOLD = 0.01;  // meters
+    const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
     const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    data_set.set_parsed_pose(robot_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+    const auto ball_pose = tools::pose_state(data_set.get_ball());
+    const auto target_pose = data_set.get_target();
 
-    const auto robot_id = data_set.get_my_robot().robot_id.id;
-    const auto elapsed = chrono::duration<double>(chrono::system_clock::now() - tactic_time_[robot_id]).count();
-    if (elapsed > 5.0) {
-      return APPROACH;
+    const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+    const auto new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
+
+    data_set.set_parsed_pose(new_pose);
+    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+
+    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+      return CARRY;
     }
 
-    std::cout << "Carrying" << std::endl;
+    std::cout << "Rotating" << std::endl;
 
-    return CARRY;
+    return ROTATE;
   };
 
-  tactic_functions_["RELEASE"] = [this](TacticDataSet & data_set) -> TacticName {
+  tactic_functions_[CARRY] = [this](TacticDataSet & data_set) -> TacticName {
     std::cout << "Releasing the ball" << std::endl;
-    return "FINISH";
+    std::cout << "Carrying" << std::endl;
+    return CARRY;
   };
 
   tactic_functions_["FINISH"] = [this](TacticDataSet & data_set) -> TacticName {
