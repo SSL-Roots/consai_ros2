@@ -15,8 +15,6 @@
 #include "consai_robot_controller/tactic/dribble_tactics.hpp"
 #include "consai_tools/geometry_tools.hpp"
 
-#include <iostream>
-
 namespace dribble_tactics
 {
 
@@ -36,100 +34,101 @@ static constexpr auto RELEASE = "RELEASE";
 DribbleTactics::DribbleTactics()
 {
   tactic_functions_[APPROACH] = [this](TacticDataSet & data_set) -> TacticName {
-    // 現在位置からボールに対してまっすぐ進む
-    constexpr auto DISTANCE_THRESHOLD = 0.1;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      // 現在位置からボールに対してまっすぐ進む
+      constexpr auto DISTANCE_THRESHOLD = 0.1;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
 
-    const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 2.0, 0.0, -M_PI);
+      const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 2.0, 0.0, -M_PI);
 
-    data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
-    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
-      return CATCH;
-    }
+      if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+        return CATCH;
+      }
 
-    return APPROACH;
-  };
+      return APPROACH;
+    };
 
   tactic_functions_[CATCH] = [this](TacticDataSet & data_set) -> TacticName {
-    // ドリブラーを駆動させながら前進する
-    // ボールをキャッチするため、一定時間は行動を継続する
-    constexpr auto CATCHING_TIME = 1.0;  // seconds
+      // ドリブラーを駆動させながら前進する
+      // ボールをキャッチするため、一定時間は行動を継続する
+      constexpr auto CATCHING_TIME = 1.0;  // seconds
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
 
-    const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 0.0, 0.0, -M_PI);
+      const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 0.0, 0.0, -M_PI);
 
-    data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
-    const auto robot_id = data_set.get_my_robot().robot_id.id;
-    const auto elapsed = chrono::duration<double>(chrono::system_clock::now() - tactic_time_[robot_id]).count();
+      const auto robot_id = data_set.get_my_robot().robot_id.id;
+      const auto elapsed =
+        chrono::duration<double>(chrono::system_clock::now() - tactic_time_[robot_id]).count();
 
-    if( elapsed > CATCHING_TIME) {
-      return ROTATE;
-    }
-    
-    return CATCH;
-  };
+      if (elapsed > CATCHING_TIME) {
+        return ROTATE;
+      }
+
+      return CATCH;
+    };
 
   tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
-    // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
-    constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
+      constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
-    const auto target_pose = data_set.get_target();
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto target_pose = data_set.get_target();
 
-    const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
-    const auto new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
+      const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+      const auto new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
 
-    data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
-    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
-      return CARRY;
-    }
+      if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+        return CARRY;
+      }
 
-    return ROTATE;
-  };
+      return ROTATE;
+    };
 
   tactic_functions_[CARRY] = [this](TacticDataSet & data_set) -> TacticName {
-    // ボールが目的地に着くまで前進する
-    constexpr auto DISTANCE_THRESHOLD = 0.01;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      // ボールが目的地に着くまで前進する
+      constexpr auto DISTANCE_THRESHOLD = 0.01;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto target_pose = data_set.get_target();
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto target_pose = data_set.get_target();
 
-    // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
-    const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
-    const auto new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS, 0.0, -M_PI);
+      // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
+      const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
+      const auto new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS, 0.0, -M_PI);
 
-    data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
-    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
-      return RELEASE;
-    }
+      if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+        return RELEASE;
+      }
 
-    return CARRY;
-  };
+      return CARRY;
+    };
 
   tactic_functions_[RELEASE] = [this](TacticDataSet & data_set) -> TacticName {
-    // ドリブラーをオフし、その場にとどまる
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+      // ドリブラーをオフし、その場にとどまる
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
-    return RELEASE;
-  };
+      return RELEASE;
+    };
 }
 
 bool DribbleTactics::update(

@@ -36,7 +36,7 @@ using RobotID = unsigned int;
 using TacticName = std::string;
 using TacticDataSet = tactics::TacticDataSet;
 
-class DribbleTactics 
+class DribbleTactics
 {
 public:
   DribbleTactics();
@@ -46,7 +46,6 @@ public:
     State & parsed_pose, double & parsed_dribble_power);
 
 private:
-
   std::map<RobotID, TacticName> tactic_name_;
   std::map<RobotID, Time> tactic_time_;
   std::map<TacticName, std::function<TacticName(TacticDataSet & data_set)>> tactic_functions_;

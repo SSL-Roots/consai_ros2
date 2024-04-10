@@ -36,13 +36,12 @@ public:
     const State & parsed_pose,
     const double & parsed_kick_power,
     const double & parsed_dribble_power
-    )
-  : 
-  my_robot_(my_robot), ball_(ball),
-  target_(target),
-  parsed_pose_(parsed_pose),
-  parsed_kick_power_(parsed_kick_power),
-  parsed_dribble_power_(parsed_dribble_power)
+  )
+  : my_robot_(my_robot), ball_(ball),
+    target_(target),
+    parsed_pose_(parsed_pose),
+    parsed_kick_power_(parsed_kick_power),
+    parsed_dribble_power_(parsed_dribble_power)
   {}
 
   void set_parsed_pose(const State & parsed_pose) {parsed_pose_ = parsed_pose;}
@@ -73,4 +72,4 @@ private:
 
 }  // namespace tactics
 
-#endif  // CONSAI_ROBOT_CONTROLLER__TACTIC__BALL_BOY_TACTICS_HPP_
+#endif  // CONSAI_ROBOT_CONTROLLER__TACTIC__TACTIC_DATA_SET_HPP_
