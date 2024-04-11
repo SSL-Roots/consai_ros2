@@ -116,7 +116,9 @@ bool FieldInfoParser::parse_goal(
       }
     }
 
-    shoot_tactics_.update(kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power);
+    shoot_tactics_.update(
+      kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power,
+      dribble_power);
     return true;
   }
 

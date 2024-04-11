@@ -15,8 +15,6 @@
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
 #include "consai_tools/geometry_tools.hpp"
 
-#include <iostream>
-
 namespace shoot_tactics
 {
 
@@ -38,111 +36,112 @@ static constexpr auto SHOOT = "SHOOT";
 ShootTactics::ShootTactics()
 {
   tactic_functions_[WAIT] = [this](TacticDataSet & data_set) -> TacticName {
-    // ボールが近づいてくるまで待機
-    // キックのための必須処理ではないので、削除してもOK
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
+      // ボールが近づいてくるまで待機
+      // キックのための必須処理ではないので、削除してもOK
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
 
-    if (tools::distance(robot_pose, ball_pose) <= WAIT_DISTANCE) {
-      return APPROACH;
-    }
+      if (tools::distance(robot_pose, ball_pose) <= WAIT_DISTANCE) {
+        return APPROACH;
+      }
 
-    return WAIT;
-  };
+      return WAIT;
+    };
 
   tactic_functions_[APPROACH] = [this](TacticDataSet & data_set) -> TacticName {
-    // 現在位置からボールに対してまっすぐ進む
+      // 現在位置からボールに対してまっすぐ進む
 
-    // 近づけば良いので、しきい値を大きくする
-    constexpr auto DISTANCE_THRESHOLD = 0.3;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      // 近づけば良いので、しきい値を大きくする
+      constexpr auto DISTANCE_THRESHOLD = 0.3;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
 
-    const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 1.5, 0.0, -M_PI);
+      const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
+      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 1.5, 0.0, -M_PI);
 
-    data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
-    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
-      return ROTATE;
-    }
+      if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
+        return ROTATE;
+      }
 
-    return APPROACH;
-  };
+      return APPROACH;
+    };
 
 
   tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
-    // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
-    // 目的位置をしっかり狙ったら、次の行動に移行する
-    constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(5.0);
-    const auto OMEGA_THRESHOLD = 0.1;  // rad/s
+      // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
+      // 目的位置をしっかり狙ったら、次の行動に移行する
+      constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      const auto OMEGA_THRESHOLD = 0.1;  // rad/s
 
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
-    const auto target_pose = data_set.get_target();
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto target_pose = data_set.get_target();
 
-    // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
-    const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+      // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
+      const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
 
-    const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
-    const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
+      const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
+      const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-    const auto ADD_ANGLE = tools::to_radians(60.0);
-    const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
-    constexpr auto ROTATION_RADIUS = ROBOT_RADIUS * 2.0;
+      const auto ADD_ANGLE = tools::to_radians(60.0);
+      const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
+      constexpr auto ROTATION_RADIUS = ROBOT_RADIUS * 2.0;
 
-    State new_pose;
-    if (std::fabs(angle_robot_position) > M_PI - AIM_ANGLE_THRETHOLD) {
-      // ボールの裏に回ったら、直進する
-      new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
-    } else {
-      // ボールの周りを旋回する
-      const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
-      double pos_x = ROTATION_RADIUS * std::cos(theta);
-      double pos_y = ROTATION_RADIUS * std::sin(theta);
-      new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
-    }
+      State new_pose;
+      if (std::fabs(angle_robot_position) > M_PI - AIM_ANGLE_THRETHOLD) {
+        // ボールの裏に回ったら、直進する
+        new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
+      } else {
+        // ボールの周りを旋回する
+        const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
+        double pos_x = ROTATION_RADIUS * std::cos(theta);
+        double pos_y = ROTATION_RADIUS * std::sin(theta);
+        new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
+      }
 
-    data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_pose(new_pose);
 
-    // ロボットが目標姿勢に近づき、回転速度が小さくなったら次の行動に移行
-    const auto robot_vel = tools::velocity_state(data_set.get_my_robot());
-    if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD) &&
-      robot_vel.theta < OMEGA_THRESHOLD) {
-      return SHOOT;
-    }
+      // ロボットが目標姿勢に近づき、回転速度が小さくなったら次の行動に移行
+      const auto robot_vel = tools::velocity_state(data_set.get_my_robot());
+      if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD) &&
+        robot_vel.theta < OMEGA_THRESHOLD)
+      {
+        return SHOOT;
+      }
 
-    return ROTATE;
-  };
+      return ROTATE;
+    };
 
   tactic_functions_[SHOOT] = [this](TacticDataSet & data_set) -> TacticName {
-    // 目的位置に向かってシュートする
-    // ボールが離れたら終了する
-    const auto robot_pose = tools::pose_state(data_set.get_my_robot());
-    const auto ball_pose = tools::pose_state(data_set.get_ball());
-    const auto target_pose = data_set.get_target();
+      // 目的位置に向かってシュートする
+      // ボールが離れたら終了する
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto target_pose = data_set.get_target();
 
-    double shoot_speed = MAX_SHOOT_SPEED;
+      double shoot_speed = MAX_SHOOT_SPEED;
 
-    if (data_set.is_pass()) {
-      const auto distance = tools::distance(ball_pose, target_pose);
-      const double ALPHA = 1.3;
-      shoot_speed = std::clamp(distance * ALPHA, MIN_SHOOT_SPEED, MAX_SHOOT_SPEED);
-    }
+      if (data_set.is_pass()) {
+        const auto distance = tools::distance(ball_pose, target_pose);
+        const double ALPHA = 1.3;
+        shoot_speed = std::clamp(distance * ALPHA, MIN_SHOOT_SPEED, MAX_SHOOT_SPEED);
+      }
 
-    data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
-    data_set.set_parsed_kick_power(shoot_speed);
+      data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+      data_set.set_parsed_kick_power(shoot_speed);
 
-    if (tools::distance(robot_pose, ball_pose) > ROBOT_RADIUS * 2.0) {
-      return WAIT;
-    }
+      if (tools::distance(robot_pose, ball_pose) > ROBOT_RADIUS * 2.0) {
+        return WAIT;
+      }
 
-    return SHOOT;
-  };
+      return SHOOT;
+    };
 }
 
 bool ShootTactics::update(
@@ -164,7 +163,8 @@ bool ShootTactics::update(
   }
 
   // Execute the tactic fuction.
-  TacticDataSet data_set(my_robot, ball, shoot_target, parsed_pose, parsed_kick_power, parsed_dribble_power);
+  TacticDataSet data_set(my_robot, ball, shoot_target, parsed_pose, parsed_kick_power,
+    parsed_dribble_power);
   data_set.set_pass(is_pass);
   const auto next_tactic = tactic_functions_[tactic_name_[robot_id]](data_set);
 
