@@ -92,7 +92,7 @@ ShootTactics::ShootTactics()
     const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
     const auto ADD_ANGLE = tools::to_radians(60.0);
-    const auto AIM_ANGLE_THRETHOLD = tools::to_radians(10.0);
+    const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
     constexpr auto ROTATION_RADIUS = ROBOT_RADIUS * 2.0;
 
     State new_pose;
@@ -130,12 +130,12 @@ ShootTactics::ShootTactics()
 
     if (data_set.is_pass()) {
       const auto distance = tools::distance(ball_pose, target_pose);
-      const double ALPHA = 1.0;
+      const double ALPHA = 1.3;
       shoot_speed = std::clamp(distance * ALPHA, MIN_SHOOT_SPEED, MAX_SHOOT_SPEED);
     }
 
     data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
-    data_set.set_parsed_kick_power(MAX_SHOOT_SPEED);
+    data_set.set_parsed_kick_power(shoot_speed);
 
     if (tools::distance(robot_pose, ball_pose) > ROBOT_RADIUS * 2.0) {
       return WAIT;
