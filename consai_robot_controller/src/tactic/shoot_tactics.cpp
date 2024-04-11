@@ -91,7 +91,12 @@ ShootTactics::ShootTactics()
 
       const auto ADD_ANGLE = tools::to_radians(60.0);
       const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
-      constexpr auto ROTATION_RADIUS = ROBOT_RADIUS * 2.0;
+
+      // セットプレイ時は回転半径を大きくする
+      double rotation_radius = ROBOT_RADIUS * 2.0;
+      if (data_set.is_setplay()) {
+        rotation_radius = ROBOT_RADIUS * 4.0;
+      }
 
       State new_pose;
       if (std::fabs(angle_robot_position) > M_PI - AIM_ANGLE_THRETHOLD) {
@@ -100,8 +105,8 @@ ShootTactics::ShootTactics()
       } else {
         // ボールの周りを旋回する
         const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
-        double pos_x = ROTATION_RADIUS * std::cos(theta);
-        double pos_y = ROTATION_RADIUS * std::sin(theta);
+        double pos_x = rotation_radius * std::cos(theta);
+        double pos_y = rotation_radius * std::sin(theta);
         new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
       }
 
@@ -146,7 +151,7 @@ ShootTactics::ShootTactics()
 
 bool ShootTactics::update(
   const State & shoot_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-  const bool & is_pass,
+  const bool & is_pass, const bool & is_setplay,
   State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power)
 {
   const auto robot_id = my_robot.robot_id.id;
@@ -166,6 +171,7 @@ bool ShootTactics::update(
   TacticDataSet data_set(my_robot, ball, shoot_target, parsed_pose, parsed_kick_power,
     parsed_dribble_power);
   data_set.set_pass(is_pass);
+  data_set.set_setplay(is_setplay);
   const auto next_tactic = tactic_functions_[tactic_name_[robot_id]](data_set);
 
   if (tactic_name_[robot_id] != next_tactic) {

@@ -43,7 +43,7 @@ public:
   ~ShootTactics() = default;
   bool update(
     const State & shoot_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & is_pass,
+    const bool & is_pass, const bool & is_setplay,
     State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power);
 
 private:
