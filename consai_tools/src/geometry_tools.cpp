@@ -65,6 +65,19 @@ State pose_state(const TrackedBall & ball)
   return state;
 }
 
+State velocity_state(const TrackedRobot & robot)
+{
+  State state;
+  if (robot.vel.size() > 0) {
+    state.x = robot.vel[0].x;
+    state.y = robot.vel[0].y;
+  }
+  if (robot.vel_angular.size() > 0) {
+    state.theta = robot.vel_angular[0];
+  }
+  return state;
+}
+
 double to_radians(const double degrees)
 {
   constexpr double TO_RADIANS = M_PI / 180.0;
