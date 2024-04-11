@@ -158,7 +158,7 @@ class PassShootObserver:
         else:
             return search(pos, self._their_robots)
 
-    def _search_shoot_pos_list(self) -> list[State2D]:
+    def _search_shoot_pos_list(self, search_ours=False) -> list[State2D]:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
         TOLERANCE = 0.1  # ロボット半径 + alpha
 
@@ -172,7 +172,7 @@ class PassShootObserver:
             return False
 
         for target in self._goal_pos_list:
-            if obstacle_exists(target, self._our_robots):
+            if obstacle_exists(target, self._our_robots) and search_ours:
                 continue
             if obstacle_exists(target, self._their_robots):
                 continue
