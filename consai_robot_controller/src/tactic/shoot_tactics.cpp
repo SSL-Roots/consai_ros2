@@ -59,7 +59,7 @@ ShootTactics::ShootTactics()
     const auto ball_pose = tools::pose_state(data_set.get_ball());
 
     const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 2.0, 0.0, -M_PI);
+    const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 1.5, 0.0, -M_PI);
 
     data_set.set_parsed_pose(new_pose);
     data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -83,7 +83,7 @@ ShootTactics::ShootTactics()
     const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 0.0, 0.0, -M_PI);
 
     data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+    // data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
     const auto robot_id = data_set.get_my_robot().robot_id.id;
     const auto elapsed =
@@ -100,17 +100,35 @@ ShootTactics::ShootTactics()
     // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
     // 目的位置をしっかり狙ったら、次の行動に移行する
     constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
-    const auto THETA_THRESHOLD = tools::to_radians(3.0);
+    const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
     const auto robot_pose = tools::pose_state(data_set.get_my_robot());
     const auto ball_pose = tools::pose_state(data_set.get_ball());
     const auto target_pose = data_set.get_target();
 
+    // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
     const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
-    const auto new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
+
+    const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
+    const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
+    // angle_robot_position が　M_PI * 0.9 以上になることを望む
+
+    const auto add_angle = tools::to_radians(60.0);
+
+    State new_pose;
+    constexpr auto RADIUS = ROBOT_RADIUS * 2.0;
+    if (std::fabs(angle_robot_position) > M_PI - add_angle) {
+      new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
+    } else {
+      const auto theta = angle_robot_position + std::copysign(add_angle, angle_robot_position);
+      double pos_x = RADIUS * std::cos(theta);
+      double pos_y = RADIUS * std::sin(theta);
+      new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
+    }
+
 
     data_set.set_parsed_pose(new_pose);
-    data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+    // data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
     if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD)) {
       return SHOOT;
