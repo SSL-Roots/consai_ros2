@@ -27,6 +27,7 @@ static constexpr double ROBOT_RADIUS = 0.09;  // ロボットの半径
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double MAX_SHOOT_SPEED = 5.5;  // m/s
+static constexpr double MIN_SHOOT_SPEED = 2.0;  // m/s
 static constexpr double WAIT_DISTANCE = 0.7;  // meters
 static constexpr auto WAIT = "WAIT";
 static constexpr auto APPROACH = "APPROACH";
@@ -123,6 +124,15 @@ ShootTactics::ShootTactics()
     // ボールが離れたら終了する
     const auto robot_pose = tools::pose_state(data_set.get_my_robot());
     const auto ball_pose = tools::pose_state(data_set.get_ball());
+    const auto target_pose = data_set.get_target();
+
+    double shoot_speed = MAX_SHOOT_SPEED;
+
+    if (data_set.is_pass()) {
+      const auto distance = tools::distance(ball_pose, target_pose);
+      const double ALPHA = 1.0;
+      shoot_speed = std::clamp(distance * ALPHA, MIN_SHOOT_SPEED, MAX_SHOOT_SPEED);
+    }
 
     data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
     data_set.set_parsed_kick_power(MAX_SHOOT_SPEED);
@@ -155,6 +165,7 @@ bool ShootTactics::update(
 
   // Execute the tactic fuction.
   TacticDataSet data_set(my_robot, ball, shoot_target, parsed_pose, parsed_kick_power, parsed_dribble_power);
+  data_set.set_pass(is_pass);
   const auto next_tactic = tactic_functions_[tactic_name_[robot_id]](data_set);
 
   if (tactic_name_[robot_id] != next_tactic) {
