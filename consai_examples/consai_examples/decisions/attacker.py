@@ -51,22 +51,27 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
-        move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        move_to_ball = move_to_ball.with_ball_receiving()
-        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
+        wait = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        wait = wait.with_ball_receiving()
+        wait = wait.with_reflecting_to(TargetXY.their_goal())
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._field_observer.ball_position().is_in_our_defense_area() or \
            self._field_observer.ball_position().is_outside_of_left():
-            move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
-            self._operator.operate(robot_id, move_to_ball)
+            wait = wait.overwrite_pose_x(-3.0)
+            self._operator.operate(robot_id, wait)
             return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._field_observer.ball_position().is_in_their_defense_area() or \
            self._field_observer.ball_position().is_outside_of_right():
-            move_to_ball = move_to_ball.overwrite_pose_x(3.0)
-            self._operator.operate(robot_id, move_to_ball)
+            wait = wait.overwrite_pose_x(3.0)
+            self._operator.operate(robot_id, wait)
             return
+
+        move_to_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+        move_to_ball = move_to_ball.with_ball_receiving()
+        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
         # シュートできる場合はシュートする
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
@@ -162,15 +167,17 @@ class AttackerDecision(DecisionBase):
         # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
         if self._field_observer.ball_position().is_outside():
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            put_ball_back = move_to_ball.with_shooting_for_setplay_to(
+            move_to_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+            put_ball_back = move_to_ball.with_shooting_to(
                 TargetXY.value(kick_pos.x, kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
             return
 
         if self._field_observer.ball_placement().is_far_from(placement_pos):
             # ボール位置が配置目標位置から離れているときはパスする
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+            move_to_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
             passing = move_to_ball.with_passing_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             self._operator.operate(robot_id, passing)

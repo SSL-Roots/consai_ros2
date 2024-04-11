@@ -116,11 +116,10 @@ bool FieldInfoParser::parse_goal(
       }
     }
 
-    if (tactic_control_ball_->kick_ball(
-        kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power))
-    {
-      return true;
-    }
+    shoot_tactics_.update(
+      kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power,
+      dribble_power);
+    return true;
   }
 
   if (goal->dribble_enable && has_dribble_target) {

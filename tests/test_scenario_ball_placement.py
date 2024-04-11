@@ -55,7 +55,7 @@ def test_far_position(rcst_comm):
 
 
 def test_so_far_position(rcst_comm):
-    init_our_placement(rcst_comm, -6.0, -4.5, ball_x=5.9, ball_y=4.4)
+    init_our_placement(rcst_comm, -5.8, -4.3, ball_x=5.9, ball_y=4.4)
     assert wait_for_placement(rcst_comm) is True
 
 

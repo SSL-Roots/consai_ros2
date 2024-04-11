@@ -53,6 +53,7 @@ public:
   {
     parsed_dribble_power_ = parsed_dribble_power;
   }
+  void set_pass(const bool & is_pass) {is_pass_ = is_pass;}
 
   TrackedRobot get_my_robot(void) {return my_robot_;}
   TrackedBall get_ball(void) {return ball_;}
@@ -60,6 +61,7 @@ public:
   State get_parsed_pose(void) {return parsed_pose_;}
   double get_parsed_kick_power(void) {return parsed_kick_power_;}
   double get_parsed_dribble_power(void) {return parsed_dribble_power_;}
+  bool is_pass(void) {return is_pass_;}
 
 private:
   TrackedRobot my_robot_;
@@ -68,6 +70,7 @@ private:
   State parsed_pose_;
   double parsed_kick_power_;
   double parsed_dribble_power_;
+  bool is_pass_ = false;
 };
 
 }  // namespace tactics
