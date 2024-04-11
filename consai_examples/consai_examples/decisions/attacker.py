@@ -167,15 +167,17 @@ class AttackerDecision(DecisionBase):
         # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
         if self._field_observer.ball_position().is_outside():
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            put_ball_back = move_to_ball.with_shooting_for_setplay_to(
+            move_to_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+            put_ball_back = move_to_ball.with_shooting_to(
                 TargetXY.value(kick_pos.x, kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
             return
 
         if self._field_observer.ball_placement().is_far_from(placement_pos):
             # ボール位置が配置目標位置から離れているときはパスする
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+            move_to_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
             passing = move_to_ball.with_passing_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             self._operator.operate(robot_id, passing)
