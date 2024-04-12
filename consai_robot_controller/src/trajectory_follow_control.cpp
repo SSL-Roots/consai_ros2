@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "consai_robot_controller/trajectory_follow_control.hpp"
+#include "consai_robot_controller/global_for_debug.hpp"
 
 #include <cstdint>
 
@@ -89,6 +90,10 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   ControllerOutput theta_output = this->controlAngular(
     current_state.pose.theta, target_pose.theta, target_velocity.theta);
   output.theta = theta_output.output;
+
+  // 保存
+  global_for_debug::last_control_output_ff = Velocity2D(x_output.ff_term, y_output.ff_term, theta_output.ff_term);
+  global_for_debug::last_control_output_p = Velocity2D(x_output.p_term, y_output.p_term, theta_output.p_term);
 
   // 時間の更新
   this->tracked_time_ += this->dt_;

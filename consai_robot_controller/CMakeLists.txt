@@ -50,6 +50,7 @@ add_library(controller_component SHARED
   src/trajectory.cpp
   src/locomotion_controller.cpp
   src/utils.cpp
+  src/global_for_debug.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")

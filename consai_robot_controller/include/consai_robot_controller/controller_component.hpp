@@ -84,6 +84,12 @@ private:
   std::vector<State> last_world_vel_;
   std::vector<LocomotionController> locomotion_controller_;
 
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_ff_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_p_;
+
   std::shared_ptr<consai_robot_controller::FieldInfoParser> parser_;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
   std::shared_ptr<obstacle::ObstacleObserver> obstacle_observer_;
