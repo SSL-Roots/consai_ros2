@@ -31,7 +31,10 @@ TrajectoryFollowController::TrajectoryFollowController()
 TrajectoryFollowController::TrajectoryFollowController(
   _Float64 kp_linear, _Float64 kd_linear,
   _Float64 kp_angular_, _Float64 kd_angular,
-  double dt)
+  double dt,
+  std::shared_ptr<BangBangTrajectory3D> trajectory
+  )
+
 {
   this->state_ = ControllerState::INITIALIZED;
   this->tracked_time_ = 0;
@@ -41,17 +44,9 @@ TrajectoryFollowController::TrajectoryFollowController(
   this->kd_angular_ = kd_angular;
   this->dt_ = dt;
   this->latest_target_state_ = State2D();
-  this->trajectory_ = nullptr;
-}
-
-
-void TrajectoryFollowController::initialize(std::shared_ptr<BangBangTrajectory3D> trajectory)
-{
   this->trajectory_ = trajectory;
-  this->state_ = ControllerState::INITIALIZED;
-  this->latest_target_state_ = State2D();
-  this->tracked_time_ = 0;
 }
+
 
 std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFollowController::run(
   const State2D & current_state)

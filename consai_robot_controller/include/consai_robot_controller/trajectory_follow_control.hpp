@@ -48,13 +48,8 @@ public:
   TrajectoryFollowController();
   TrajectoryFollowController(
     _Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_,
-    _Float64 kd_angular, double dt);
-
-  /**
-   * @brief コントローラの初期化
-   * @param trajectory 追従するTrajectory
-   */
-  void initialize(std::shared_ptr<BangBangTrajectory3D> trajectory);
+    _Float64 kd_angular, double dt,
+     std::shared_ptr<BangBangTrajectory3D> trajectory);
 
   /**
    * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する

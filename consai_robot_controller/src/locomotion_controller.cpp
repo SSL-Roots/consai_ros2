@@ -26,14 +26,13 @@ LocomotionController::LocomotionController(
   double max_linear_acceleration,
   double max_angular_acceleration)
 {
-  this->trajectory_follow_controller_ = TrajectoryFollowController(
-    kp_xy, kd_xy, kp_theta, kd_theta,
-    dt);
   this->target_velocity_ = Velocity2D(0, 0, 0);
   this->output_velocity_ = Velocity2D(0, 0, 0);
   this->state_ = INITIALIZED;
-  this->kp_xy = kp_xy;
-  this->kp_theta = kp_theta;
+  this->kp_xy_ = kp_xy;
+  this->kd_xy_ = kd_xy;
+  this->kp_theta_ = kp_theta;
+  this->kd_theta_ = kd_theta;
   this->dt_ = dt;
   this->max_linear_velocity_ = max_linear_velocity;
   this->max_angular_velocity_ = max_angular_velocity;
@@ -53,10 +52,10 @@ LocomotionController::ControllerState LocomotionController::moveConstantVelocity
 
 LocomotionController::ControllerState LocomotionController::moveToPose(
   const Pose2D & goal_pose,
-  const Pose2D & current_pose)
+  const State2D & current_state)
 {
   // 特定のポーズへの移動を指示するメソッドの実装
-  this->generateTrajectory(goal_pose, current_pose);
+  this->generateTrajectory(goal_pose, current_state);
   this->goal_pose_ = goal_pose;
   state_ = RUNNING_FOLLOW_TRAJECTORY;
 
@@ -177,8 +176,16 @@ Velocity2D LocomotionController::limitVelocity(
   return modified_velocity;
 }
 
+void LocomotionController::initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory)
+{
+  this->trajectory_follow_controller_ = TrajectoryFollowController(
+    kp_xy_, kd_xy_, kp_theta_, kd_theta_,
+    dt_,
+    trajectory);
+}
+
 void LocomotionController::generateTrajectory(
-  const Pose2D & goal_pose, const Pose2D & current_pose)
+  const Pose2D & goal_pose, const State2D & current_state)
 {
   // 軌道生成を行う
   BangBangTrajectory3D trajectory;
@@ -186,17 +193,18 @@ void LocomotionController::generateTrajectory(
   Pose2D s0, s1;
   Velocity2D v0;
 
-  s0 = Pose2D(current_pose.x, current_pose.y, current_pose.theta);
+  s0 = Pose2D(current_state.pose.x, current_state.pose.y, current_state.pose.theta);
   s1 = Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta);
   v0 =
-    Velocity2D(this->output_velocity_.x, this->output_velocity_.y, this->output_velocity_.theta);
+    Velocity2D(current_state.velocity.x, current_state.velocity.y, current_state.velocity.theta);
 
   trajectory.generate(
     s0, s1, v0, this->max_linear_velocity_ * 0.8,
     this->max_angular_velocity_ * 0.8, this->max_linear_acceleration_ * 0.8,
     this->max_angular_acceleration_ * 0.8, 0.1);
 
-  trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory3D>(trajectory));
+  this->initializeTrajectoryFollowController(std::make_shared<BangBangTrajectory3D>(trajectory));
+
 }
 
 Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_state)
@@ -209,7 +217,7 @@ Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_sta
     // 軌道追従に失敗したときは再度軌道を生成し直して追従し直す
     this->generateTrajectory(
       this->goal_pose_,
-      current_state.pose);
+      current_state);
 
     control_output = trajectory_follow_controller_.run(current_state);
   }
