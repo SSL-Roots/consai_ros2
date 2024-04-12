@@ -61,8 +61,6 @@ LocomotionController::ControllerState LocomotionController::moveToPose(
   this->goal_pose_ = goal_pose;
   state_ = RUNNING_FOLLOW_TRAJECTORY;
 
-  std::cout << "moveTo: " << goal_pose.x << ", " << goal_pose.y << ", " << goal_pose.theta << std::endl;
-
   return state_;
 }
 
@@ -214,7 +212,6 @@ Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_sta
   auto control_output = trajectory_follow_controller_.run(current_state);
 
   if (control_output.second == TrajectoryFollowController::ControllerState::FAILED) {
-    std::cout << "Trajectory Follow Failed" << std::endl;
 
     // 軌道追従に失敗したときは再度軌道を生成し直して追従し直す
     this->generateTrajectory(

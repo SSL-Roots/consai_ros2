@@ -74,7 +74,6 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
 
   // 目標位置と現在位置が大きく離れすぎていたらFail
   if (hypot(target_pose.x - current_state.pose.x, target_pose.y - current_state.pose.y) > 0.5) {
-    std::cout << "TrajectoryFollowController::run: too far from target" << std::endl;
     state = ControllerState::FAILED;
     return std::make_pair(output, state);
   }
