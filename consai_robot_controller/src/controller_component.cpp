@@ -298,7 +298,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     {
       this->locomotion_controller_[robot_id].moveToPose(
         Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
+        State2D(
+          Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+          Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+        )
       );
     }
 
