@@ -28,6 +28,8 @@
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
+#include "consai_robot_controller/locomotion_controller.hpp"
+#include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
@@ -80,6 +82,7 @@ private:
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
   std::vector<State> last_world_vel_;
+  std::vector<LocomotionController> locomotion_controller_;
 
   std::shared_ptr<consai_robot_controller::FieldInfoParser> parser_;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;

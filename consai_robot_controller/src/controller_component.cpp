@@ -93,9 +93,24 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
+    auto control_loop_cycle = 10ms;
     timer_pub_control_command_.push_back(
       create_wall_timer(
-        10ms, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
+        control_loop_cycle, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
+      )
+    );
+
+    const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
+    const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
+    const auto control_range_xy = get_parameter("control_range_xy").as_double();
+    const auto control_a_xy = get_parameter("control_a_xy").as_double();
+    const auto control_a_theta = get_parameter("control_a_theta").as_double();
+
+    double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
+    locomotion_controller_.push_back(
+      LocomotionController(
+        2.5, 0.0, 2.5, 0.0, control_loop_cycle_sec, max_vel_xy,
+        max_vel_theta, control_a_xy, control_a_theta
       )
     );
 
@@ -196,32 +211,32 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     return;
   }
 
-  // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
-  goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-    robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
+  // // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
+  // goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
+  //   robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
 
-  // 障害物情報を取得
-  const auto obstacle_environments = obstacle_observer_->get_obstacle_environment(
-    robot_control_map_[robot_id], my_robot);
+  // // 障害物情報を取得
+  // const auto obstacle_environments = obstacle_observer_->get_obstacle_environment(
+  //   robot_control_map_[robot_id], my_robot);
 
-  // 現在位置: my_robot.pos
-  // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
-  // 最終目標位置: goal_pose
-  // 障害物情報: obstacle_environments
-  // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
+  // // 現在位置: my_robot.pos
+  // // 現在速度: my_robot.vel[0]  // optionalなのでvectorに格納している
+  // // 最終目標位置: goal_pose
+  // // 障害物情報: obstacle_environments
+  // // move_with_avoid(my_robot.pos, my_robot.vel[0], goal_pose, obstacle_environments)
 
-  // 目標位置と現在位置の差分
-  const double diff_x = goal_pose.x - my_robot.pos.x;
-  const double diff_y = goal_pose.y - my_robot.pos.y;
-  const double diff_theta = tools::normalize_theta(
-    goal_pose.theta - my_robot.orientation);
+  // // 目標位置と現在位置の差分
+  // const double diff_x = goal_pose.x - my_robot.pos.x;
+  // const double diff_y = goal_pose.y - my_robot.pos.y;
+  // const double diff_theta = tools::normalize_theta(
+  //   goal_pose.theta - my_robot.orientation);
 
-  // tanhに反応する区間の係数
-  // double range_xy = 1.0;
-  // double range_theta = 0.1;
-  // 最大速度調整用の係数(a < 1)
-  // double a_xy = 1.0;
-  // double a_theta = 0.5;
+  // // tanhに反応する区間の係数
+  // // double range_xy = 1.0;
+  // // double range_theta = 0.1;
+  // // 最大速度調整用の係数(a < 1)
+  // // double a_xy = 1.0;
+  // // double a_theta = 0.5;
 
   const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
   const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
@@ -229,25 +244,52 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
-  // tanh関数を用いた速度制御
-  State world_vel;
-  world_vel.x = ctools::velocity_contol_tanh(
-    diff_x, control_range_xy, control_a_xy * max_vel_xy);
-  world_vel.y = ctools::velocity_contol_tanh(
-    diff_y, control_range_xy, control_a_xy * max_vel_xy);
-  // sin関数を用いた角速度制御
-  world_vel.theta = ctools::angular_velocity_contol_sin(
-    diff_theta, control_a_theta * max_vel_theta);
+  // // tanh関数を用いた速度制御
+  // State world_vel;
+  // world_vel.x = ctools::velocity_contol_tanh(
+  //   diff_x, control_range_xy, control_a_xy * max_vel_xy);
+  // world_vel.y = ctools::velocity_contol_tanh(
+  //   diff_y, control_range_xy, control_a_xy * max_vel_xy);
+  // // sin関数を用いた角速度制御
+  // world_vel.theta = ctools::angular_velocity_contol_sin(
+  //   diff_theta, control_a_theta * max_vel_theta);
 
-  // 最大加速度リミットを適用
-  world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
-  // 最大速度リミットを適用
-  auto overwritten_max_vel_xy = max_vel_xy;
-  // 最大速度リミットを上書きできる
-  if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
-    overwritten_max_vel_xy = std::min(robot_control_map_[robot_id]->max_velocity_xy[0], max_vel_xy);
-  }
-  world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
+  // // 最大加速度リミットを適用
+  // world_vel = limit_world_acceleration(world_vel, last_world_vel_[robot_id], duration);
+  // // 最大速度リミットを適用
+  // auto overwritten_max_vel_xy = max_vel_xy;
+  // // 最大速度リミットを上書きできる
+  // if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
+  //   overwritten_max_vel_xy = std::min(robot_control_map_[robot_id]->max_velocity_xy[0], max_vel_xy);
+  // }
+  // world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
+
+  State world_vel;
+    this->locomotion_controller_[robot_id].moveToPose(
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
+      Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
+    );
+
+    auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
+      State2D(
+        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+      )
+    );
+
+    // 型変換
+    world_vel.x = output_vel.x;
+    world_vel.y = output_vel.y;
+    world_vel.theta = output_vel.theta;
+
+    // sin関数を用いた角速度制御
+    double diff_theta = tools::normalize_theta(
+      goal_pose.theta -
+      my_robot.orientation);
+    world_vel.theta = ctools::angular_velocity_contol_sin(
+      diff_theta,
+      control_a_theta *
+      max_vel_theta);
 
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id;
