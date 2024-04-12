@@ -16,7 +16,7 @@
 
 #include <cstdint>
 
-#include "consai_robot_controller/geometry_tools.hpp"
+#include "consai_tools/geometry_tools.hpp"
 #include "consai_robot_controller/global_for_debug.hpp"
 
 // TrajectoryFollowController クラスの定義
