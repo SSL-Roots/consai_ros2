@@ -70,11 +70,18 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
     this->state_ = ControllerState::RUNNING;
   }
 
+
   // 今ステップの目標位置の取得
   Pose2D target_pose = this->trajectory_->get_pose(this->tracked_time_ + this->dt_);
 
   // 今ステップの目標速度の取得
   Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
+
+  // 目標位置と現在位置が大きく離れすぎていたらFail
+  if (hypot(target_pose.x - current_state.pose.x, target_pose.y - current_state.pose.y) > 0.5) {
+    state = ControllerState::FAILED;
+    return std::make_pair(output, state);
+  }
 
   // x方向の制御
   ControllerOutput x_output = this->controlLinear(
@@ -100,10 +107,7 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
 
   this->latest_target_state_ = State2D(target_pose, target_velocity);
 
-  // 終了判定
-  if (this->tracked_time_ >= this->trajectory_->get_total_time()) {
-    state = ControllerState::COMPLETE;
-  }
+
 
   return std::make_pair(output, state);
 }

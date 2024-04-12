@@ -44,11 +44,13 @@ public:
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
   ControllerState getState();
   State2D getCurrentTargetState();
+  Pose2D getGoal();
 
 private:
   TrajectoryFollowController trajectory_follow_controller_;
   Velocity2D target_velocity_;
   Velocity2D output_velocity_;
+  Pose2D goal_pose_;
   ControllerState state_;
 
   _Float64 kp_xy;
@@ -63,6 +65,7 @@ private:
   double max_linear_acceleration_;    // [m/s^2]
   double max_angular_acceleration_;   // [rad/s^2]
 
+  void generateTrajectory(const Pose2D & goal_pose, const Pose2D & current_pose);
   Velocity2D runFollowTrajectory(const State2D & current_state);
   Velocity2D limitAcceleration(
     const Velocity2D & velocity, const Velocity2D & last_velocity,

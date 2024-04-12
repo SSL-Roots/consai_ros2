@@ -291,10 +291,16 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // world_vel = limit_world_velocity(world_vel, overwritten_max_vel_xy, max_vel_theta);
 
   State world_vel;
-    this->locomotion_controller_[robot_id].moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-      Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
-    );
+
+    // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
+    Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
+    if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y || goal_pose.theta != current_goal_pose.theta)
+    {
+      this->locomotion_controller_[robot_id].moveToPose(
+        Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
+        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation)
+      );
+    }
 
     auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
       State2D(

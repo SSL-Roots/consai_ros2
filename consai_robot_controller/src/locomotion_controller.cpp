@@ -56,40 +56,12 @@ LocomotionController::ControllerState LocomotionController::moveToPose(
   const Pose2D & current_pose)
 {
   // 特定のポーズへの移動を指示するメソッドの実装
-
-  // 軌道生成を行う
-  BangBangTrajectory3D trajectory;
-
-  Pose2D s0, s1;
-  Velocity2D v0;
-  if (this->state_ == INITIALIZED || this->state_ == RUNNING_CONSTANT_VELOCITY) {
-    // 位置追従制御に切り替わるタイミングでは、現在の位置と速度を初期値として軌道生成を行う
-    s0 = Pose2D(current_pose.x, current_pose.y, current_pose.theta);
-    s1 = Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta);
-    v0 =
-      Velocity2D(this->output_velocity_.x, this->output_velocity_.y, this->output_velocity_.theta);
-    // TODO(tilt_silvie): ロボットの現在速度を使うように変える
-  } else {
-    // 位置追従制御中に新たな目標位置が与えられた場合は、直前の目標位置と速度を初期値として軌道生成を行う
-    s0 = Pose2D(
-      this->trajectory_follow_controller_.latest_target_state_.pose.x,
-      this->trajectory_follow_controller_.latest_target_state_.pose.y,
-      this->trajectory_follow_controller_.latest_target_state_.pose.theta);
-    s1 = Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta);
-    v0 = Velocity2D(
-      this->trajectory_follow_controller_.latest_target_state_.velocity.x,
-      this->trajectory_follow_controller_.latest_target_state_.velocity.y,
-      this->trajectory_follow_controller_.latest_target_state_.velocity.theta);
-  }
-
-  trajectory.generate(
-    s0, s1, v0, this->max_linear_velocity_ * 0.8,
-    this->max_angular_velocity_ * 0.8, this->max_linear_acceleration_ * 0.8,
-    this->max_angular_acceleration_ * 0.8, 0.1);
-
-  trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory3D>(trajectory));
-
+  this->generateTrajectory(goal_pose, current_pose);
+  this->goal_pose_ = goal_pose;
   state_ = RUNNING_FOLLOW_TRAJECTORY;
+
+  std::cout << "moveTo: " << goal_pose.x << ", " << goal_pose.y << ", " << goal_pose.theta << std::endl;
+
   return state_;
 }
 
@@ -140,9 +112,20 @@ LocomotionController::ControllerState LocomotionController::getState()
   return state_;
 }
 
+/**
+ * @brief 現在の軌道上の仮想の目標状態を取得する
+*/
 State2D LocomotionController::getCurrentTargetState()
 {
   return this->trajectory_follow_controller_.latest_target_state_;
+}
+
+/**
+ * @brief 現在の最終目標位置を取得する
+*/
+Pose2D LocomotionController::getGoal()
+{
+  return this->goal_pose_;
 }
 
 /**
@@ -194,10 +177,43 @@ Velocity2D LocomotionController::limitVelocity(
   return modified_velocity;
 }
 
+void LocomotionController::generateTrajectory(
+  const Pose2D & goal_pose, const Pose2D & current_pose)
+{
+  // 軌道生成を行う
+  BangBangTrajectory3D trajectory;
+
+  Pose2D s0, s1;
+  Velocity2D v0;
+
+  s0 = Pose2D(current_pose.x, current_pose.y, current_pose.theta);
+  s1 = Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta);
+  v0 =
+    Velocity2D(this->output_velocity_.x, this->output_velocity_.y, this->output_velocity_.theta);
+
+  trajectory.generate(
+    s0, s1, v0, this->max_linear_velocity_ * 0.8,
+    this->max_angular_velocity_ * 0.8, this->max_linear_acceleration_ * 0.8,
+    this->max_angular_acceleration_ * 0.8, 0.1);
+
+  trajectory_follow_controller_.initialize(std::make_shared<BangBangTrajectory3D>(trajectory));
+}
 
 Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_state)
 {
   auto control_output = trajectory_follow_controller_.run(current_state);
+
+  if (control_output.second == TrajectoryFollowController::ControllerState::FAILED) {
+    std::cout << "Trajectory Follow Failed" << std::endl;
+
+    // 軌道追従に失敗したときは再度軌道を生成し直して追従し直す
+    this->generateTrajectory(
+      this->goal_pose_,
+      current_state.pose);
+
+    control_output = trajectory_follow_controller_.run(current_state);
+  }
+
   Velocity2D output = control_output.first;
   if (control_output.second == TrajectoryFollowController::ControllerState::COMPLETE) {
     this->state_ = COMPLETE;
