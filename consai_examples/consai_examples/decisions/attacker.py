@@ -210,7 +210,8 @@ def gen_chase_ball_function():
 
 def gen_setplay_shoot_function():
     def function(self, robot_id):
-        move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        move_to_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
         setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
         self._operator.operate(robot_id, setplay_shoot)
     return function
