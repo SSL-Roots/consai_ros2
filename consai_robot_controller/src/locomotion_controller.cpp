@@ -55,7 +55,9 @@ LocomotionController::ControllerState LocomotionController::moveToPose(
   const State2D & current_state)
 {
   // 特定のポーズへの移動を指示するメソッドの実装
-  this->generateTrajectory(goal_pose, current_state);
+
+  // 経路の連続性を担保するために、実際の current_stateを利用せず、前回の目標位置・速度を利用する
+  this->generateTrajectory(goal_pose, this->trajectory_follow_controller_.latest_target_state_);
   this->goal_pose_ = goal_pose;
   state_ = RUNNING_FOLLOW_TRAJECTORY;
 
