@@ -7,7 +7,7 @@ max_velocity_theta: 5.0  # rad/s^2
 
 control_range_xy: 1.0
 control_a_xy: 1.0
-control_a_theta: 0.5
+control_a_theta: 1.0
 
 p_gain_xy: 1.5
 d_gain_xy: 0.0
