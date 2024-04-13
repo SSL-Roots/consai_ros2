@@ -128,15 +128,14 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
     const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-    const auto control_range_xy = get_parameter("control_range_xy").as_double();
-    const auto control_a_xy = get_parameter("control_a_xy").as_double();
-    const auto control_a_theta = get_parameter("control_a_theta").as_double();
+    const auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
+    const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
 
     double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
     locomotion_controller_.push_back(
       LocomotionController(
         2.5, 0.0, 2.5, 0.0, control_loop_cycle_sec, max_vel_xy,
-        max_vel_theta, control_a_xy, control_a_theta
+        max_vel_theta, max_acc_xy, max_acc_theta
       )
     );
 
