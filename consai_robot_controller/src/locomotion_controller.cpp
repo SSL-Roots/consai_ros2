@@ -127,6 +127,44 @@ Pose2D LocomotionController::getGoal()
   return this->goal_pose_;
 }
 
+void LocomotionController::setParameters(
+    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
+    _Float64 kd_theta, double max_linear_velocity,
+    double max_angular_velocity, double max_linear_acceleration,
+    double max_angular_acceleration)
+{
+  this->kp_xy_ = kp_xy;
+  this->kd_xy_ = kd_xy;
+  this->kp_theta_ = kp_theta;
+  this->kd_theta_ = kd_theta;
+  this->max_linear_velocity_ = max_linear_velocity;
+  this->max_angular_velocity_ = max_angular_velocity;
+  this->max_linear_acceleration_ = max_linear_acceleration;
+  this->max_angular_acceleration_ = max_angular_acceleration;
+}
+
+double LocomotionController::getMaxLinearVelocity()
+{
+  return this->max_linear_velocity_;
+}
+
+double LocomotionController::getMaxAngularVelocity()
+{
+  return this->max_angular_velocity_;
+}
+
+double LocomotionController::getMaxLinearAcceleration()
+{
+  return this->max_linear_acceleration_;
+}
+
+double LocomotionController::getMaxAngularAcceleration()
+{
+  return this->max_angular_acceleration_;
+}
+
+
+
 /**
  * Private
 */
