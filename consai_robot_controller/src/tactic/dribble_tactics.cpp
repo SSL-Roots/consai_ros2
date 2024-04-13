@@ -42,7 +42,7 @@ DribbleTactics::DribbleTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 2.0, 0.0, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 4.0, 0.0, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -96,13 +96,13 @@ DribbleTactics::DribbleTactics()
       const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
       const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-      const auto ADD_ANGLE = tools::to_radians(60.0);
-      const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
+      const auto ADD_ANGLE = tools::to_radians(25.0);
+      const auto AIM_ANGLE_THRETHOLD = tools::to_radians(10.0);
 
-      double rotation_radius = ROBOT_RADIUS * 2.0;
+      double rotation_radius = ROBOT_RADIUS * 4.0;
 
       State new_pose;
-      if (std::fabs(angle_robot_position) > M_PI - AIM_ANGLE_THRETHOLD) {
+      if (std::fabs(angle_robot_position) + ADD_ANGLE > M_PI - AIM_ANGLE_THRETHOLD) {
         // ボールの裏に回ったら、直進する
         new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
       } else {
@@ -136,8 +136,17 @@ DribbleTactics::DribbleTactics()
       const auto target_pose = data_set.get_target();
 
       // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
-      const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
-      const auto new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS, 0.0, -M_PI);
+      constexpr double MOVE_DISTANCE = 0.3;  //meters
+      State new_pose;
+
+      if (tools::distance(robot_pose, target_pose) > MOVE_DISTANCE) {
+        const tools::Trans trans_RtoT(robot_pose, tools::calc_angle(robot_pose, target_pose));
+        new_pose = trans_RtoT.inverted_transform(MOVE_DISTANCE, 0.0, 0.0);
+      } else {
+        // target付近で暴れないように、targetを基準にした目標位置を生成する
+        const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
+        new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS * 1.0, 0.0, -M_PI);
+      }
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
@@ -151,7 +160,19 @@ DribbleTactics::DribbleTactics()
 
   tactic_functions_[RELEASE] = [this](TacticDataSet & data_set) -> TacticName {
       // ドリブラーをオフし、その場にとどまる
-      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
+      const auto target_pose = data_set.get_target();
+      const tools::Trans trans_TtoR(target_pose, tools::calc_angle(target_pose, robot_pose));
+      const auto new_pose = trans_TtoR.inverted_transform(ROBOT_RADIUS * 1.0, 0.0, -M_PI);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+
+
+      // ボールがtargetから大きく離れていたらリセット
+      const auto ball_pose = tools::pose_state(data_set.get_ball());
+      if (tools::distance(ball_pose, target_pose) > 0.05) {
+        return APPROACH;
+      }
 
       return RELEASE;
     };
