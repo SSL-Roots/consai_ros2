@@ -51,6 +51,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
+  declare_parameter("p_gain_xy", 1.5);
+  declare_parameter("d_gain_xy", 0.0);
+  declare_parameter("p_gain_theta", 2.5);
+  declare_parameter("d_gain_theta", 0.0);
 
   const auto visibility_threshold = 0.01;
   detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
@@ -306,7 +310,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     locomotion_controller_[robot_id].getMaxAngularAcceleration() != max_acc_theta)
   {
     locomotion_controller_[robot_id].setParameters(
-      2.5, 0.0, 2.5, 0.0, max_vel_xy, max_vel_theta, max_acc_xy, max_acc_theta);
+      get_parameter("p_gain_xy").as_double(),
+      get_parameter("d_gain_xy").as_double(),
+      get_parameter("p_gain_theta").as_double(),
+      get_parameter("d_gain_theta").as_double(),
+      max_vel_xy, max_vel_theta, max_acc_xy, max_acc_theta);
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
