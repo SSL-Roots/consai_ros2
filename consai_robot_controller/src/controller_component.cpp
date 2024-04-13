@@ -360,6 +360,12 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     control_a_theta *
     max_vel_theta);
 
+  // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
+  const auto vel_norm = std::hypot(world_vel.x, world_vel.y);
+  if (vel_norm > 1.5) {
+    world_vel.theta = 0.0;
+  }
+
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id;
   command_msg->team_is_yellow = team_is_yellow_;
