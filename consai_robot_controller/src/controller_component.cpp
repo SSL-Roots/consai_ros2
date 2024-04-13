@@ -236,9 +236,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     return;
   }
 
-  // // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
-  // goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-  //   robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
+  // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
+  goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
+    robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
 
   // // 障害物情報を取得
   // const auto obstacle_environments = obstacle_observer_->get_obstacle_environment(
