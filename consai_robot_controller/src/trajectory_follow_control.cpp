@@ -31,7 +31,7 @@ TrajectoryFollowController::TrajectoryFollowController()
 TrajectoryFollowController::TrajectoryFollowController(
   _Float64 kp_linear, _Float64 kd_linear,
   _Float64 kp_angular_, _Float64 kd_angular,
-  double dt,
+  double delayfactor_sec, double dt,
   std::shared_ptr<BangBangTrajectory3D> trajectory
   )
 
@@ -42,6 +42,7 @@ TrajectoryFollowController::TrajectoryFollowController(
   this->kd_linear_ = kd_linear;
   this->kp_angular_ = kp_angular_;
   this->kd_angular_ = kd_angular;
+  this->delayfactor_sec_ = delayfactor_sec;
   this->dt_ = dt;
   this->latest_target_state_ = State2D();
   this->trajectory_ = trajectory;
@@ -67,7 +68,9 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
 
 
   // 今ステップの目標位置の取得
+  // ロボットの応答遅れを考慮して、少し前の位置を目標位置にする
   Pose2D target_pose = this->trajectory_->get_pose(this->tracked_time_ + this->dt_);
+  Pose2D target_pose_delayed = this->trajectory_->get_pose(this->tracked_time_ + this->dt_ - this->delayfactor_sec_);
 
   // 今ステップの目標速度の取得
   Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
@@ -80,17 +83,17 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
 
   // x方向の制御
   ControllerOutput x_output = this->controlLinear(
-    FF_AND_P, current_state.pose.x, target_pose.x, target_velocity.x);
+    FF_AND_P, current_state.pose.x, target_pose_delayed.x, target_velocity.x);
   output.x = x_output.output;
 
   // y方向の制御
   ControllerOutput y_output = this->controlLinear(
-    FF_AND_P, current_state.pose.y, target_pose.y, target_velocity.y);
+    FF_AND_P, current_state.pose.y, target_pose_delayed.y, target_velocity.y);
   output.y = y_output.output;
 
   // 角度の制御
   ControllerOutput theta_output = this->controlAngular(
-    current_state.pose.theta, target_pose.theta, target_velocity.theta);
+    current_state.pose.theta, target_pose_delayed.theta, target_velocity.theta);
   output.theta = theta_output.output;
 
   // 保存

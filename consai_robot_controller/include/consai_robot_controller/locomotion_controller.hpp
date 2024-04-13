@@ -35,7 +35,7 @@ public:
 
   LocomotionController(
     _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double dt, double max_linear_velocity, double max_angular_velocity,
+    double delayfactor_sec, double dt, double max_linear_velocity, double max_angular_velocity,
     double max_linear_acceleration, double max_angular_acceleration);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
@@ -69,6 +69,7 @@ private:
   _Float64 kp_theta_;  // [rad]
   _Float64  ki_theta_;
   _Float64  kd_theta_;
+  double delayfactor_sec_;
   double dt_;           // 制御周期
   double max_linear_velocity_;        // [m/s]
   double max_angular_velocity_;       // [rad/s]

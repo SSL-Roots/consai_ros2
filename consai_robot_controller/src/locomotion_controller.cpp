@@ -21,7 +21,7 @@
 
 LocomotionController::LocomotionController(
   _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-  _Float64 kd_theta, double dt, double max_linear_velocity,
+  _Float64 kd_theta, double delayfactor_sec, double dt, double max_linear_velocity,
   double max_angular_velocity,
   double max_linear_acceleration,
   double max_angular_acceleration)
@@ -33,6 +33,7 @@ LocomotionController::LocomotionController(
   this->kd_xy_ = kd_xy;
   this->kp_theta_ = kp_theta;
   this->kd_theta_ = kd_theta;
+  this->delayfactor_sec_ = delayfactor_sec;
   this->dt_ = dt;
   this->max_linear_velocity_ = max_linear_velocity;
   this->max_angular_velocity_ = max_angular_velocity;
@@ -218,7 +219,7 @@ void LocomotionController::initializeTrajectoryFollowController(std::shared_ptr<
 {
   this->trajectory_follow_controller_ = TrajectoryFollowController(
     kp_xy_, kd_xy_, kp_theta_, kd_theta_,
-    dt_,
+    this->delayfactor_sec_, this->dt_,
     trajectory);
 }
 

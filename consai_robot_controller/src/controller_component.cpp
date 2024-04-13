@@ -55,6 +55,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("d_gain_xy", 0.0);
   declare_parameter("p_gain_theta", 2.5);
   declare_parameter("d_gain_theta", 0.0);
+  declare_parameter("delayfactor_sec", 0.1);
 
   const auto visibility_threshold = 0.01;
   detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
@@ -134,11 +135,12 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
     const auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
     const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+    const auto delayfactor_sec = get_parameter("delayfactor_sec").as_double();
 
     double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
     locomotion_controller_.push_back(
       LocomotionController(
-        2.5, 0.0, 2.5, 0.0, control_loop_cycle_sec, max_vel_xy,
+        2.5, 0.0, 2.5, 0.0, delayfactor_sec, control_loop_cycle_sec, max_vel_xy,
         max_vel_theta, max_acc_xy, max_acc_theta
       )
     );

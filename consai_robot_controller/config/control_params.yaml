@@ -13,3 +13,4 @@ p_gain_xy: 1.5
 d_gain_xy: 0.0
 p_gain_theta: 2.5
 d_gain_theta: 0.0
+delayfactor_sec: 0.1

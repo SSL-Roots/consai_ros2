@@ -48,7 +48,7 @@ public:
   TrajectoryFollowController();
   TrajectoryFollowController(
     _Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_,
-    _Float64 kd_angular, double dt,
+    _Float64 kd_angular, double delayfactor_sec, double dt,
      std::shared_ptr<BangBangTrajectory3D> trajectory);
 
   /**
@@ -92,6 +92,7 @@ private:
   double tracked_time_ = 0;  // 追従制御開始時刻からの経過時刻
   double dt_ = 0.0;          // 制御周期
   double last_error_linear_ = 0;
+  double delayfactor_sec_;
 };
 
 
