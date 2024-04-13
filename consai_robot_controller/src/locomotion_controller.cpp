@@ -237,9 +237,9 @@ void LocomotionController::generateTrajectory(
     Velocity2D(current_state.velocity.x, current_state.velocity.y, current_state.velocity.theta);
 
   trajectory.generate(
-    s0, s1, v0, this->max_linear_velocity_ * 0.8,
-    this->max_angular_velocity_ * 0.8, this->max_linear_acceleration_ * 0.8,
-    this->max_angular_acceleration_ * 0.8, 0.1);
+    s0, s1, v0, this->max_linear_velocity_ ,
+    this->max_angular_velocity_, this->max_linear_acceleration_,
+    this->max_angular_acceleration_, 0.1);
 
   this->initializeTrajectoryFollowController(std::make_shared<BangBangTrajectory3D>(trajectory));
 
