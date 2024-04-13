@@ -263,12 +263,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // // double a_xy = 1.0;
   // // double a_theta = 0.5;
 
-  const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
-  const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-  const auto control_range_xy = get_parameter("control_range_xy").as_double();
-  const auto control_a_xy = get_parameter("control_a_xy").as_double();
-  const auto control_a_theta = get_parameter("control_a_theta").as_double();
-
   // // tanh関数を用いた速度制御
   // State world_vel;
   // world_vel.x = ctools::velocity_contol_tanh(
@@ -291,39 +285,72 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   State world_vel;
 
-    // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
-    Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
-    if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y || goal_pose.theta != current_goal_pose.theta)
-    {
-      this->locomotion_controller_[robot_id].moveToPose(
-        Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-        State2D(
-          Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-          Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-        )
-      );
-    }
+  // 各種パラメータの設定
+  auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
+  auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
+  auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
+  auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+  const auto control_range_xy = get_parameter("control_range_xy").as_double();
+  const auto control_a_xy = get_parameter("control_a_xy").as_double();
+  const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
-    auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
+  // 上書きされていたらそちらの値を使う
+  if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
+    max_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
+  }
+
+  // パラメータが更新された場合は、ロボットの制御器に反映する
+  if (locomotion_controller_[robot_id].getMaxLinearVelocity() != max_vel_xy ||
+    locomotion_controller_[robot_id].getMaxAngularVelocity() != max_vel_theta ||
+    locomotion_controller_[robot_id].getMaxLinearAcceleration() != max_acc_xy ||
+    locomotion_controller_[robot_id].getMaxAngularAcceleration() != max_acc_theta)
+  {
+    locomotion_controller_[robot_id].setParameters(
+      2.5, 0.0, 2.5, 0.0, max_vel_xy, max_vel_theta, max_acc_xy, max_acc_theta);
+
+    // 軌道の再生成
+    locomotion_controller_[robot_id].moveToPose(
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
       State2D(
         Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
         Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
       )
     );
+  }
 
-    // 型変換
-    world_vel.x = output_vel.x;
-    world_vel.y = output_vel.y;
-    world_vel.theta = output_vel.theta;
+  // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
+  Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
+  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y || goal_pose.theta != current_goal_pose.theta)
+  {
+    this->locomotion_controller_[robot_id].moveToPose(
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
+      State2D(
+        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+      )
+    );
+  }
 
-    // sin関数を用いた角速度制御
-    double diff_theta = tools::normalize_theta(
-      goal_pose.theta -
-      my_robot.orientation);
-    world_vel.theta = ctools::angular_velocity_contol_sin(
-      diff_theta,
-      control_a_theta *
-      max_vel_theta);
+  auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
+    State2D(
+      Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
+      Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
+    )
+  );
+
+  // 型変換
+  world_vel.x = output_vel.x;
+  world_vel.y = output_vel.y;
+  world_vel.theta = output_vel.theta;
+
+  // sin関数を用いた角速度制御
+  double diff_theta = tools::normalize_theta(
+    goal_pose.theta -
+    my_robot.orientation);
+  world_vel.theta = ctools::angular_velocity_contol_sin(
+    diff_theta,
+    control_a_theta *
+    max_vel_theta);
 
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id;
