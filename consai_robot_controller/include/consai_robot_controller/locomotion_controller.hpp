@@ -35,6 +35,8 @@ public:
 
   LocomotionController();
 
+  LocomotionController(double dt);
+
   LocomotionController(
     _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
     double delayfactor_sec, double dt, double max_linear_velocity, double max_angular_velocity,

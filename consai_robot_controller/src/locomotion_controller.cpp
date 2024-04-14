@@ -31,6 +31,19 @@ LocomotionController::LocomotionController()
     max_angular_acceleration_(0.0)
 {}
 
+LocomotionController::LocomotionController(double dt)
+ : kp_xy_(0.0),
+    kd_xy_(0.0),
+    kp_theta_(0.0),
+    kd_theta_(0.0),
+    delayfactor_sec_(0.0),
+    dt_(dt),
+    max_linear_velocity_(0.0),
+    max_angular_velocity_(0.0),
+    max_linear_acceleration_(0.0),
+    max_angular_acceleration_(0.0)
+{}
+
 LocomotionController::LocomotionController(
   _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
   _Float64 kd_theta, double delayfactor_sec, double dt, double max_linear_velocity,

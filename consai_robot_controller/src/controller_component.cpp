@@ -14,7 +14,6 @@
 
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -31,7 +30,6 @@
 namespace consai_robot_controller
 {
 
-using namespace std::chrono_literals;
 namespace tools = geometry_tools;
 namespace ctools = control_tools;
 
@@ -124,25 +122,14 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
-    auto control_loop_cycle = 10ms;
     timer_pub_control_command_.push_back(
       create_wall_timer(
-        control_loop_cycle, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
+        control_loop_cycle_, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
       )
     );
 
-    const auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
-    const auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-    const auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
-    const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
-    const auto delayfactor_sec = get_parameter("delayfactor_sec").as_double();
-
-    double control_loop_cycle_sec = control_loop_cycle.count() / 1000.0;
     locomotion_controller_.push_back(
-      LocomotionController(
-        2.5, 0.0, 2.5, 0.0, delayfactor_sec, control_loop_cycle_sec, max_vel_xy,
-        max_vel_theta, max_acc_xy, max_acc_theta
-      )
+      LocomotionController(control_loop_cycle_.count() / 1000.0)
     );
 
     last_world_vel_.push_back(State());
