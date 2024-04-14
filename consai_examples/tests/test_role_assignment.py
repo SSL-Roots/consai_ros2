@@ -122,8 +122,8 @@ def test_ロボットが消えても優先度の高いロールは空けない�
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.GOALIE, 0),
         (RoleName.ATTACKER, 3),
-        (RoleName.CENTER_BACK1, 7),
-        (RoleName.CENTER_BACK2, 6)]
+        (RoleName.SUB_ATTACKER, 7),
+        (RoleName.CENTER_BACK1, 6)]
 
 
 def test_ボールに一番近いロボットがAttackerになること(rclpy_init_shutdown):
@@ -141,8 +141,8 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
 
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.ATTACKER, 9),
-        (RoleName.CENTER_BACK1, 8),
-        (RoleName.CENTER_BACK2, 7)]
+        (RoleName.SUB_ATTACKER, 8),
+        (RoleName.CENTER_BACK1, 7)]
 
 
 def test_goalieが一番ボールに近いときは二番目に近いロボットがAttackerになること(rclpy_init_shutdown):
@@ -161,7 +161,7 @@ def test_goalieが一番ボールに近いときは二番目に近いロボッ�
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.GOALIE, 9),
         (RoleName.ATTACKER, 8),
-        (RoleName.CENTER_BACK1, 7)]
+        (RoleName.SUB_ATTACKER, 7)]
 
 
 def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
@@ -179,8 +179,8 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
 
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.ATTACKER, 7),
-        (RoleName.CENTER_BACK1, 8),
-        (RoleName.CENTER_BACK2, 9)]
+        (RoleName.SUB_ATTACKER, 8),
+        (RoleName.CENTER_BACK1, 9)]
 
 
 @pytest.mark.parametrize("robot_num, expected_indexes",
