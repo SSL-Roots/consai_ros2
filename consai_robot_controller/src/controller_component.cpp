@@ -251,17 +251,26 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity() != hard_limit_vel_xy ||
-    locomotion_controller_[robot_id].getHardLimitAngularVelocity() != hard_limit_vel_theta ||
-    locomotion_controller_[robot_id].getHardLimitLinearAcceleration() != hard_limit_acc_xy ||
-    locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta)
+  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity()      != hard_limit_vel_xy     ||
+      locomotion_controller_[robot_id].getSoftLimitLinearVelocity()      != soft_limit_vel_xy     ||
+      locomotion_controller_[robot_id].getHardLimitAngularVelocity()     != hard_limit_vel_theta  ||
+      locomotion_controller_[robot_id].getSoftLimitAngluarVelocity()     != soft_limit_vel_theta  ||
+      locomotion_controller_[robot_id].getHardLimitLinearAcceleration()  != hard_limit_acc_xy     ||
+      locomotion_controller_[robot_id].getSoftLimitLinearAcceleration()  != soft_limit_acc_xy     ||
+      locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta  ||
+      locomotion_controller_[robot_id].getSoftLimitAngularAcceleration() != soft_limit_acc_theta
+  )
   {
     locomotion_controller_[robot_id].setParameters(
       get_parameter("p_gain_xy").as_double(),
       get_parameter("d_gain_xy").as_double(),
       get_parameter("p_gain_theta").as_double(),
       get_parameter("d_gain_theta").as_double(),
-      hard_limit_vel_xy, hard_limit_vel_theta, hard_limit_acc_xy, hard_limit_acc_theta);
+      hard_limit_vel_xy, soft_limit_vel_xy,
+      hard_limit_vel_theta, soft_limit_vel_theta,
+      hard_limit_acc_xy, soft_limit_acc_xy,
+      hard_limit_acc_theta, soft_limit_acc_theta
+      );
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
