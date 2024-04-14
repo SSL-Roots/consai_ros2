@@ -246,6 +246,7 @@ Velocity2D LocomotionController::limitVelocity(
 void LocomotionController::initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory)
 {
   this->trajectory_follow_controller_ = TrajectoryFollowController(
+    this->robot_id_for_debug_,
     kp_xy_, kd_xy_, kp_theta_, kd_theta_,
     this->delayfactor_sec_, this->dt_,
     trajectory);

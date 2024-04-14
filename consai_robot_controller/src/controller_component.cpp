@@ -129,7 +129,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     );
 
     locomotion_controller_.push_back(
-      LocomotionController(control_loop_cycle_.count() / 1000.0)
+      LocomotionController(i, control_loop_cycle_.count() / 1000.0)
     );
 
     last_world_vel_.push_back(State());
