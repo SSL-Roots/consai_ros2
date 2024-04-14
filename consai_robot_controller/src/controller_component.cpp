@@ -234,9 +234,13 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // 各種パラメータの設定
   auto hard_limit_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
+  auto soft_limit_vel_xy = get_parameter("soft_limit_velocity_xy").as_double();
   auto hard_limit_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
+  auto soft_limit_vel_theta = get_parameter("soft_limit_velocity_theta").as_double();
   auto hard_limit_acc_xy =  get_parameter("hard_limit_acceleration_xy").as_double();
+  auto soft_limit_acc_xy =  get_parameter("soft_limit_acceleration_xy").as_double();
   auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
+  auto soft_limit_acc_theta = get_parameter("soft_limit_acceleration_theta").as_double();
   const auto control_range_xy = get_parameter("control_range_xy").as_double();
   const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
