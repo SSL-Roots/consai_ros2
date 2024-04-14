@@ -112,6 +112,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/target_speed_world", 10)
     );
 
+    pub_control_output_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/control_output", 10)
+    );
+
     pub_control_output_ff_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/control_output_ff", 10)
@@ -365,6 +370,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       my_vel->theta  = my_robot.vel_angular[0];
       pub_current_vel_[robot_id]->publish(std::move(my_vel));
     }
+
+    pub_control_output_[robot_id]->publish(output_vel.toState2DMsg());
 
     State control_output_ff, control_output_p;
     control_output_ff.x = global_for_debug::last_control_output_ff.x;
