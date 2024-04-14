@@ -43,9 +43,13 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
   declare_parameter("hard_limit_acceleration_xy", 2.0);
+  declare_parameter("soft_limit_acceleration_xy", 2.0);
   declare_parameter("hard_limit_acceleration_theta", 2.0 * M_PI);
+  declare_parameter("soft_limit_acceleration_theta", 2.0 * M_PI);
   declare_parameter("hard_limit_velocity_xy", 2.0);
+  declare_parameter("soft_limit_velocity_xy", 2.0);
   declare_parameter("hard_limit_velocity_theta", 2.0 * M_PI);
+  declare_parameter("soft_limit_velocity_theta", 2.0 * M_PI);
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
