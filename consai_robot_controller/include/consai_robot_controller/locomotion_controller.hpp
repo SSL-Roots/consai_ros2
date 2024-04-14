@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <memory>
 #include <utility>
 #include "rclcpp/rclcpp.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"

@@ -15,6 +15,8 @@
 // utils.h
 #pragma once
 
+#include <vector>
+
 #include "consai_msgs/msg/state2_d.hpp"
 
 
@@ -112,8 +114,6 @@ public:
   Vector2D c;
   double r;
 };
-
-#include <vector>
 
 class IPolygon
 {

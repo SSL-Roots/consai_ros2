@@ -316,7 +316,6 @@ void LocomotionController::generateTrajectory(
     this->soft_limit_angular_acceleration_, 0.1);
 
   this->initializeTrajectoryFollowController(std::make_shared<BangBangTrajectory3D>(trajectory));
-
 }
 
 Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_state)
@@ -324,7 +323,6 @@ Velocity2D LocomotionController::runFollowTrajectory(const State2D & current_sta
   auto control_output = trajectory_follow_controller_.run(current_state);
 
   if (control_output.second == TrajectoryFollowController::ControllerState::FAILED) {
-
     // 軌道追従に失敗したときは再度軌道を生成し直して追従し直す
     this->generateTrajectory(
       this->goal_pose_,

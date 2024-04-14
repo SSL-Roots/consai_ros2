@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/global_for_debug.hpp"
-
-#include <cstdint>
 
 #include "consai_tools/geometry_tools.hpp"
 

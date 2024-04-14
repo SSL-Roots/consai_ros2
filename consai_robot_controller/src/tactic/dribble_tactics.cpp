@@ -136,7 +136,7 @@ DribbleTactics::DribbleTactics()
       const auto target_pose = data_set.get_target();
 
       // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
-      constexpr double MOVE_DISTANCE = 0.3;  //meters
+      constexpr double MOVE_DISTANCE = 0.3;   // meters
       State new_pose;
 
       if (tools::distance(robot_pose, target_pose) > MOVE_DISTANCE) {
