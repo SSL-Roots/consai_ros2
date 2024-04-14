@@ -44,8 +44,6 @@
 
 namespace consai_robot_controller
 {
-using namespace std::chrono_literals;
-
 using GoalPose = consai_msgs::msg::GoalPose;
 using GoalPoses = consai_msgs::msg::GoalPoses;
 using NamedTargets = consai_msgs::msg::NamedTargets;
@@ -114,7 +112,8 @@ private:
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
-  const std::chrono::milliseconds control_loop_cycle_ = 10ms;
+
+  const std::chrono::milliseconds control_loop_cycle_ = std::chrono::milliseconds(10);
 };
 
 }  // namespace consai_robot_controller

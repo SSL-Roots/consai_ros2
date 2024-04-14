@@ -155,7 +155,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     create_publisher<VisualizerObjects>(
       "visualizer_objects", rclcpp::SensorDataQoS()));
   timer_pub_goal_poses_ =
-    create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
+    create_wall_timer(this->control_loop_cycle_, std::bind(&Controller::on_timer_pub_goal_poses, this));
 
   auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
       parser_->set_detection_tracked(msg);
