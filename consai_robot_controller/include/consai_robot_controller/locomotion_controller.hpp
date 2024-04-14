@@ -39,8 +39,11 @@ public:
 
   LocomotionController(
     int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double delayfactor_sec, double dt, double hard_limit_linear_velocity, double hard_limit_angular_velocity,
-    double hard_limit_linear_acceleration, double hard_limit_angular_acceleration);
+    double delayfactor_sec, double dt, 
+    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
   ControllerState moveToPose(const Pose2D & goal_pose, const State2D & current_state);
@@ -50,10 +53,11 @@ public:
   State2D getCurrentTargetState();
   Pose2D getGoal();
   void setParameters(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-    _Float64 kd_theta, double hard_limit_linear_velocity,
-    double hard_limit_angular_velocity, double hard_limit_linear_acceleration,
-    double hard_limit_angular_acceleration);  
+    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, 
+    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);  
 
   double getHardLimitLinearVelocity();
   double getHardLimitAngularVelocity();
@@ -76,9 +80,13 @@ private:
   double delayfactor_sec_;
   double dt_;           // 制御周期
   double hard_limit_linear_velocity_;        // [m/s]
+  double soft_limit_linear_velocity_;        // [m/s]
   double hard_limit_angular_velocity_;       // [rad/s]
+  double soft_limit_angular_velocity_;       // [rad/s]
   double hard_limit_linear_acceleration_;    // [m/s^2]
+  double soft_limit_linear_acceleration_;    // [m/s^2]
   double hard_limit_angular_acceleration_;   // [rad/s^2]
+  double soft_limit_angular_acceleration_;   // [rad/s^2]
   int robot_id_for_debug_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);

@@ -27,9 +27,13 @@ LocomotionController::LocomotionController()
     delayfactor_sec_(0.0),
     dt_(0.0),
     hard_limit_linear_velocity_(0.0),
+    soft_limit_linear_velocity_(0.0),
     hard_limit_angular_velocity_(0.0),
+    soft_limit_angular_velocity_(0.0),
     hard_limit_linear_acceleration_(0.0),
-    hard_limit_angular_acceleration_(0.0)
+    soft_limit_linear_acceleration_(0.0),
+    hard_limit_angular_acceleration_(0.0),
+    soft_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
@@ -41,17 +45,23 @@ LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
     delayfactor_sec_(0.0),
     dt_(dt),
     hard_limit_linear_velocity_(0.0),
+    soft_limit_linear_velocity_(0.0),
     hard_limit_angular_velocity_(0.0),
+    soft_limit_angular_velocity_(0.0),
     hard_limit_linear_acceleration_(0.0),
-    hard_limit_angular_acceleration_(0.0)
+    soft_limit_linear_acceleration_(0.0),
+    hard_limit_angular_acceleration_(0.0),
+    soft_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(
-  int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-  _Float64 kd_theta, double delayfactor_sec, double dt, double hard_limit_linear_velocity,
-  double hard_limit_angular_velocity,
-  double hard_limit_linear_acceleration,
-  double hard_limit_angular_acceleration)
+    int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
+    double delayfactor_sec, double dt, 
+    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
+)
 {
   this->robot_id_for_debug_ = robot_id_for_debug;
   this->target_velocity_ = Velocity2D(0, 0, 0);
@@ -64,9 +74,13 @@ LocomotionController::LocomotionController(
   this->delayfactor_sec_ = delayfactor_sec;
   this->dt_ = dt;
   this->hard_limit_linear_velocity_ = hard_limit_linear_velocity;
+  this->soft_limit_linear_velocity_ = soft_limit_linear_velocity;
   this->hard_limit_angular_velocity_ = hard_limit_angular_velocity;
+  this->soft_limit_angular_velocity_ = soft_limit_angular_velocity;
   this->hard_limit_linear_acceleration_ = hard_limit_linear_acceleration;
+  this->soft_limit_linear_acceleration_ = soft_limit_linear_acceleration;
   this->hard_limit_angular_acceleration_ = hard_limit_angular_acceleration;
+  this->soft_limit_angular_acceleration_ = soft_limit_angular_acceleration;
 }
 
 LocomotionController::ControllerState LocomotionController::moveConstantVelocity(
@@ -157,19 +171,25 @@ Pose2D LocomotionController::getGoal()
 }
 
 void LocomotionController::setParameters(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-    _Float64 kd_theta, double hard_limit_linear_velocity,
-    double hard_limit_angular_velocity, double hard_limit_linear_acceleration,
-    double hard_limit_angular_acceleration)
+    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, 
+    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
+)
 {
   this->kp_xy_ = kp_xy;
   this->kd_xy_ = kd_xy;
   this->kp_theta_ = kp_theta;
   this->kd_theta_ = kd_theta;
   this->hard_limit_linear_velocity_ = hard_limit_linear_velocity;
+  this->soft_limit_linear_velocity_ = soft_limit_linear_velocity;
   this->hard_limit_angular_velocity_ = hard_limit_angular_velocity;
+  this->soft_limit_angular_velocity_ = soft_limit_angular_velocity;
   this->hard_limit_linear_acceleration_ = hard_limit_linear_acceleration;
+  this->soft_limit_linear_acceleration_ = soft_limit_linear_acceleration;
   this->hard_limit_angular_acceleration_ = hard_limit_angular_acceleration;
+  this->soft_limit_angular_acceleration_ = soft_limit_angular_acceleration;
 }
 
 double LocomotionController::getHardLimitLinearVelocity()
