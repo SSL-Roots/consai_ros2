@@ -15,6 +15,9 @@
 // utils.h
 #pragma once
 
+#include "consai_msgs/msg/state2_d.hpp"
+
+
 class PosVelAcc
 {
 public:
@@ -60,6 +63,8 @@ public:
 
   Pose2D();
   Pose2D(double x, double y, double theta);
+  
+  consai_msgs::msg::State2D toState2DMsg();
 };
 
 class Velocity2D
@@ -71,6 +76,8 @@ public:
 
   Velocity2D();
   Velocity2D(double x, double y, double theta);
+
+  consai_msgs::msg::State2D toState2DMsg();
 };
 
 class State2D

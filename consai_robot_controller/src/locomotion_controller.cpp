@@ -18,14 +18,42 @@
 
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
+LocomotionController::LocomotionController()
+ :  robot_id_for_debug_(0),
+    kp_xy_(0.0),
+    kd_xy_(0.0),
+    kp_theta_(0.0),
+    kd_theta_(0.0),
+    delayfactor_sec_(0.0),
+    dt_(0.0),
+    max_linear_velocity_(0.0),
+    max_angular_velocity_(0.0),
+    max_linear_acceleration_(0.0),
+    max_angular_acceleration_(0.0)
+{}
+
+LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
+ :  robot_id_for_debug_(robot_id_for_debug),
+    kp_xy_(0.0),
+    kd_xy_(0.0),
+    kp_theta_(0.0),
+    kd_theta_(0.0),
+    delayfactor_sec_(0.0),
+    dt_(dt),
+    max_linear_velocity_(0.0),
+    max_angular_velocity_(0.0),
+    max_linear_acceleration_(0.0),
+    max_angular_acceleration_(0.0)
+{}
 
 LocomotionController::LocomotionController(
-  _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
+  int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
   _Float64 kd_theta, double delayfactor_sec, double dt, double max_linear_velocity,
   double max_angular_velocity,
   double max_linear_acceleration,
   double max_angular_acceleration)
 {
+  this->robot_id_for_debug_ = robot_id_for_debug;
   this->target_velocity_ = Velocity2D(0, 0, 0);
   this->output_velocity_ = Velocity2D(0, 0, 0);
   this->state_ = INITIALIZED;
@@ -218,6 +246,7 @@ Velocity2D LocomotionController::limitVelocity(
 void LocomotionController::initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory)
 {
   this->trajectory_follow_controller_ = TrajectoryFollowController(
+    this->robot_id_for_debug_,
     kp_xy_, kd_xy_, kp_theta_, kd_theta_,
     this->delayfactor_sec_, this->dt_,
     trajectory);

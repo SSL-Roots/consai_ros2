@@ -15,6 +15,7 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 #define CONSAI_ROBOT_CONTROLLER__CONTROLLER_COMPONENT_HPP_
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -43,6 +44,8 @@
 
 namespace consai_robot_controller
 {
+using namespace std::chrono_literals;
+
 using GoalPose = consai_msgs::msg::GoalPose;
 using GoalPoses = consai_msgs::msg::GoalPoses;
 using NamedTargets = consai_msgs::msg::NamedTargets;
@@ -109,6 +112,7 @@ private:
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
+  const std::chrono::milliseconds control_loop_cycle_ = 10ms;
 };
 
 }  // namespace consai_robot_controller
