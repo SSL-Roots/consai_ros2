@@ -42,6 +42,9 @@ class PassShootObserver:
 
     def get_shoot_pos_list(self) -> list[State2D]:
         return self._present_shoot_pos_list
+    
+    def get_goal_pos_list(self) -> list[State2D]:
+        return self._goal_pos_list
 
     def search_receivers_list(self, my_robot_id: int) -> list[int]:
         # パス可能なロボットIDのリストを返す関数
