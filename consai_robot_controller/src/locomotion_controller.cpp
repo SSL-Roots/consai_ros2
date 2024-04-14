@@ -19,48 +19,48 @@
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
 LocomotionController::LocomotionController()
- :  robot_id_for_debug_(0),
-    kp_xy_(0.0),
-    kd_xy_(0.0),
-    kp_theta_(0.0),
-    kd_theta_(0.0),
-    delayfactor_sec_(0.0),
-    dt_(0.0),
-    hard_limit_linear_velocity_(0.0),
-    soft_limit_linear_velocity_(0.0),
-    hard_limit_angular_velocity_(0.0),
-    soft_limit_angular_velocity_(0.0),
-    hard_limit_linear_acceleration_(0.0),
-    soft_limit_linear_acceleration_(0.0),
-    hard_limit_angular_acceleration_(0.0),
-    soft_limit_angular_acceleration_(0.0)
+:  robot_id_for_debug_(0),
+  kp_xy_(0.0),
+  kd_xy_(0.0),
+  kp_theta_(0.0),
+  kd_theta_(0.0),
+  delayfactor_sec_(0.0),
+  dt_(0.0),
+  hard_limit_linear_velocity_(0.0),
+  soft_limit_linear_velocity_(0.0),
+  hard_limit_angular_velocity_(0.0),
+  soft_limit_angular_velocity_(0.0),
+  hard_limit_linear_acceleration_(0.0),
+  soft_limit_linear_acceleration_(0.0),
+  hard_limit_angular_acceleration_(0.0),
+  soft_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
- :  robot_id_for_debug_(robot_id_for_debug),
-    kp_xy_(0.0),
-    kd_xy_(0.0),
-    kp_theta_(0.0),
-    kd_theta_(0.0),
-    delayfactor_sec_(0.0),
-    dt_(dt),
-    hard_limit_linear_velocity_(0.0),
-    soft_limit_linear_velocity_(0.0),
-    hard_limit_angular_velocity_(0.0),
-    soft_limit_angular_velocity_(0.0),
-    hard_limit_linear_acceleration_(0.0),
-    soft_limit_linear_acceleration_(0.0),
-    hard_limit_angular_acceleration_(0.0),
-    soft_limit_angular_acceleration_(0.0)
+:  robot_id_for_debug_(robot_id_for_debug),
+  kp_xy_(0.0),
+  kd_xy_(0.0),
+  kp_theta_(0.0),
+  kd_theta_(0.0),
+  delayfactor_sec_(0.0),
+  dt_(dt),
+  hard_limit_linear_velocity_(0.0),
+  soft_limit_linear_velocity_(0.0),
+  hard_limit_angular_velocity_(0.0),
+  soft_limit_angular_velocity_(0.0),
+  hard_limit_linear_acceleration_(0.0),
+  soft_limit_linear_acceleration_(0.0),
+  hard_limit_angular_acceleration_(0.0),
+  soft_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(
-    int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double delayfactor_sec, double dt, 
-    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
-    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
-    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
-    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
+  int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
+  double delayfactor_sec, double dt,
+  double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+  double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+  double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+  double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
 )
 {
   this->robot_id_for_debug_ = robot_id_for_debug;
@@ -171,11 +171,11 @@ Pose2D LocomotionController::getGoal()
 }
 
 void LocomotionController::setParameters(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, 
-    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
-    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
-    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
-    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
+  _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
+  double hard_limit_linear_velocity, double soft_limit_linear_velocity,
+  double hard_limit_angular_velocity, double soft_limit_angular_velocity,
+  double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
+  double hard_limit_angular_acceleration, double soft_limit_angular_acceleration
 )
 {
   this->kp_xy_ = kp_xy;
@@ -254,7 +254,9 @@ Velocity2D LocomotionController::limitAcceleration(
     acc.x /= acc_ratio;
     acc.y /= acc_ratio;
   }
-  acc.theta = std::clamp(acc.theta, -this->hard_limit_angular_acceleration_, hard_limit_angular_acceleration_);
+  acc.theta = std::clamp(
+    acc.theta, -this->hard_limit_angular_acceleration_,
+    hard_limit_angular_acceleration_);
 
   Velocity2D modified_velocity = velocity;
   modified_velocity.x = last_velocity.x + acc.x * dt;
@@ -283,7 +285,8 @@ Velocity2D LocomotionController::limitVelocity(
   return modified_velocity;
 }
 
-void LocomotionController::initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory)
+void LocomotionController::initializeTrajectoryFollowController(
+  std::shared_ptr<BangBangTrajectory3D> trajectory)
 {
   this->trajectory_follow_controller_ = TrajectoryFollowController(
     this->robot_id_for_debug_,
@@ -307,8 +310,8 @@ void LocomotionController::generateTrajectory(
     Velocity2D(current_state.velocity.x, current_state.velocity.y, current_state.velocity.theta);
 
   trajectory.generate(
-    s0, s1, v0, 
-    this->soft_limit_linear_velocity_ ,
+    s0, s1, v0,
+    this->soft_limit_linear_velocity_,
     this->soft_limit_angular_velocity_, this->soft_limit_linear_acceleration_,
     this->soft_limit_angular_acceleration_, 0.1);
 

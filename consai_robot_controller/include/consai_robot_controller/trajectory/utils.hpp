@@ -63,7 +63,7 @@ public:
 
   Pose2D();
   Pose2D(double x, double y, double theta);
-  
+
   consai_msgs::msg::State2D toState2DMsg();
 };
 

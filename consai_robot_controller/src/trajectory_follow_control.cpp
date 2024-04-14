@@ -34,8 +34,7 @@ TrajectoryFollowController::TrajectoryFollowController(
   _Float64 kp_angular_, _Float64 kd_angular,
   double delayfactor_sec, double dt,
   std::shared_ptr<BangBangTrajectory3D> trajectory
-  )
-
+)
 {
   this->robot_id_for_debug_ = robot_id_for_debug;
   this->state_ = ControllerState::INITIALIZED;
@@ -72,7 +71,8 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   // 今ステップの目標位置の取得
   // ロボットの応答遅れを考慮して、少し前の位置を目標位置にする
   Pose2D target_pose = this->trajectory_->get_pose(this->tracked_time_ + this->dt_);
-  Pose2D target_pose_delayed = this->trajectory_->get_pose(this->tracked_time_ + this->dt_ - this->delayfactor_sec_);
+  Pose2D target_pose_delayed = this->trajectory_->get_pose(
+    this->tracked_time_ + this->dt_ - this->delayfactor_sec_);
 
   // 今ステップの目標速度の取得
   Velocity2D target_velocity = this->trajectory_->get_velocity(this->tracked_time_ + this->dt_);
@@ -99,14 +99,17 @@ std::pair<Velocity2D, TrajectoryFollowController::ControllerState> TrajectoryFol
   output.theta = theta_output.output;
 
   // 保存
-  global_for_debug::last_control_output_ff = Velocity2D(x_output.ff_term, y_output.ff_term, theta_output.ff_term);
-  global_for_debug::last_control_output_p = Velocity2D(x_output.p_term, y_output.p_term, theta_output.p_term);
+  global_for_debug::last_control_output_ff = Velocity2D(
+    x_output.ff_term, y_output.ff_term,
+    theta_output.ff_term);
+  global_for_debug::last_control_output_p = Velocity2D(
+    x_output.p_term, y_output.p_term,
+    theta_output.p_term);
 
   // 時間の更新
   this->tracked_time_ += this->dt_;
 
   this->latest_target_state_ = State2D(target_pose, target_velocity);
-
 
 
   return std::make_pair(output, state);

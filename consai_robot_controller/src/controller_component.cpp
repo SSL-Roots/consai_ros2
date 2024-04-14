@@ -242,8 +242,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   auto soft_limit_vel_xy = get_parameter("soft_limit_velocity_xy").as_double();
   auto hard_limit_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
   auto soft_limit_vel_theta = get_parameter("soft_limit_velocity_theta").as_double();
-  auto hard_limit_acc_xy =  get_parameter("hard_limit_acceleration_xy").as_double();
-  auto soft_limit_acc_xy =  get_parameter("soft_limit_acceleration_xy").as_double();
+  auto hard_limit_acc_xy = get_parameter("hard_limit_acceleration_xy").as_double();
+  auto soft_limit_acc_xy = get_parameter("soft_limit_acceleration_xy").as_double();
   auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   auto soft_limit_acc_theta = get_parameter("soft_limit_acceleration_theta").as_double();
   const auto control_range_xy = get_parameter("control_range_xy").as_double();
@@ -256,15 +256,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity()      != hard_limit_vel_xy     ||
-      locomotion_controller_[robot_id].getSoftLimitLinearVelocity()      != soft_limit_vel_xy     ||
-      locomotion_controller_[robot_id].getHardLimitAngularVelocity()     != hard_limit_vel_theta  ||
-      locomotion_controller_[robot_id].getSoftLimitAngluarVelocity()     != soft_limit_vel_theta  ||
-      locomotion_controller_[robot_id].getHardLimitLinearAcceleration()  != hard_limit_acc_xy     ||
-      locomotion_controller_[robot_id].getSoftLimitLinearAcceleration()  != soft_limit_acc_xy     ||
-      locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta  ||
-      locomotion_controller_[robot_id].getSoftLimitAngularAcceleration() != soft_limit_acc_theta
-  )
+  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity() != hard_limit_vel_xy ||
+    locomotion_controller_[robot_id].getSoftLimitLinearVelocity() != soft_limit_vel_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularVelocity() != hard_limit_vel_theta ||
+    locomotion_controller_[robot_id].getSoftLimitAngluarVelocity() != soft_limit_vel_theta ||
+    locomotion_controller_[robot_id].getHardLimitLinearAcceleration() != hard_limit_acc_xy ||
+    locomotion_controller_[robot_id].getSoftLimitLinearAcceleration() != soft_limit_acc_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta ||
+    locomotion_controller_[robot_id].getSoftLimitAngularAcceleration() != soft_limit_acc_theta)
   {
     locomotion_controller_[robot_id].setParameters(
       get_parameter("p_gain_xy").as_double(),
@@ -275,7 +274,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       hard_limit_vel_theta, soft_limit_vel_theta,
       hard_limit_acc_xy, soft_limit_acc_xy,
       hard_limit_acc_theta, soft_limit_acc_theta
-      );
+    );
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
@@ -289,7 +288,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
   Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
-  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y || goal_pose.theta != current_goal_pose.theta)
+  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y ||
+    goal_pose.theta != current_goal_pose.theta)
   {
     this->locomotion_controller_[robot_id].moveToPose(
       Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
@@ -365,9 +365,9 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     // velが存在するときのみ速度情報をPublish
     if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
       auto my_vel = std::make_unique<State>();
-      my_vel->x      = my_robot.vel[0].x;
-      my_vel->y      = my_robot.vel[0].y;
-      my_vel->theta  = my_robot.vel_angular[0];
+      my_vel->x = my_robot.vel[0].x;
+      my_vel->y = my_robot.vel[0].y;
+      my_vel->theta = my_robot.vel_angular[0];
       pub_current_vel_[robot_id]->publish(std::move(my_vel));
     }
 

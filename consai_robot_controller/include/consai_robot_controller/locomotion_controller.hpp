@@ -39,7 +39,7 @@ public:
 
   LocomotionController(
     int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double delayfactor_sec, double dt, 
+    double delayfactor_sec, double dt,
     double hard_limit_linear_velocity, double soft_limit_linear_velocity,
     double hard_limit_angular_velocity, double soft_limit_angular_velocity,
     double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
@@ -53,11 +53,11 @@ public:
   State2D getCurrentTargetState();
   Pose2D getGoal();
   void setParameters(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta, 
+    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
     double hard_limit_linear_velocity, double soft_limit_linear_velocity,
     double hard_limit_angular_velocity, double soft_limit_angular_velocity,
     double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
-    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);  
+    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
 
   double getHardLimitLinearVelocity();
   double getSoftLimitLinearVelocity();
@@ -76,11 +76,11 @@ private:
   ControllerState state_;
 
   _Float64 kp_xy_;
-  _Float64  ki_xy_;
-  _Float64  kd_xy_;
+  _Float64 ki_xy_;
+  _Float64 kd_xy_;
   _Float64 kp_theta_;  // [rad]
-  _Float64  ki_theta_;
-  _Float64  kd_theta_;
+  _Float64 ki_theta_;
+  _Float64 kd_theta_;
   double delayfactor_sec_;
   double dt_;           // 制御周期
   double hard_limit_linear_velocity_;        // [m/s]
