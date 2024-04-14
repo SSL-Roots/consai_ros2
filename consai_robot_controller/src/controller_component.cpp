@@ -247,7 +247,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // 最大速度が上書きされていたらそちらの値を使う
   if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
-    hard_limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
+    soft_limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
