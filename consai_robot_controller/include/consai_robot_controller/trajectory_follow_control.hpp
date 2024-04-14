@@ -47,6 +47,7 @@ public:
 
   TrajectoryFollowController();
   TrajectoryFollowController(
+    int robot_id_for_debug,
     _Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_,
     _Float64 kd_angular, double delayfactor_sec, double dt,
      std::shared_ptr<BangBangTrajectory3D> trajectory);
@@ -93,6 +94,7 @@ private:
   double dt_ = 0.0;          // 制御周期
   double last_error_linear_ = 0;
   double delayfactor_sec_;
+  int robot_id_for_debug_;
 };
 
 

@@ -35,10 +35,10 @@ public:
 
   LocomotionController();
 
-  LocomotionController(double dt);
+  LocomotionController(int robot_id_for_debug, double dt);
 
   LocomotionController(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
+    int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
     double delayfactor_sec, double dt, double max_linear_velocity, double max_angular_velocity,
     double max_linear_acceleration, double max_angular_acceleration);
 
@@ -79,6 +79,7 @@ private:
   double max_angular_velocity_;       // [rad/s]
   double max_linear_acceleration_;    // [m/s^2]
   double max_angular_acceleration_;   // [rad/s^2]
+  int robot_id_for_debug_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);
   void generateTrajectory(const Pose2D & goal_pose, const State2D & current_state);

@@ -29,6 +29,7 @@ TrajectoryFollowController::TrajectoryFollowController()
 }
 
 TrajectoryFollowController::TrajectoryFollowController(
+  int robot_id_for_debug,
   _Float64 kp_linear, _Float64 kd_linear,
   _Float64 kp_angular_, _Float64 kd_angular,
   double delayfactor_sec, double dt,
@@ -36,6 +37,7 @@ TrajectoryFollowController::TrajectoryFollowController(
   )
 
 {
+  this->robot_id_for_debug_ = robot_id_for_debug;
   this->state_ = ControllerState::INITIALIZED;
   this->tracked_time_ = 0;
   this->kp_linear_ = kp_linear;
