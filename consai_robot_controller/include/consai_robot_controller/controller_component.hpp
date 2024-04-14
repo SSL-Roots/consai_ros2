@@ -44,8 +44,6 @@
 
 namespace consai_robot_controller
 {
-using namespace std::chrono_literals;
-
 using GoalPose = consai_msgs::msg::GoalPose;
 using GoalPoses = consai_msgs::msg::GoalPoses;
 using NamedTargets = consai_msgs::msg::NamedTargets;
@@ -88,8 +86,10 @@ private:
   std::vector<LocomotionController> locomotion_controller_;
 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_vel_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_ff_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_p_;
 
@@ -112,7 +112,8 @@ private:
   GoalPosesMap final_goal_poses_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
-  const std::chrono::milliseconds control_loop_cycle_ = 10ms;
+
+  const std::chrono::milliseconds control_loop_cycle_ = std::chrono::milliseconds(10);
 };
 
 }  // namespace consai_robot_controller

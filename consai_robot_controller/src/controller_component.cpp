@@ -42,10 +42,14 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
-  declare_parameter("max_acceleration_xy", 2.0);
-  declare_parameter("max_acceleration_theta", 2.0 * M_PI);
-  declare_parameter("max_velocity_xy", 2.0);
-  declare_parameter("max_velocity_theta", 2.0 * M_PI);
+  declare_parameter("hard_limit_acceleration_xy", 2.0);
+  declare_parameter("soft_limit_acceleration_xy", 2.0 * 0.8);
+  declare_parameter("hard_limit_acceleration_theta", 2.0 * M_PI);
+  declare_parameter("soft_limit_acceleration_theta", 2.0 * M_PI * 0.8);
+  declare_parameter("hard_limit_velocity_xy", 2.0);
+  declare_parameter("soft_limit_velocity_xy", 2.0 * 0.8);
+  declare_parameter("hard_limit_velocity_theta", 2.0 * M_PI);
+  declare_parameter("soft_limit_velocity_theta", 2.0 * M_PI * 0.8);
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
@@ -93,6 +97,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/current_pose", 10)
     );
 
+    pub_current_vel_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/current_vel", 10)
+    );
+
     pub_goal_pose_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/goal_pose", 10)
@@ -101,6 +110,11 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     pub_target_speed_world_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/target_speed_world", 10)
+    );
+
+    pub_control_output_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/control_output", 10)
     );
 
     pub_control_output_ff_.push_back(
@@ -141,7 +155,9 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     create_publisher<VisualizerObjects>(
       "visualizer_objects", rclcpp::SensorDataQoS()));
   timer_pub_goal_poses_ =
-    create_wall_timer(10ms, std::bind(&Controller::on_timer_pub_goal_poses, this));
+    create_wall_timer(
+    this->control_loop_cycle_, std::bind(&Controller::on_timer_pub_goal_poses, this)
+    );
 
   auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
       parser_->set_detection_tracked(msg);
@@ -224,52 +240,55 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
 
   // 各種パラメータの設定
-  auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
-  auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-  auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
-  auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
-  const auto control_range_xy = get_parameter("control_range_xy").as_double();
-  const auto control_a_xy = get_parameter("control_a_xy").as_double();
+  auto hard_limit_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
+  auto soft_limit_vel_xy = get_parameter("soft_limit_velocity_xy").as_double();
+  auto hard_limit_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
+  auto soft_limit_vel_theta = get_parameter("soft_limit_velocity_theta").as_double();
+  auto hard_limit_acc_xy = get_parameter("hard_limit_acceleration_xy").as_double();
+  auto soft_limit_acc_xy = get_parameter("soft_limit_acceleration_xy").as_double();
+  auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
+  auto soft_limit_acc_theta = get_parameter("soft_limit_acceleration_theta").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
   // 最大速度が上書きされていたらそちらの値を使う
   if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
-    max_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
+    soft_limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (locomotion_controller_[robot_id].getMaxLinearVelocity() != max_vel_xy ||
-    locomotion_controller_[robot_id].getMaxAngularVelocity() != max_vel_theta ||
-    locomotion_controller_[robot_id].getMaxLinearAcceleration() != max_acc_xy ||
-    locomotion_controller_[robot_id].getMaxAngularAcceleration() != max_acc_theta)
+  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity() != hard_limit_vel_xy ||
+    locomotion_controller_[robot_id].getSoftLimitLinearVelocity() != soft_limit_vel_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularVelocity() != hard_limit_vel_theta ||
+    locomotion_controller_[robot_id].getSoftLimitAngluarVelocity() != soft_limit_vel_theta ||
+    locomotion_controller_[robot_id].getHardLimitLinearAcceleration() != hard_limit_acc_xy ||
+    locomotion_controller_[robot_id].getSoftLimitLinearAcceleration() != soft_limit_acc_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta ||
+    locomotion_controller_[robot_id].getSoftLimitAngularAcceleration() != soft_limit_acc_theta)
   {
     locomotion_controller_[robot_id].setParameters(
       get_parameter("p_gain_xy").as_double(),
       get_parameter("d_gain_xy").as_double(),
       get_parameter("p_gain_theta").as_double(),
       get_parameter("d_gain_theta").as_double(),
-      max_vel_xy, max_vel_theta, max_acc_xy, max_acc_theta);
+      hard_limit_vel_xy, soft_limit_vel_xy,
+      hard_limit_vel_theta, soft_limit_vel_theta,
+      hard_limit_acc_xy, soft_limit_acc_xy,
+      hard_limit_acc_theta, soft_limit_acc_theta
+    );
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-      State2D(
-        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-      )
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
     );
   }
 
   // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
   Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
-  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y || goal_pose.theta != current_goal_pose.theta)
+  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y ||
+    goal_pose.theta != current_goal_pose.theta)
   {
     this->locomotion_controller_[robot_id].moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-      State2D(
-        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-      )
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
     );
   }
 
@@ -293,7 +312,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   world_vel.theta = ctools::angular_velocity_contol_sin(
     diff_theta,
     control_a_theta *
-    max_vel_theta);
+    hard_limit_vel_theta);
 
   // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
   const auto vel_norm = std::hypot(world_vel.x, world_vel.y);
@@ -334,6 +353,17 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     my_pose.y = my_robot.pos.y;
     my_pose.theta = my_robot.orientation;
     pub_current_pose_[robot_id]->publish(my_pose);
+
+    // velが存在するときのみ速度情報をPublish
+    if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
+      auto my_vel = std::make_unique<State>();
+      my_vel->x = my_robot.vel[0].x;
+      my_vel->y = my_robot.vel[0].y;
+      my_vel->theta = my_robot.vel_angular[0];
+      pub_current_vel_[robot_id]->publish(std::move(my_vel));
+    }
+
+    pub_control_output_[robot_id]->publish(output_vel.toState2DMsg());
 
     State control_output_ff, control_output_p;
     control_output_ff.x = global_for_debug::last_control_output_ff.x;
@@ -412,8 +442,8 @@ State Controller::limit_world_acceleration(
   acc.y = (velocity.y - last_velocity.y) / dt.seconds();
   acc.theta = (velocity.theta - last_velocity.theta) / dt.seconds();
 
-  const auto max_acc_xy = get_parameter("max_acceleration_xy").as_double();
-  const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+  const auto max_acc_xy = get_parameter("hard_limit_acceleration_xy").as_double();
+  const auto max_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   const auto acc_norm = std::hypot(acc.x, acc.y);
   const auto acc_ratio = acc_norm / max_acc_xy;
 

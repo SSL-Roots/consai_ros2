@@ -50,7 +50,7 @@ public:
     int robot_id_for_debug,
     _Float64 kp_linear, _Float64 kd_linear, _Float64 kp_angular_,
     _Float64 kd_angular, double delayfactor_sec, double dt,
-     std::shared_ptr<BangBangTrajectory3D> trajectory);
+    std::shared_ptr<BangBangTrajectory3D> trajectory);
 
   /**
    * @brief 現在の状態を元に次ステップの指令速度とコントローラのステートを計算する
@@ -58,7 +58,6 @@ public:
    * @return 次ステップの指令速度とコントローラのステート
    */
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
-
 
 private:
   enum ControllerMode
@@ -77,7 +76,9 @@ private:
   ControllerOutput controlLinear(
     ControllerMode mode, double current_position, double target_position,
     double target_velocity);
-  ControllerOutput controlAngular(double current_position, double target_position, double target_velocity);
+  ControllerOutput controlAngular(
+    double current_position, double target_position,
+    double target_velocity);
 
   std::shared_ptr<BangBangTrajectory3D> trajectory_;
   ControllerState state_;

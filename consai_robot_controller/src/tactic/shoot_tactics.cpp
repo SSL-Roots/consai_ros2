@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
+
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
 #include "consai_tools/geometry_tools.hpp"
-
-#include <iostream>
 
 namespace shoot_tactics
 {

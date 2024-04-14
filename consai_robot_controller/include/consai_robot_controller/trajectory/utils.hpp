@@ -15,6 +15,8 @@
 // utils.h
 #pragma once
 
+#include <vector>
+
 #include "consai_msgs/msg/state2_d.hpp"
 
 
@@ -63,7 +65,7 @@ public:
 
   Pose2D();
   Pose2D(double x, double y, double theta);
-  
+
   consai_msgs::msg::State2D toState2DMsg();
 };
 
@@ -112,8 +114,6 @@ public:
   Vector2D c;
   double r;
 };
-
-#include <vector>
 
 class IPolygon
 {
