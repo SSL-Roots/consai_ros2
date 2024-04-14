@@ -56,7 +56,7 @@ def enable_update_attacker_by_ball_pos():
         not referee.their_pre_penalty() and \
         not referee.their_penalty() and \
         not referee.their_ball_placement()
-        # not observer.ball_motion().is_moving() and \
+    # not observer.ball_motion().is_moving() and \
 
 
 def update_decisions(changed_ids: list[int], num_of_zone_roles: int):
