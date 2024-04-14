@@ -15,6 +15,8 @@
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
 #include "consai_tools/geometry_tools.hpp"
 
+#include <iostream>
+
 namespace shoot_tactics
 {
 
@@ -59,7 +61,7 @@ ShootTactics::ShootTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 1.5, 0.0, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 4.0, 0.0, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -89,8 +91,8 @@ ShootTactics::ShootTactics()
       const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
       const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-      const auto ADD_ANGLE = tools::to_radians(60.0);
-      const auto AIM_ANGLE_THRETHOLD = tools::to_radians(15.0);
+      const auto ADD_ANGLE = tools::to_radians(25.0);
+      const auto AIM_ANGLE_THRETHOLD = tools::to_radians(10.0);
 
       // セットプレイ時は回転半径を大きくする
       double rotation_radius = ROBOT_RADIUS * 2.0;
@@ -99,7 +101,7 @@ ShootTactics::ShootTactics()
       }
 
       State new_pose;
-      if (std::fabs(angle_robot_position) > M_PI - AIM_ANGLE_THRETHOLD) {
+      if (std::fabs(angle_robot_position) + ADD_ANGLE > M_PI - AIM_ANGLE_THRETHOLD) {
         // ボールの裏に回ったら、直進する
         new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
       } else {
@@ -111,11 +113,12 @@ ShootTactics::ShootTactics()
       }
 
       data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
 
       // ロボットが目標姿勢に近づき、回転速度が小さくなったら次の行動に移行
       const auto robot_vel = tools::velocity_state(data_set.get_my_robot());
       if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD) &&
-        robot_vel.theta < OMEGA_THRESHOLD)
+        std::fabs(robot_vel.theta) < OMEGA_THRESHOLD)
       {
         return SHOOT;
       }
@@ -130,15 +133,18 @@ ShootTactics::ShootTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
       const auto target_pose = data_set.get_target();
 
-      double shoot_speed = MAX_SHOOT_SPEED;
+      const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+      const auto new_pose = trans_BtoT.inverted_transform(-ROBOT_RADIUS, 0.0, 0.0);
 
+      double shoot_speed = MAX_SHOOT_SPEED;
       if (data_set.is_pass()) {
         const auto distance = tools::distance(ball_pose, target_pose);
         const double ALPHA = 1.3;
         shoot_speed = std::clamp(distance * ALPHA, MIN_SHOOT_SPEED, MAX_SHOOT_SPEED);
       }
 
-      data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
+      data_set.set_parsed_pose(new_pose);
+      data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
       data_set.set_parsed_kick_power(shoot_speed);
 
       if (tools::distance(robot_pose, ball_pose) > ROBOT_RADIUS * 2.0) {
