@@ -233,31 +233,31 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
 
   // 各種パラメータの設定
-  auto max_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
-  auto max_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
-  auto max_acc_xy =  get_parameter("hard_limit_acceleration_xy").as_double();
-  auto max_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
+  auto hard_limit_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
+  auto hard_limit_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
+  auto hard_limit_acc_xy =  get_parameter("hard_limit_acceleration_xy").as_double();
+  auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   const auto control_range_xy = get_parameter("control_range_xy").as_double();
   const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
   // 最大速度が上書きされていたらそちらの値を使う
   if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
-    max_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
+    hard_limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (locomotion_controller_[robot_id].getMaxLinearVelocity() != max_vel_xy ||
-    locomotion_controller_[robot_id].getMaxAngularVelocity() != max_vel_theta ||
-    locomotion_controller_[robot_id].getMaxLinearAcceleration() != max_acc_xy ||
-    locomotion_controller_[robot_id].getMaxAngularAcceleration() != max_acc_theta)
+  if (locomotion_controller_[robot_id].getMaxLinearVelocity() != hard_limit_vel_xy ||
+    locomotion_controller_[robot_id].getMaxAngularVelocity() != hard_limit_vel_theta ||
+    locomotion_controller_[robot_id].getMaxLinearAcceleration() != hard_limit_acc_xy ||
+    locomotion_controller_[robot_id].getMaxAngularAcceleration() != hard_limit_acc_theta)
   {
     locomotion_controller_[robot_id].setParameters(
       get_parameter("p_gain_xy").as_double(),
       get_parameter("d_gain_xy").as_double(),
       get_parameter("p_gain_theta").as_double(),
       get_parameter("d_gain_theta").as_double(),
-      max_vel_xy, max_vel_theta, max_acc_xy, max_acc_theta);
+      hard_limit_vel_xy, hard_limit_vel_theta, hard_limit_acc_xy, hard_limit_acc_theta);
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
@@ -302,7 +302,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   world_vel.theta = ctools::angular_velocity_contol_sin(
     diff_theta,
     control_a_theta *
-    max_vel_theta);
+    hard_limit_vel_theta);
 
   // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
   const auto vel_norm = std::hypot(world_vel.x, world_vel.y);
