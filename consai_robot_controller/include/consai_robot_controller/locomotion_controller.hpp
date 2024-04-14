@@ -47,7 +47,7 @@ public:
     double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
-  ControllerState moveToPose(const Pose2D & goal_pose, const State2D & current_state);
+  ControllerState moveToPose(const Pose2D & goal_pose);
   ControllerState halt();
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
   ControllerState getState();
@@ -76,6 +76,7 @@ private:
   Pose2D goal_pose_;
   ControllerState state_;
 
+  int robot_id_for_debug_;
   _Float64 kp_xy_;
   _Float64 ki_xy_;
   _Float64 kd_xy_;
@@ -92,7 +93,6 @@ private:
   double soft_limit_linear_acceleration_;    // [m/s^2]
   double hard_limit_angular_acceleration_;   // [rad/s^2]
   double soft_limit_angular_acceleration_;   // [rad/s^2]
-  int robot_id_for_debug_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);
   void generateTrajectory(const Pose2D & goal_pose, const State2D & current_state);

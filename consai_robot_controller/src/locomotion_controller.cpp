@@ -21,8 +21,10 @@
 LocomotionController::LocomotionController()
 :  robot_id_for_debug_(0),
   kp_xy_(0.0),
+  ki_xy_(0.0),
   kd_xy_(0.0),
   kp_theta_(0.0),
+  ki_theta_(0.0),
   kd_theta_(0.0),
   delayfactor_sec_(0.0),
   dt_(0.0),
@@ -39,8 +41,10 @@ LocomotionController::LocomotionController()
 LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
 :  robot_id_for_debug_(robot_id_for_debug),
   kp_xy_(0.0),
+  ki_xy_(0.0),
   kd_xy_(0.0),
   kp_theta_(0.0),
+  ki_theta_(0.0),
   kd_theta_(0.0),
   delayfactor_sec_(0.0),
   dt_(dt),
@@ -94,8 +98,7 @@ LocomotionController::ControllerState LocomotionController::moveConstantVelocity
 }
 
 LocomotionController::ControllerState LocomotionController::moveToPose(
-  const Pose2D & goal_pose,
-  const State2D & current_state)
+  const Pose2D & goal_pose)
 {
   // 特定のポーズへの移動を指示するメソッドの実装
 

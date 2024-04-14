@@ -248,8 +248,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   auto soft_limit_acc_xy = get_parameter("soft_limit_acceleration_xy").as_double();
   auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   auto soft_limit_acc_theta = get_parameter("soft_limit_acceleration_theta").as_double();
-  const auto control_range_xy = get_parameter("control_range_xy").as_double();
-  const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
   // 最大速度が上書きされていたらそちらの値を使う
@@ -280,11 +278,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
     // 軌道の再生成
     locomotion_controller_[robot_id].moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-      State2D(
-        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-      )
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
     );
   }
 
@@ -294,11 +288,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     goal_pose.theta != current_goal_pose.theta)
   {
     this->locomotion_controller_[robot_id].moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta),
-      State2D(
-        Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-        Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-      )
+      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
     );
   }
 
