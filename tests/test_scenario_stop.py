@@ -27,7 +27,7 @@ def test_robot_speed(rcst_comm: Communication):
     for i in range(11):
         rcst_comm.send_blue_robot(i, -1.0, 3.0 - i * 0.5, math.radians(0))
 
-    rcst_comm.change_referee_command('STOP', 1.0)
+    rcst_comm.change_referee_command('STOP', 3.0)
 
     rcst_comm.observer.reset()
     success = True
