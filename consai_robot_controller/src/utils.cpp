@@ -97,6 +97,16 @@ Pose2D::Pose2D(double x, double y, double theta)
   this->theta = theta;
 }
 
+consai_msgs::msg::State2D Pose2D::toState2DMsg()
+{
+  consai_msgs::msg::State2D state;
+  state.x = this->x;
+  state.y = this->y;
+  state.theta = this->theta;
+
+  return state;
+}
+
 // Velocity2D クラスの定義
 Velocity2D::Velocity2D()
 {
@@ -110,6 +120,17 @@ Velocity2D::Velocity2D(double x, double y, double theta)
   this->x = x;
   this->y = y;
   this->theta = theta;
+}
+
+
+consai_msgs::msg::State2D Velocity2D::toState2DMsg()
+{
+  consai_msgs::msg::State2D state;
+  state.x = this->x;
+  state.y = this->y;
+  state.theta = this->theta;
+
+  return state;
 }
 
 // State2D クラスの定義
