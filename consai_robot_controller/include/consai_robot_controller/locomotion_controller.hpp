@@ -39,8 +39,8 @@ public:
 
   LocomotionController(
     int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double delayfactor_sec, double dt, double max_linear_velocity, double max_angular_velocity,
-    double max_linear_acceleration, double max_angular_acceleration);
+    double delayfactor_sec, double dt, double hard_limit_linear_velocity, double hard_limit_angular_velocity,
+    double hard_limit_linear_acceleration, double hard_limit_angular_acceleration);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
   ControllerState moveToPose(const Pose2D & goal_pose, const State2D & current_state);
@@ -51,14 +51,14 @@ public:
   Pose2D getGoal();
   void setParameters(
     _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-    _Float64 kd_theta, double max_linear_velocity,
-    double max_angular_velocity, double max_linear_acceleration,
-    double max_angular_acceleration);  
+    _Float64 kd_theta, double hard_limit_linear_velocity,
+    double hard_limit_angular_velocity, double hard_limit_linear_acceleration,
+    double hard_limit_angular_acceleration);  
 
-  double getMaxLinearVelocity();
-  double getMaxAngularVelocity();
-  double getMaxLinearAcceleration();
-  double getMaxAngularAcceleration();
+  double getHardLimitLinearVelocity();
+  double getHardLimitAngularVelocity();
+  double getHardLimitLinearAcceleration();
+  double getHardLimitAngularAcceleration();
 
 private:
   TrajectoryFollowController trajectory_follow_controller_;
@@ -75,10 +75,10 @@ private:
   _Float64  kd_theta_;
   double delayfactor_sec_;
   double dt_;           // 制御周期
-  double max_linear_velocity_;        // [m/s]
-  double max_angular_velocity_;       // [rad/s]
-  double max_linear_acceleration_;    // [m/s^2]
-  double max_angular_acceleration_;   // [rad/s^2]
+  double hard_limit_linear_velocity_;        // [m/s]
+  double hard_limit_angular_velocity_;       // [rad/s]
+  double hard_limit_linear_acceleration_;    // [m/s^2]
+  double hard_limit_angular_acceleration_;   // [rad/s^2]
   int robot_id_for_debug_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);

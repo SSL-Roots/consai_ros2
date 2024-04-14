@@ -251,10 +251,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (locomotion_controller_[robot_id].getMaxLinearVelocity() != hard_limit_vel_xy ||
-    locomotion_controller_[robot_id].getMaxAngularVelocity() != hard_limit_vel_theta ||
-    locomotion_controller_[robot_id].getMaxLinearAcceleration() != hard_limit_acc_xy ||
-    locomotion_controller_[robot_id].getMaxAngularAcceleration() != hard_limit_acc_theta)
+  if (locomotion_controller_[robot_id].getHardLimitLinearVelocity() != hard_limit_vel_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularVelocity() != hard_limit_vel_theta ||
+    locomotion_controller_[robot_id].getHardLimitLinearAcceleration() != hard_limit_acc_xy ||
+    locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta)
   {
     locomotion_controller_[robot_id].setParameters(
       get_parameter("p_gain_xy").as_double(),

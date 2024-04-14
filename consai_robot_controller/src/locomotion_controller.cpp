@@ -26,10 +26,10 @@ LocomotionController::LocomotionController()
     kd_theta_(0.0),
     delayfactor_sec_(0.0),
     dt_(0.0),
-    max_linear_velocity_(0.0),
-    max_angular_velocity_(0.0),
-    max_linear_acceleration_(0.0),
-    max_angular_acceleration_(0.0)
+    hard_limit_linear_velocity_(0.0),
+    hard_limit_angular_velocity_(0.0),
+    hard_limit_linear_acceleration_(0.0),
+    hard_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
@@ -40,18 +40,18 @@ LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
     kd_theta_(0.0),
     delayfactor_sec_(0.0),
     dt_(dt),
-    max_linear_velocity_(0.0),
-    max_angular_velocity_(0.0),
-    max_linear_acceleration_(0.0),
-    max_angular_acceleration_(0.0)
+    hard_limit_linear_velocity_(0.0),
+    hard_limit_angular_velocity_(0.0),
+    hard_limit_linear_acceleration_(0.0),
+    hard_limit_angular_acceleration_(0.0)
 {}
 
 LocomotionController::LocomotionController(
   int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-  _Float64 kd_theta, double delayfactor_sec, double dt, double max_linear_velocity,
-  double max_angular_velocity,
-  double max_linear_acceleration,
-  double max_angular_acceleration)
+  _Float64 kd_theta, double delayfactor_sec, double dt, double hard_limit_linear_velocity,
+  double hard_limit_angular_velocity,
+  double hard_limit_linear_acceleration,
+  double hard_limit_angular_acceleration)
 {
   this->robot_id_for_debug_ = robot_id_for_debug;
   this->target_velocity_ = Velocity2D(0, 0, 0);
@@ -63,10 +63,10 @@ LocomotionController::LocomotionController(
   this->kd_theta_ = kd_theta;
   this->delayfactor_sec_ = delayfactor_sec;
   this->dt_ = dt;
-  this->max_linear_velocity_ = max_linear_velocity;
-  this->max_angular_velocity_ = max_angular_velocity;
-  this->max_linear_acceleration_ = max_linear_acceleration;
-  this->max_angular_acceleration_ = max_angular_acceleration;
+  this->hard_limit_linear_velocity_ = hard_limit_linear_velocity;
+  this->hard_limit_angular_velocity_ = hard_limit_angular_velocity;
+  this->hard_limit_linear_acceleration_ = hard_limit_linear_acceleration;
+  this->hard_limit_angular_acceleration_ = hard_limit_angular_acceleration;
 }
 
 LocomotionController::ControllerState LocomotionController::moveConstantVelocity(
@@ -158,38 +158,38 @@ Pose2D LocomotionController::getGoal()
 
 void LocomotionController::setParameters(
     _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta,
-    _Float64 kd_theta, double max_linear_velocity,
-    double max_angular_velocity, double max_linear_acceleration,
-    double max_angular_acceleration)
+    _Float64 kd_theta, double hard_limit_linear_velocity,
+    double hard_limit_angular_velocity, double hard_limit_linear_acceleration,
+    double hard_limit_angular_acceleration)
 {
   this->kp_xy_ = kp_xy;
   this->kd_xy_ = kd_xy;
   this->kp_theta_ = kp_theta;
   this->kd_theta_ = kd_theta;
-  this->max_linear_velocity_ = max_linear_velocity;
-  this->max_angular_velocity_ = max_angular_velocity;
-  this->max_linear_acceleration_ = max_linear_acceleration;
-  this->max_angular_acceleration_ = max_angular_acceleration;
+  this->hard_limit_linear_velocity_ = hard_limit_linear_velocity;
+  this->hard_limit_angular_velocity_ = hard_limit_angular_velocity;
+  this->hard_limit_linear_acceleration_ = hard_limit_linear_acceleration;
+  this->hard_limit_angular_acceleration_ = hard_limit_angular_acceleration;
 }
 
-double LocomotionController::getMaxLinearVelocity()
+double LocomotionController::getHardLimitLinearVelocity()
 {
-  return this->max_linear_velocity_;
+  return this->hard_limit_linear_velocity_;
 }
 
-double LocomotionController::getMaxAngularVelocity()
+double LocomotionController::getHardLimitAngularVelocity()
 {
-  return this->max_angular_velocity_;
+  return this->hard_limit_angular_velocity_;
 }
 
-double LocomotionController::getMaxLinearAcceleration()
+double LocomotionController::getHardLimitLinearAcceleration()
 {
-  return this->max_linear_acceleration_;
+  return this->hard_limit_linear_acceleration_;
 }
 
-double LocomotionController::getMaxAngularAcceleration()
+double LocomotionController::getHardLimitAngularAcceleration()
 {
-  return this->max_angular_acceleration_;
+  return this->hard_limit_angular_acceleration_;
 }
 
 
@@ -208,13 +208,13 @@ Velocity2D LocomotionController::limitAcceleration(
   acc.theta = (velocity.theta - last_velocity.theta) / dt;
 
   auto acc_norm = std::hypot(acc.x, acc.y);
-  auto acc_ratio = acc_norm / this->max_linear_acceleration_;
+  auto acc_ratio = acc_norm / this->hard_limit_linear_acceleration_;
 
   if (acc_ratio > 1.0) {
     acc.x /= acc_ratio;
     acc.y /= acc_ratio;
   }
-  acc.theta = std::clamp(acc.theta, -this->max_angular_acceleration_, max_angular_acceleration_);
+  acc.theta = std::clamp(acc.theta, -this->hard_limit_angular_acceleration_, hard_limit_angular_acceleration_);
 
   Velocity2D modified_velocity = velocity;
   modified_velocity.x = last_velocity.x + acc.x * dt;
@@ -229,7 +229,7 @@ Velocity2D LocomotionController::limitVelocity(
 {
   // ワールド座標系のロボット速度に制限を掛ける
   auto velocity_norm = std::hypot(velocity.x, velocity.y);
-  auto velocity_ratio = velocity_norm / this->max_linear_velocity_;
+  auto velocity_ratio = velocity_norm / this->hard_limit_linear_velocity_;
 
   Velocity2D modified_velocity = velocity;
   if (velocity_ratio > 1.0) {
@@ -237,8 +237,8 @@ Velocity2D LocomotionController::limitVelocity(
     modified_velocity.y /= velocity_ratio;
   }
   modified_velocity.theta = std::clamp(
-    velocity.theta, -this->max_angular_velocity_,
-    this->max_angular_velocity_);
+    velocity.theta, -this->hard_limit_angular_velocity_,
+    this->hard_limit_angular_velocity_);
 
   return modified_velocity;
 }
@@ -267,9 +267,9 @@ void LocomotionController::generateTrajectory(
     Velocity2D(current_state.velocity.x, current_state.velocity.y, current_state.velocity.theta);
 
   trajectory.generate(
-    s0, s1, v0, this->max_linear_velocity_ ,
-    this->max_angular_velocity_, this->max_linear_acceleration_,
-    this->max_angular_acceleration_, 0.1);
+    s0, s1, v0, this->hard_limit_linear_velocity_ ,
+    this->hard_limit_angular_velocity_, this->hard_limit_linear_acceleration_,
+    this->hard_limit_angular_acceleration_, 0.1);
 
   this->initializeTrajectoryFollowController(std::make_shared<BangBangTrajectory3D>(trajectory));
 
