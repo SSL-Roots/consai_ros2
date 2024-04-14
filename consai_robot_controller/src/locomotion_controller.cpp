@@ -197,9 +197,20 @@ double LocomotionController::getHardLimitLinearVelocity()
   return this->hard_limit_linear_velocity_;
 }
 
+double LocomotionController::getSoftLimitLinearVelocity()
+{
+  return this->soft_limit_linear_velocity_;
+}
+
+
 double LocomotionController::getHardLimitAngularVelocity()
 {
   return this->hard_limit_angular_velocity_;
+}
+
+double LocomotionController::getSoftLimitAngluarVelocity()
+{
+  return this->soft_limit_angular_velocity_;
 }
 
 double LocomotionController::getHardLimitLinearAcceleration()
@@ -207,11 +218,20 @@ double LocomotionController::getHardLimitLinearAcceleration()
   return this->hard_limit_linear_acceleration_;
 }
 
+double LocomotionController::getSoftLimitLinearAcceleration()
+{
+  return this->soft_limit_linear_acceleration_;
+}
+
 double LocomotionController::getHardLimitAngularAcceleration()
 {
   return this->hard_limit_angular_acceleration_;
 }
 
+double LocomotionController::getSoftLimitAngularAcceleration()
+{
+  return this->soft_limit_angular_acceleration_;
+}
 
 
 /**

@@ -60,9 +60,13 @@ public:
     double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);  
 
   double getHardLimitLinearVelocity();
+  double getSoftLimitLinearVelocity();
   double getHardLimitAngularVelocity();
+  double getSoftLimitAngluarVelocity();
   double getHardLimitLinearAcceleration();
+  double getSoftLimitLinearAcceleration();
   double getHardLimitAngularAcceleration();
+  double getSoftLimitAngularAcceleration();
 
 private:
   TrajectoryFollowController trajectory_follow_controller_;
