@@ -88,6 +88,7 @@ private:
   std::vector<LocomotionController> locomotion_controller_;
 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
+  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_vel_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_ff_;
