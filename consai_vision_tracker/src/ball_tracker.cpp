@@ -66,27 +66,31 @@ BallTracker::BallTracker(const double dt)
   AB[0] = A;
   AB[1] = B;
 
-  // システムノイズの平均値
-  ColumnVector sys_noise_mu(4);
-  sys_noise_mu = 0.0;
+  auto gen_uncertainty = [&](const double max_linear_acc_mps) {
+      const auto max_linear_movement_in_dt = max_linear_acc_mps / 2 * std::pow(dt, 2);  // [m]
+      const auto max_linear_acc_in_dt = max_linear_acc_mps * dt;  // [m/s]
+      // 位置、速度の変化をシステムノイズで表現する
+      // システムノイズの平均値
+      ColumnVector sys_noise_mu(4);
+      sys_noise_mu = 0.0;
 
-  // 位置、速度の変化をのシステムノイズで表現する（つまりめちゃくちゃノイズがでかい）
-  // 0 m/s から、いきなり1.0 m/sに変化しうる、ということ
-  const double MAX_LINEAR_ACC_MPS = 0.5 / dt;  // 例：1.0[m/s] / 0.001[s] = 100 [m/ss]
-  const double MAX_LINEAR_ACCEL_IN_DT = MAX_LINEAR_ACC_MPS * dt;  // [m/s]
-  const double MAX_LINEAR_MOVEMENT_IN_DT = MAX_LINEAR_ACC_MPS / 2 * std::pow(dt, 2);  // [m]
+      // システムノイズの分散
+      SymmetricMatrix sys_noise_cov(4);
+      sys_noise_cov = 0.0;
+      sys_noise_cov(1, 1) = std::pow(max_linear_movement_in_dt, 2);
+      sys_noise_cov(2, 2) = std::pow(max_linear_movement_in_dt, 2);
+      sys_noise_cov(3, 3) = std::pow(max_linear_acc_in_dt, 2);
+      sys_noise_cov(4, 4) = std::pow(max_linear_acc_in_dt, 2);
+      return Gaussian(sys_noise_mu, sys_noise_cov);
+    };
 
-  // システムノイズの分散
-  SymmetricMatrix sys_noise_cov(4);
-  sys_noise_cov = 0.0;
-  sys_noise_cov(1, 1) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(2, 2) = std::pow(MAX_LINEAR_MOVEMENT_IN_DT, 2);
-  sys_noise_cov(3, 3) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
-  sys_noise_cov(4, 4) = std::pow(MAX_LINEAR_ACCEL_IN_DT, 2);
+  // システムノイズを大きくして不確かさを増やす
+  sys_uncertain_pdf_ = std::make_shared<ConditionalGaussian>(AB, gen_uncertainty(0.5 / dt));
+  sys_uncertain_model_ = std::make_shared<SystemModelGaussianUncertainty>(sys_uncertain_pdf_.get());
 
-  Gaussian system_uncertainty(sys_noise_mu, sys_noise_cov);
-  sys_pdf_ = std::make_shared<ConditionalGaussian>(AB, system_uncertainty);
-  sys_model_ = std::make_shared<SystemModelGaussianUncertainty>(sys_pdf_.get());
+  // システムノイズを小さくして不確かさを減らす
+  sys_certain_pdf_ = std::make_shared<ConditionalGaussian>(AB, gen_uncertainty(0.1 / dt));
+  sys_certain_model_ = std::make_shared<SystemModelGaussianUncertainty>(sys_certain_pdf_.get());
 
   // 観測モデル
   // ~pos(t) = pos(t) + noise
@@ -135,7 +139,7 @@ void BallTracker::push_back_observation(const DetectionBall & ball)
   ball_observations_.push_back(observation);
 }
 
-TrackedBall BallTracker::update()
+TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
 {
   // 観測値から外れ値を取り除く
   for (auto it = ball_observations_.begin(); it != ball_observations_.end(); ) {
@@ -198,7 +202,12 @@ TrackedBall BallTracker::update()
   ColumnVector input(2);
   input(1) = 0;
   input(2) = 0;
-  filter_->Update(sys_model_.get(), input);
+
+  if (use_uncertain_sys_model) {
+    filter_->Update(sys_uncertain_model_.get(), input);
+  } else {
+    filter_->Update(sys_certain_model_.get(), input);
+  }
 
   return prev_tracked_ball_;
 }

@@ -47,6 +47,7 @@ public:
   void push_back_observation(const DetectionRobot & robot);
   TrackedRobot update();
   RobotLocalVelocity calc_local_velocity();
+  TrackedRobot prev_estimation(void) const {return prev_tracked_robot_;}
 
 private:
   void reset_prior();

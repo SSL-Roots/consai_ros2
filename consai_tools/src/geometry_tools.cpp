@@ -125,6 +125,22 @@ bool is_same(
   return false;
 }
 
+bool is_visible(const TrackedRobot & robot, const double threshold)
+{
+  if (robot.visibility.size() > 0) {
+    return robot.visibility[0] > threshold;
+  }
+  return false;
+}
+
+bool is_visible(const TrackedBall & ball, const double threshold)
+{
+  if (ball.visibility.size() > 0) {
+    return ball.visibility[0] > threshold;
+  }
+  return false;
+}
+
 Trans::Trans(const State & center, const double theta)
 {
   center_ = std::complex<double>(center.x, center.y);
