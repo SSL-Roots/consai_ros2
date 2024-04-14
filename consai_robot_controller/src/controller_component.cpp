@@ -42,10 +42,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
-  declare_parameter("max_acceleration_xy", 2.0);
-  declare_parameter("max_acceleration_theta", 2.0 * M_PI);
-  declare_parameter("max_velocity_xy", 2.0);
-  declare_parameter("max_velocity_theta", 2.0 * M_PI);
+  declare_parameter("hard_limit_acceleration_xy", 2.0);
+  declare_parameter("hard_limit_acceleration_theta", 2.0 * M_PI);
+  declare_parameter("hard_limit_velocity_xy", 2.0);
+  declare_parameter("hard_limit_velocity_theta", 2.0 * M_PI);
   declare_parameter("control_range_xy", 1.0);
   declare_parameter("control_a_xy", 1.0);
   declare_parameter("control_a_theta", 0.5);
@@ -229,10 +229,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   State world_vel;
 
   // 各種パラメータの設定
-  auto max_vel_xy = get_parameter("max_velocity_xy").as_double();
-  auto max_vel_theta = get_parameter("max_velocity_theta").as_double();
-  auto max_acc_xy =  get_parameter("max_acceleration_xy").as_double();
-  auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+  auto max_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
+  auto max_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
+  auto max_acc_xy =  get_parameter("hard_limit_acceleration_xy").as_double();
+  auto max_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   const auto control_range_xy = get_parameter("control_range_xy").as_double();
   const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
@@ -426,8 +426,8 @@ State Controller::limit_world_acceleration(
   acc.y = (velocity.y - last_velocity.y) / dt.seconds();
   acc.theta = (velocity.theta - last_velocity.theta) / dt.seconds();
 
-  const auto max_acc_xy = get_parameter("max_acceleration_xy").as_double();
-  const auto max_acc_theta = get_parameter("max_acceleration_theta").as_double();
+  const auto max_acc_xy = get_parameter("hard_limit_acceleration_xy").as_double();
+  const auto max_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
   const auto acc_norm = std::hypot(acc.x, acc.y);
   const auto acc_ratio = acc_norm / max_acc_xy;
 
