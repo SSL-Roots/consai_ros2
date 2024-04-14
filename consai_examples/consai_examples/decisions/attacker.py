@@ -104,7 +104,7 @@ class AttackerDecision(DecisionBase):
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
             self._operator.operate(robot_id, setplay_shoot)
-    
+
     def our_direct(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball.with_ball_receiving()
@@ -117,7 +117,7 @@ class AttackerDecision(DecisionBase):
             passing = move_to_ball.with_passing_to(TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
             return
-        
+
         # シュート可能なIDリストを取得
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
         # シュートできる場合はシュートする
@@ -126,7 +126,7 @@ class AttackerDecision(DecisionBase):
                 TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
             self._operator.operate(robot_id, shooting)
             return
-        
+
         # パスとシュートができない場合はゴール中央に向けてシュートする
         goal_pos_list = self._field_observer.pass_shoot().get_goal_pos_list()
         shooting_center = move_to_ball.with_shooting_to(
