@@ -93,7 +93,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         "robot" + std::to_string(i) + "/current_pose", 10)
     );
 
-    pub_current_pose_.push_back(
+    pub_current_vel_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/current_vel", 10)
     );
@@ -340,11 +340,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     my_pose.theta = my_robot.orientation;
     pub_current_pose_[robot_id]->publish(my_pose);
 
-    State my_vel;
-    my_vel.x      = my_robot.vel[0].x;
-    my_vel.y      = my_robot.vel[0].y;
-    my_vel.theta  = my_robot.vel_angular[0];
-    pub_current_vel_[robot_id]->publish(my_vel);
+    // velが存在するときのみ速度情報をPublish
+    if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
+      auto my_vel = std::make_unique<State>();
+      my_vel->x      = my_robot.vel[0].x;
+      my_vel->y      = my_robot.vel[0].y;
+      my_vel->theta  = my_robot.vel_angular[0];
+      pub_current_vel_[robot_id]->publish(std::move(my_vel));
+    }
 
     State control_output_ff, control_output_p;
     control_output_ff.x = global_for_debug::last_control_output_ff.x;
