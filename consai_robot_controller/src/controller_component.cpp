@@ -232,7 +232,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   const auto control_a_xy = get_parameter("control_a_xy").as_double();
   const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
-  // 上書きされていたらそちらの値を使う
+  // 最大速度が上書きされていたらそちらの値を使う
   if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
     max_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
   }
@@ -273,6 +273,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     );
   }
 
+  // 制御の実行
   auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
     State2D(
       Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
