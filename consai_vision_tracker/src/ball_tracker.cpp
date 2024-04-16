@@ -149,7 +149,6 @@ TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
       // 外れ値が連続できたら、観測値をそのまま使用する（誘拐対応）
       outlier_count_++;
       if (outlier_count_ > OUTLIER_COUNT_THRESHOLD) {
-        std::cout <<"outlier counts out" << std::endl;
         break;
       }
       it = ball_observations_.erase(it);
