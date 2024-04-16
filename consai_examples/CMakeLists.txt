@@ -28,6 +28,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
+    ${PROJECT_NAME}/decisions/center_back.py
     ${PROJECT_NAME}/decisions/center_back1.py
     ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
