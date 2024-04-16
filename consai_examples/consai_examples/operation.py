@@ -194,13 +194,13 @@ class Operation():
         return Operation(goal)
 
     def move_to_intersection(self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY,
-                             target_theta: TargetTheta) -> 'Operation':
+                             target_theta: TargetTheta, offset: float=0.0) -> 'Operation':
         line = ConstraintLine()
         line.p1 = p1.constraint
         line.p2 = p2.constraint
         line.p3.insert(0, p3.constraint)
         line.p4.insert(0, p4.constraint)
-        line.offset_intersection_to_p2.insert(0, 0.0)
+        line.offset_intersection_to_p2.insert(0, offset)
         line.theta = target_theta.constraint
         goal = deepcopy(self._goal)
         goal.line.insert(0, line)
