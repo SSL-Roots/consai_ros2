@@ -141,11 +141,20 @@ void BallTracker::push_back_observation(const DetectionBall & ball)
 
 TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
 {
+  constexpr auto OUTLIER_COUNT_THRESHOLD = 10;
+
   // 観測値から外れ値を取り除く
   for (auto it = ball_observations_.begin(); it != ball_observations_.end(); ) {
     if (is_outlier(*it)) {
+      // 外れ値が連続できたら、観測値をそのまま使用する（誘拐対応）
+      outlier_count_++;
+      if (outlier_count_ > OUTLIER_COUNT_THRESHOLD) {
+        std::cout <<"outlier counts out" << std::endl;
+        break;
+      }
       it = ball_observations_.erase(it);
     } else {
+      outlier_count_ = 0;
       ++it;
     }
   }
