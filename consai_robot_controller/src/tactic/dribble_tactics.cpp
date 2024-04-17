@@ -24,6 +24,7 @@ namespace chrono = std::chrono;
 static constexpr double ROBOT_RADIUS = 0.09;  // ロボットの半径
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
+static constexpr double ROTATE_RADIUS = ROBOT_RADIUS * 2.0;  // meters
 static constexpr auto APPROACH = "APPROACH";
 // static constexpr auto CATCH = "CATCH";
 static constexpr auto ROTATE = "ROTATE";
@@ -42,7 +43,7 @@ DribbleTactics::DribbleTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 4.0, 0.0, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(ROTATE_RADIUS, 0.0, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -99,8 +100,6 @@ DribbleTactics::DribbleTactics()
       const auto ADD_ANGLE = tools::to_radians(25.0);
       const auto AIM_ANGLE_THRETHOLD = tools::to_radians(10.0);
 
-      double rotation_radius = ROBOT_RADIUS * 4.0;
-
       State new_pose;
       if (std::fabs(angle_robot_position) + ADD_ANGLE > M_PI - AIM_ANGLE_THRETHOLD) {
         // ボールの裏に回ったら、直進する
@@ -108,8 +107,8 @@ DribbleTactics::DribbleTactics()
       } else {
         // ボールの周りを旋回する
         const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
-        double pos_x = rotation_radius * std::cos(theta);
-        double pos_y = rotation_radius * std::sin(theta);
+        double pos_x = ROTATE_RADIUS * std::cos(theta);
+        double pos_y = ROTATE_RADIUS * std::sin(theta);
         new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
       }
 
@@ -137,9 +136,10 @@ DribbleTactics::DribbleTactics()
 
       // ボールが消えることを考慮して、ターゲットとロボットの座標系で目標位置を生成する
       constexpr double MOVE_DISTANCE = 0.3;   // meters
+      constexpr double CAREFUL_DISTANCE = 0.5;  // meters
       State new_pose;
 
-      if (tools::distance(robot_pose, target_pose) > MOVE_DISTANCE) {
+      if (tools::distance(robot_pose, target_pose) > CAREFUL_DISTANCE) {
         const tools::Trans trans_RtoT(robot_pose, tools::calc_angle(robot_pose, target_pose));
         new_pose = trans_RtoT.inverted_transform(MOVE_DISTANCE, 0.0, 0.0);
       } else {
