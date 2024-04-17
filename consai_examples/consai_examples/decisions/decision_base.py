@@ -39,7 +39,7 @@ class DecisionBase(object):
 
     def disable_avoid_obstacles(self, robot_id):
         self._operator.disable_avoid_obstacles(robot_id)
-    
+
     def set_num_of_center_back_roles(self, num_of_center_back_roles):
         self._num_of_center_back_roles = num_of_center_back_roles
 

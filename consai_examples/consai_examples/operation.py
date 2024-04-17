@@ -194,7 +194,7 @@ class Operation():
         return Operation(goal)
 
     def move_to_intersection(self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY,
-                             target_theta: TargetTheta, offset: float=0.0) -> 'Operation':
+                             target_theta: TargetTheta, offset: float = 0.0) -> 'Operation':
         line = ConstraintLine()
         line.p1 = p1.constraint
         line.p2 = p2.constraint

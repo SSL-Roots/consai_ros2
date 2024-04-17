@@ -66,7 +66,9 @@ def enable_update_attacker_by_ball_pos():
     # not observer.ball_motion().is_moving() and \
 
 
-def update_decisions(changed_ids: list[int], num_of_center_back_roles: int, num_of_zone_roles: int):
+def update_decisions(changed_ids: list[int],
+                     num_of_center_back_roles: int,
+                     num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
         if robot_id in changed_ids:
