@@ -29,6 +29,7 @@ static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double MAX_SHOOT_SPEED = 5.5;  // m/s
 static constexpr double MIN_SHOOT_SPEED = 2.0;  // m/s
 static constexpr double WAIT_DISTANCE = 0.7;  // meters
+static constexpr double ROTATE_RADIUS = ROBOT_RADIUS * 2.0;  // meters
 static constexpr auto WAIT = "WAIT";
 static constexpr auto APPROACH = "APPROACH";
 static constexpr auto ROTATE = "ROTATE";
@@ -61,7 +62,7 @@ ShootTactics::ShootTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(ROBOT_RADIUS * 4.0, 0.0, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(ROTATE_RADIUS, 0.0, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -95,7 +96,7 @@ ShootTactics::ShootTactics()
       const auto AIM_ANGLE_THRETHOLD = tools::to_radians(10.0);
 
       // セットプレイ時は回転半径を大きくする
-      double rotation_radius = ROBOT_RADIUS * 2.0;
+      double rotation_radius = ROTATE_RADIUS;
       if (data_set.is_setplay()) {
         rotation_radius = ROBOT_RADIUS * 4.0;
       }
@@ -147,7 +148,7 @@ ShootTactics::ShootTactics()
       data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
       data_set.set_parsed_kick_power(shoot_speed);
 
-      if (tools::distance(robot_pose, ball_pose) > ROBOT_RADIUS * 2.0) {
+      if (tools::distance(robot_pose, ball_pose) > ROTATE_RADIUS) {
         return WAIT;
       }
 
