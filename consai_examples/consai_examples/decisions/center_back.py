@@ -19,6 +19,7 @@
 from enum import Enum
 
 from decisions.decision_base import DecisionBase
+from field import Field
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
@@ -29,6 +30,7 @@ class CenterBackID(Enum):
     CENTER_BACK1 = 0
     CENTER_BACK2 = 1
 
+
 class CenterBackDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer, center_back_id: CenterBackID):
@@ -38,7 +40,11 @@ class CenterBackDecision(DecisionBase):
         self._MARGIN_LINE = 0.3
         # 2台でディフェンスする時のお互いの距離
         self._MARGIN_ROBOT = 0.1
-    
+        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
+        self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
+        self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
+        self._penalty_goalside_lower_back = Field.penalty_pose('our', 'lower_back')
+
     def _get_offset(self) -> float:
         offset = 0.0
         if self._num_of_center_back_roles > 1:
@@ -49,44 +55,42 @@ class CenterBackDecision(DecisionBase):
         return offset
 
     def _defend_front_operation(self, offset: float):
-        # ディフェンスエリアの前側上半分を守る
-        p1_x = -6.0 + 1.8 + self._MARGIN_LINE
-        p1_y = 1.8
-        p2_x = -6.0 + 1.8 + self._MARGIN_LINE
-        p2_y = -1.8
+        # ディフェンスエリアの前側を守る
+        p1_x = self._penalty_corner_upper_front.x + self._MARGIN_LINE
+        p1_y = self._penalty_corner_upper_front.y
+        p2_x = self._penalty_corner_lower_front.x + self._MARGIN_LINE
+        p2_y = self._penalty_corner_lower_front.y
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
-    def _defend_upper_top_operation(self, offset: float):
-        # ディフェンスエリアの上半分を守る
-        p1_x = -6.0 + 0.3
-        p1_y = 1.8 + self._MARGIN_LINE
-        p2_x = -6.0 + 1.8 + 0.3
-        p2_y = 1.8 + self._MARGIN_LINE
+    def _defend_upper_operation(self, offset: float):
+        # ディフェンスエリアの上側を守る
+        p1_x = self._penalty_goalside_upper_back.x + 0.3
+        p1_y = self._penalty_goalside_upper_back.y + self._MARGIN_LINE
+        p2_x = self._penalty_corner_upper_front.x + 0.3
+        p2_y = self._penalty_corner_upper_front.y + self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
-    def _defend_lower_bottom_defense_operation(self, offset: float):
+    def _defend_lower_operation(self, offset: float):
         # ディフェンスエリアの下側を守る
-        p1_x = -6.0 + 0.3
-        p1_y = -1.8 - self._MARGIN_LINE
-        p2_x = -6.0 + 1.8 + 0.3
-        p2_y = -1.8 - self._MARGIN_LINE
+        p1_x = self._penalty_goalside_lower_back.x + 0.3
+        p1_y = self._penalty_goalside_lower_back.y - self._MARGIN_LINE
+        p2_x = self._penalty_corner_lower_front.x + 0.3
+        p2_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
     def _defend_defense_area(self, robot_id):
         offset = self._get_offset()
-        # ディフェンスエリアの上半分を守る
-        # ボールが左上にあれば上側をまもる
-        # ボールが左下にあれば下側をまもる
+        # ボール位置で行動を変更
         if self._field_observer.zone().ball_is_in_left_top():
-            operation = self._defend_upper_top_operation(offset)
+            operation = self._defend_upper_operation(offset)
         elif self._field_observer.zone().ball_is_in_left_bottom():
-            operation = self._defend_lower_bottom_defense_operation(offset)
+            operation = self._defend_lower_operation(offset)
         else:
             operation = self._defend_front_operation(offset)
         operation = operation.with_ball_receiving()
@@ -105,17 +109,17 @@ class CenterBackDecision(DecisionBase):
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 1.0),
+            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * (self._center_back_id + 1.0)),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 1.0),
+            TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * (self._center_back_id + 1.0)),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 1.0),
+            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * (self._center_back_id + 1.0)),
             TargetTheta.look_ball())
 
 
