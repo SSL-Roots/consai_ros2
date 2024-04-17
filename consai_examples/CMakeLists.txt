@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/field_observer.py
+    ${PROJECT_NAME}/field.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
