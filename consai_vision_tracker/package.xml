@@ -11,6 +11,7 @@
 
   <depend>launch_ros</depend>
   <depend>consai_msgs</depend>
+  <depend>consai_tools</depend>
   <depend>consai_visualizer_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>

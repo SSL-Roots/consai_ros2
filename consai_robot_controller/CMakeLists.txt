@@ -42,6 +42,15 @@ add_library(controller_component SHARED
   src/tactic/tactic_control_ball.cpp
   src/tactic/tactic_obstacle_avoidance.cpp
   src/tools/control_tools.cpp
+  src/bangbangtrajectory1d.cpp
+  src/bangbangtrajectory2d.cpp
+  src/bangbangtrajectory3d.cpp
+    src/trajectory_follow_control.cpp
+  src/trajectory_generator.cpp
+  src/trajectory.cpp
+  src/locomotion_controller.cpp
+  src/utils.cpp
+  src/global_for_debug.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")

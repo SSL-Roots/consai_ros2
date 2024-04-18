@@ -158,11 +158,19 @@ void RobotTracker::push_back_observation(const DetectionRobot & robot)
 
 TrackedRobot RobotTracker::update()
 {
+  constexpr auto OUTLIER_COUNT_THRESHOLD = 10;
+
   // 観測値から外れ値を取り除く
   for (auto it = robot_observations_.begin(); it != robot_observations_.end(); ) {
     if (is_outlier(*it)) {
+      // 外れ値が連続できたら、観測値をそのまま使用する（誘拐対応）
+      outlier_count_++;
+      if (outlier_count_ > OUTLIER_COUNT_THRESHOLD) {
+        break;
+      }
       it = robot_observations_.erase(it);
     } else {
+      outlier_count_ = 0;
       ++it;
     }
   }

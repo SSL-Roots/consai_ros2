@@ -69,7 +69,7 @@ class AttackerDecision(DecisionBase):
             return
 
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
@@ -109,6 +109,34 @@ class AttackerDecision(DecisionBase):
             move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
             setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
             self._operator.operate(robot_id, setplay_shoot)
+
+    def our_direct(self, robot_id):
+        move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        move_to_ball.with_ball_receiving()
+        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
+
+        # シュート可能なIDリストを取得
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        # シュートできる場合はシュートする
+        if len(shoot_pos_list) > 0:
+            shooting = move_to_ball.with_shooting_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+            self._operator.operate(robot_id, shooting)
+            return
+
+        # パス可能なIDのリストを取得
+        receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
+        # パスできる味方ロボットがいる場合はパスする
+        if len(receivers_id_list) > 0:
+            passing = move_to_ball.with_passing_to(TargetXY.our_robot(receivers_id_list[0]))
+            self._operator.operate(robot_id, passing)
+            return
+
+        # パスとシュートができない場合はゴール中央に向けてシュートする
+        shooting_center = move_to_ball.with_shooting_to(
+            TargetXY.their_goal())
+        self._operator.operate(robot_id, shooting_center)
+        return
 
     def their_direct(self, robot_id):
         prevent_direct_shooting = Operation().move_on_line(
@@ -168,7 +196,7 @@ class AttackerDecision(DecisionBase):
         if self._field_observer.ball_position().is_outside():
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
             put_ball_back = move_to_ball.with_shooting_to(
                 TargetXY.value(kick_pos.x, kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
@@ -177,7 +205,7 @@ class AttackerDecision(DecisionBase):
         if self._field_observer.ball_placement().is_far_from(placement_pos):
             # ボール位置が配置目標位置から離れているときはパスする
             move_to_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
             passing = move_to_ball.with_passing_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             self._operator.operate(robot_id, passing)
@@ -230,7 +258,7 @@ def gen_their_penalty_function():
 for name in ['our_pre_kickoff', 'their_pre_kickoff', 'their_kickoff', 'our_pre_penalty']:
     setattr(AttackerDecision, name, gen_chase_ball_function())
 
-for name in ['our_kickoff', 'our_penalty', 'our_direct', 'our_indirect']:
+for name in ['our_kickoff', 'our_penalty', 'our_indirect']:
     setattr(AttackerDecision, name, gen_setplay_shoot_function())
 
 for name in ['their_pre_penalty', 'their_penalty', 'their_penalty_inplay']:

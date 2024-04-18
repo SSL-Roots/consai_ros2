@@ -55,44 +55,40 @@ def test_their_penalty_defend(rcst_comm: Communication):
     assert rcst_comm.observer.goal().ball_has_been_in_negative_goal() is False
 
 
-# def blue_robot_are_behind_ball(
-#         ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
-#     DISTANCE = 1.0  # meters
-#     KICKER_ID = 1
+def test_robots_be_behind_ball(rcst_comm: Communication):
+    rcst_comm.send_empty_world()
+    for i in range(11):
+        rcst_comm.send_blue_robot(i, -1.0, 3.0 - i * 0.5, math.radians(0))
 
-#     for robot in blue_robots.values():
-#         if robot.id == KICKER_ID:
-#             continue
+    # Kicker robot.
+    rcst_comm.send_blue_robot(1, -2.2, 0.0, math.radians(0))
+    rcst_comm.send_ball(-2, 0)
 
-#         if robot.x > ball.x - DISTANCE:
-#             return False
+    rcst_comm.change_referee_command('STOP', 1.0)
+    rcst_comm.change_referee_command('PREPARE_PENALTY_BLUE', 0.0)
 
-#     return True
+    def blue_robot_are_behind_ball(
+            ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
+        DISTANCE = 1.0  # meters
+        KICKER_ID = 1
 
-# TODO: Fix the issue: https://github.com/SSL-Roots/consai_ros2/issues/185
-# def test_robots_be_behind_ball(rcst_comm: Communication):
-#     rcst_comm.send_empty_world()
-#     for i in range(11):
-#         rcst_comm.send_blue_robot(i, -1.0, 3.0 - i * 0.5, math.radians(0))
-#     time.sleep(3)  # Wait for the robots to be placed.
+        for robot in blue_robots.values():
+            if robot.id == KICKER_ID:
+                continue
+            if robot.x > ball.x - DISTANCE:
+                return False
+        return True
 
-#     # Kicker robot.
-#     rcst_comm.send_blue_robot(1, -2.2, 0.0, math.radians(0))
-#     rcst_comm.send_ball(-2, 0)
+    rcst_comm.observer.customized().register_sticky_true_callback(
+        "test", blue_robot_are_behind_ball)
 
-#     rcst_comm.change_referee_command('STOP', 3.0)
-#     rcst_comm.change_referee_command('PREPARE_PENALTY_BLUE', 0.0)
-
-#     rcst_comm.observer.customized().register_sticky_true_callback(
-#         "test", blue_robot_are_behind_ball)
-
-#     success = False
-#     for _ in range(10):
-#         if rcst_comm.observer.customized().get_result("test"):
-#             success = True
-#             break
-#         time.sleep(1)
-#     assert success is True
+    success = False
+    for _ in range(10):
+        if rcst_comm.observer.customized().get_result("test"):
+            success = True
+            break
+        time.sleep(1)
+    assert success is True
 
 
 def test_robots_be_behind_ball_for_their_penalty(rcst_comm: Communication):

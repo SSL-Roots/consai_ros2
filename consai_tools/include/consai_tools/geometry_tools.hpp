@@ -41,6 +41,8 @@ State intersection(const State & p1, const State & p2, const State & p3, const S
 bool is_same(
   const State & p1, const State & p2,
   const double distance_threshold = 0.01, const double theta_threshold = 0.17);
+bool is_visible(const TrackedRobot & robot, const double threshold = 0.01);
+bool is_visible(const TrackedBall & ball, const double threshold = 0.01);
 
 class Trans
 {
