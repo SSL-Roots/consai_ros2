@@ -35,6 +35,7 @@ double distance(const State & pose1, const State & pose2);
 State pose_state(const TrackedRobot & robot);
 State pose_state(const TrackedBall & ball);
 State velocity_state(const TrackedRobot & robot);
+State gen_state(const double x, const double y, const double theta = 0.0);
 double to_radians(const double degrees);
 double to_degrees(const double radians);
 State intersection(const State & p1, const State & p2, const State & p3, const State & p4);
@@ -43,6 +44,8 @@ bool is_same(
   const double distance_threshold = 0.01, const double theta_threshold = 0.17);
 bool is_visible(const TrackedRobot & robot, const double threshold = 0.01);
 bool is_visible(const TrackedBall & ball, const double threshold = 0.01);
+bool is_lines_intersect(
+  const State & line1_p1, const State & line1_p2, const State & line2_p1, const State & line2_p2);
 
 class Trans
 {

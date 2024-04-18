@@ -14,6 +14,7 @@
 
 
 #include <algorithm>
+#include <iostream>
 
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
 #include "consai_tools/geometry_tools.hpp"
@@ -351,8 +352,44 @@ bool ObstacleAvoidance::avoid_defense_area(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const
 {
-  // ディフェンスエリアを回避する
+  constexpr double AVOID_DISTANCE = 0.5;
+
+  // 障害物がなければ、目標位置を回避位置とする
   avoidance_pose = goal_pose;
+
+  const auto robot_pose = tools::pose_state(my_robot);
+
+  // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
+  constexpr double FIELD_HALF_LENGTH = 6.0;
+  constexpr double DEFENSE_AREA_LENGTH = 1.8;
+  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
+  constexpr double FIELD_MARGIN = 0.3;
+  const auto OURSIDE_TOP_LEFT = tools::gen_state(
+    -(FIELD_HALF_LENGTH + FIELD_MARGIN), DEFENSE_AREA_HALF_WIDTH);
+  const auto OURSIDE_TOP_RIGHT = tools::gen_state(
+    -FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH, DEFENSE_AREA_HALF_WIDTH);
+  const auto OURSIDE_BOTTOM_LEFT = tools::gen_state(
+    -(FIELD_HALF_LENGTH + FIELD_MARGIN), -DEFENSE_AREA_HALF_WIDTH);
+  const auto OURSIDE_BOTTOM_RIGHT = tools::gen_state(
+    -FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH, -DEFENSE_AREA_HALF_WIDTH);
+
+  const auto is_intersect_our_top = tools::is_lines_intersect(
+    robot_pose, goal_pose, OURSIDE_TOP_LEFT, OURSIDE_TOP_RIGHT);
+  const auto is_intersect_our_bottom = tools::is_lines_intersect(
+    robot_pose, goal_pose, OURSIDE_BOTTOM_LEFT, OURSIDE_BOTTOM_RIGHT);
+  const auto is_intersect_our_right = tools::is_lines_intersect(
+    robot_pose, goal_pose, OURSIDE_TOP_RIGHT, OURSIDE_BOTTOM_RIGHT);
+  const auto len_our_intersections = is_intersect_our_top + is_intersect_our_bottom + is_intersect_our_right;
+
+  if (len_our_intersections == 1) {
+    if (is_intersect_our_top) {
+      avoidance_pose.y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
+    } else if (is_intersect_our_bottom) {
+      avoidance_pose.y = -DEFENSE_AREA_HALF_WIDTH - AVOID_DISTANCE;
+    } else if (is_intersect_our_right) {
+      avoidance_pose.x = -FIELD_HALF_LENGTH + DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
+    }
+  }
 
   return true;
 }

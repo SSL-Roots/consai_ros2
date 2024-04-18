@@ -33,11 +33,11 @@ class AttackerDecision(DecisionBase):
         move_to_ball = move_to_ball.enable_avoid_pushing_robots()
 
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._field_observer.ball_position().is_in_our_defense_area() or \
-           self._field_observer.ball_position().is_outside_of_left():
-            move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
-            self._operator.operate(robot_id, move_to_ball)
-            return
+        # if self._field_observer.ball_position().is_in_our_defense_area() or \
+        #    self._field_observer.ball_position().is_outside_of_left():
+        #     move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
+        #     self._operator.operate(robot_id, move_to_ball)
+        #     return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._field_observer.ball_position().is_in_their_defense_area() or \
@@ -55,11 +55,11 @@ class AttackerDecision(DecisionBase):
         wait = wait.with_ball_receiving()
         wait = wait.with_reflecting_to(TargetXY.their_goal())
         # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._field_observer.ball_position().is_in_our_defense_area() or \
-           self._field_observer.ball_position().is_outside_of_left():
-            wait = wait.overwrite_pose_x(-3.0)
-            self._operator.operate(robot_id, wait)
-            return
+        # if self._field_observer.ball_position().is_in_our_defense_area() or \
+        #    self._field_observer.ball_position().is_outside_of_left():
+        #     wait = wait.overwrite_pose_x(-3.0)
+        #     self._operator.operate(robot_id, wait)
+        #     return
 
         # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
         if self._field_observer.ball_position().is_in_their_defense_area() or \
