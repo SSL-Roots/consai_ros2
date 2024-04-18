@@ -86,39 +86,21 @@ def update_decisions(changed_ids: list[int], num_of_zone_roles: int):
         elif referee.their_kickoff():
             decisions[role].their_kickoff(robot_id)
         elif referee.our_pre_penalty():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].our_pre_penalty(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
-
         elif referee.our_penalty():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].our_penalty(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
-
         elif referee.their_pre_penalty():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].their_pre_penalty(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
-
         elif referee.their_penalty():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].their_penalty(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
-
         elif referee.our_penalty_inplay():
             decisions[role].our_penalty_inplay(robot_id)
-
         elif referee.their_penalty_inplay():
             decisions[role].their_penalty_inplay(robot_id)
-
         elif referee.our_direct():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].our_direct(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
         elif referee.their_direct():
-            decisions[role].enable_stop_game_velocity(robot_id)
             decisions[role].their_direct(robot_id)
-            decisions[role].disable_stop_game_velocity(robot_id)
         elif referee.our_indirect():
             decisions[role].our_indirect(robot_id)
         elif referee.their_indirect():
