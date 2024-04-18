@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import time
-import pytest
 
 
 def init_our_placement(rcst_comm, target_x: float, target_y: float,
@@ -24,7 +23,6 @@ def init_our_placement(rcst_comm, target_x: float, target_y: float,
 
     for i in range(num_of_robots):
         rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5*i, 0.0)
-    time.sleep(3)  # Wait for the robots to be placed.
 
     rcst_comm.observer.ball_placement().set_targets(
         target_x, target_y, for_blue_team=True)

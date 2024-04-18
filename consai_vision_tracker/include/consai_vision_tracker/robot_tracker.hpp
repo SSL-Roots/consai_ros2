@@ -65,6 +65,8 @@ private:
   std::shared_ptr<MeasurementModelGaussianUncertainty> meas_model_;
   std::shared_ptr<Gaussian> prior_;
   std::shared_ptr<ExtendedKalmanFilter> filter_;
+
+  int outlier_count_ = 0;
 };
 
 }  // namespace consai_vision_tracker

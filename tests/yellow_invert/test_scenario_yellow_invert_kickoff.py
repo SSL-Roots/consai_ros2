@@ -21,6 +21,8 @@ from rcst.communication import Communication
 def test_yellow_invert_our_kickoff(rcst_comm: Communication):
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
+    for i in range(11):
+        rcst_comm.send_yellow_robot(i, 3.0, 3.0 - 0.5*i, 0.0)
     rcst_comm.send_yellow_robot(1, 0.5, 0.0, math.radians(180))
 
     rcst_comm.observer.reset()
@@ -34,6 +36,8 @@ def test_yellow_invert_our_kickoff(rcst_comm: Communication):
 def test_their_kickoff(rcst_comm: Communication):
     rcst_comm.send_empty_world()
     rcst_comm.send_ball(0, 0)
+    for i in range(11):
+        rcst_comm.send_yellow_robot(i, 3.0, 3.0 - 0.5*i, 0.0)
     rcst_comm.send_yellow_robot(0, 5.5, 0.0, math.radians(180))
     rcst_comm.send_blue_robot(0, -0.1, 0.0, math.radians(0))
 
