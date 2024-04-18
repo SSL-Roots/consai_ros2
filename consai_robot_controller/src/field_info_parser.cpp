@@ -136,6 +136,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     return avoidance_pose;
   }
 
+  if (goal->avoid_defense_area) {
+    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, avoidance_pose, avoidance_pose);
+  }
+
   TrackedBall ball;
   if (!detection_extractor_->extract_ball(ball)) {
     return avoidance_pose;

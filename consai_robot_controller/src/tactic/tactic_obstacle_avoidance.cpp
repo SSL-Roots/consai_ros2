@@ -347,4 +347,14 @@ bool ObstacleAvoidance::avoid_ball_500mm(
   return true;
 }
 
+bool ObstacleAvoidance::avoid_defense_area(
+    const TrackedRobot & my_robot, const State & goal_pose,
+    State & avoidance_pose) const
+{
+  // ディフェンスエリアを回避する
+  avoidance_pose = goal_pose;
+
+  return true;
+}
+
 }  // namespace tactic
