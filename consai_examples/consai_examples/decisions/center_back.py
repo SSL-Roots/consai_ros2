@@ -36,6 +36,10 @@ class CenterBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, center_back_id: CenterBackID):
         super().__init__(robot_operator, field_observer)
         self._center_back_id = center_back_id
+        self._our_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
+        self._their_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
+        self._ball_placement_pos_x = -6.0 + 2.0
+        self._ball_placement_pos_y = 1.8 - 0.3 * (1.0 + self._center_back_id.value)
         # ペナルティエリアからどれだけ離れるか
         self._MARGIN_LINE = 0.3
         # 2台でディフェンスする時のお互いの距離
@@ -109,17 +113,17 @@ class CenterBackDecision(DecisionBase):
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * (self._center_back_id + 1.0)),
+            TargetXY.value(-self._PENALTY_WAIT_X, self._our_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * (self._center_back_id + 1.0)),
+            TargetXY.value(self._PENALTY_WAIT_X, self._their_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * (self._center_back_id + 1.0)),
+            TargetXY.value(self._ball_placement_pos_x, self._ball_placement_pos_y),
             TargetTheta.look_ball())
 
 
