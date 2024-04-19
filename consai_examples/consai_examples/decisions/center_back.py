@@ -129,7 +129,8 @@ class CenterBackDecision(DecisionBase):
 
 def gen_kickoff_function():
     def function(self, robot_id):
-        operation = self._defend_front_operation()
+        offset = self._get_offset()
+        operation = self._defend_front_operation(offset)
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
@@ -137,7 +138,8 @@ def gen_kickoff_function():
 
 def gen_setplay_function():
     def function(self, robot_id):
-        operation = self._defend_front_operation()
+        offset = self._get_offset()
+        operation = self._defend_front_operation(offset)
         operation = operation.with_ball_receiving()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
