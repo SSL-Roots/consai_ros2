@@ -86,7 +86,7 @@ class CenterBackDecision(DecisionBase):
         p2_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
+            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), -offset)
 
     def _defend_defense_area(self, robot_id):
         offset = self._get_offset()
