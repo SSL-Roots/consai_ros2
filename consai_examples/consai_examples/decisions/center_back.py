@@ -80,13 +80,13 @@ class CenterBackDecision(DecisionBase):
 
     def _defend_lower_operation(self, offset: float):
         # ディフェンスエリアの下側を守る
-        p1_x = self._penalty_goalside_lower_back.x + 0.3
-        p1_y = self._penalty_goalside_lower_back.y - self._MARGIN_LINE
-        p2_x = self._penalty_corner_lower_front.x + 0.3
-        p2_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
+        p1_x = self._penalty_corner_lower_front.x + 0.3
+        p1_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
+        p2_x = self._penalty_goalside_lower_back.x + 0.3
+        p2_y = self._penalty_goalside_lower_back.y - self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), -offset)
+            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
     def _defend_defense_area(self, robot_id):
         offset = self._get_offset()
