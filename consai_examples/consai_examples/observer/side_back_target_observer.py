@@ -79,7 +79,8 @@ class SideBackTargetObserver():
         # ディフェンスエリアの横（上側）にロボットがいればtrue
         if self._is_in_defence_area(pos):
             return False
-        if pos.x < self._penalty_corner_upper_front.x and pos.y > self._penalty_corner_upper_front.y:
+        if pos.x < self._penalty_corner_upper_front.x and \
+                pos.y > self._penalty_corner_upper_front.y:
             return True
         return False
 
@@ -87,6 +88,7 @@ class SideBackTargetObserver():
         # ディフェンスエリアの横（下側）にロボットがいればtrue
         if self._is_in_defence_area(pos):
             return False
-        if pos.x < self._penalty_corner_lower_front.x and pos.y < self._penalty_corner_lower_front.y:
+        if pos.x < self._penalty_corner_lower_front.x and \
+                pos.y < self._penalty_corner_lower_front.y:
             return True
         return False
