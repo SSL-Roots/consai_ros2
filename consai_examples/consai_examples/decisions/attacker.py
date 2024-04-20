@@ -32,42 +32,11 @@ class AttackerDecision(DecisionBase):
         move_to_ball = move_to_ball.enable_avoid_ball()
         move_to_ball = move_to_ball.enable_avoid_pushing_robots()
 
-        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        # if self._field_observer.ball_position().is_in_our_defense_area() or \
-        #    self._field_observer.ball_position().is_outside_of_left():
-        #     move_to_ball = move_to_ball.overwrite_pose_x(-3.0)
-        #     self._operator.operate(robot_id, move_to_ball)
-        #     return
-
-        # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._field_observer.ball_position().is_in_their_defense_area() or \
-           self._field_observer.ball_position().is_outside_of_right():
-            move_to_ball = move_to_ball.overwrite_pose_x(3.0)
-            self._operator.operate(robot_id, move_to_ball)
-            return
-
         # ボールを追いかける
         chase_ball = move_to_ball.offset_pose_x(-0.6)
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
-        wait = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-        wait = wait.with_ball_receiving()
-        wait = wait.with_reflecting_to(TargetXY.their_goal())
-        # ボールが自分ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        # if self._field_observer.ball_position().is_in_our_defense_area() or \
-        #    self._field_observer.ball_position().is_outside_of_left():
-        #     wait = wait.overwrite_pose_x(-3.0)
-        #     self._operator.operate(robot_id, wait)
-        #     return
-
-        # ボールが相手ディフェンスエリアにあるときは、ボールと同じ軸上に移動する
-        if self._field_observer.ball_position().is_in_their_defense_area() or \
-           self._field_observer.ball_position().is_outside_of_right():
-            wait = wait.overwrite_pose_x(3.0)
-            self._operator.operate(robot_id, wait)
-            return
-
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
