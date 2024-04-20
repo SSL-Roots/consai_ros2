@@ -25,6 +25,7 @@ class DecisionBase(object):
         self._operator = robot_operator
         self._field_observer = field_observer
         self._num_of_center_back_roles = 0
+        self._num_of_side_back_roles = 0
         self._num_of_zone_roles = 0
         self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
 
@@ -42,6 +43,9 @@ class DecisionBase(object):
 
     def set_num_of_center_back_roles(self, num_of_center_back_roles):
         self._num_of_center_back_roles = num_of_center_back_roles
+
+    def set_num_of_side_back_roles(self, num_of_side_back_roles):
+        self._num_of_side_back_roles = num_of_side_back_roles
 
     def set_num_of_zone_roles(self, num_of_zone_roles):
         self._num_of_zone_roles = num_of_zone_roles

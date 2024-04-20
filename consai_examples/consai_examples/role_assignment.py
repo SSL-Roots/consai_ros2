@@ -39,7 +39,9 @@ class RoleName(Enum):
     ZONE4 = 8
     LEFT_WING = 11
     RIGHT_WING = 12
-    SUBSTITUTE = 13
+    SIDE_BACK1 = 13
+    SIDE_BACK2 = 14
+    SUBSTITUTE = 15
 
 
 # フィールド状況を見て、ロボットの役割を決めるノード
