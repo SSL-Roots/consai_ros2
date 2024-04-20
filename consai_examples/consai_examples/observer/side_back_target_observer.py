@@ -21,19 +21,20 @@ import math
 class SideBackTargetObserver():
 
     def __init__(self):
+        # 0が上側、1が下側
         self._side_back_targets: dict[int, int] = {0: None, 1: None}
         # ロボット半径 x 2 + α
         self._DEFENSE_AREA_MARGIN = 0.6
         self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
         self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
 
-    def has_zone_target(self, zone_id: int) -> bool:
-        return self._side_back_targets[zone_id] is not None
+    def has_target(self, side_id: int) -> bool:
+        return self._side_back_targets[side_id] is not None
 
-    def get_zone_target_id(self, zone_id: int) -> int:
-        return self._side_back_targets[zone_id]
+    def get_target_id(self, side_id: int) -> int:
+        return self._side_back_targets[side_id]
 
-    def update(self, their_robots: dict[int, PosVel], num_of_zone_roles: int) -> None:
+    def update(self, their_robots: dict[int, PosVel]) -> None:
         # ディフェンスエリア横にいる相手ロボットを検出する
         # 存在しない場合はNoneをセットする
         self._reset_targets()

@@ -69,12 +69,14 @@ class RoleAssignment(Node):
             RoleName.SUB_ATTACKER,
             RoleName.CENTER_BACK1,
             RoleName.CENTER_BACK2,
+            RoleName.SIDE_BACK1,
+            RoleName.SIDE_BACK2,
             RoleName.ZONE1,
             RoleName.ZONE2,
             RoleName.ZONE3,
             RoleName.ZONE4,
-            RoleName.LEFT_WING,
-            RoleName.RIGHT_WING,
+            # RoleName.LEFT_WING,
+            # RoleName.RIGHT_WING,
         ]
         # 実際に運用するroleのリスト
         # イエローカードや交代指示などで役割が変更されます
