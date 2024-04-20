@@ -21,8 +21,7 @@ import time
 
 import rclpy
 from decisions.attacker import AttackerDecision
-from decisions.center_back1 import CenterBack1Decision
-from decisions.center_back2 import CenterBack2Decision
+from decisions.center_back import CenterBackDecision, CenterBackID
 from decisions.goalie import GoaleDecision
 from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
@@ -33,6 +32,14 @@ from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
 from robot_operator import RobotOperator
 from role_assignment import RoleAssignment, RoleName
+
+
+def num_of_active_center_back_roles(active_roles):
+    # アクティブなセンターバック担当者の数を返す
+    role_zone_list = [
+        RoleName.CENTER_BACK1,
+        RoleName.CENTER_BACK2]
+    return len(set(role_zone_list) & set(active_roles))
 
 
 def num_of_active_zone_roles(active_roles):
@@ -59,12 +66,16 @@ def enable_update_attacker_by_ball_pos():
     # not observer.ball_motion().is_moving() and \
 
 
-def update_decisions(changed_ids: list[int], num_of_zone_roles: int):
+def update_decisions(changed_ids: list[int],
+                     num_of_center_back_roles: int,
+                     num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
         if robot_id in changed_ids:
             decisions[role].reset_operation(robot_id)
 
+        # センターバックの担当者数をセットする
+        decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
 
@@ -141,10 +152,11 @@ def main():
 
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
+        num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         observer.set_num_of_zone_roles(num_of_zone_roles)
 
-        update_decisions(changed_ids, num_of_zone_roles)
+        update_decisions(changed_ids, num_of_center_back_roles, num_of_zone_roles)
 
         elapsed_time = time.time() - start_time
         if elapsed_time < TARGET_PERIOD:
@@ -190,8 +202,8 @@ if __name__ == '__main__':
     decisions = {
         RoleName.GOALIE: GoaleDecision(operator, observer),
         RoleName.ATTACKER: AttackerDecision(operator, observer),
-        RoleName.CENTER_BACK1: CenterBack1Decision(operator, observer),
-        RoleName.CENTER_BACK2: CenterBack2Decision(operator, observer),
+        RoleName.CENTER_BACK1: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK1),
+        RoleName.CENTER_BACK2: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK2),
         RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
         RoleName.ZONE1: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE1),
         RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),

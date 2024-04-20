@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/field_observer.py
+    ${PROJECT_NAME}/field.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
@@ -28,6 +29,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/robot_operator.py
     ${PROJECT_NAME}/role_assignment.py
     ${PROJECT_NAME}/decisions/attacker.py
+    ${PROJECT_NAME}/decisions/center_back.py
     ${PROJECT_NAME}/decisions/center_back1.py
     ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
