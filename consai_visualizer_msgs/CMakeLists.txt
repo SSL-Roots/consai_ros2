@@ -17,6 +17,7 @@ set(msg_files
   "msg/ShapePoint.msg"
   "msg/ShapeRectangle.msg"
   "msg/ShapeRobot.msg"
+  "msg/ShapeText.msg"
   "msg/ShapeTube.msg"
 )
 
