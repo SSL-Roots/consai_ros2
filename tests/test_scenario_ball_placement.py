@@ -67,3 +67,13 @@ def test_so_far_position(rcst_comm):
 def test_around_our_defense_area(rcst_comm):
     init_our_placement(rcst_comm, -4.1, 4.4, ball_x=-4.1, ball_y=-4.4)
     assert wait_for_placement(rcst_comm) is True
+
+
+def test_ball_is_in_our_defense_area(rcst_comm):
+    init_our_placement(rcst_comm, 0.0, 0.0, ball_x=-5.0, ball_y=0.0)
+    assert wait_for_placement(rcst_comm) is True
+
+
+def test_ball_is_in_their_defense_area(rcst_comm):
+    init_our_placement(rcst_comm, 0.0, 0.0, ball_x=5.0, ball_y=0.0)
+    assert wait_for_placement(rcst_comm) is True
