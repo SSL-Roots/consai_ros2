@@ -62,56 +62,52 @@ def test_ボールプレースメント時に進入禁止エリアに侵入し�
     assert success is True
 
 
-# def test_インプレイ中にディフェンスエリアに侵入しないこと(rcst_comm: Communication):
-#     rcst_comm.send_empty_world()
-#     robot_num = 11
-#     for i in range(robot_num):
-#         rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5*i, 0.0)
-#     rcst_comm.send_ball(4.5, 0)
+def test_インプレイ中にディフェンスエリアに侵入しないこと(rcst_comm: Communication):
+    rcst_comm.send_empty_world()
+    robot_num = 11
+    for i in range(robot_num):
+        rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5*i, 0.0)
+    rcst_comm.send_ball(4.5, 0)
 
-#     rcst_comm.change_referee_command('STOP', 3.0)
-#     rcst_comm.change_referee_command('FORCE_START', 0.0)
+    def robot_is_in_the_defense_area(
+            ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
+        GOALIE_ID = 0
+        HALF_FIELD_LENGTH = 6.0  # meters
+        DEFENSE_WIDTH = 1.8  # meters
+        DEFENSE_HALF_HEIGHT = 1.8  # meters
 
-#     def robot_is_in_the_defense_area(
-#             ball: Ball, blue_robots: RobotDict, yellow_robots: RobotDict) -> bool:
-#         GOALIE_ID = 0
-#         HALF_FIELD_LENGTH = 6.0  # meters
-#         DEFENSE_WIDTH = 1.8  # meters
-#         DEFENSE_HALF_HEIGHT = 1.8  # meters
-#         ROBOT_RADIUS = 0.09  # meters
+        for robot in blue_robots.values():
+            if robot.id == GOALIE_ID:
+                continue
 
-#         for robot in blue_robots.values():
-#             if robot.id == GOALIE_ID:
-#                 continue
+            if (abs(robot.y)) < DEFENSE_HALF_HEIGHT and \
+                    (abs(robot.x)) > (HALF_FIELD_LENGTH - DEFENSE_WIDTH):
+                return True
+        return False
 
-#             if (abs(robot.y) - ROBOT_RADIUS) < DEFENSE_HALF_HEIGHT and \
-#                     (abs(robot.x) + ROBOT_RADIUS) > (HALF_FIELD_LENGTH - DEFENSE_WIDTH):
-#                 return True
-#         return False
+    rcst_comm.observer.customized().register_sticky_true_callback(
+        "test", robot_is_in_the_defense_area)
 
-#     rcst_comm.observer.customized().register_sticky_true_callback(
-#         "test", robot_is_in_the_defense_area)
+    # TODO(ゴール前ディンフェスがロボットを衝突回避して、ディフェンスエリアに侵入する)
+    # TODO(アタッカーがボールを追いかけて、急激に目標位置が変わり、ディンフェスエリアに侵入する)
+    success = True
+    ball_positions = [
+        # (0.0, 0.0),
+        (4.5, 1.5),
+        # (4.5, -1.5),
+        # (4.5, 1.5),
+        # (5.5, -1.5),
+    ]
 
-#     success = True
-#     for _ in range(5):
-#         if rcst_comm.observer.customized().get_result("test"):
-#             success = False
-#             break
-#         time.sleep(1)
-#     assert success is True
-    
-#     rcst_comm.send_ball(4.5, 2.0)
-#     for _ in range(5):
-#         if rcst_comm.observer.customized().get_result("test"):
-#             success = False
-#             break
-#         time.sleep(1)
-#     assert success is True
+    for ball_x, ball_y in ball_positions:
+        rcst_comm.change_referee_command('STOP', 3.0)
+        rcst_comm.send_ball(ball_x, ball_y)
+        rcst_comm.observer.reset()
+        rcst_comm.change_referee_command('FORCE_START', 0.0)
 
-#     rcst_comm.send_ball(5.5, -2.0)
-#     for _ in range(5):
-#         if rcst_comm.observer.customized().get_result("test"):
-#             success = False
-#             break
-#         time.sleep(1)
-#     assert success is True
+        for _ in range(5):
+            if rcst_comm.observer.customized().get_result("test"):
+                success = False
+                break
+            time.sleep(1)
+        assert success is True

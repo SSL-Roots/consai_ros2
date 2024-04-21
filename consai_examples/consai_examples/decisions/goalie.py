@@ -36,6 +36,7 @@ class GoaleDecision(DecisionBase):
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
         defend_goal = defend_goal.with_ball_receiving()
+        defend_goal = defend_goal.disable_avoid_defense_area()
         return defend_goal
 
     def _penalty_defend_operation(self):
@@ -47,12 +48,14 @@ class GoaleDecision(DecisionBase):
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
         defend_goal = defend_goal.with_ball_receiving()
+        defend_goal = defend_goal.disable_avoid_defense_area()
         return defend_goal
 
     def stop(self, robot_id):
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_ball()
         defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
+        defend_our_goal = defend_our_goal.disable_avoid_defense_area()
         self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
@@ -66,6 +69,7 @@ class GoaleDecision(DecisionBase):
             move_to_behind_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
+            move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
             if len(receivers_id_list) > 0:
                 passing = move_to_behind_ball.with_passing_to(

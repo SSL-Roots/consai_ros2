@@ -78,6 +78,15 @@ State velocity_state(const TrackedRobot & robot)
   return state;
 }
 
+State gen_state(const double x, const double y, const double theta)
+{
+  State state;
+  state.x = x;
+  state.y = y;
+  state.theta = theta;
+  return state;
+}
+
 double to_radians(const double degrees)
 {
   constexpr double TO_RADIANS = M_PI / 180.0;
@@ -139,6 +148,22 @@ bool is_visible(const TrackedBall & ball, const double threshold)
     return ball.visibility[0] > threshold;
   }
   return false;
+}
+
+bool is_lines_intersect(
+  const State & line1_p1, const State & line1_p2, const State & line2_p1, const State & line2_p2)
+{
+  // 2つの線分が交差しているかを判定する
+  // reference:https://qiita.com/ykob/items/ab7f30c43a0ed52d16f2
+
+  auto cross = [](const State & p1, const State & p2, const State & p3) -> double {
+      return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+    };
+
+  double cross1 = cross(line1_p1, line1_p2, line2_p1) * cross(line1_p1, line1_p2, line2_p2);
+  double cross2 = cross(line2_p1, line2_p2, line1_p1) * cross(line2_p1, line2_p2, line1_p2);
+
+  return cross1 < 0 && cross2 < 0;
 }
 
 Trans::Trans(const State & center, const double theta)
