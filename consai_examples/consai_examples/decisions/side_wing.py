@@ -82,6 +82,12 @@ class SideWingDecision(DecisionBase):
 
     def inplay(self, robot_id):
         operation = self._offend_upper_defense_area_operation()
+        # シュート可能なIDリストを取得
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        # シュートできる場合はシュートする
+        if len(shoot_pos_list) > 0:
+            operation = operation.with_reflecting_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
         self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
