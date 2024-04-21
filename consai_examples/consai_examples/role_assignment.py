@@ -51,41 +51,31 @@ class RoleName(Enum):
 # フィールド状況を見て、ロボットの役割を決めるノード
 # ロボットの役割が頻繁に変わらないように調整する
 class RoleAssignment(Node):
-    # ロボット、ボールの消失判定しきい値
-    VISIBILITY_THRESHOLD = 0.01
+    # フィールド上のロボット役割一覧
+    # フィールドに出せるロボットの数は11台
+    # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
+    ACTIVE_ROLE_LIST = [
+        RoleName.GOALIE,
+        RoleName.ATTACKER,
+        RoleName.SUB_ATTACKER,
+        RoleName.CENTER_BACK1,
+        RoleName.CENTER_BACK2,
+        RoleName.SIDE_BACK1,
+        RoleName.SIDE_BACK2,
+        RoleName.ZONE1,
+        RoleName.ZONE2,
+        RoleName.ZONE3,
+        RoleName.ZONE4,
+        # RoleName.LEFT_WING,
+        # RoleName.RIGHT_WING,
+    ]
 
-    def __init__(self, goalie_id, our_team_is_yellow=False):
+    def __init__(self, goalie_id: int):
         super().__init__('assignor')
-
-        self._our_team_is_yellow = our_team_is_yellow
-
-        if self._our_team_is_yellow:
-            self.get_logger().info('ourteamはyellowです')
-        else:
-            self.get_logger().info('ourteamはblueです')
-
-        # フィールド上のロボット役割一覧
-        # フィールドに出せるロボットの数は11台
-        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
-        self._active_role_list = [
-            RoleName.GOALIE,
-            RoleName.ATTACKER,
-            RoleName.SUB_ATTACKER,
-            RoleName.CENTER_BACK1,
-            RoleName.CENTER_BACK2,
-            RoleName.SIDE_BACK1,
-            RoleName.SIDE_BACK2,
-            RoleName.ZONE1,
-            RoleName.ZONE2,
-            RoleName.ZONE3,
-            RoleName.ZONE4,
-            # RoleName.LEFT_WING,
-            # RoleName.RIGHT_WING,
-        ]
         # 実際に運用するroleのリスト
         # イエローカードや交代指示などで役割が変更されます
-        self._present_role_list = copy.deepcopy(self._active_role_list)
-        self._ROLE_NUM = len(self._active_role_list)
+        self._present_role_list = copy.deepcopy(self.ACTIVE_ROLE_LIST)
+        self._ROLE_NUM = len(self.ACTIVE_ROLE_LIST)
 
         # role優先度とロボットIDを結びつけるリスト
         # indexの数値が小さいほど優先度が高い
@@ -112,7 +102,7 @@ class RoleAssignment(Node):
 
         # 役割リストを更新する
         prev_role_list = copy.deepcopy(self._present_role_list)
-        self._present_role_list = copy.deepcopy(self._active_role_list)
+        self._present_role_list = copy.deepcopy(self.ACTIVE_ROLE_LIST)
         # SUBSTITUTEを更新する
         num_of_substitute = self._ROLE_NUM - allowed_robot_num
         if num_of_substitute > 0:
@@ -165,7 +155,7 @@ class RoleAssignment(Node):
     def _get_priority_of_role(self, role):
         # roleの優先度を返す
         # 重複するroleが設定されている場合、高いほうの優先度を返す
-        return self._active_role_list.index(role)
+        return self.ACTIVE_ROLE_LIST.index(role)
 
     def _update_role_list(
             self, ball: PosVel, our_robots: dict[int, PosVel],

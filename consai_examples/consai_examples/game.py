@@ -204,7 +204,7 @@ if __name__ == '__main__':
     rclpy.init(args=other_args)
 
     operator = RobotOperator(args.yellow)
-    assignor = RoleAssignment(args.goalie, args.yellow)
+    assignor = RoleAssignment(args.goalie)
     referee = RefereeParser(args.yellow, args.invert)
     observer = FieldObserver(args.yellow)
 
