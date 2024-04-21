@@ -97,7 +97,8 @@ class AttackerDecision(DecisionBase):
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
         # パスできる味方ロボットがいる場合はパスする
         if len(receivers_id_list) > 0:
-            passing = move_to_ball.with_passing_for_setplay_to(TargetXY.our_robot(receivers_id_list[0]))
+            passing = move_to_ball.with_passing_for_setplay_to(
+                TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
             return
 
