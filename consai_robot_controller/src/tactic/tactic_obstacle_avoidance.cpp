@@ -394,7 +394,7 @@ bool ObstacleAvoidance::avoid_defense_area(
       robot_pose, goal, TOP_INSIDE, BOTTOM_INSIDE);
     const auto len_our_intersections = is_intersect_top + is_intersect_bottom + is_intersect_inside;
 
-    constexpr double AVOID_DISTANCE = 0.3;
+    constexpr double AVOID_DISTANCE = 0.5;
     const auto AVOID_POS_X = (-FIELD_HALF_LENGTH + DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE) * sign;
     constexpr auto AVOID_POS_Y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
 
@@ -423,7 +423,13 @@ bool ObstacleAvoidance::avoid_defense_area(
       }
     } else if (is_in_defense_area(is_ourside, goal)) {
       // 交差はしてないが、目標位置がディフェンスエリア内にある場合
-      target_pose.y = std::copysign(AVOID_POS_Y, robot_pose.y);
+
+      // ディフェンスエリア内で、ロボットがTOP or BOTTOM側に近いとき
+      if (FIELD_HALF_LENGTH - std::fabs(robot_pose.x) < std::fabs(robot_pose.y)) {
+        target_pose.y = std::copysign(AVOID_POS_Y, robot_pose.y);
+      } else {
+        target_pose.x = AVOID_POS_X;
+      }
     }
     return target_pose;
   };
