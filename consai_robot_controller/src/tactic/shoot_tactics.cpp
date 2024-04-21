@@ -94,7 +94,7 @@ ShootTactics::ShootTactics()
       const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
       const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-      const auto ADD_ANGLE = tools::to_radians(25.0);
+      const auto ADD_ANGLE = tools::to_radians(45.0);
       const auto AIM_ANGLE_THRETHOLD = tools::to_radians(45.0);
       const auto AIM_ANGLE_THRETHOLD_FOR_SETPLAY = tools::to_radians(10.0);
 
