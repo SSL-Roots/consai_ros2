@@ -39,7 +39,9 @@ class RoleName(Enum):
     ZONE4 = 8
     LEFT_WING = 11
     RIGHT_WING = 12
-    SUBSTITUTE = 13
+    SIDE_BACK1 = 13
+    SIDE_BACK2 = 14
+    SUBSTITUTE = 15
 
 
 # フィールド状況を見て、ロボットの役割を決めるノード
@@ -67,12 +69,14 @@ class RoleAssignment(Node):
             RoleName.SUB_ATTACKER,
             RoleName.CENTER_BACK1,
             RoleName.CENTER_BACK2,
+            RoleName.SIDE_BACK1,
+            RoleName.SIDE_BACK2,
             RoleName.ZONE1,
             RoleName.ZONE2,
             RoleName.ZONE3,
             RoleName.ZONE4,
-            RoleName.LEFT_WING,
-            RoleName.RIGHT_WING,
+            # RoleName.LEFT_WING,
+            # RoleName.RIGHT_WING,
         ]
         # 実際に運用するroleのリスト
         # イエローカードや交代指示などで役割が変更されます

@@ -23,6 +23,7 @@ import rclpy
 from decisions.attacker import AttackerDecision
 from decisions.center_back import CenterBackDecision, CenterBackID
 from decisions.goalie import GoaleDecision
+from decisions.side_back import SideBackDecision, SideBackID
 from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
@@ -39,6 +40,14 @@ def num_of_active_center_back_roles(active_roles):
     role_zone_list = [
         RoleName.CENTER_BACK1,
         RoleName.CENTER_BACK2]
+    return len(set(role_zone_list) & set(active_roles))
+
+
+def num_of_active_side_back_roles(active_roles):
+    # アクティブなサイドバック担当者の数を返す
+    role_zone_list = [
+        RoleName.SIDE_BACK1,
+        RoleName.SIDE_BACK2]
     return len(set(role_zone_list) & set(active_roles))
 
 
@@ -68,6 +77,7 @@ def enable_update_attacker_by_ball_pos():
 
 def update_decisions(changed_ids: list[int],
                      num_of_center_back_roles: int,
+                     num_of_side_back_roles: int,
                      num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # 役割が変わったロボットのみ、行動を更新する
@@ -76,6 +86,8 @@ def update_decisions(changed_ids: list[int],
 
         # センターバックの担当者数をセットする
         decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
+        # サイドバックの担当者数をセットする
+        decisions[role].set_num_of_side_back_roles(num_of_side_back_roles)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
 
@@ -153,10 +165,12 @@ def main():
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
+        num_of_side_back_roles = num_of_active_side_back_roles(assigned_roles)
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         observer.set_num_of_zone_roles(num_of_zone_roles)
 
-        update_decisions(changed_ids, num_of_center_back_roles, num_of_zone_roles)
+        update_decisions(changed_ids, num_of_center_back_roles,
+                         num_of_side_back_roles, num_of_zone_roles)
 
         elapsed_time = time.time() - start_time
         if elapsed_time < TARGET_PERIOD:
@@ -211,6 +225,8 @@ if __name__ == '__main__':
         RoleName.ZONE4: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE4),
         RoleName.LEFT_WING: SideWingDecision(operator, observer, WingID.LEFT),
         RoleName.RIGHT_WING: SideWingDecision(operator, observer, WingID.RIGHT),
+        RoleName.SIDE_BACK1: SideBackDecision(operator, observer, SideBackID.SIDE1),
+        RoleName.SIDE_BACK2: SideBackDecision(operator, observer, SideBackID.SIDE2),
         RoleName.SUBSTITUTE: SubstituteDecision(operator, observer, args.invert),
     }
 

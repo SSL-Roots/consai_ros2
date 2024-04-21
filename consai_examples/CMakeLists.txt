@@ -34,6 +34,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/decisions/center_back2.py
     ${PROJECT_NAME}/decisions/decision_base.py
     ${PROJECT_NAME}/decisions/goalie.py
+    ${PROJECT_NAME}/decisions/side_back.py
     ${PROJECT_NAME}/decisions/sub_attacker.py
     ${PROJECT_NAME}/decisions/substitute.py
     ${PROJECT_NAME}/decisions/zone_defense.py
@@ -44,6 +45,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/detection_wrapper.py
     ${PROJECT_NAME}/observer/pass_shoot_observer.py
     ${PROJECT_NAME}/observer/pos_vel.py
+    ${PROJECT_NAME}/observer/side_back_target_observer.py
     ${PROJECT_NAME}/observer/zone_ball_observer.py
     ${PROJECT_NAME}/observer/zone_target_observer.py
     ${PROJECT_NAME}/operation_test/ball_boy_test.py
