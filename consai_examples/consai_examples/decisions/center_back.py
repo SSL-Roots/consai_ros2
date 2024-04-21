@@ -164,7 +164,9 @@ def gen_their_penalty_function():
 
 def gen_ball_placement_function():
     def function(self, robot_id, placement_pos):
-        operation = self._ball_placement_operation()
+        offset = self._get_offset()
+        operation = self._defend_front_operation(offset)
+        operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_placement_area(placement_pos)
         operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
