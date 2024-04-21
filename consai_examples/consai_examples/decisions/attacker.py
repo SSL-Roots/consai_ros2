@@ -166,7 +166,7 @@ class AttackerDecision(DecisionBase):
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
-            put_ball_back = move_to_ball.with_shooting_to(
+            put_ball_back = move_to_ball.with_shooting_for_setplay_to(
                 TargetXY.value(kick_pos.x, kick_pos.y))
             self._operator.operate(robot_id, put_ball_back)
             return
@@ -175,7 +175,7 @@ class AttackerDecision(DecisionBase):
             # ボール位置が配置目標位置から離れているときはパスする
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
-            passing = move_to_ball.with_passing_to(TargetXY.value(
+            passing = move_to_ball.with_passing_for_setplay_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             self._operator.operate(robot_id, passing)
             return
