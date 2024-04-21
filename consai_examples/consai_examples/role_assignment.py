@@ -17,11 +17,11 @@
 
 import copy
 from enum import Enum
-import math
 
 from consai_examples.observer.pos_vel import PosVel
 from consai_examples.role_to_visualize_msg import to_visualize_msg
 from consai_msgs.msg import State2D
+from consai_tools.geometry import geometry_tools as tool
 from consai_visualizer_msgs.msg import Objects
 
 from rclpy import qos
@@ -264,51 +264,57 @@ class RoleAssignment(Node):
             self._id_list_ordered_by_role_priority[priority1]
 
     def _determine_next_attacker_id(self, our_robots: dict[int, PosVel], ball_pos: State2D):
-        # ボールに最も近いロボットをアタッカー候補として出力する
-        # アタッカーIDが頻繁に変わらないヒステリシスをもたせる
-        NEAREST_DIFF_THRESHOLD = 0.5  # meter
-        NEAREST_VERY_CLOSE_DIFF_THRESHOLD = 0.1  # meter
-        NEAREST_VERY_CLOSE_THRESHOLD = 0.3  # meter
+        # ボールを受け取れるロボットをアタッカー候補として出力する
 
-        nearest_id = None
-        nearest_distance = 1000  # 適当な巨大な距離を初期値とする
-        present_attacker_distance = 1000  # 適当な巨大な距離を初期値とする
+        # ボールが転がっている場合は、その軌道に一番近いロボットをアタッカー候補とする
 
-        attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
-        present_attacker_id = self._id_list_ordered_by_role_priority[attacker_role_priority]
+        # ボールが止まっている場合は、ボールに最も近いロボットをアタッカー候補とする
+        def next_attacker_id_by_ball_position() -> int:
+            next_id = None
+            nearest_distance = 1000  # 適当な巨大な距離を初期値とする
+            for robot_id, robot in our_robots.items():
+                # Goalieはスキップ
+                if robot_id == self._goalie_id:
+                    continue
 
-        for robot_id, robot in our_robots.items():
-            distance_x = ball_pos.x - robot.pos().x
-            distance_y = ball_pos.y - robot.pos().y
-            distance = math.hypot(distance_x, distance_y)
+                distance = tool.get_distance(ball_pos, robot.pos())
 
-            # 現在のアタッカーの距離をセット
-            if robot_id == present_attacker_id:
-                present_attacker_distance = distance
-                continue
+                # 最もボールに近いロボットの距離とIDを更新
+                if distance < nearest_distance:
+                    nearest_distance = distance
+                    next_id = robot_id
+            return next_id
 
-            # Goalieはスキップ
-            if robot_id == self._goalie_id:
-                continue
+        def select_attacker_id_by_ball_position(present_id: int, next_id: int) -> int:
+            NEAREST_DIFF_THRESHOLD = 0.5  # meter
+            if present_id is None:
+                return None
+            if next_id is None:
+                return present_id
 
-            # 最もボールに近いロボットの距離とIDを更新
-            if distance < nearest_distance:
-                nearest_distance = distance
-                nearest_id = robot_id
+            present_distance = tool.get_distance(
+                ball_pos, our_robots[present_id].pos())
+            next_distance = tool.get_distance(
+                ball_pos, our_robots[next_id].pos())
 
-        # アタッカー以外のロボットが十分にボールに近ければ、
-        # アタッカー候補としてIDを返す
-        if present_attacker_distance - nearest_distance > NEAREST_DIFF_THRESHOLD:
-            return nearest_id
+            # ヒステリシスをもたせ、アタッカー候補が頻繁に変わらないようにする
+            if present_distance - next_distance > NEAREST_DIFF_THRESHOLD:
+                return next_id
+            return present_id
 
-        # アタッカーと次候補が両方ボールに近いとき
-        # 両者の距離の差とnearest_distanceそのものの距離をみることで
-        # 3台以上ボールに近いときでも切り替わりの連発を防ぐ
-        if present_attacker_distance - nearest_distance > NEAREST_VERY_CLOSE_DIFF_THRESHOLD \
-           and nearest_distance < NEAREST_VERY_CLOSE_THRESHOLD:
-            return nearest_id
+        present_attacker_id = self._id_list_ordered_by_role_priority[
+            self._get_priority_of_role(RoleName.ATTACKER)]
 
-        return present_attacker_id
+        next_attacker_id = next_attacker_id_by_ball_position()
+
+        # 現在アタッカーがいない場合は、アタッカー候補をそのまま返す
+        if present_attacker_id is None:
+            return next_attacker_id
+
+        selected_id = select_attacker_id_by_ball_position(
+            present_attacker_id, next_attacker_id)
+
+        return selected_id
 
     def _overwrite_substite_to_present_role_list(self, num_of_substitute):
         # 指定した数だけ、presetn_role_listの後ろからSUBSTITUEロールを上書きする
