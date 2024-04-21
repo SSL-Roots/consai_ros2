@@ -50,6 +50,7 @@ private:
   std::map<RobotID, TacticName> tactic_name_;
   std::map<RobotID, Time> tactic_time_;
   std::map<TacticName, std::function<TacticName(TacticDataSet & data_set)>> tactic_functions_;
+  State shoot_target_;
 };
 
 }  // namespace shoot_tactics
