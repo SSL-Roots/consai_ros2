@@ -34,6 +34,7 @@ class SideBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, side_id: SideBackID):
         super().__init__(robot_operator, field_observer)
         self._side_id = side_id
+        self._distance_from = 0.25
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
         self._our_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
@@ -51,7 +52,7 @@ class SideBackDecision(DecisionBase):
             target_id = self._field_observer.side_back_target().get_target_id(SIDE_ID)
             operation = Operation().move_on_line(
                 TargetXY.their_robot(target_id), TargetXY.ball(),
-                distance_from_p1=0.5, target_theta=TargetTheta.look_ball())
+                distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:
             # DFエリア横付近で待機する
