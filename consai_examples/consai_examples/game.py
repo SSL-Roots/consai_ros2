@@ -162,6 +162,9 @@ def main():
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
+        # 役割の描画情報を出力する
+        assignor.publish_role_for_visualizer(observer.detection().our_robots())
+
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)

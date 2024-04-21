@@ -59,7 +59,7 @@ def test_their_penalty_defend(rcst_comm: Communication):
 def test_robots_be_behind_ball(rcst_comm: Communication):
     rcst_comm.send_empty_world()
     for i in range(11):
-        rcst_comm.send_blue_robot(i, -1.0, 3.0 - i * 0.5, math.radians(0))
+        rcst_comm.send_blue_robot(i, 2.5, 3.0 - i * 0.5, math.radians(0))
 
     # Kicker robot.
     rcst_comm.send_blue_robot(1, -2.2, 0.0, math.radians(0))

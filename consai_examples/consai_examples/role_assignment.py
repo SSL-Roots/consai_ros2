@@ -19,6 +19,11 @@ import copy
 from enum import Enum
 import math
 
+from consai_examples.observer.pos_vel import PosVel
+from consai_visualizer_msgs.msg import Objects
+from consai_examples.role_to_visualize_msg import to_visualize_msg
+
+from rclpy import qos
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedFrame
@@ -94,6 +99,9 @@ class RoleAssignment(Node):
         self._sub_detection_tracked = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
+        self._pub_visualizer_objects = self.create_publisher(
+            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+
     def update_role(self, update_attacker_by_ball_pos=True, allowed_robot_num=11):
         # roleへのロボットの割り当てを更新する
 
@@ -145,6 +153,14 @@ class RoleAssignment(Node):
             role_index = self._id_list_ordered_by_role_priority.index(robot_id)
             return self._present_role_list[role_index]
         return None
+
+    def publish_role_for_visualizer(self, our_robots: dict[int, PosVel]):
+        role_dict = {}
+        for robot_id in self._id_list_ordered_by_role_priority:
+            if robot_id is not None:
+                role = self.get_role_from_robot_id(robot_id)
+                role_dict[robot_id] = role.name
+        self._pub_visualizer_objects.publish(to_visualize_msg(role_dict, our_robots))
 
     def _detection_tracked_callback(self, msg):
         self._detection = msg
