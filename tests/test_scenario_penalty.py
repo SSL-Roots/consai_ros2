@@ -24,17 +24,18 @@ from rcst.robot import RobotDict
 # TODO: Implement a motion dribbling the ball to the opponent's side.
 # Issue: https://github.com/SSL-Roots/consai_ros2/issues/186
 
-# def test_our_penalty_shoot(rcst_comm: Communication):
-#     rcst_comm.send_empty_world()
-#     rcst_comm.send_ball(-2, 0)
-#     rcst_comm.send_blue_robot(1, -2.5, 0.0, math.radians(0))
+def test_our_penalty_shoot(rcst_comm: Communication):
+    rcst_comm.send_empty_world()
+    rcst_comm.send_ball(-2, 0)
+    for i in range(11):
+        rcst_comm.send_blue_robot(i, -2.5, 3.0 - i * 0.5, math.radians(0))
 
-#     rcst_comm.observer.reset()
-#     rcst_comm.change_referee_command('STOP', 3.0)
-#     rcst_comm.change_referee_command('PREPARE_PENALTY_BLUE', 3.0)
-#     rcst_comm.change_referee_command('NORMAL_START', 5.0)
+    rcst_comm.observer.reset()
+    rcst_comm.change_referee_command('STOP', 3.0)
+    rcst_comm.change_referee_command('PREPARE_PENALTY_BLUE', 3.0)
+    rcst_comm.change_referee_command('NORMAL_START', 10.0)
 
-#     assert rcst_comm.observer.goal().ball_has_been_in_positive_goal() is True
+    assert rcst_comm.observer.goal().ball_has_been_in_positive_goal() is True
 
 
 def test_their_penalty_defend(rcst_comm: Communication):

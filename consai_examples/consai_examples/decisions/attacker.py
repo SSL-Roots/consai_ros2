@@ -67,18 +67,6 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, dribbling)
         return
 
-    def our_penalty_inplay(self, robot_id):
-        # ボールがディフェンスエリアに入ったら、ボールと同じ軸上に移動する
-        if self._field_observer.ball_position().is_in_their_defense_area() or \
-           self._field_observer.ball_position().is_outside_of_right():
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            move_to_ball = move_to_ball.overwrite_pose_x(3.0)
-            self._operator.operate(robot_id, move_to_ball)
-        else:
-            move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
-            setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
-            self._operator.operate(robot_id, setplay_shoot)
-
     def our_direct(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball.with_ball_receiving()
@@ -228,6 +216,32 @@ def gen_their_penalty_function():
     return function
 
 
+def gen_our_penalty_function():
+    def function(self, robot_id):
+        ball_pos = self._field_observer.detection().ball().pos()
+        dribble_pos = State2D(x=ball_pos.x + 2.0, y=ball_pos.y)
+
+        move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+
+        # ボールが相手ゴールに近づくまでは、ボールを弱く蹴って前進する
+        if ball_pos.x < self._field_observer.field_half_length() * 0.25:
+            dribbling = move_to_ball.with_passing_to(
+                TargetXY.value(dribble_pos.x, dribble_pos.y))
+            self._operator.operate(robot_id, dribbling)
+            return
+        else:
+            # 空いているところを狙ってシュート
+            shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+            if len(shoot_pos_list) > 0:
+                shooting = move_to_ball.with_shooting_to(
+                    TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+                self._operator.operate(robot_id, shooting)
+                return
+            shooting = move_to_ball.with_shooting_to(TargetXY.their_goal())
+            self._operator.operate(robot_id, shooting)
+    return function
+
+
 for name in ['our_pre_kickoff', 'their_pre_kickoff', 'their_kickoff', 'our_pre_penalty']:
     setattr(AttackerDecision, name, gen_chase_ball_function())
 
@@ -236,3 +250,6 @@ for name in ['our_kickoff', 'our_penalty', 'our_indirect']:
 
 for name in ['their_pre_penalty', 'their_penalty', 'their_penalty_inplay']:
     setattr(AttackerDecision, name, gen_their_penalty_function())
+
+for name in ['our_penalty', 'our_penalty_inplay']:
+    setattr(AttackerDecision, name, gen_our_penalty_function())
