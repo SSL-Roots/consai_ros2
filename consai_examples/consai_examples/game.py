@@ -159,6 +159,8 @@ def main():
 
         # ロボットの役割の更新する
         changed_ids = assignor.update_role(
+            observer.detection().ball(),
+            observer.detection().our_robots(),
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
