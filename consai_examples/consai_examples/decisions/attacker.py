@@ -88,7 +88,7 @@ class AttackerDecision(DecisionBase):
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
         # シュートできる場合はシュートする
         if len(shoot_pos_list) > 0:
-            shooting = move_to_ball.with_shooting_to(
+            shooting = move_to_ball.with_shooting_for_setplay_to(
                 TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
             self._operator.operate(robot_id, shooting)
             return
@@ -97,12 +97,12 @@ class AttackerDecision(DecisionBase):
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
         # パスできる味方ロボットがいる場合はパスする
         if len(receivers_id_list) > 0:
-            passing = move_to_ball.with_passing_to(TargetXY.our_robot(receivers_id_list[0]))
+            passing = move_to_ball.with_passing_for_setplay_to(TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
             return
 
         # パスとシュートができない場合はゴール中央に向けてシュートする
-        shooting_center = move_to_ball.with_shooting_to(
+        shooting_center = move_to_ball.with_shooting_for_setplay_to(
             TargetXY.their_goal())
         self._operator.operate(robot_id, shooting_center)
         return
