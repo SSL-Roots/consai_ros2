@@ -111,9 +111,9 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, prevent_direct_shooting)
 
     def their_ball_placement(self, robot_id, placement_pos):
-        operation = Operation().move_to_pose(
-            TargetXY.value(-6.0 + 2.0, 1.8),
-            TargetTheta.look_ball())
+        operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        operation = operation.offset_pose_x(-0.6)
+        operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_placement_area(placement_pos)
         operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)

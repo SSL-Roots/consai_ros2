@@ -114,9 +114,8 @@ class SubAttackerDecision(DecisionBase):
         self._operator.operate(robot_id, avoid_ball)
 
     def their_ball_placement(self, robot_id, placement_pos):
-        operation = Operation().move_to_pose(
-            TargetXY.value(-6.0 + 2.0, 1.8 - 0.3 * 3.0),
-            TargetTheta.look_ball())
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_placement_area(placement_pos)
         operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
