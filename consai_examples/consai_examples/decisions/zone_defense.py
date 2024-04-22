@@ -37,6 +37,7 @@ class ZoneDefenseDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, zone_id: ZoneDefenseID):
         super().__init__(robot_operator, field_observer)
         self._zone_id = zone_id
+        self._distance_from = 0.4
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
         self._our_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
@@ -54,11 +55,12 @@ class ZoneDefenseDecision(DecisionBase):
         # ball_is_in_my_zone = self._ball_is_in_zone()
 
         # ゾーン内の相手ロボットがいる、ボールとロボットの間に移動する
-        if self._field_observer.zone_target().has_zone_target(ZONE_ID) and without_mark is False:
-            target_id = self._field_observer.zone_target().get_zone_target_id(ZONE_ID)
+        # if self._field_observer.zone_target().has_zone_target(ZONE_ID) and without_mark is False:
+        if self._field_observer.zone_man_mark_target().has_target(ZONE_ID) and without_mark is False:
+            target_id = self._field_observer.zone_man_mark_target().get_target_id(ZONE_ID)
             operation = Operation().move_on_line(
                 TargetXY.their_robot(target_id), TargetXY.ball(),
-                distance_from_p1=0.5, target_theta=TargetTheta.look_ball())
+                distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:
             # ゾーン内で待機する
