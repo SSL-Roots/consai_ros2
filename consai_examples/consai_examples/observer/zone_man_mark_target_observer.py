@@ -15,7 +15,6 @@
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
 from field import Field
-import math
 
 
 class ZoneManMarkTargetObserver():
