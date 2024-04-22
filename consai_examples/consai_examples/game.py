@@ -61,9 +61,8 @@ def num_of_active_zone_roles(active_roles):
     return len(set(role_zone_list) & set(active_roles))
 
 
-def enable_update_attacker_by_ball_pos():
-    # アタッカーの切り替わりを防ぐため、
-    # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
+def enable_role_update():
+    # ロールの更新を許可する条件
     return not observer.ball_position().is_in_our_defense_area() and \
         not observer.ball_position().is_outside() and \
         not referee.our_ball_placement() and \
@@ -75,15 +74,10 @@ def enable_update_attacker_by_ball_pos():
     # not observer.ball_motion().is_moving() and \
 
 
-def update_decisions(changed_ids: list[int],
-                     num_of_center_back_roles: int,
+def update_decisions(num_of_center_back_roles: int,
                      num_of_side_back_roles: int,
                      num_of_zone_roles: int):
     for role, robot_id in assignor.get_assigned_roles_and_ids():
-        # 役割が変わったロボットのみ、行動を更新する
-        if robot_id in changed_ids:
-            decisions[role].reset_operation(robot_id)
-
         # センターバックの担当者数をセットする
         decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
         # サイドバックの担当者数をセットする
@@ -158,10 +152,9 @@ def main():
             operator.publish_named_targets()
 
         # ロボットの役割の更新する
-        changed_ids = assignor.update_role(
+        assignor.update_role(
             observer.detection().ball(),
             observer.detection().our_robots(),
-            enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
         # 役割の描画情報を出力する
@@ -174,7 +167,7 @@ def main():
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         observer.set_num_of_zone_roles(num_of_zone_roles)
 
-        update_decisions(changed_ids, num_of_center_back_roles,
+        update_decisions(num_of_center_back_roles,
                          num_of_side_back_roles, num_of_zone_roles)
 
         elapsed_time = time.time() - start_time

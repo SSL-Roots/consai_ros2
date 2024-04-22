@@ -98,14 +98,13 @@ class RoleAssignment(Node):
             Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
 
     def update_role(
-            self, ball: PosVel, our_robots: dict[int, PosVel],
-            update_attacker_by_ball_pos=True, allowed_robot_num=11):
+            self, ball: PosVel, our_robots: dict[int, PosVel], allowed_robot_num=11):
         # roleへのロボットの割り当てを更新する
 
         # 優先度が高い順にロボットIDを並べる
         prev_id_list_ordered_by_role_priority = copy.deepcopy(
             self._id_list_ordered_by_role_priority)
-        self._update_role_list(ball, our_robots, update_attacker_by_ball_pos)
+        self._update_role_list(ball, our_robots)
 
         # 役割リストを更新する
         prev_role_list = copy.deepcopy(self._present_role_list)
@@ -164,9 +163,7 @@ class RoleAssignment(Node):
         # 重複するroleが設定されている場合、高いほうの優先度を返す
         return self.ACTIVE_ROLE_LIST.index(role)
 
-    def _update_role_list(
-            self, ball: PosVel, our_robots: dict[int, PosVel],
-            update_attacker_by_ball_pos=True):
+    def _update_role_list(self, ball: PosVel, our_robots: dict[int, PosVel]):
         # イベントが発生したらroleを更新する
         updated = False
 
@@ -182,7 +179,7 @@ class RoleAssignment(Node):
         self._present_active_ids = copy.deepcopy(our_active_ids)
 
         # イベント：ボールの状況が変わったらアタッカーを更新する
-        if self._update_ball_state(ball) and update_attacker_by_ball_pos:
+        if self._update_ball_state(ball):
             if self._present_ball_state == BallState.STOP:
                 # ボールが止まっている場合は、位置情報をもとにアタッカーを更新する
                 next_attacker_id = self._determine_attacker_via_ball_pos(our_robots, ball)
