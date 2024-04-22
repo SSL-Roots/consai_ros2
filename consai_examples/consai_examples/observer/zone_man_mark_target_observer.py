@@ -73,10 +73,8 @@ class ZoneManMarkTargetObserver():
     def _is_in_defence_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
         defense_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
-        defense_y = self._penalty_corner_upper_front.y + self._DEFENSE_AREA_MARGIN
 
         # ディデンスエリア横はサイドバックが守るので無視
-        # if pos.x < defense_x and math.fabs(pos.y) < defense_y:
         if pos.x < defense_x:
             return True
         return False
