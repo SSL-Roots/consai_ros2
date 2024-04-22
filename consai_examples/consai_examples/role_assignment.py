@@ -106,9 +106,7 @@ class RoleAssignment(Node):
         # 優先度が高い順にロボットIDを並べる
         prev_id_list_ordered_by_role_priority = copy.deepcopy(
             self._id_list_ordered_by_role_priority)
-        if self._update_role_list(
-              ball, our_robots, update_attacker_by_ball_pos):
-            self.get_logger().info('Role Updated')
+        self._update_role_list(ball, our_robots, update_attacker_by_ball_pos)
 
         # 役割リストを更新する
         prev_role_list = copy.deepcopy(self._present_role_list)
@@ -205,7 +203,7 @@ class RoleAssignment(Node):
     def _update_ball_state(self, ball: PosVel) -> bool:
         # ボール状態を更新する
         # 状態が変わったらTrueを返す
-        MOVE_THRESHOLD = 2.0  # m/s
+        MOVE_THRESHOLD = 1.0  # m/s
         ball_vel_norm = math.hypot(ball.vel().x, ball.vel().y)
 
         prev_state = copy.deepcopy(self._present_ball_state)
