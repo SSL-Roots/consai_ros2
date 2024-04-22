@@ -56,7 +56,8 @@ class ZoneDefenseDecision(DecisionBase):
 
         # ゾーン内の相手ロボットがいる、ボールとロボットの間に移動する
         # if self._field_observer.zone_target().has_zone_target(ZONE_ID) and without_mark is False:
-        if self._field_observer.zone_man_mark_target().has_target(ZONE_ID) and without_mark is False:
+        if self._field_observer.zone_man_mark_target().has_target(ZONE_ID) and \
+                without_mark is False:
             target_id = self._field_observer.zone_man_mark_target().get_target_id(ZONE_ID)
             operation = Operation().move_on_line(
                 TargetXY.their_robot(target_id), TargetXY.ball(),
