@@ -191,9 +191,10 @@ class RoleAssignment(Node):
                 next_attacker_id = self._determine_attacker_via_ball_pos(our_robots, ball)
             elif self._present_ball_state == BallState.MOVE:
                 # ボールが動いている場合は、ボールの軌道をもとにアタッカーを更新する
-                next_attacker_id = self._determine_attacker_via_ball_pos(our_robots, ball)
+                next_attacker_id = self._determine_attacker_via_ball_motion(our_robots, ball)
 
-            if next_attacker_id in self._id_list_ordered_by_role_priority:
+            if next_attacker_id is not None \
+               and next_attacker_id in self._id_list_ordered_by_role_priority:
                 next_attacker_priority = self._id_list_ordered_by_role_priority.index(next_attacker_id)
                 attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
                 self._swap_robot_id_of_priority(next_attacker_priority, attacker_role_priority)
@@ -204,7 +205,7 @@ class RoleAssignment(Node):
     def _update_ball_state(self, ball: PosVel) -> bool:
         # ボール状態を更新する
         # 状態が変わったらTrueを返す
-        MOVE_THRESHOLD = 1.0  # m/s
+        MOVE_THRESHOLD = 2.0  # m/s
         ball_vel_norm = math.hypot(ball.vel().x, ball.vel().y)
 
         prev_state = copy.deepcopy(self._present_ball_state)
@@ -300,7 +301,7 @@ class RoleAssignment(Node):
             self._id_list_ordered_by_role_priority[priority1]
 
     def _determine_attacker_via_ball_pos(self, our_robots: dict[int, PosVel], ball: PosVel):
-        # ボールの位置情報を元にアタッカーのID候補を返す
+        # ボール位置に一番近いロボットをアタッカー候補とする
         def nearest_robot_id_by_ball_position():
             # ボールに最も近いロボットを返す
             next_id = None
@@ -318,36 +319,43 @@ class RoleAssignment(Node):
                     next_id = robot_id
             return next_id
 
-        def select_attacker_id_by_ball_position(present_id: int, next_id: int) -> int:
-            NEAREST_DIFF_THRESHOLD = 0.5  # meter
-            if present_id is None:
-                return None
-            if next_id is None:
-                return present_id
+        return nearest_robot_id_by_ball_position()
 
-            present_distance = tool.get_distance(
-                ball.pos(), our_robots[present_id].pos())
-            next_distance = tool.get_distance(
-                ball.pos(), our_robots[next_id].pos())
+    def _determine_attacker_via_ball_motion(self, our_robots: dict[int, PosVel], ball: PosVel):
+        # ボール軌道に一番近いロボットをアタッカー候補とする
 
-            # ヒステリシスをもたせ、アタッカー候補が頻繁に変わらないようにする
-            if present_distance - next_distance > NEAREST_DIFF_THRESHOLD:
-                return next_id
-            return present_id
+        def nearest_robot_id_by_ball_motion():
+            # ボールの軌道に一番近いロボットを返す
+            VEL_NORM_GAIN = 2.0
+            next_id = None
+            nearest_distance = 1000  # 適当な巨大な距離を初期値とする
 
-        present_attacker_id = self._id_list_ordered_by_role_priority[
-            self._get_priority_of_role(RoleName.ATTACKER)]
+            ball_vel_norm = math.hypot(ball.vel().x, ball.vel().y)
+            # ボールを中心にしたボール軌道をX軸とする座標系を生成
+            trans = tool.Trans(ball.pos(), math.atan2(ball.vel().y, ball.vel().x))
+            for robot_id, robot in our_robots.items():
+                # Goalieはスキップ
+                if robot_id == self._goalie_id:
+                    continue
 
-        next_attacker_id = nearest_robot_id_by_ball_position()
+                tr_robot_pos = trans.transform(robot.pos())
+                # ボール軌道の後ろにいるロボットはスキップ
+                if tr_robot_pos.x < 0:
+                    continue
 
-        # 現在アタッカーがいない場合は、アタッカー候補をそのまま返す
-        if present_attacker_id is None:
-            return next_attacker_id
+                # ボール速度を考慮して、ボールに近すぎるロボットはスキップ
+                # distance_to_ball = math.hypot(tr_robot_pos.x, tr_robot_pos.y)
+                # if distance_to_ball < ball_vel_norm * VEL_NORM_GAIN:
+                #     continue
 
-        selected_id = select_attacker_id_by_ball_position(
-            present_attacker_id, next_attacker_id)
+                distance_to_trajectory = abs(tr_robot_pos.y)
+                # 最もボールに近いロボットの距離とIDを更新
+                if distance_to_trajectory < nearest_distance:
+                    nearest_distance = distance_to_trajectory
+                    next_id = robot_id
+            return next_id
 
-        return selected_id
+        return nearest_robot_id_by_ball_motion()
 
     # def _determine_next_attacker_id(self, our_robots: dict[int, PosVel], ball: PosVel):
     #     # ボールを受け取れるロボットをアタッカー候補として出力する
