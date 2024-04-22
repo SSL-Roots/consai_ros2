@@ -287,34 +287,34 @@ class RoleAssignment(Node):
                     next_id = robot_id
             return next_id
 
-        def nearest_robot_id_by_ball_motion():
-            # ボールの軌道に一番近いロボットを返す
-            VEL_NORM_GAIN = 2.0
-            next_id = None
-            nearest_distance = 1000  # 適当な巨大な距離を初期値とする
+        # def nearest_robot_id_by_ball_motion():
+        #     # ボールの軌道に一番近いロボットを返す
+        #     VEL_NORM_GAIN = 2.0
+        #     next_id = None
+        #     nearest_distance = 1000  # 適当な巨大な距離を初期値とする
 
-            ball_vel_norm = math.hypot(ball.vel().x, ball.vel().y)
-            trans = tool.trans(ball.pos(), math.atan2(ball.vel().y, ball.vel().x))
-            for robot_id, robot in our_robots.items():
-                # Goalieはスキップ
-                if robot_id == self._goalie_id:
-                    continue
+        #     ball_vel_norm = math.hypot(ball.vel().x, ball.vel().y)
+        #     trans = tool.trans(ball.pos(), math.atan2(ball.vel().y, ball.vel().x))
+        #     for robot_id, robot in our_robots.items():
+        #         # Goalieはスキップ
+        #         if robot_id == self._goalie_id:
+        #             continue
 
-                tr_robot_pos = trans.transform(robot.pos())
-                # ボール軌道の後ろにいるロボットはスキップ
-                if tr_robot_pos.x < 0:
-                    continue
+        #         tr_robot_pos = trans.transform(robot.pos())
+        #         # ボール軌道の後ろにいるロボットはスキップ
+        #         if tr_robot_pos.x < 0:
+        #             continue
 
-                # ボール速度を考慮して、ボールに近すぎるロボットはスキップ
-                distance = math.hypot(tr_robot_pos.x, tr_robot_pos.y)
-                if distance < ball_vel_norm * VEL_NORM_GAIN:
-                    continue
+        #         # ボール速度を考慮して、ボールに近すぎるロボットはスキップ
+        #         distance = math.hypot(tr_robot_pos.x, tr_robot_pos.y)
+        #         if distance < ball_vel_norm * VEL_NORM_GAIN:
+        #             continue
 
-                # 最もボールに近いロボットの距離とIDを更新
-                if distance < nearest_distance:
-                    nearest_distance = distance
-                    next_id = robot_id
-            return next_id
+        #         # 最もボールに近いロボットの距離とIDを更新
+        #         if distance < nearest_distance:
+        #             nearest_distance = distance
+        #             next_id = robot_id
+        #     return next_id
 
         def select_attacker_id_by_ball_position(present_id: int, next_id: int) -> int:
             NEAREST_DIFF_THRESHOLD = 0.5  # meter
@@ -324,9 +324,9 @@ class RoleAssignment(Node):
                 return present_id
 
             present_distance = tool.get_distance(
-                ball_pos, our_robots[present_id].pos())
+                ball.pos(), our_robots[present_id].pos())
             next_distance = tool.get_distance(
-                ball_pos, our_robots[next_id].pos())
+                ball.pos(), our_robots[next_id].pos())
 
             # ヒステリシスをもたせ、アタッカー候補が頻繁に変わらないようにする
             if present_distance - next_distance > NEAREST_DIFF_THRESHOLD:
