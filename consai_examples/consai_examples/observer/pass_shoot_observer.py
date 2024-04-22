@@ -32,7 +32,7 @@ class PassShootObserver:
 
         self._present_shoot_pos_list: list[State2D] = []
 
-        self.goalie_id = goalie_id
+        self._goalie_id = goalie_id
 
     def update(self, ball: PosVel,
                our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:
@@ -62,8 +62,8 @@ class PassShootObserver:
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
         forward_our_id_list = self._search_forward_robots(
-            my_robot_pos, search_our_robots=True, 
-            exclude_id=my_robot_id, our_goalie_id=self.goalie_id)
+            my_robot_pos, search_our_robots=True,
+            exclude_id=my_robot_id, our_goalie_id=self._goalie_id)
         forward_their_id_list = self._search_forward_robots(
             my_robot_pos, search_our_robots=False)
 
@@ -142,7 +142,7 @@ class PassShootObserver:
     #     return sorted_robots_id
 
     def _search_forward_robots(
-            self, pos: State2D, search_our_robots=True, 
+            self, pos: State2D, search_our_robots=True,
             exclude_id=-1, our_goalie_id=-1) -> list[int]:
         # 指定した座標より前にいるロボットIDのリストを返す関数
 
