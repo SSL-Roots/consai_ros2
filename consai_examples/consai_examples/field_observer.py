@@ -30,7 +30,7 @@ from consai_examples.observer.pass_shoot_observer import PassShootObserver
 
 class FieldObserver(Node):
 
-    def __init__(self, our_team_is_yellow=False):
+    def __init__(self, goalie_id, our_team_is_yellow=False):
         super().__init__('field_observer')
 
         self._field_length = 12.0  # meters
@@ -48,7 +48,7 @@ class FieldObserver(Node):
         self._zone_target_observer = ZoneTargetObserver()
         self._side_back_target_observer = SideBackTargetObserver()
         self._ball_motion_observer = BallMotionObserver()
-        self._pass_shoot_observer = PassShootObserver()
+        self._pass_shoot_observer = PassShootObserver(goalie_id)
 
         self._num_of_zone_roles = 0
 
