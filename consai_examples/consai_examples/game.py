@@ -204,7 +204,7 @@ if __name__ == '__main__':
     operator = RobotOperator(args.yellow)
     assignor = RoleAssignment(args.goalie, args.yellow)
     referee = RefereeParser(args.yellow, args.invert)
-    observer = FieldObserver(args.yellow)
+    observer = FieldObserver(args.goalie, args.yellow)
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator)
