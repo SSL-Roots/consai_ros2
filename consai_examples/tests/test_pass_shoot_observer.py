@@ -19,7 +19,7 @@ from consai_examples.observer.pass_shoot_observer import PassShootObserver
 
 
 def test_パサーロボットがいないときには空リストを返す():
-    observer = PassShootObserver()
+    observer = PassShootObserver(goalie_id=1)
     my_robot_id = 0
     receivers_list = observer.search_receivers_list(my_robot_id)
     assert receivers_list == []
