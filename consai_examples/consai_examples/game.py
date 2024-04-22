@@ -63,15 +63,12 @@ def num_of_active_zone_roles(active_roles):
 
 def enable_role_update():
     # ロールの更新を許可する条件
-    return not observer.ball_position().is_in_our_defense_area() and \
-        not observer.ball_position().is_outside() and \
-        not referee.our_ball_placement() and \
-        not referee.our_pre_penalty() and \
+    return not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
+        not referee.our_penalty_inplay() and \
         not referee.their_pre_penalty() and \
         not referee.their_penalty() and \
-        not referee.their_ball_placement()
-    # not observer.ball_motion().is_moving() and \
+        not referee.their_penalty_inplay()
 
 
 def update_decisions(num_of_center_back_roles: int,
@@ -152,10 +149,10 @@ def main():
             operator.publish_named_targets()
 
         # ロボットの役割の更新する
-        assignor.update_role(
-            observer.detection().ball(),
-            observer.detection().our_robots(),
-            referee.max_allowed_our_bots())
+        if enable_role_update():
+            assignor.update_role(observer.detection().ball(),
+                                 observer.detection().our_robots(),
+                                 referee.max_allowed_our_bots())
 
         # 役割の描画情報を出力する
         assignor.publish_role_for_visualizer(observer.detection().our_robots())
