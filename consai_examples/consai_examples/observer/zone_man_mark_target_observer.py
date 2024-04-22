@@ -70,7 +70,7 @@ class ZoneManMarkTargetObserver():
         # ZONEターゲットを初期化する
         self._zone_man_mark_targets = {0: None, 1: None, 2: None, 3: None}
 
-    def _is_in_defence_area(self, pos: State2D) -> bool:
+    def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
         defense_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
 
