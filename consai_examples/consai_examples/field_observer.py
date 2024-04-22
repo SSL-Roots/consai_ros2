@@ -21,8 +21,9 @@ from robocup_ssl_msgs.msg import TrackedFrame
 from consai_examples.observer.detection_wrapper import DetectionWrapper
 from consai_examples.observer.ball_position_observer import BallPositionObserver
 from consai_examples.observer.ball_placement_observer import BallPlacementObserver
-from consai_examples.observer.zone_ball_observer import ZoneBallObserver
 from consai_examples.observer.side_back_target_observer import SideBackTargetObserver
+from consai_examples.observer.zone_ball_observer import ZoneBallObserver
+from consai_examples.observer.zone_man_mark_target_observer import ZoneManMarkTargetObserver
 from consai_examples.observer.zone_target_observer import ZoneTargetObserver
 from consai_examples.observer.ball_motion_observer import BallMotionObserver
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
@@ -47,6 +48,7 @@ class FieldObserver(Node):
         self._zone_ball_observer = ZoneBallObserver()
         self._zone_target_observer = ZoneTargetObserver()
         self._side_back_target_observer = SideBackTargetObserver()
+        self._zone_man_mark_target_observer = ZoneManMarkTargetObserver()
         self._ball_motion_observer = BallMotionObserver()
         self._pass_shoot_observer = PassShootObserver()
 
@@ -69,6 +71,9 @@ class FieldObserver(Node):
 
     def side_back_target(self) -> SideBackTargetObserver:
         return self._side_back_target_observer
+
+    def zone_man_mark_target(self) -> ZoneManMarkTargetObserver:
+        return self._zone_man_mark_target_observer
 
     def ball_motion(self) -> BallMotionObserver:
         return self._ball_motion_observer
@@ -100,6 +105,7 @@ class FieldObserver(Node):
         self._zone_target_observer.update(
             self._detection_wrapper.their_robots(), self._num_of_zone_roles)
         self._side_back_target_observer.update(self._detection_wrapper.their_robots())
+        self._zone_man_mark_target_observer.update(self._detection_wrapper.their_robots())
         self._ball_motion_observer.update(self._detection_wrapper.ball())
         self._pass_shoot_observer.update(
             self._detection_wrapper.ball(),
