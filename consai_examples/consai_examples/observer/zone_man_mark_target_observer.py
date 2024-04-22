@@ -43,9 +43,6 @@ class ZoneManMarkTargetObserver():
         self._update_targets(their_robots)
 
     def _update_targets(self, their_robots: dict[int, PosVel]) -> None:
-        # ZONE1に属するターゲットを抽出する
-        nearest_x = 10.0
-
         # robot.pos().xの値とIDのタプルのリストを作成
         robot_x_id_pairs = [(robot.pos().x, robot_id) for robot_id, robot in their_robots.items()]
 
