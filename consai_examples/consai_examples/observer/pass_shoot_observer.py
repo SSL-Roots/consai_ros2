@@ -142,7 +142,7 @@ class PassShootObserver:
     #     return sorted_robots_id
 
     def _search_forward_robots(
-            self, pos: State2D, search_offsset=0.0 ,search_our_robots=True,
+            self, pos: State2D, search_offsset=0.0, search_our_robots=True,
             exclude_id=-1, our_goalie_id=-1) -> list[int]:
         # 指定した座標より前にいるロボットIDのリストを返す関数
 
