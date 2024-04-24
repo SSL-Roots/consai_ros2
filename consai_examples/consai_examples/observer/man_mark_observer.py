@@ -36,7 +36,7 @@ class ManMarkObserver:
 
         self._remove_non_exist_robots_from_mark(our_robots, their_robots)
 
-        # 自チームサイドの相手ロボットを全探索
+        target_their_bots: dict[TheirIDType: PosVel] = {}
         for their_bot_id, their_bot in their_robots.items():
             if their_bot.pos().x > DETECTION_THRESHOLD_X:
                 self._remove_mark_via_their_id(their_bot_id)
@@ -45,9 +45,19 @@ class ManMarkObserver:
             if self._is_marked(their_bot_id):
                 continue
 
-            self._assign_mark(
-                self._search_nearest_our_bot(
-                    their_bot.pos(), self._our_free_bot_ids(), our_robots), their_bot_id)
+            target_their_bots[their_bot_id] = their_bot
+
+        for our_bot_id in self._our_active_bot_ids:
+            if our_bot_id not in our_robots.keys():
+                continue
+
+            if not self._is_free_bot(our_bot_id):
+                continue
+
+            our_bot = our_robots[our_bot_id]
+            nearest_their_bot_id = self._search_nearest_bot_id(our_bot.pos(), target_their_bots)
+            if self._assign_mark(our_bot_id, nearest_their_bot_id):
+                target_their_bots.pop(nearest_their_bot_id)
 
     def set_our_active_bot_ids(self, our_active_bot_ids: list[OurIDType]) -> None:
         self._our_active_bot_ids = our_active_bot_ids
@@ -106,6 +116,9 @@ class ManMarkObserver:
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
         return their_bot_id in self._mark_dict.values()
 
+    def _is_free_bot(self, our_id: OurIDType) -> bool:
+        return our_id in self._our_free_bot_ids()
+
     def _our_free_bot_ids(self) -> list[OurIDType]:
         return list(set(self._our_active_bot_ids) - set(self._mark_dict.keys()))
 
@@ -129,6 +142,25 @@ class ManMarkObserver:
 
         return nearest_id
 
-    def _assign_mark(self, our_id: OurIDType, their_id: TheirIDType) -> None:
+    def _search_nearest_bot_id(
+            self, my_pos: State2D,
+            target_robots: dict[OurIDType, PosVel]) -> OurIDType:
+
+        nearest_id = InValidID
+        nearest_dist = math.inf
+
+        for target_id, target_bot in target_robots.items():
+            target_pos = target_bot.pos()
+            dist = tool.get_distance(my_pos, target_pos)
+
+            if dist < nearest_dist:
+                nearest_id = target_id
+                nearest_dist = dist
+
+        return nearest_id
+
+    def _assign_mark(self, our_id: OurIDType, their_id: TheirIDType) -> bool:
         if our_id != InValidID:
             self._mark_dict[our_id] = their_id
+            return True
+        return False
