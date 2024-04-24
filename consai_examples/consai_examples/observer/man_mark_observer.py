@@ -34,7 +34,7 @@ class ManMarkObserver:
                our_robots: dict[OurIDType, PosVel], their_robots: dict[TheirIDType, PosVel]) -> None:
         DETECTION_THRESHOLD_X = 0.0
 
-        self._remove_non_exist_mark(their_robots)
+        self._remove_non_exist_robots_from_mark(our_robots, their_robots)
 
         # 自チームサイドの相手ロボットを全探索
         for their_bot_id, their_bot in their_robots.items():
@@ -94,11 +94,13 @@ class ManMarkObserver:
         for our_id in to_remove:
             self._mark_dict.pop(our_id)
 
-    def _remove_non_exist_mark(self, their_robots: dict[TheirIDType, PosVel]) -> None:
+    def _remove_non_exist_robots_from_mark(
+            self, our_robots: dict[OurIDType, PosVel], their_robots: dict[TheirIDType, PosVel]) -> None:
         # 存在しないキーを一時リストに保存
-        to_remove = [our_id for our_id, their_id in self._mark_dict.items() if their_id not in their_robots]
+        to_remove_via_theirs = [our_id for our_id, their_id in self._mark_dict.items() if their_id not in their_robots]
+        to_remove_via_ours = [our_id for our_id in self._mark_dict.keys() if our_id not in our_robots]
         # 実際に削除
-        for our_id in to_remove:
+        for our_id in to_remove_via_theirs + to_remove_via_ours:
             self._mark_dict.pop(our_id)
 
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
@@ -115,6 +117,9 @@ class ManMarkObserver:
         nearest_dist = math.inf
 
         for our_id in our_target_ids:
+            if our_id not in our_robots.keys():
+                continue
+
             our_pos = our_robots[our_id].pos()
             dist = tool.get_distance(our_pos, their_bot_pos)
 
