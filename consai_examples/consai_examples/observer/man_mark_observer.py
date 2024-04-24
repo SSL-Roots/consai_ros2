@@ -63,6 +63,11 @@ class ManMarkObserver:
                 our_active_bots.pop(nearest_our_bot_id)
 
     def set_our_active_bot_ids(self, our_active_bot_ids: list[OurIDType]) -> None:
+        # アクティブじゃなくなったロボットのマーク情報を削除
+        for fired_bot_id in set(self._our_active_bot_ids) - set(our_active_bot_ids):
+            if fired_bot_id in self._mark_dict.keys():
+                self._mark_dict.pop(fired_bot_id)
+
         self._our_active_bot_ids = our_active_bot_ids
 
     def get_mark_robot_id(self, our_id: OurIDType) -> TheirIDType:
@@ -137,7 +142,7 @@ class ManMarkObserver:
 
     def _our_active_free_bots(
             self, our_robots: dict[OurIDType, PosVel]) -> dict[OurIDType, PosVel]:
-        return {our_id: our_bot 
+        return {our_id: our_bot
                 for our_id, our_bot in our_robots.items() if self._is_our_free_bot(our_id)}
 
     def _is_our_free_bot(self, our_id: OurIDType) -> bool:
