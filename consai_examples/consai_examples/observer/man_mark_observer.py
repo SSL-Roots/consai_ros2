@@ -48,25 +48,19 @@ class ManMarkObserver:
         already_marked_ids = [their_id for their_id in markable_ids if self._is_marked(their_id)]
         markable_ids = list(set(markable_ids) - set(already_marked_ids))
 
-        for our_bot_id in self._our_active_bot_ids:
-            if len(markable_ids) == 0:
+        our_active_bots = self._our_active_free_bots(our_robots)
+
+        for markable_id in markable_ids:
+            if len(our_active_bots) == 0:
                 return
 
-            if our_bot_id not in our_robots.keys():
-                continue
-
-            if not self._is_our_free_bot(our_bot_id):
-                continue
-
-            # 対象のロボットに最も近いロボットをマークに割り当てる
-            our_bot = our_robots[our_bot_id]
-            nearest_their_bot_id = self._search_nearest_bot_id(
-                our_bot.pos(), their_robots, markable_ids)
+            # マーク対象のロボットに最も近いロボットをマークに割り当てる
+            nearest_our_bot_id = self._search_nearest_bot_id(
+                their_robots[markable_id].pos(), our_active_bots)
 
             # アサインに成功したら、マーク対象リストからIDを削除
-            if self._assign_mark(our_bot_id, nearest_their_bot_id):
-                if nearest_their_bot_id in markable_ids:
-                    markable_ids.remove(nearest_their_bot_id)
+            if self._assign_mark(nearest_our_bot_id, markable_id):
+                our_active_bots.pop(nearest_our_bot_id)
 
     def set_our_active_bot_ids(self, our_active_bot_ids: list[OurIDType]) -> None:
         self._our_active_bot_ids = our_active_bot_ids
@@ -141,6 +135,11 @@ class ManMarkObserver:
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
         return their_bot_id in self._mark_dict.values()
 
+    def _our_active_free_bots(
+            self, our_robots: dict[OurIDType, PosVel]) -> dict[OurIDType, PosVel]:
+        return {our_id: our_bot 
+                for our_id, our_bot in our_robots.items() if self._is_our_free_bot(our_id)}
+
     def _is_our_free_bot(self, our_id: OurIDType) -> bool:
         return our_id in self._our_free_bot_ids()
 
@@ -149,16 +148,12 @@ class ManMarkObserver:
 
     def _search_nearest_bot_id(
             self, my_pos: State2D,
-            target_robots: dict[IDType, PosVel],
-            markable_ids: list[IDType]) -> IDType:
+            target_robots: dict[IDType, PosVel]) -> IDType:
 
         nearest_id = InValidID
         nearest_dist = math.inf
 
         for target_id, target_bot in target_robots.items():
-            if target_id not in markable_ids:
-                continue
-
             target_pos = target_bot.pos()
             dist = tool.get_distance(my_pos, target_pos)
 
