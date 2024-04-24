@@ -55,7 +55,7 @@ class ManMarkObserver:
             if our_bot_id not in our_robots.keys():
                 continue
 
-            if not self._is_free_bot(our_bot_id):
+            if not self._is_our_free_bot(our_bot_id):
                 continue
 
             # 対象のロボットに最も近いロボットをマークに割り当てる
@@ -141,7 +141,7 @@ class ManMarkObserver:
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
         return their_bot_id in self._mark_dict.values()
 
-    def _is_free_bot(self, our_id: OurIDType) -> bool:
+    def _is_our_free_bot(self, our_id: OurIDType) -> bool:
         return our_id in self._our_free_bot_ids()
 
     def _our_free_bot_ids(self) -> list[OurIDType]:
