@@ -15,7 +15,6 @@
 from consai_msgs.msg import State2D
 from consai_examples.observer.pos_vel import PosVel
 from consai_tools.geometry import geometry_tools
-import math
 
 
 class DistanceObserver:

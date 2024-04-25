@@ -24,7 +24,6 @@ from operation import TargetTheta
 from consai_tools.geometry import geometry_tools
 from consai_msgs.msg import State2D
 from field import Field
-import copy
 
 
 class GoaleDecision(DecisionBase):
@@ -57,19 +56,18 @@ class GoaleDecision(DecisionBase):
         flag = 1
         # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
         if is_in_our_side and len(distance_ball_to_their_robots):
-        # if is_in_our_side and len(distance_ball_to_their_robots):
             # ボールに一番近い敵ロボットのIDを取得
             sorted_distance = sorted(enumerate(distance_ball_to_their_robots), key=lambda x: x[1])
             sorted_indices = [index for index, _ in sorted_distance]
             near_their_robot_id = sorted_indices[0]
 
             # 一番近いロボットの位置を取得
-            their_robot_pos = self._field_observer.detection().their_robots()[near_their_robot_id].pos()
+            robot_pos = self._field_observer.detection().their_robots()[near_their_robot_id].pos()
 
             # ボールと敵ロボットの距離が近い and 場合
-            if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < their_robot_pos.x:
+            if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
                 # 2点を結ぶ直線の傾きと切片を取得
-                slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, their_robot_pos)
+                slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, robot_pos)
                 # ゴール前との交点(y座標)を算出
                 y = slope * p1_x + intercept
                 if abs(y) < p1_y:
@@ -89,7 +87,8 @@ class GoaleDecision(DecisionBase):
                 flag = 2
 
         if flag == 1:
-            slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, State2D(x=-6.75, y=0.0))
+            slope, intercept, _ = geometry_tools.get_line_parameter(
+                ball_pos, State2D(x=-6.75, y=0.0))
             y = slope * p1_x + intercept
             defend_goal = Operation().move_to_intersection(
                 TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
