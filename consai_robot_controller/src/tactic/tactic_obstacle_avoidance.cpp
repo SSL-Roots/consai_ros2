@@ -395,7 +395,7 @@ bool ObstacleAvoidance::avoid_defense_area(
       const auto len_our_intersections = is_intersect_top + is_intersect_bottom +
         is_intersect_inside;
 
-      constexpr double AVOID_DISTANCE = 0.5;
+      constexpr double AVOID_DISTANCE = ROBOT_RADIUS * 2.0;
       const auto AVOID_POS_X = (-FIELD_HALF_LENGTH + DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE) *
         sign;
       constexpr auto AVOID_POS_Y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
