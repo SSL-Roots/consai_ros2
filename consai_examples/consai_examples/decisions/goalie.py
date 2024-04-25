@@ -38,7 +38,9 @@ class GoaleDecision(DecisionBase):
         p2_x = -6.0 + 0.3
         p2_y = -0.9
 
-        # ボールの座標
+        # ボールの座標を取得
+        ball_pos = self._field_observer.detection().ball().pos()
+        # ボールの速度を取得
         ball_pos = self._field_observer.detection().ball().pos()
 
         # フィールドのある一点の座標
@@ -47,14 +49,42 @@ class GoaleDecision(DecisionBase):
         pose2 = copy.deepcopy(Field._our_goal_dict['upper'])
         pose2.y = pose2.y + (ball_pos.x - 6.0) * 0.03
 
-        # 2点を結ぶ直線の傾きと切片を取得
-        slope, intercept, _ = geometry_tools.get_line_parameter(pose1, pose2)
-        # 2点を結ぶ直線のうちy=0のときの座標
-        pose = TargetXY.value(-intercept / slope, 0.0)
+        # ボールと敵ロボットの距離を取得
+        distance_ball_to_their_robots = self._field_observer.distance().ball_to_their_robots()
+        # ボールが味方側エリアにあるか取得
+        is_in_our_side = self._field_observer.ball_position().is_in_our_side()
 
-        defend_goal = Operation().move_to_intersection(
-            TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-            pose, TargetXY.ball(), TargetTheta.look_ball())
+        if len(distance_ball_to_their_robots):
+            # 味方エリアにあるかつボールと敵ロボットの距離が近い場合
+            if is_in_our_side and min(distance_ball_to_their_robots) < 0.15:
+                # 一番近いロボットのIDを取得
+                sorted_distance = sorted(enumerate(distance_ball_to_their_robots), key=lambda x: x[1])
+                sorted_indices = [index for index, _ in sorted_distance]
+                near_their_robot_id = sorted_indices[0]
+
+                # 一番近いロボットの位置を取得
+                their_robot_pos = self._field_observer.detection().their_robots()[near_their_robot_id].pos()
+                # 敵ロボットとボールを結ぶ直線とゴール前の直線の交点上を守る
+                defend_goal = Operation().move_to_intersection(
+                    TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+                    TargetXY.value(their_robot_pos.x, their_robot_pos.y), TargetXY.ball(), TargetTheta.look_ball())
+            else:
+                defend_goal = Operation().move_to_intersection(
+                    TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+                    TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
+        else:
+            defend_goal = Operation().move_to_intersection(
+                TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+                TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
+
+        # # 2点を結ぶ直線の傾きと切片を取得
+        # slope, intercept, _ = geometry_tools.get_line_parameter(pose1, pose2)
+        # # 2点を結ぶ直線のうちy=0のときの座標
+        # pose = TargetXY.value(-intercept / slope, 0.0)
+        # 
+        # defend_goal = Operation().move_to_intersection(
+        #     TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+        #     pose, TargetXY.ball(), TargetTheta.look_ball())
         defend_goal = defend_goal.with_ball_receiving()
         defend_goal = defend_goal.disable_avoid_defense_area()
 
