@@ -41,8 +41,7 @@ class DistanceObserver:
         return self._calc_dist_ball_to_robots(self._their_robots)
 
     def _calc_dist_ball_to_robots(self, robots: dict[int, PosVel]) -> dict:
-        # distance = []
-        distance: dict[int, PosVel] = {}
+        distance = {}
         for robot_id in robots.keys():
             robot_pos = robots[robot_id].pos()
             # distance.append(geometry_tools.get_distance(robot_pos, self._ball_pos))
