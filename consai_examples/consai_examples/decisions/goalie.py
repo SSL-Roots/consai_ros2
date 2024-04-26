@@ -24,6 +24,7 @@ from operation import TargetTheta
 from consai_tools.geometry import geometry_tools
 from consai_msgs.msg import State2D
 from field import Field
+import math
 
 
 class GoaleDecision(DecisionBase):
@@ -55,16 +56,16 @@ class GoaleDecision(DecisionBase):
         # ボールと敵ロボットの状況を見てディフェンス座標を変更するフラグを生成
         flag = 1
         # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
-        if is_in_our_side and len(distance_ball_to_their_robots):
+        if is_in_our_side and len(distance_ball_to_their_robots.keys()):
             # ボールに一番近い敵ロボットのIDを取得
-            sorted_distance = sorted(enumerate(distance_ball_to_their_robots), key=lambda x: x[1])
+            sorted_distance = sorted(enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
             sorted_indices = [index for index, _ in sorted_distance]
             near_their_robot_id = sorted_indices[0]
 
             # 一番近いロボットの位置を取得
             robot_pos = self._field_observer.detection().their_robots()[near_their_robot_id].pos()
 
-            # ボールと敵ロボットの距離が近い and 場合
+            # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
             if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
                 # 2点を結ぶ直線の傾きと切片を取得
                 slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, robot_pos)
@@ -75,8 +76,8 @@ class GoaleDecision(DecisionBase):
                     defend_pose = TargetXY.value(x, y)
                     flag = 2
 
-        # ボールがゴール側に向かって来る場合
-        elif 0.2 < abs(ball_vel.x) and 0.1 < geometry_tools.get_distance(ball_pos, ball_vel):
+        # ボールがゴールに向かって来る場合
+        elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
             # 2点を結ぶ直線の傾きと切片を取得
             slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
             # ゴール前との交点(y座標)を算出

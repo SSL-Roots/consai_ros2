@@ -34,16 +34,17 @@ class DistanceObserver:
         self._our_robots = our_robots
         self._their_robots = their_robots
 
-    def ball_to_our_robots(self) -> list:
+    def ball_to_our_robots(self) -> dict:
         return self._calc_dist_ball_to_robots(self._our_robots)
 
-    def ball_to_their_robots(self) -> list:
+    def ball_to_their_robots(self) -> dict:
         return self._calc_dist_ball_to_robots(self._their_robots)
 
-    def _calc_dist_ball_to_robots(self, robots: dict[int, PosVel]) -> list:
-        distance = []
+    def _calc_dist_ball_to_robots(self, robots: dict[int, PosVel]) -> dict:
+        # distance = []
+        distance: dict[int, PosVel] = {}
         for robot_id in robots.keys():
             robot_pos = robots[robot_id].pos()
-            distance.append(geometry_tools.get_distance(robot_pos, self._ball_pos))
+            # distance.append(geometry_tools.get_distance(robot_pos, self._ball_pos))
+            distance[robot_id] = geometry_tools.get_distance(robot_pos, self._ball_pos)
         return distance
-        # return [geometry_tools.get_distance(robot.pos(), ball_pos()) for robot in robots]
