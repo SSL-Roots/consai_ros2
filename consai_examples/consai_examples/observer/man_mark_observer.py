@@ -17,6 +17,7 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
 from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeLine
+from field import Field
 import math
 
 IDType = int
@@ -38,7 +39,7 @@ class ManMarkObserver:
 
         # マーク条件に該当するロボットを抽出
         # ここの条件を変更することで、より賢いマークを実現できる
-        markable_ids = self._detect_their_bots_in_our_side(their_robots)
+        markable_ids = self._detect_their_bots_in_our_side_without_our_df_area_side(their_robots)
 
         non_markable_ids = set(their_robots.keys()) - set(markable_ids)
         for non_markable_id in non_markable_ids:
@@ -113,6 +114,22 @@ class ManMarkObserver:
         bot_ids = []
         for bot_id, bot in their_robots.items():
             if bot.pos().x < DETECTION_THRESHOLD_X:
+                bot_ids.append(bot_id)
+
+        return bot_ids
+
+    def _detect_their_bots_in_our_side_without_our_df_area_side(
+            self, their_robots: dict[OurIDType, PosVel]) -> list[OurIDType]:
+        penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
+        # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
+        DEFENSE_AREA_MARGIN = 0.2
+        DETECTION_THRESHOLD_X_MAX = 0.0
+        DETECTION_THRESHOLD_X_MIN = penalty_corner_upper_front.x + DEFENSE_AREA_MARGIN
+
+        bot_ids = []
+        for bot_id, bot in their_robots.items():
+            if bot.pos().x < DETECTION_THRESHOLD_X_MAX and \
+                    bot.pos().x > DETECTION_THRESHOLD_X_MIN:
                 bot_ids.append(bot_id)
 
         return bot_ids
