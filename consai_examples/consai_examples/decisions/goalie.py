@@ -58,7 +58,8 @@ class GoaleDecision(DecisionBase):
         # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
         if is_in_our_side and len(distance_ball_to_their_robots.keys()):
             # ボールに一番近い敵ロボットのIDを取得
-            sorted_distance = sorted(enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
+            sorted_distance = sorted(
+                enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
             sorted_indices = [index for index, _ in sorted_distance]
             near_their_robot_id = sorted_indices[0]
 
