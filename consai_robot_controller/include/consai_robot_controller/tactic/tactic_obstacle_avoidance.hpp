@@ -40,7 +40,10 @@ public:
   explicit ObstacleAvoidance(const std::shared_ptr<DetectionExtractor> & detection_extractor);
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const bool & avoid_ball, State & avoidance_pose) const;
+    const bool & avoid_our_robots,
+    const bool & avoid_their_robots,
+    const bool & avoid_ball,
+    State & avoidance_pose) const;
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const State & designated_position, State & avoidance_pose) const;
