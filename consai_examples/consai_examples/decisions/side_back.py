@@ -56,7 +56,7 @@ class SideBackDecision(DecisionBase):
         p1_x = self._penalty_corner_upper_front.x
         p1_y = MARK_THRESHOLD_Y - 0.2
         p2_x = self._penalty_goalside_upper_back.x
-        p2_y = MARK_THRESHOLD_Y -0.2
+        p2_y = MARK_THRESHOLD_Y - 0.2
 
         # FIXME: ボールが相手側にある場合は攻めに役立ちそうなポジションに移動してほしい
 
@@ -69,11 +69,13 @@ class SideBackDecision(DecisionBase):
                 if target_pos.y > 0:
                     operation = Operation().move_to_intersection(
                         TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-                        TargetXY.their_robot(target_id), TargetXY.our_goal(), TargetTheta.look_ball())
+                        TargetXY.their_robot(target_id), TargetXY.our_goal(),
+                        TargetTheta.look_ball())
                 else:
                     operation = Operation().move_to_intersection(
                         TargetXY.value(p1_x, -p1_y), TargetXY.value(p2_x, -p2_y),
-                        TargetXY.their_robot(target_id), TargetXY.our_goal(), TargetTheta.look_ball())
+                        TargetXY.their_robot(target_id), TargetXY.our_goal(),
+                        TargetTheta.look_ball())
             else:
                 operation = Operation().move_on_line(
                     TargetXY.their_robot(target_id), TargetXY.our_goal(),
