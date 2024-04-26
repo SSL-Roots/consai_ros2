@@ -161,6 +161,7 @@ class AttackerDecision(DecisionBase):
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
+            move_to_ball = move_to_ball.with_ball_receiving()
             put_ball_back = move_to_ball.with_shooting_for_setplay_to(
                 TargetXY.value(kick_pos.x, kick_pos.y))
             put_ball_back = put_ball_back.disable_avoid_defense_area()
@@ -171,6 +172,7 @@ class AttackerDecision(DecisionBase):
             # ボール位置が配置目標位置から離れているときはパスする
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
+            move_to_ball = move_to_ball.with_ball_receiving()
             passing = move_to_ball.with_passing_for_setplay_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
             passing = passing.disable_avoid_defense_area()
@@ -182,6 +184,7 @@ class AttackerDecision(DecisionBase):
             move_to_behind_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y), -0.3,
                 TargetTheta.look_ball())
+            move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             dribbling = move_to_behind_ball.with_dribbling_to(
                 TargetXY.value(placement_pos.x, placement_pos.y))
             dribbling = dribbling.disable_avoid_defense_area()
