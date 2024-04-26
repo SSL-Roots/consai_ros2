@@ -152,7 +152,9 @@ class ManMarkObserver:
             our_id for our_id in self._mark_dict.keys() if our_id not in our_robots]
         # 実際に削除
         for our_id in to_remove_via_theirs + to_remove_via_ours:
-            self._mark_dict.pop(our_id)
+            # 更新タイミングによってはエラーになるため存在確認
+            if our_id in self._mark_dict:
+                self._mark_dict.pop(our_id)
 
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
         return their_bot_id in self._mark_dict.values()
