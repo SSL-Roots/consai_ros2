@@ -17,6 +17,7 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
 from consai_visualizer_msgs.msg import Objects
 from consai_visualizer_msgs.msg import ShapeLine
+import copy
 from field import Field
 import math
 
@@ -65,7 +66,8 @@ class ManMarkObserver:
 
     def set_our_active_bot_ids(self, our_active_bot_ids: list[OurIDType]) -> None:
         # アクティブじゃなくなったロボットのマーク情報を削除
-        for fired_bot_id in set(self._our_active_bot_ids) - set(our_active_bot_ids):
+        fired_bot_ids = set(self._our_active_bot_ids) - set(our_active_bot_ids)
+        for fired_bot_id in fired_bot_ids:
             if fired_bot_id in self._mark_dict.keys():
                 self._mark_dict.pop(fired_bot_id)
 
@@ -88,7 +90,10 @@ class ManMarkObserver:
         vis_objects.sub_layer = 'mark'
         vis_objects.z_order = 4
 
-        for our_id, their_id in self._mark_dict.items():
+        # Avoid dict size change during iteration
+        mark_dict = copy.deepcopy(self._mark_dict)
+
+        for our_id, their_id in mark_dict.items():
             if our_id not in our_robots.keys() or their_id not in their_robots.keys():
                 continue
 
