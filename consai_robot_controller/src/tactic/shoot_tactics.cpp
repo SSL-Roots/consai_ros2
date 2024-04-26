@@ -152,8 +152,9 @@ ShootTactics::ShootTactics()
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
 
+      // 目標位置をボールの奥に設定し、前進する
       const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, shoot_target_));
-      const auto new_pose = trans_BtoT.inverted_transform(-(ROBOT_RADIUS + BALL_RADIUS), 0.0, 0.0);
+      const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS, 0.0, 0.0);
 
       double shoot_speed = MAX_SHOOT_SPEED;
       if (data_set.is_pass()) {
