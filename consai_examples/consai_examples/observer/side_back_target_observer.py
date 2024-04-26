@@ -43,21 +43,21 @@ class SideBackTargetObserver():
         self._update_targets(their_robots)
 
     def _update_targets(self, their_robots: dict[int, PosVel]) -> None:
-        # ターゲットを抽出する
-        nearest_x0 = 10.0
-        nearest_x1 = 10.0
+        # ターゲットを抽出する（ゴールに近い相手ロボット）
+        nearest_y0 = 10.0
+        nearest_y1 = 10.0
         nearest_id0 = None
         nearest_id1 = None
         for robot_id, robot in their_robots.items():
             if self._is_in_top_side(robot.pos()):
-                if robot.pos().x < nearest_x0:
-                    nearest_x0 = robot.pos().x
+                if math.fabs(robot.pos().y) < nearest_y0:
+                    nearest_y0 = math.fabs(robot.pos().y)
                     nearest_id0 = robot_id
                 continue
 
             if self._is_in_bottom_side(robot.pos()):
-                if robot.pos().x < nearest_x1:
-                    nearest_x1 = robot.pos().x
+                if math.fabs(robot.pos().y) < nearest_y1:
+                    nearest_y1 = math.fabs(robot.pos().y)
                     nearest_id1 = robot_id
                 continue
 
