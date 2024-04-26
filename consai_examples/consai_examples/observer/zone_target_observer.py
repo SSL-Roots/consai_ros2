@@ -151,7 +151,7 @@ class ZoneTargetObserver():
         # ZONEターゲットを初期化する
         self._zone_targets = {0: None, 1: None, 2: None, 3: None}
 
-    def _is_in_defence_area(self, pos: State2D) -> bool:
+    def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
         defense_x = -6.0 + 1.8 + 0.6  # 0.4はロボットの直径x2
         defense_y = 1.8 + 0.6  # 0.4はロボットの直径x2
@@ -161,7 +161,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone1_0(self, pos: State2D) -> bool:
         # ZONE1 (左サイドの全部)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
 
         if pos.x < 0.0:
@@ -170,7 +170,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone2_0(self, pos: State2D) -> bool:
         # ZONE2 (左サイドの上半分)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y > 0.0:
             return True
@@ -178,7 +178,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone2_1(self, pos: State2D) -> bool:
         # ZONE2 (左サイドの下半分)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y <= 0.0:
             return True
@@ -186,7 +186,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone3_0(self, pos: State2D) -> bool:
         # ZONE3 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y > 4.5 * 0.5:
             return True
@@ -194,7 +194,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone3_1(self, pos: State2D) -> bool:
         # ZONE3 (左サイドの真ん中)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and math.fabs(pos.y) <= 4.5 * 0.5:
             return True
@@ -202,7 +202,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone3_2(self, pos: State2D) -> bool:
         # ZONE3 (左サイドの下半分の下)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y < -4.5 * 0.5:
             return True
@@ -210,7 +210,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone4_0(self, pos: State2D) -> bool:
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y > 4.5 * 0.5:
             return True
@@ -218,7 +218,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone4_1(self, pos: State2D) -> bool:
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y > 0.0 and pos.y <= 4.5 * 0.5:
             return True
@@ -226,7 +226,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone4_2(self, pos: State2D) -> bool:
         # ZONE4 (左サイドの下半分の上)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y <= 0.0 and pos.y > -4.5 * 0.5:
             return True
@@ -234,7 +234,7 @@ class ZoneTargetObserver():
 
     def _is_in_zone4_3(self, pos: State2D) -> bool:
         # ZONE4 (左サイドの下半分の下)にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < 0.0 and pos.y <= -4.5 * 0.5:
             return True
