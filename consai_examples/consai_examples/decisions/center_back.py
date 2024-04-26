@@ -18,6 +18,8 @@
 
 from enum import Enum
 
+from consai_examples.field import Field
+from consai_tools.geometry import geometry_tools as tool
 from decisions.decision_base import DecisionBase
 from field import Field
 from operation import Operation
@@ -88,7 +90,7 @@ class CenterBackDecision(DecisionBase):
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
-    def _defend_defense_area(self, robot_id):
+    def _defend_defense_area_operation(self, robot_id) -> Operation:
         offset = self._get_offset()
         # ボール位置で行動を変更
         if self._field_observer.zone().ball_is_in_left_top():
@@ -99,17 +101,29 @@ class CenterBackDecision(DecisionBase):
             operation = self._defend_front_operation(offset)
         operation = operation.with_ball_receiving()
         operation = operation.with_reflecting_to(TargetXY.their_goal())
-        self._operator.operate(robot_id, operation)
+        return operation
+
+    def _modify_our_robots_avoidance(self, robot_id: int, operation: Operation) -> Operation:
+        # 隣同士の衝突回避をやめるため、
+        # ディンフェスエリアに近づいたら、our robot回避を無効にする
+        my_pos = self._field_observer.detection().our_robots()[robot_id].pos()
+        our_goal_center = Field.goal_pose('our', 'center')
+        if tool.get_distance(my_pos, our_goal_center) < 3.0:
+            operation = operation.disable_avoid_our_robots()
+        return operation
 
     def stop(self, robot_id):
         offset = self._get_offset()
         operation = self._defend_front_operation(offset)
         operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_pushing_robots()
+        operation = self._modify_our_robots_avoidance(robot_id, operation)
         self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
-        self._defend_defense_area(robot_id)
+        operation = self._defend_defense_area_operation(robot_id)
+        operation = self._modify_our_robots_avoidance(robot_id, operation)
+        self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
