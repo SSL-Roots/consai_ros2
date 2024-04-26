@@ -98,7 +98,7 @@ class CenterBackDecision(DecisionBase):
             operation = self._defend_lower_operation(offset)
         else:
             operation = self._defend_front_operation(offset)
-        operation = operation.with_ball_receiving()
+        # operation = operation.with_ball_receiving()
         operation = operation.with_reflecting_to(TargetXY.their_goal())
         return operation
 
