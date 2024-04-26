@@ -23,7 +23,7 @@ from consai_visualizer_msgs.msg import ShapeText
 def to_visualize_msg(role_dict: dict[int, str], our_robots: dict[int, PosVel]) -> Objects:
     vis_objects = Objects()
 
-    vis_objects.layer = 'role'
+    vis_objects.layer = 'game'
     vis_objects.sub_layer = 'role'
     vis_objects.z_order = 5
 

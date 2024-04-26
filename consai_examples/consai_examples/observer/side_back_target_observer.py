@@ -24,7 +24,8 @@ class SideBackTargetObserver():
         # 0が上側、1が下側
         self._side_back_targets: dict[int, int] = {0: None, 1: None}
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
-        self._DEFENSE_AREA_MARGIN = 0.1
+        self._DEFENSE_AREA_MARGIN = 0.0
+        self._DEFENSE_AREA_FRONT_MARGIN = 0.2
         self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
         self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
 
@@ -79,7 +80,7 @@ class SideBackTargetObserver():
         # ディフェンスエリアの横（上側）にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < self._penalty_corner_upper_front.x and \
+        if pos.x < (self._penalty_corner_upper_front.x + self._DEFENSE_AREA_FRONT_MARGIN) and \
                 pos.y > self._penalty_corner_upper_front.y:
             return True
         return False
@@ -88,7 +89,7 @@ class SideBackTargetObserver():
         # ディフェンスエリアの横（下側）にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < self._penalty_corner_lower_front.x and \
+        if pos.x < (self._penalty_corner_lower_front.x + self._DEFENSE_AREA_FRONT_MARGIN) and \
                 pos.y < self._penalty_corner_lower_front.y:
             return True
         return False

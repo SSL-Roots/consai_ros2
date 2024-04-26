@@ -21,6 +21,11 @@ from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
 
+from consai_tools.geometry import geometry_tools
+from consai_msgs.msg import State2D
+from field import Field
+import copy
+
 
 class GoaleDecision(DecisionBase):
 
@@ -32,11 +37,27 @@ class GoaleDecision(DecisionBase):
         p1_y = 0.9
         p2_x = -6.0 + 0.3
         p2_y = -0.9
+
+        # ボールの座標
+        ball_pos = self._field_observer.detection().ball().pos()
+
+        # フィールドのある一点の座標
+        pose1 = State2D(x=ball_pos.x, y=2.5)
+        # ゴール上端の座標
+        pose2 = copy.deepcopy(Field._our_goal_dict['upper'])
+        pose2.y = pose2.y + (ball_pos.x - 6.0) * 0.03
+
+        # 2点を結ぶ直線の傾きと切片を取得
+        slope, intercept, _ = geometry_tools.get_line_parameter(pose1, pose2)
+        # 2点を結ぶ直線のうちy=0のときの座標
+        pose = TargetXY.value(-intercept / slope, 0.0)
+
         defend_goal = Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-            TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
+            pose, TargetXY.ball(), TargetTheta.look_ball())
         defend_goal = defend_goal.with_ball_receiving()
         defend_goal = defend_goal.disable_avoid_defense_area()
+
         return defend_goal
 
     def _penalty_defend_operation(self):

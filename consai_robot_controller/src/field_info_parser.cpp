@@ -136,13 +136,11 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     return avoidance_pose;
   }
 
-  if (goal->avoid_defense_area) {
-    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, avoidance_pose, avoidance_pose);
-  }
-
   TrackedBall ball;
   if (!detection_extractor_->extract_ball(ball)) {
-    return avoidance_pose;
+    // Set dummy value
+    ball.pos.x = 1000.0;
+    ball.pos.y = 1000.0;
   }
 
   tactic_obstacle_avoidance_->avoid_obstacles(
@@ -160,6 +158,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   if (goal->avoid_ball) {
     tactic_obstacle_avoidance_->avoid_ball_500mm(
       my_robot, final_goal_pose, avoidance_pose, ball, avoidance_pose);
+  }
+
+  if (goal->avoid_defense_area) {
+    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, avoidance_pose, avoidance_pose);
   }
 
   return avoidance_pose;

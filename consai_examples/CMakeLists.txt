@@ -42,6 +42,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/ball_placement_observer.py
     ${PROJECT_NAME}/observer/ball_position_observer.py
     ${PROJECT_NAME}/observer/detection_wrapper.py
+    ${PROJECT_NAME}/observer/man_mark_observer.py
     ${PROJECT_NAME}/observer/pass_shoot_observer.py
     ${PROJECT_NAME}/observer/pos_vel.py
     ${PROJECT_NAME}/observer/side_back_target_observer.py
