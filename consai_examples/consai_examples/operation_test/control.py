@@ -18,11 +18,12 @@
 import argparse
 from consai_examples.field_observer import FieldObserver
 from consai_examples.operation import OneShotOperation
-from consai_examples.operation import Operation
+# from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
 from consai_examples.referee_parser import RefereeParser
 from consai_examples.robot_operator import RobotOperator
+import math
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 import threading
@@ -46,101 +47,151 @@ def move_to(args: argparse.Namespace) -> None:
         time.sleep(CYCLE_TIME)
 
 
-def chase_ball(args: argparse.Namespace) -> None:
-    operation = OneShotOperation().move_to_pose(
-        TargetXY.ball(), TargetTheta.look_ball()
-    )
-    operation = operation.offset_pose_x(-0.2)
-    operator_node.operate(args.id, operation)
+def motion_check_for_all_robots(args: argparse.Namespace) -> None:
+    CYCLE_TIME = 5.0  # seconds
 
-    while operator_node.robot_is_free(args.id) is False:
-        logger.info("Robot {} is running".format(args.id))
-        time.sleep(1.0)
+    DESTINATION = 6.0  # meters
+    HALF_DESTINATION = DESTINATION / 2.0
+    OFFSET = DESTINATION / 10.0  # 10 = robot_num - 1
 
+    def move_all_robots_on_a_line(
+            x, y, theta, offset_x=0.0, offset_y=0.0, sleep_time=0.0,
+            robot_ids=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
+        for i in robot_ids:
+            pos_x = x + offset_x*i
+            pos_y = y + offset_y*i
+            operation = OneShotOperation().move_to_pose(
+                TargetXY.value(pos_x, pos_y), TargetTheta.value(theta)
+            )
+            operator_node.operate(i, operation)
+        time.sleep(sleep_time)
 
-def wait_ball_and_shoot(args: argparse.Namespace) -> None:
-    operation = Operation().move_to_pose(
-        TargetXY.value(args.x, args.y), TargetTheta.look_their_goal()
-    )
-    operation = operation.with_shooting_to(TargetXY.their_goal())
-    operator_node.operate(args.id, operation)
+    print("Go to top side")
+    move_all_robots_on_a_line(
+        -HALF_DESTINATION, HALF_DESTINATION, math.radians(90), OFFSET, 0.0, CYCLE_TIME)
 
-    logger.info("Robot {} keep moving after this script shutdown".format(args.id))
+    print("Go to right side")
+    move_all_robots_on_a_line(
+        HALF_DESTINATION, -HALF_DESTINATION, math.radians(0), 0.0, OFFSET, CYCLE_TIME)
 
+    print("Go to left side")
+    move_all_robots_on_a_line(
+        -HALF_DESTINATION, -HALF_DESTINATION, math.radians(180), 0.0, OFFSET, CYCLE_TIME)
 
-def receive_ball_and_shoot(args: argparse.Namespace) -> None:
-    operation = Operation().move_to_pose(
-        TargetXY.value(args.x, args.y), TargetTheta.look_their_goal()
-    )
-    operation = operation.with_shooting_to(TargetXY.their_goal())
-    operation = operation.with_reflecting_to(TargetXY.their_goal())
-    operator_node.operate(args.id, operation)
+    print("Go to bottom side")
+    move_all_robots_on_a_line(
+        -HALF_DESTINATION, -HALF_DESTINATION, math.radians(90), OFFSET, 0.0, CYCLE_TIME)
 
-    logger.info("Robot {} keep moving after this script shutdown".format(args.id))
+    def set_shoot_operation_for_all_robots(target_x, target_y):
+        for i in range(11):
+            operation = OneShotOperation().move_to_pose(
+                TargetXY.our_robot(i), TargetTheta.look_ball())
+            operation = operation.with_shooting_to(TargetXY.value(target_x, target_y))
+            operator_node.operate(i, operation)
 
-
-def pass_ball_between_robots(args: argparse.Namespace) -> None:
-    ope1 = Operation().move_to_pose(TargetXY.value(-2.0, -1.0), TargetTheta.look_ball())
-    ope1 = ope1.with_passing_to(TargetXY.our_robot(args.sub_id))
-    operator_node.operate(args.id, ope1)
-
-    ope2 = Operation().move_to_pose(TargetXY.value(2.0, 1.0), TargetTheta.look_ball())
-    ope2 = ope2.with_passing_to(TargetXY.our_robot(args.id))
-    operator_node.operate(args.sub_id, ope2)
-
-    logger.info(
-        "Robots {}, {} keep moving after this script shutdown".format(
-            args.id, args.sub_id
-        )
-    )
-
-
-def move_to_between_ball_and_center(args: argparse.Namespace) -> None:
-    operation = OneShotOperation().move_on_line(
-        TargetXY.ball(), TargetXY.value(0, 0), 0.5, TargetTheta.look_ball()
-    )
-    operator_node.operate(args.id, operation)
-
-    while operator_node.robot_is_free(args.id) is False:
-        logger.info("Robot {} is running".format(args.id))
-        time.sleep(1.0)
+    print("Shoot to top side")
+    move_all_robots_on_a_line(
+        -HALF_DESTINATION, -HALF_DESTINATION + 1.0, math.radians(90),
+        OFFSET, 0.0, CYCLE_TIME, robot_ids=[0, 2, 4, 6, 8, 10])
+    set_shoot_operation_for_all_robots(0.0, DESTINATION)
 
 
-def defend_our_goal(args: argparse.Namespace) -> None:
-    p1_x = -5.5
-    p1_y = 1.8
-    p2_x = -5.5
-    p2_y = -1.8
-    operation = Operation().move_to_intersection(
-        TargetXY.value(p1_x, p1_y),
-        TargetXY.value(p2_x, p2_y),
-        TargetXY.our_goal(),
-        TargetXY.ball(),
-        TargetTheta.look_ball(),
-    )
-    operation = operation.with_ball_receiving()
-    operator_node.operate(args.id, operation)
+# def chase_ball(args: argparse.Namespace) -> None:
+#     operation = OneShotOperation().move_to_pose(
+#         TargetXY.ball(), TargetTheta.look_ball()
+#     )
+#     operation = operation.offset_pose_x(-0.2)
+#     operator_node.operate(args.id, operation)
 
-    logger.info(
-        "Robots {}, {} keep moving after this script shutdown".format(
-            args.id, args.sub_id
-        )
-    )
+#     while operator_node.robot_is_free(args.id) is False:
+#         logger.info("Robot {} is running".format(args.id))
+#         time.sleep(1.0)
 
 
-def main():
-    pass
+# def wait_ball_and_shoot(args: argparse.Namespace) -> None:
+#     operation = Operation().move_to_pose(
+#         TargetXY.value(args.x, args.y), TargetTheta.look_their_goal()
+#     )
+#     operation = operation.with_shooting_to(TargetXY.their_goal())
+#     operator_node.operate(args.id, operation)
+
+#     logger.info("Robot {} keep moving after this script shutdown".format(args.id))
+
+
+# def receive_ball_and_shoot(args: argparse.Namespace) -> None:
+#     operation = Operation().move_to_pose(
+#         TargetXY.value(args.x, args.y), TargetTheta.look_their_goal()
+#     )
+#     operation = operation.with_shooting_to(TargetXY.their_goal())
+#     operation = operation.with_reflecting_to(TargetXY.their_goal())
+#     operator_node.operate(args.id, operation)
+
+#     logger.info("Robot {} keep moving after this script shutdown".format(args.id))
+
+
+# def pass_ball_between_robots(args: argparse.Namespace) -> None:
+#     ope1 = Operation().move_to_pose(TargetXY.value(-2.0, -1.0), TargetTheta.look_ball())
+#     ope1 = ope1.with_passing_to(TargetXY.our_robot(args.sub_id))
+#     operator_node.operate(args.id, ope1)
+
+#     ope2 = Operation().move_to_pose(TargetXY.value(2.0, 1.0), TargetTheta.look_ball())
+#     ope2 = ope2.with_passing_to(TargetXY.our_robot(args.id))
+#     operator_node.operate(args.sub_id, ope2)
+
+#     logger.info(
+#         "Robots {}, {} keep moving after this script shutdown".format(
+#             args.id, args.sub_id
+#         )
+#     )
+
+
+# def move_to_between_ball_and_center(args: argparse.Namespace) -> None:
+#     operation = OneShotOperation().move_on_line(
+#         TargetXY.ball(), TargetXY.value(0, 0), 0.5, TargetTheta.look_ball()
+#     )
+#     operator_node.operate(args.id, operation)
+
+#     while operator_node.robot_is_free(args.id) is False:
+#         logger.info("Robot {} is running".format(args.id))
+#         time.sleep(1.0)
+
+
+# def defend_our_goal(args: argparse.Namespace) -> None:
+#     p1_x = -5.5
+#     p1_y = 1.8
+#     p2_x = -5.5
+#     p2_y = -1.8
+#     operation = Operation().move_to_intersection(
+#         TargetXY.value(p1_x, p1_y),
+#         TargetXY.value(p2_x, p2_y),
+#         TargetXY.our_goal(),
+#         TargetXY.ball(),
+#         TargetTheta.look_ball(),
+#     )
+#     operation = operation.with_ball_receiving()
+#     operator_node.operate(args.id, operation)
+
+#     logger.info(
+#         "Robots {}, {} keep moving after this script shutdown".format(
+#             args.id, args.sub_id
+#         )
+#     )
+
+
+# def main():
+#     pass
 
 
 if __name__ == "__main__":
     example_functions = {
         0: move_to,
-        1: chase_ball,
-        2: wait_ball_and_shoot,
-        3: receive_ball_and_shoot,
-        4: pass_ball_between_robots,
-        5: move_to_between_ball_and_center,
-        6: defend_our_goal,
+        1: motion_check_for_all_robots,
+        # 1: chase_ball,
+        # 2: wait_ball_and_shoot,
+        # 3: receive_ball_and_shoot,
+        # 4: pass_ball_between_robots,
+        # 5: move_to_between_ball_and_center,
+        # 6: defend_our_goal,
     }
     examples_text = ""
     for key, value in example_functions.items():
@@ -189,7 +240,7 @@ if __name__ == "__main__":
 
     try:
         example_functions[args.example](args)
-        main()
+        # main()
     except KeyboardInterrupt:
         pass
 
