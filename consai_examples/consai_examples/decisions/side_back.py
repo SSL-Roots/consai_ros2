@@ -54,9 +54,9 @@ class SideBackDecision(DecisionBase):
 
         # 深追いしないライン
         p1_x = self._penalty_corner_upper_front.x
-        p1_y = self._penalty_corner_upper_front.y + MARK_THRESHOLD_Y
+        p1_y = MARK_THRESHOLD_Y - 0.2
         p2_x = self._penalty_goalside_upper_back.x
-        p2_y = self._penalty_goalside_upper_back.y + MARK_THRESHOLD_Y
+        p2_y = MARK_THRESHOLD_Y -0.2
 
         # FIXME: ボールが相手側にある場合は攻めに役立ちそうなポジションに移動してほしい
 
