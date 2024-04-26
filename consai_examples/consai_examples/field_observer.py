@@ -136,4 +136,3 @@ class FieldObserver(Node):
             self._man_mark_observer.to_visualize_msg(
                 self._detection_wrapper.our_robots(),
                 self._detection_wrapper.their_robots()))
-

@@ -70,13 +70,15 @@ class GoaleDecision(DecisionBase):
                     # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
                     if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
                         # 2点を結ぶ直線の傾きと切片を取得
-                        slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, robot_pos)
+                        slope, intercept, _ = geometry_tools.get_line_parameter(
+                            ball_pos, robot_pos)
                         # ゴール前との交点(y座標)を算出
                         y = slope * p1_x + intercept
                         if abs(y) < p1_y:
                             x = p1_x
                             defend_pose = TargetXY.value(x, y)
                             flag = 2
+                    continue
 
         # ボールがゴールに向かって来る場合
         elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
