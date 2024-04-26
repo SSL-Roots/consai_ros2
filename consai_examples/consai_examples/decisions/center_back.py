@@ -21,7 +21,6 @@ from enum import Enum
 from consai_examples.field import Field
 from consai_tools.geometry import geometry_tools as tool
 from decisions.decision_base import DecisionBase
-from field import Field
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
