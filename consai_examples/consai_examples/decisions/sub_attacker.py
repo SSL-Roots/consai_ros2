@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
-from consai_msgs.msg import State2D
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
@@ -32,8 +31,6 @@ class SubAttackerDecision(DecisionBase):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         ball_pos = self._field_observer.detection().ball().pos()
         half_right = 3.0
-        robot_offset_x = 1.5
-        robot_pose_y = 2.5
 
         if self._field_observer.zone().ball_is_in_right_top():
             if ball_pos.x > half_right:
