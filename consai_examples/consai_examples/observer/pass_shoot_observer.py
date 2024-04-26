@@ -45,7 +45,7 @@ class PassShootObserver:
     def get_shoot_pos_list(self) -> list[State2D]:
         return self._present_shoot_pos_list
 
-    def search_receivers_list(self, my_robot_id: int) -> list[int]:
+    def search_receivers_list(self, my_robot_id: int, search_offset=0.0) -> list[int]:
         # パス可能なロボットIDのリストを返す関数
         # TODO(Roots): パスできるリストの探索と、シュートできるリストの探索は別関数に分けたほうが良い
 
@@ -62,7 +62,7 @@ class PassShootObserver:
 
         # パサーよりも前にいる味方ロボットIDのリストを取得
         forward_our_id_list = self._search_forward_robots(
-            my_robot_pos, search_our_robots=True,
+            my_robot_pos, search_offset, search_our_robots=True,
             exclude_id=my_robot_id, our_goalie_id=self._goalie_id)
         forward_their_id_list = self._search_forward_robots(
             my_robot_pos, search_our_robots=False)
@@ -142,23 +142,23 @@ class PassShootObserver:
     #     return sorted_robots_id
 
     def _search_forward_robots(
-            self, pos: State2D, search_our_robots=True,
+            self, pos: State2D, search_offsset=0.0, search_our_robots=True,
             exclude_id=-1, our_goalie_id=-1) -> list[int]:
         # 指定した座標より前にいるロボットIDのリストを返す関数
 
-        def search(pos: State2D, robots: dict[int, PosVel]) -> list[int]:
+        def search(pos: State2D, robots: dict[int, PosVel], search_offsset=0.0) -> list[int]:
             # 指定した座標より前にいるロボットIDのリストを返す関数
             forward_robots_id = []
             for robot_id, robot in robots.items():
                 if robot_id == exclude_id or robot_id == our_goalie_id:
                     continue
-                if pos.x < robot.pos().x:
+                if pos.x < robot.pos().x + search_offsset:
                     forward_robots_id.append(robot_id)
 
             return forward_robots_id
 
         if search_our_robots:
-            return search(pos, self._our_robots)
+            return search(pos, self._our_robots, search_offsset)
         else:
             return search(pos, self._their_robots)
 

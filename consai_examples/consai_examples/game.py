@@ -61,6 +61,15 @@ def num_of_active_zone_roles(active_roles):
     return len(set(role_zone_list) & set(active_roles))
 
 
+def zone_role_ids(aVctive_roles) -> list[int]:
+    # ゾーンディンフェンスを担当するロボットIDのリストを返す
+    ids = []
+    for role, robot_id in assignor.get_assigned_roles_and_ids():
+        if role in [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3, RoleName.ZONE4]:
+            ids.append(robot_id)
+    return ids
+
+
 def enable_update_attacker_by_ball_pos():
     # アタッカーの切り替わりを防ぐため、
     # ボールが動いてたり、ディフェンスエリアや自ゴール側場外にあるときは役割を更新しない
@@ -162,18 +171,19 @@ def main():
             enable_update_attacker_by_ball_pos(),
             referee.max_allowed_our_bots())
 
-        # 役割の描画情報を出力する
-        assignor.publish_role_for_visualizer(observer.detection().our_robots())
-
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
         num_of_center_back_roles = num_of_active_center_back_roles(assigned_roles)
         num_of_side_back_roles = num_of_active_side_back_roles(assigned_roles)
         num_of_zone_roles = num_of_active_zone_roles(assigned_roles)
         observer.set_num_of_zone_roles(num_of_zone_roles)
+        observer.man_mark().set_our_active_bot_ids(zone_role_ids(assigned_roles))
 
         update_decisions(changed_ids, num_of_center_back_roles,
                          num_of_side_back_roles, num_of_zone_roles)
+
+        # 役割情報を出力する
+        assignor.publish_role_for_visualizer(observer.detection().our_robots())
 
         elapsed_time = time.time() - start_time
         if elapsed_time < TARGET_PERIOD:
