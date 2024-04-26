@@ -205,6 +205,34 @@ def gen_chase_ball_function():
 
 def gen_setplay_shoot_function():
     def function(self, robot_id):
+
+        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
+        search_offset = 1.0
+        move_to_ball = Operation().move_on_line(
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
+        move_to_ball = move_to_ball.with_ball_receiving()
+        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
+
+        # シュートできる場合はシュートする
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        if len(shoot_pos_list) > 0:
+            shooting = move_to_ball.with_shooting_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+            self._operator.operate(robot_id, shooting)
+            return
+
+        # パス可能なIDのリストを取得
+        receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
+            robot_id, search_offset)
+
+        # パス可能な場合
+        if len(receivers_id_list) > 0:
+            passing = move_to_ball.with_passing_to(
+                TargetXY.our_robot(receivers_id_list[0]))
+            self._operator.operate(robot_id, passing)
+            return
+
+        # パスもできなければシュートする
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
         setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
