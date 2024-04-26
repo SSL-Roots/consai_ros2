@@ -205,38 +205,46 @@ def gen_chase_ball_function():
 
 def gen_setplay_shoot_function():
     def function(self, robot_id):
-
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
-        search_offset = 1.0
+        search_offset = 2.0
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
-        move_to_ball = move_to_ball.with_ball_receiving()
-        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
-        # シュートできる場合はシュートする
+        # シュート可能なゴールのリストを取得
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
-        if len(shoot_pos_list) > 0:
-            shooting = move_to_ball.with_shooting_to(
-                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
-            self._operator.operate(robot_id, shooting)
-            return
-
         # パス可能なIDのリストを取得
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
             robot_id, search_offset)
 
+        # シュートできる場合
+        if len(shoot_pos_list) > 0:
+            # シュートする
+            target_pose = TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y)
+            # move_to_ball = Operation().move_on_line(
+                # target_pose, TargetXY.ball(), 0.05, TargetTheta.look_ball())
+            shooting = move_to_ball.with_shooting_for_setplay_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+            self._operator.operate(robot_id, shooting)
+            return
         # パス可能な場合
-        if len(receivers_id_list) > 0:
-            passing = move_to_ball.with_passing_to(
+        elif len(receivers_id_list) > 0:
+            # パスする
+            target_pose = TargetXY.our_robot(receivers_id_list[0])
+            # move_to_ball = Operation().move_on_line(
+                # target_pose, TargetXY.ball(), 0.05, TargetTheta.look_ball())
+            # move_to_ball = Operation().move_on_line(
+                # TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+            passing = move_to_ball.with_passing_for_setplay_to(
                 TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
             return
+        else:
+            # パスもできなければ相手ゴールに向かってシュートする
+            # move_to_ball = Operation().move_on_line(
+                # TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
+            setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
+            self._operator.operate(robot_id, setplay_shoot)
 
-        # パスもできなければシュートする
-        move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
-        setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
-        self._operator.operate(robot_id, setplay_shoot)
     return function
 
 
