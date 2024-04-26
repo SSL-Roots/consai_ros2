@@ -47,7 +47,7 @@ class ZoneDefenseDecision(DecisionBase):
 
     def _zone_defense_operation(self, robot_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
-        ZONE_ID = self._zone_id.value
+        # ZONE_ID = self._zone_id.value
         target_id = self._field_observer.man_mark().get_mark_robot_id(robot_id)
 
         # ゾーン内にボールがあるか判定
