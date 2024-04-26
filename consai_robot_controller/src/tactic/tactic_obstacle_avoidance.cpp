@@ -23,6 +23,7 @@ namespace tactic
 {
 
 namespace tools = geometry_tools;
+constexpr double ROBOT_RADIUS = 0.09;
 
 ObstacleAvoidance::ObstacleAvoidance(
   const std::shared_ptr<DetectionExtractor> & detection_extractor)
@@ -355,7 +356,6 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double ROBOT_RADIUS = 0.09;
   constexpr double FIELD_HALF_LENGTH = 6.0;
   constexpr double DEFENSE_AREA_LENGTH = 1.8;
   constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
