@@ -74,7 +74,7 @@ class GoaleDecision(DecisionBase):
                             ball_pos, robot_pos)
                         # ゴール前との交点(y座標)を算出
                         y = slope * p1_x + intercept
-                        if abs(y) < p1_y:
+                        if abs(y) < p1_y - 0.35:
                             x = p1_x
                             defend_pose = TargetXY.value(x, y)
                             flag = 2
