@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from rclpy import qos
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import TrackedFrame
 
@@ -26,6 +27,9 @@ from consai_examples.observer.side_back_target_observer import SideBackTargetObs
 from consai_examples.observer.zone_target_observer import ZoneTargetObserver
 from consai_examples.observer.ball_motion_observer import BallMotionObserver
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
+from consai_examples.observer.distance_observer import DistanceObserver
+from consai_examples.observer.man_mark_observer import ManMarkObserver
+from consai_visualizer_msgs.msg import Objects
 
 
 class FieldObserver(Node):
@@ -41,6 +45,9 @@ class FieldObserver(Node):
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
+        self._pub_visualizer_objects = self.create_publisher(
+            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
         self._ball_placement_observer = BallPlacementObserver()
@@ -49,6 +56,8 @@ class FieldObserver(Node):
         self._side_back_target_observer = SideBackTargetObserver()
         self._ball_motion_observer = BallMotionObserver()
         self._pass_shoot_observer = PassShootObserver(goalie_id)
+        self._distance_observer = DistanceObserver()
+        self._man_mark_observer = ManMarkObserver()
 
         self._num_of_zone_roles = 0
 
@@ -75,6 +84,12 @@ class FieldObserver(Node):
 
     def pass_shoot(self) -> PassShootObserver:
         return self._pass_shoot_observer
+
+    def distance(self) -> DistanceObserver:
+        return self._distance_observer
+
+    def man_mark(self) -> ManMarkObserver:
+        return self._man_mark_observer
 
     def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
         self._num_of_zone_roles = num_of_zone_roles
@@ -105,3 +120,19 @@ class FieldObserver(Node):
             self._detection_wrapper.ball(),
             self._detection_wrapper.our_robots(),
             self._detection_wrapper.their_robots())
+        self._distance_observer.update(
+            self._detection_wrapper.ball().pos(),
+            self._detection_wrapper.our_robots(),
+            self._detection_wrapper.their_robots())
+        self._man_mark_observer.update(
+            self._detection_wrapper.ball(),
+            self._detection_wrapper.our_robots(),
+            self._detection_wrapper.their_robots())
+
+        self._publish_visualizer_msgs()
+
+    def _publish_visualizer_msgs(self):
+        self._pub_visualizer_objects.publish(
+            self._man_mark_observer.to_visualize_msg(
+                self._detection_wrapper.our_robots(),
+                self._detection_wrapper.their_robots()))
