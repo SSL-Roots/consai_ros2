@@ -144,7 +144,11 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   tactic_obstacle_avoidance_->avoid_obstacles(
-    my_robot, avoidance_pose, ball, goal->avoid_ball, avoidance_pose);
+    my_robot, avoidance_pose, ball,
+    goal->avoid_our_robots,
+    goal->avoid_their_robots,
+    goal->avoid_ball,
+    avoidance_pose);
 
   if (goal->avoid_placement_area) {
     tactic_obstacle_avoidance_->avoid_placement_area(

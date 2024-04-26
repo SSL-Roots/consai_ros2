@@ -24,37 +24,84 @@ from operation import TargetTheta
 from consai_tools.geometry import geometry_tools
 from consai_msgs.msg import State2D
 from field import Field
-import copy
+import math
 
 
 class GoaleDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
+        self.our_goal_upper_pos = Field()._our_goal_dict['upper']
+        self.our_goal_center_pos = Field()._our_goal_dict['center']
+        self.our_goal_lower_pos = Field()._our_goal_dict['lower']
+        # ゴール前を守る位置のマージン[m]
+        self.margin = 0.2
 
     def _defend_goal_operation(self):
-        p1_x = -6.0 + 0.3
-        p1_y = 0.9
-        p2_x = -6.0 + 0.3
-        p2_y = -0.9
+        p1_x = self.our_goal_upper_pos.x + self.margin
+        p1_y = self.our_goal_upper_pos.y
+        p2_x = self.our_goal_lower_pos.x + self.margin
+        p2_y = self.our_goal_lower_pos.y
 
-        # ボールの座標
+        # ボールの座標を取得
         ball_pos = self._field_observer.detection().ball().pos()
+        # ボールの速度を取得
+        ball_vel = self._field_observer.detection().ball().vel()
 
-        # フィールドのある一点の座標
-        pose1 = State2D(x=ball_pos.x, y=2.5)
-        # ゴール上端の座標
-        pose2 = copy.deepcopy(Field._our_goal_dict['upper'])
-        pose2.y = pose2.y + (ball_pos.x - 6.0) * 0.03
+        # ボールと敵ロボットの距離を取得
+        distance_ball_to_their_robots = self._field_observer.distance().ball_to_their_robots()
+        # ボールが味方側エリアにあるか取得
+        is_in_our_side = self._field_observer.ball_position().is_in_our_side()
 
-        # 2点を結ぶ直線の傾きと切片を取得
-        slope, intercept, _ = geometry_tools.get_line_parameter(pose1, pose2)
-        # 2点を結ぶ直線のうちy=0のときの座標
-        pose = TargetXY.value(-intercept / slope, 0.0)
+        # ボールと敵ロボットの状況を見てディフェンス座標を変更するフラグを生成
+        flag = 1
+        # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
+        if is_in_our_side and len(distance_ball_to_their_robots.keys()):
+            # ボールに一番近い敵ロボットのIDを取得
+            sorted_distance = sorted(
+                enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
+            sorted_indices = [index for index, _ in sorted_distance]
+            robots = self._field_observer.detection().their_robots()
+            for i in sorted_indices:
+                if i in robots:
+                    # 一番近いロボットの位置を取得
+                    robot_pos = robots[i].pos()
 
-        defend_goal = Operation().move_to_intersection(
-            TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
-            pose, TargetXY.ball(), TargetTheta.look_ball())
+                    # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
+                    if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
+                        # 2点を結ぶ直線の傾きと切片を取得
+                        slope, intercept, _ = geometry_tools.get_line_parameter(
+                            ball_pos, robot_pos)
+                        # ゴール前との交点(y座標)を算出
+                        y = slope * p1_x + intercept
+                        if abs(y) < p1_y:
+                            x = p1_x
+                            defend_pose = TargetXY.value(x, y)
+                            flag = 2
+                    continue
+
+        # ボールがゴールに向かって来る場合
+        elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
+            # 2点を結ぶ直線の傾きと切片を取得
+            slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
+            # ゴール前との交点(y座標)を算出
+            y = slope * p1_x + intercept
+            if abs(y) < p1_y:
+                x = p1_x
+                defend_pose = TargetXY.value(x, y)
+                flag = 2
+
+        if flag == 1:
+            slope, intercept, _ = geometry_tools.get_line_parameter(
+                ball_pos, State2D(x=-6.75, y=0.0))
+            y = slope * p1_x + intercept
+            defend_goal = Operation().move_to_intersection(
+                TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+                TargetXY.value(p1_x, y), TargetXY.ball(), TargetTheta.look_ball())
+        if flag == 2:
+            defend_goal = Operation().move_to_pose(
+                defend_pose, TargetTheta.look_ball())
+
         defend_goal = defend_goal.with_ball_receiving()
         defend_goal = defend_goal.disable_avoid_defense_area()
 

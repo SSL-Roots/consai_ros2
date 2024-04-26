@@ -39,5 +39,7 @@ bool avoid_obstacles true  # 衝突回避は安全のためデフォルトでtru
 bool avoid_placement_area false  # 回避の機会は限定的なのでデフォルトでfalse
 State2D placement_pos
 bool avoid_ball false  # ボールを避ける機会は限定的なのでデフォルトでfalse
+bool avoid_our_robots true
+bool avoid_their_robots true
 bool avoid_pushing_robots false  # ロボット同士の押し合いを避ける機会は限定的なのでデフォルトでfalse
 bool avoid_defense_area true  # ディフェンスエリアは避けるべきなのでデフォルトでtrue
