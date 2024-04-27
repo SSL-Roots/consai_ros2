@@ -156,16 +156,14 @@ class AttackerDecision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         # 壁際にあると判定した場合
-        # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
+        # ボールがフィールド外にある場合は、バックドリブルでボールをフィールド内に戻す
         if self._field_observer.ball_position().is_outside_with_margin():
-            kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
             move_to_ball = move_to_ball.with_ball_receiving()
-            put_ball_back = move_to_ball.with_shooting_for_setplay_to(
-                TargetXY.value(kick_pos.x, kick_pos.y))
-            put_ball_back = put_ball_back.disable_avoid_defense_area()
-            self._operator.operate(robot_id, put_ball_back)
+            back_dribble = move_to_ball.with_back_dribbling_to(TargetXY.value(0.0, 0.0))
+            back_dribble = back_dribble.disable_avoid_defense_area()
+            self._operator.operate(robot_id, back_dribble)
             return
 
         if self._field_observer.ball_placement().is_far_from(placement_pos):
