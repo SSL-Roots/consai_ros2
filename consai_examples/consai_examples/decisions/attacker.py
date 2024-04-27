@@ -133,17 +133,17 @@ class AttackerDecision(DecisionBase):
             + self._field_observer.field_margin_to_wall()
         offset = 0.2  # ボールからのオフセット距離。値が大きいほどキック角度が浅くなる
 
-        if self._field_observer.ball_position().is_outside_of_left():
+        if self._field_observer.ball_position().is_outside_of_left_with_margin():
             if ball_pos.y > placement_pos.y:
                 return State2D(x=-wall_x, y=ball_pos.y - offset)
             else:
                 return State2D(x=-wall_x, y=ball_pos.y + offset)
-        elif self._field_observer.ball_position().is_outside_of_right():
+        elif self._field_observer.ball_position().is_outside_of_right_with_margin():
             if ball_pos.y > placement_pos.y:
                 return State2D(x=wall_x, y=ball_pos.y - offset)
             else:
                 return State2D(x=wall_x, y=ball_pos.y + offset)
-        elif self._field_observer.ball_position().is_outside_of_top():
+        elif self._field_observer.ball_position().is_outside_of_top_with_margin():
             if ball_pos.x > placement_pos.x:
                 return State2D(x=ball_pos.x - offset, y=wall_y)
             else:
@@ -157,7 +157,7 @@ class AttackerDecision(DecisionBase):
     def our_ball_placement(self, robot_id, placement_pos):
         # 壁際にあると判定した場合
         # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
-        if self._field_observer.ball_position().is_outside():
+        if self._field_observer.ball_position().is_outside_with_margin():
             kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
