@@ -147,6 +147,8 @@ ShootTactics::ShootTactics()
     };
 
   tactic_functions_[SHOOT] = [this](TacticDataSet & data_set) -> TacticName {
+      // ロボットからみてボールが正面にあるかのしきい値
+      const auto THETA_THRESHOLD = tools::to_radians(30.0);
       // 目的位置に向かってシュートする
       // ボールが離れたら終了する
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
@@ -155,6 +157,14 @@ ShootTactics::ShootTactics()
       // 目標位置をボールの奥に設定し、前進する
       const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, shoot_target_));
       const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS, 0.0, 0.0);
+
+      // ロボットから見てボールが正面にない場合は
+      // SHOOTを抜けて、APPROACHに戻る
+      const tools::Trans trans_RtoB(ball_pose, tools::calc_angle(robot_pose, ball_pose));
+      const auto robot_pose_RtoB = trans_RtoB.transform(robot_pose);
+      if (std::fabs(robot_pose_RtoB.theta) > THETA_THRESHOLD) {
+        return APPROACH;
+      }
 
       double shoot_speed = MAX_SHOOT_SPEED;
       if (data_set.is_pass()) {
