@@ -30,7 +30,9 @@ from consai_examples.observer.ball_motion_observer import BallMotionObserver
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
 from consai_examples.observer.distance_observer import DistanceObserver
 from consai_examples.observer.man_mark_observer import ManMarkObserver
-from consai_msgs.msg import GoalPoses, GoalPose
+from consai_msgs.msg import GoalPose
+from consai_msgs.msg import GoalPoses
+from consai_msgs.msg import State2D
 from consai_visualizer_msgs.msg import Objects
 
 
@@ -102,11 +104,11 @@ class FieldObserver(Node):
     def man_mark(self) -> ManMarkObserver:
         return self._man_mark_observer
 
-    def destination(self, robot_id: int) -> tuple[bool, GoalPose]:
+    def destination_pose(self, robot_id: int) -> tuple[bool, State2D]:
         for goal_pose in self._destinations.poses:
             if goal_pose.robot_id == robot_id:
-                return True, goal_pose
-        return False, GoalPose()
+                return True, goal_pose.pose
+        return False, GoalPose().pose
 
     def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
         self._num_of_zone_roles = num_of_zone_roles
