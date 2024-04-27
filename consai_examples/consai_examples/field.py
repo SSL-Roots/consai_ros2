@@ -82,7 +82,7 @@ class Field:
     @classmethod
     def field(cls, param='length'):
         return Field._field[param]
-    
+
     @classmethod
     def defense_area(cls, param='length'):
         return Field._defense_area[param]
