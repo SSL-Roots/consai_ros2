@@ -103,13 +103,13 @@ private:
   rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
   rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_goal_poses_;
-  rclcpp::Publisher<GoalPoses>::SharedPtr pub_final_goal_poses_;
+  rclcpp::Publisher<GoalPoses>::SharedPtr pub_destinations_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;
   std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
 
   RobotControlMap robot_control_map_;
   GoalPosesMap goal_poses_map_;
-  GoalPosesMap final_goal_poses_map_;
+  GoalPosesMap destinations_map_;
   bool team_is_yellow_;
   rclcpp::Clock steady_clock_;
 

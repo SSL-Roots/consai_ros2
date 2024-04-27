@@ -30,6 +30,7 @@ from consai_examples.observer.ball_motion_observer import BallMotionObserver
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
 from consai_examples.observer.distance_observer import DistanceObserver
 from consai_examples.observer.man_mark_observer import ManMarkObserver
+from consai_msgs.msg import GoalPoses, GoalPose
 from consai_visualizer_msgs.msg import Objects
 
 
@@ -49,6 +50,9 @@ class FieldObserver(Node):
         self._pub_visualizer_objects = self.create_publisher(
             Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
 
+        self._sub_destinations = self.create_subscription(
+            GoalPoses, 'destinations', self._destinations_callback, 10)
+
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
         self._ball_placement_observer = BallPlacementObserver()
@@ -60,6 +64,8 @@ class FieldObserver(Node):
         self._pass_shoot_observer = PassShootObserver(goalie_id)
         self._distance_observer = DistanceObserver()
         self._man_mark_observer = ManMarkObserver()
+
+        self._destinations = GoalPoses()
 
         self._num_of_zone_roles = 0
 
@@ -95,6 +101,12 @@ class FieldObserver(Node):
 
     def man_mark(self) -> ManMarkObserver:
         return self._man_mark_observer
+
+    def destination(self, robot_id: int) -> tuple[bool, GoalPose]:
+        for goal_pose in self._destinations.poses:
+            if goal_pose.robot_id == robot_id:
+                return True, goal_pose
+        return False, GoalPose()
 
     def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
         self._num_of_zone_roles = num_of_zone_roles
@@ -136,6 +148,9 @@ class FieldObserver(Node):
             self._detection_wrapper.their_robots())
 
         self._publish_visualizer_msgs()
+
+    def _destinations_callback(self, msg):
+        self._destinations = msg
 
     def _publish_visualizer_msgs(self):
         self._pub_visualizer_objects.publish(
