@@ -15,18 +15,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
+
 from decisions.decision_base import DecisionBase
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
 
+class SubAttackerID(Enum):
+    SUBATTACK1 = 0
+    SUBATTACK2 = 1
 
 class SubAttackerDecision(DecisionBase):
 
-    def __init__(self, robot_operator, field_observer):
+    def __init__(self, robot_operator, field_observer, sub_attacker_id: SubAttackerID):
         super().__init__(robot_operator, field_observer)
+        self._sub_attacker_id = sub_attacker_id
+        self.half_right = 3.0
+        self.dist_from_ball_x = 1.5
+        self.dist_from_ball_y = 2.5
 
     def _offend_operation(self):
+        SUB_ATTACKER_ID = self._sub_attacker_id.value
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         if self._field_observer.zone().ball_is_in_top():
