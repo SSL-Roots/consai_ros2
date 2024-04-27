@@ -52,6 +52,11 @@ class Field:
         'quarter_length': 3.0,
         'half_width':     4.5,
         'quarter_width':  2.25}
+    _defense_area = {
+        'length':      1.8,
+        'width':       3.6,
+        'helf_length': 0.9,
+        'helf_width':  1.8}
     _geometry_field_lines = {}
 
     # _penalty_poseとfield_lines紐付ける辞書
@@ -77,3 +82,7 @@ class Field:
     @classmethod
     def field(cls, param='length'):
         return Field._field[param]
+    
+    @classmethod
+    def defense_area(cls, param='length'):
+        return Field._defense_area[param]
