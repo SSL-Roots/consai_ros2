@@ -182,6 +182,16 @@ class Operation():
         goal.avoid_defense_area = False
         return Operation(goal)
 
+    def disable_avoid_our_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_our_robots = False
+        return Operation(goal)
+
+    def disable_avoid_their_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_their_robots = False
+        return Operation(goal)
+
     def restrict_velocity_xy(self, velocity: float) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.max_velocity_xy.insert(0, velocity)

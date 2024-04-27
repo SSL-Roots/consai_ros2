@@ -23,6 +23,7 @@ namespace tactic
 {
 
 namespace tools = geometry_tools;
+constexpr double ROBOT_RADIUS = 0.09;
 
 ObstacleAvoidance::ObstacleAvoidance(
   const std::shared_ptr<DetectionExtractor> & detection_extractor)
@@ -32,18 +33,20 @@ ObstacleAvoidance::ObstacleAvoidance(
 
 bool ObstacleAvoidance::avoid_obstacles(
   const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-  const bool & avoid_ball, State & avoidance_pose) const
+  const bool & avoid_our_robots,
+  const bool & avoid_their_robots,
+  const bool & avoid_ball,
+  State & avoidance_pose) const
 {
   // 障害物を回避するposeを生成する
-  // 全ロボット情報を検索し、
+  // 全ロボットとボールを検索し、
   // 自己位置(my_robot)と目標位置(goal_pose)間に存在する、
   // 自己位置に最も近い障害物付近に回避点を生成し、その回避点を新しい目標位置とする
 
-  // 自身から直進方向に何m離れたロボットを障害物と判定するか
+  // 自身から直進方向に何m離れた物体を障害物と判定するか
   const double OBSTACLE_DETECTION_X = 0.5;
-  // 自身から直進方向に対して左右何m離れたロボットを障害物と判定するか
-  const double OBSTACLE_DETECTION_Y_ROBOT = 0.3;
-  const double OBSTACLE_DETECTION_Y_BALL = 0.2;
+  // 自身から直進方向に対して左右何m離れた物体を障害物と判定するか
+  const double OBSTACLE_DETECTION_Y = 0.3;
   // 回避の相対位置
   const double AVOIDANCE_POS_X_SHORT = 0.1;
   const double AVOIDANCE_POS_X_LONG = 0.2;
@@ -61,8 +64,37 @@ bool ObstacleAvoidance::avoid_obstacles(
   // 回避位置の初期値を目標位置にする
   avoidance_pose = goal_pose;
 
-  std::shared_ptr<State> obstacle_pose_MtoA;
+  std::vector<State> candidate_poses;
+  for (const auto & robot : detection_->extract_robots()) {
+    // is our team
+    if (robot.robot_id.team_color == my_robot.robot_id.team_color) {
+      // Extract myself
+      if (robot.robot_id.id == my_robot.robot_id.id) {
+        continue;
+      }
 
+      if (!avoid_our_robots) {
+        continue;
+      }
+    } else {
+      if (!avoid_their_robots) {
+        continue;
+      }
+    }
+
+    if (robot.robot_id.id == my_robot.robot_id.id &&
+      robot.robot_id.team_color == my_robot.robot_id.team_color)
+    {
+      continue;
+    }
+    candidate_poses.push_back(tools::pose_state(robot));
+  }
+
+  if (avoid_ball) {
+    candidate_poses.push_back(tools::pose_state(ball));
+  }
+
+  std::shared_ptr<State> obstacle_pose_MtoA;
   // 回避位置生成と回避位置-自己位置間の障害物を検索するためのループ
   for (auto iter = 0; iter < NUM_ITERATIONS; iter++) {
     // 各変数を更新
@@ -75,45 +107,17 @@ bool ObstacleAvoidance::avoid_obstacles(
     auto avoidance_pose_MtoA = trans_MtoA.transform(avoidance_pose);
     auto goal_pose_MtoA = trans_MtoA.transform(goal_pose);
 
-    // ロボットに対して回避位置を生成
-    for (const auto & robot : detection_->extract_robots()) {
-      // 自身の情報は除外する
-      if (robot.robot_id.id == my_robot.robot_id.id &&
-        robot.robot_id.team_color == my_robot.robot_id.team_color)
-      {
-        continue;
-      }
-
+    for (const auto candidate_pose : candidate_poses) {
       // ロボットが目標位置との間に存在するか判定
-      auto robot_pose = tools::pose_state(robot);
-      auto robot_pose_MtoA = trans_MtoA.transform(robot_pose);
+      auto candidate_pose_MtoA = trans_MtoA.transform(candidate_pose);
 
-      distance = std::hypot(robot_pose_MtoA.x, robot_pose_MtoA.y);
-      if (0 < robot_pose_MtoA.x &&
-        robot_pose_MtoA.x < avoidance_pose_MtoA.x &&
-        std::fabs(robot_pose_MtoA.y) < OBSTACLE_DETECTION_Y_ROBOT)
+      distance = std::hypot(candidate_pose_MtoA.x, candidate_pose_MtoA.y);
+      if (0 < candidate_pose_MtoA.x &&
+        candidate_pose_MtoA.x < avoidance_pose_MtoA.x &&
+        std::fabs(candidate_pose_MtoA.y) < OBSTACLE_DETECTION_Y)
       {
         if (distance < distance_to_obstacle) {
-          obstacle_pose_MtoA = std::make_shared<State>(robot_pose_MtoA);
-          distance_to_obstacle = distance;
-          need_avoid = true;
-        }
-      }
-    }
-
-    // ボールが目標位置との間に存在するか判定
-    if (avoid_ball) {
-      auto ball_pose = tools::pose_state(ball);
-      auto ball_pose_MtoA = trans_MtoA.transform(ball_pose);
-
-      distance = std::hypot(ball_pose_MtoA.x, ball_pose_MtoA.y);
-      // 進路上にボールエリアがある場合
-      if (0 < ball_pose_MtoA.x &&
-        ball_pose_MtoA.x < avoidance_pose_MtoA.x &&
-        std::fabs(ball_pose_MtoA.y) < OBSTACLE_DETECTION_Y_BALL)
-      {
-        if (distance < distance_to_obstacle) {
-          obstacle_pose_MtoA = std::make_shared<State>(ball_pose_MtoA);
+          obstacle_pose_MtoA = std::make_shared<State>(candidate_pose_MtoA);
           distance_to_obstacle = distance;
           need_avoid = true;
         }
@@ -355,7 +359,6 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double ROBOT_RADIUS = 0.09;
   constexpr double FIELD_HALF_LENGTH = 6.0;
   constexpr double DEFENSE_AREA_LENGTH = 1.8;
   constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;

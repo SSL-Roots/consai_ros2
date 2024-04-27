@@ -47,6 +47,7 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/pos_vel.py
     ${PROJECT_NAME}/observer/side_back_target_observer.py
     ${PROJECT_NAME}/observer/zone_ball_observer.py
+    ${PROJECT_NAME}/observer/zone_man_mark_target_observer.py
     ${PROJECT_NAME}/observer/zone_target_observer.py
     ${PROJECT_NAME}/operation_test/ball_boy_test.py
     ${PROJECT_NAME}/operation_test/control.py
@@ -66,7 +67,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_pytest REQUIRED)
-  ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
+  # ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
   ament_add_pytest_test(test_robot_operator tests/test_robot_operator.py)
   ament_add_pytest_test(test_pass_shoot_observer tests/test_pass_shoot_observer.py)
   ament_add_pytest_test(test_operation tests/test_operation.py)

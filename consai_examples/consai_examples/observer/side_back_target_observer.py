@@ -14,7 +14,7 @@
 
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
-from field import Field
+from consai_examples.field import Field
 import math
 
 
@@ -68,7 +68,7 @@ class SideBackTargetObserver():
         # ターゲットを初期化する
         self._side_back_targets = {0: None, 1: None}
 
-    def _is_in_defence_area(self, pos: State2D) -> bool:
+    def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
         defense_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
         defense_y = self._penalty_corner_upper_front.y + self._DEFENSE_AREA_MARGIN
@@ -78,7 +78,7 @@ class SideBackTargetObserver():
 
     def _is_in_top_side(self, pos: State2D) -> bool:
         # ディフェンスエリアの横（上側）にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < (self._penalty_corner_upper_front.x + self._DEFENSE_AREA_FRONT_MARGIN) and \
                 pos.y > self._penalty_corner_upper_front.y:
@@ -87,7 +87,7 @@ class SideBackTargetObserver():
 
     def _is_in_bottom_side(self, pos: State2D) -> bool:
         # ディフェンスエリアの横（下側）にロボットがいればtrue
-        if self._is_in_defence_area(pos):
+        if self._is_in_defense_area(pos):
             return False
         if pos.x < (self._penalty_corner_lower_front.x + self._DEFENSE_AREA_FRONT_MARGIN) and \
                 pos.y < self._penalty_corner_lower_front.y:
