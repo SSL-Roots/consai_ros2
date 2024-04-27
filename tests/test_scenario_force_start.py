@@ -25,7 +25,7 @@ def test_shoot_at_force_start(rcst_comm: Communication):
     rcst_comm.send_blue_robot(2, -0.5, 0.0, math.radians(0))
 
     rcst_comm.observer.reset()
-    rcst_comm.change_referee_command('STOP', 3.0)
+    rcst_comm.change_referee_command('STOP', 5.0)
     rcst_comm.change_referee_command('FORCE_START', 5.0)
 
     assert rcst_comm.observer.goal().ball_has_been_in_positive_goal() is True
