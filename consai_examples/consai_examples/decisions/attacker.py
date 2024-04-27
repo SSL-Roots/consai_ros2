@@ -80,7 +80,7 @@ class AttackerDecision(DecisionBase):
         ball_pos = self._field_observer.detection().ball().pos()
         if ball_pos.x > 0.0:
             search_offset = ball_pos.x
-            
+
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
