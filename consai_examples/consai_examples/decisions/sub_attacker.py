@@ -31,21 +31,23 @@ class SubAttackerDecision(DecisionBase):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         ball_pos = self._field_observer.detection().ball().pos()
         half_right = 3.0
+        dist_from_ball_x = 1.5
+        dist_from_ball_y = 2.5
 
         if self._field_observer.zone().ball_is_in_right_top():
             if ball_pos.x > half_right:
-                move_to_ball = move_to_ball.offset_pose_x(-0.5)
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.offset_pose_x(-dist_from_ball_x)
+                move_to_ball = move_to_ball.overwrite_pose_y(-dist_from_ball_y)
             else:
-                move_to_ball = move_to_ball.offset_pose_x(1.5)
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.offset_pose_x(dist_from_ball_x)
+                move_to_ball = move_to_ball.overwrite_pose_y(-dist_from_ball_y)
         else:
             if ball_pos.x > half_right:
-                move_to_ball = move_to_ball.offset_pose_x(-0.5)
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+                move_to_ball = move_to_ball.offset_pose_x(-dist_from_ball_x)
+                move_to_ball = move_to_ball.overwrite_pose_y(dist_from_ball_y)
             else:
-                move_to_ball = move_to_ball.offset_pose_x(1.5)
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+                move_to_ball = move_to_ball.offset_pose_x(dist_from_ball_x)
+                move_to_ball = move_to_ball.overwrite_pose_y(dist_from_ball_y)
         return move_to_ball
 
     def _offend_our_side_operation(self):

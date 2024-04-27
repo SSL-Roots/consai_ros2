@@ -37,8 +37,6 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
-        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
-        search_offset = 0.7
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
@@ -51,6 +49,12 @@ class AttackerDecision(DecisionBase):
                 TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
             self._operator.operate(robot_id, shooting)
             return
+
+        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
+        search_offset = 0.7
+        ball_pos = self._field_observer.detection().ball().pos()
+        if ball_pos.x > 0.0:
+            search_offset = ball_pos.x
 
         # パス可能なIDのリストを取得
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
@@ -73,6 +77,10 @@ class AttackerDecision(DecisionBase):
     def our_direct(self, robot_id):
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
         search_offset = 0.7
+        ball_pos = self._field_observer.detection().ball().pos()
+        if ball_pos.x > 0.0:
+            search_offset = ball_pos.x
+            
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
