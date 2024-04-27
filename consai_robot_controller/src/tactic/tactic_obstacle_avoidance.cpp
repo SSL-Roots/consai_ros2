@@ -374,7 +374,8 @@ bool ObstacleAvoidance::avoid_defense_area(
       }
     };
 
-  auto gen_avoidance_pose = [&](const bool is_ourside, const State & goal) {
+  auto gen_avoidance_pose = [&](const bool is_ourside, const State & goal)
+    -> std::pair<bool, State> {
       const auto sign = is_ourside ? 1.0 : -1.0;
       const auto TOP_OUTSIDE = tools::gen_state(
         -(FIELD_HALF_LENGTH + FIELD_MARGIN) * sign,
@@ -405,7 +406,9 @@ bool ObstacleAvoidance::avoid_defense_area(
 
       // 障害物がなければ、目標位置を回避位置とする
       auto target_pose = goal;
+      auto need_avoidance = false;
       if (len_our_intersections == 1) {
+        need_avoidance = true;
         // １つの線を交差する場合
         if (is_intersect_top) {
           target_pose.y = AVOID_POS_Y;
@@ -415,6 +418,7 @@ bool ObstacleAvoidance::avoid_defense_area(
           target_pose.x = AVOID_POS_X;
         }
       } else if (len_our_intersections >= 2) {
+        need_avoidance = true;
         // ２つの線を交差する場合
         target_pose.x = AVOID_POS_X;
         target_pose.y = std::copysign(AVOID_POS_Y, robot_pose.y);
@@ -427,6 +431,7 @@ bool ObstacleAvoidance::avoid_defense_area(
           target_pose.y = -AVOID_POS_Y;
         }
       } else if (is_in_defense_area(is_ourside, goal)) {
+        need_avoidance = true;
         // 交差はしてないが、目標位置がディフェンスエリア内にある場合
 
         // ディフェンスエリア内で、ロボットがTOP or BOTTOM側に近いとき
@@ -436,11 +441,17 @@ bool ObstacleAvoidance::avoid_defense_area(
           target_pose.x = AVOID_POS_X;
         }
       }
-      return target_pose;
+      return {need_avoidance, target_pose};
     };
 
-  avoidance_pose = gen_avoidance_pose(true, goal_pose);
-  avoidance_pose = gen_avoidance_pose(false, avoidance_pose);
+  auto [need_avoidance_our, result_pose_our] = gen_avoidance_pose(true, goal_pose);
+  if (need_avoidance_our) {
+    avoidance_pose = result_pose_our;
+  }
+  auto [need_avoidance_their, result_pose_their] = gen_avoidance_pose(false, result_pose_our);
+  if (need_avoidance_their) {
+    avoidance_pose = result_pose_their;
+  }
 
   return true;
 }
