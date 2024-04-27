@@ -20,12 +20,14 @@ from decisions.decision_base import DecisionBase
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
+from field import Field
 
 
 class AttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
+        self._field_quarter_length = Field()._field['quarter_length']
 
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
@@ -225,27 +227,36 @@ def gen_setplay_shoot_function():
                 # パスする
                 passing = move_to_ball.with_passing_for_setplay_to(
                     TargetXY.our_robot(receivers_id_list[0]))
+            else:
+                x = self._field_quarter_length
+                y = 0
+                # ボールが味方側エリアにあるか取得
+                is_in_our_side = self._field_observer.ball_position().is_in_our_side()
+                if is_in_our_side:
+                    x = -x
+                shooting = move_to_ball.with_passing_to(
+                    TargetXY.value(x, y))
+                self._operator.operate(robot_id, shooting)
+                return
+        else:
+            # シュートできる場合
+            if len(shoot_pos_list) > 0:
+                # シュートする
+                shooting = move_to_ball.with_shooting_for_setplay_to(
+                    TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+                self._operator.operate(robot_id, shooting)
+                return
+            # パス可能な場合
+            elif len(receivers_id_list) > 0:
+                # パスする
+                passing = move_to_ball.with_passing_for_setplay_to(
+                    TargetXY.our_robot(receivers_id_list[0]))
                 self._operator.operate(robot_id, passing)
                 return
-
-        # シュートできる場合
-        if len(shoot_pos_list) > 0:
-            # シュートする
-            shooting = move_to_ball.with_shooting_for_setplay_to(
-                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
-            self._operator.operate(robot_id, shooting)
-            return
-        # パス可能な場合
-        elif len(receivers_id_list) > 0:
-            # パスする
-            passing = move_to_ball.with_passing_for_setplay_to(
-                TargetXY.our_robot(receivers_id_list[0]))
-            self._operator.operate(robot_id, passing)
-            return
-        else:
-            # パスもできなければ相手ゴールに向かってシュートする
-            setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
-            self._operator.operate(robot_id, setplay_shoot)
+            else:
+                # パスもできなければ相手ゴールに向かってシュートする
+                setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
+                self._operator.operate(robot_id, setplay_shoot)
 
     return function
 
