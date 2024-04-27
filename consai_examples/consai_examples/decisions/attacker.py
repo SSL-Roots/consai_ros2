@@ -210,6 +210,9 @@ def gen_chase_ball_function():
 
 def gen_setplay_shoot_function():
     def function(self, robot_id):
+        # 該当レフリー信号開始から経過時間の上限
+        time_out = 4.0
+
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
         search_offset = 2.0
         move_to_ball = Operation().move_on_line(
@@ -221,7 +224,7 @@ def gen_setplay_shoot_function():
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
             robot_id, search_offset)
 
-        if 4.0 < self.command_elapsed_time:
+        if time_out < self.command_elapsed_time:
             # パス可能な場合
             if len(receivers_id_list) > 0:
                 # パスする
@@ -237,7 +240,7 @@ def gen_setplay_shoot_function():
                 shooting = move_to_ball.with_passing_to(
                     TargetXY.value(x, y))
                 self._operator.operate(robot_id, shooting)
-                return
+            return
         else:
             # シュートできる場合
             if len(shoot_pos_list) > 0:
@@ -245,19 +248,17 @@ def gen_setplay_shoot_function():
                 shooting = move_to_ball.with_shooting_for_setplay_to(
                     TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
                 self._operator.operate(robot_id, shooting)
-                return
             # パス可能な場合
             elif len(receivers_id_list) > 0:
                 # パスする
                 passing = move_to_ball.with_passing_for_setplay_to(
                     TargetXY.our_robot(receivers_id_list[0]))
                 self._operator.operate(robot_id, passing)
-                return
             else:
                 # パスもできなければ相手ゴールに向かってシュートする
                 setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
                 self._operator.operate(robot_id, setplay_shoot)
-
+            return
     return function
 
 
