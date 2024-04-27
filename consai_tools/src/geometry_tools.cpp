@@ -78,6 +78,16 @@ State velocity_state(const TrackedRobot & robot)
   return state;
 }
 
+State velocity_ball_state(const TrackedBall & ball)
+{
+  State state;
+  if (ball.vel.size() > 0) {
+    state.x = ball.vel[0].x;
+    state.y = ball.vel[0].y;
+  }
+  return state;
+}
+
 State gen_state(const double x, const double y, const double theta)
 {
   State state;
