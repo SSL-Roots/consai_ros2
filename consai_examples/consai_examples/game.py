@@ -75,6 +75,7 @@ def enable_role_update():
     return not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
         not referee.our_penalty_inplay() and \
+        not referee.our_ball_placement() and \
         not referee.their_pre_penalty() and \
         not referee.their_penalty() and \
         not referee.their_penalty_inplay()
