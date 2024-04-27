@@ -91,6 +91,8 @@ def update_decisions(num_of_center_back_roles: int,
         decisions[role].set_num_of_side_back_roles(num_of_side_back_roles)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
+        # 現在のレフリーの経過時間をセットする
+        decisions[role].set_command_elapsed_time(referee.command_elapsed_time())
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():
