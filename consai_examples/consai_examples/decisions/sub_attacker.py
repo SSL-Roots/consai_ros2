@@ -110,7 +110,10 @@ class SubAttackerDecision(DecisionBase):
                 TargetXY.ball(),
                 -0.1,
                 TargetTheta.look_ball())
-            move_to_behind_target = move_to_behind_target.with_ball_receiving()
+            if self._field_observer.ball_placement().is_far_from(placement_pos):
+               # パスするときだけボール受取動作
+               # ドリブル接近時はじっとする
+               move_to_behind_target = move_to_behind_target.with_ball_receiving()
             self._operator.operate(robot_id, move_to_behind_target)
             return
 
