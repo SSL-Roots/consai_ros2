@@ -219,10 +219,18 @@ def gen_setplay_shoot_function():
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
             robot_id, search_offset)
 
+        if 4.0 < self.command_elapsed_time:
+            # パス可能な場合
+            if len(receivers_id_list) > 0:
+                # パスする
+                passing = move_to_ball.with_passing_for_setplay_to(
+                    TargetXY.our_robot(receivers_id_list[0]))
+                self._operator.operate(robot_id, passing)
+                return
+
         # シュートできる場合
         if len(shoot_pos_list) > 0:
             # シュートする
-            target_pose = TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y)
             shooting = move_to_ball.with_shooting_for_setplay_to(
                 TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
             self._operator.operate(robot_id, shooting)
@@ -230,7 +238,6 @@ def gen_setplay_shoot_function():
         # パス可能な場合
         elif len(receivers_id_list) > 0:
             # パスする
-            target_pose = TargetXY.our_robot(receivers_id_list[0])
             passing = move_to_ball.with_passing_for_setplay_to(
                 TargetXY.our_robot(receivers_id_list[0]))
             self._operator.operate(robot_id, passing)
