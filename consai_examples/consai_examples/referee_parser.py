@@ -261,7 +261,7 @@ class RefereeParser(Node):
                 self._current_command = self._COMMAND_INPLAY
 
         # コマンドの経過時間を格納
-        self._command_elapsed_time = elapsed_time 
+        self._command_elapsed_time = elapsed_time
 
     def present_stage(self):
         # ステージのテキストを返す
