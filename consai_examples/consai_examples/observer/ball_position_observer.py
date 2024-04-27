@@ -48,7 +48,7 @@ class BallPositionObserver:
     def is_outside(self) -> bool:
         return self.is_outside_of_left() or self.is_outside_of_right() or \
             self.is_outside_of_top() or self.is_outside_of_bottom()
-    
+
     def is_outside_of_left_with_margin(self) -> bool:
         if self._ball_pos.x < -self._field_half_length - self._OUTSIDE_MARGIN:
             return True
@@ -64,7 +64,7 @@ class BallPositionObserver:
     def is_outside_of_bottom_with_margin(self) -> bool:
         if self._ball_pos.y < -self._field_half_width - self._OUTSIDE_MARGIN:
             return True
-        
+
     def is_outside_with_margin(self) -> bool:
         return self.is_outside_of_left_with_margin() or \
             self.is_outside_of_right_with_margin() or \
