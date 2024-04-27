@@ -28,7 +28,7 @@ def init_our_placement(rcst_comm, target_x: float, target_y: float,
         target_x, target_y, for_blue_team=True)
     rcst_comm.set_ball_placement_position(target_x, target_y)
 
-    rcst_comm.change_referee_command('STOP', 1.0)
+    rcst_comm.change_referee_command('STOP', 2.0)
     rcst_comm.change_referee_command('BALL_PLACEMENT_BLUE', 0.0)
 
 
