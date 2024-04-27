@@ -150,7 +150,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   }
 
   pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
-  pub_final_goal_poses_ = create_publisher<GoalPoses>("final_goal_poses", 10);
+  pub_destinations_ = create_publisher<GoalPoses>("destinations", 10);
   vis_data_handler_ = std::make_shared<VisualizationDataHandler>(
     create_publisher<VisualizerObjects>(
       "visualizer_objects", rclcpp::SensorDataQoS()));
@@ -218,14 +218,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 目標値を取得する
   // 目標値を取得できなければ速度0を目標値とする
   State goal_pose;
-  State final_goal_pose;
+  State destination;
   double kick_power = 0.0;
   double dribble_power = 0.0;
 
   const auto current_time = steady_clock_.now();
   const auto duration = current_time - last_update_time_[robot_id];
   if (!parser_->parse_goal(
-      robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose, kick_power,
+      robot_control_map_[robot_id], my_robot, goal_pose, destination, kick_power,
       dribble_power))
   {
     RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
@@ -235,7 +235,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
   goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-    robot_control_map_[robot_id], my_robot, goal_pose, final_goal_pose);
+    robot_control_map_[robot_id], my_robot, goal_pose, destination);
 
   State world_vel;
 
@@ -388,29 +388,32 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   goal_pose_msg.pose = goal_pose;
   goal_poses_map_[robot_id] = goal_pose_msg;
 
-  GoalPose final_goal_pose_msg;
-  final_goal_pose_msg.robot_id = robot_id;
-  final_goal_pose_msg.team_is_yellow = team_is_yellow_;
-  final_goal_pose_msg.pose = final_goal_pose;
-  final_goal_poses_map_[robot_id] = final_goal_pose_msg;
+  GoalPose destination_msg;
+  destination_msg.robot_id = robot_id;
+  destination_msg.team_is_yellow = team_is_yellow_;
+  destination_msg.pose = destination;
+  destinations_map_[robot_id] = destination_msg;
 }
 
 void Controller::on_timer_pub_goal_poses()
 {
   // 目標位置・姿勢を描画情報として出力する
+  auto destinations_msg = std::make_unique<GoalPoses>();
   for (const auto & robot_id : detection_extractor_->active_robot_id_list(team_is_yellow_)) {
     TrackedRobot my_robot;
     if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
       continue;
     }
 
-    if (goal_poses_map_.count(robot_id) > 0 && final_goal_poses_map_.count(robot_id) > 0) {
+    if (goal_poses_map_.count(robot_id) > 0 && destinations_map_.count(robot_id) > 0) {
       vis_data_handler_->append_vis_goal(
-        my_robot, goal_poses_map_[robot_id], final_goal_poses_map_[robot_id]);
+        my_robot, goal_poses_map_[robot_id], destinations_map_[robot_id]);
+      destinations_msg->poses.push_back(destinations_map_[robot_id]);
     }
   }
 
   vis_data_handler_->publish_and_reset_vis_goal();
+  pub_destinations_->publish(std::move(destinations_msg));
 }
 
 State Controller::limit_world_velocity(

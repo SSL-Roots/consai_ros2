@@ -13,16 +13,18 @@
 # limitations under the License.
 
 from consai_msgs.msg import State2D
+from consai_examples.field import Field
 import math
 
 
 class BallPositionObserver:
     def __init__(self):
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
-        self._defense_area_length = 1.8
-        self._defense_area_half_width = 1.8
+        self._field_half_length = Field.field('half_length')
+        self._field_half_width = Field.field('half_width')
+        self._defense_area_length = Field.defense_area('length')
+        self._defense_area_half_width = Field.defense_area('helf_width')
         self._ball_pos = State2D()
+        self._OUTSIDE_MARGIN = 0.05
 
     def update(self, ball_pos: State2D) -> None:
         self._ball_pos = ball_pos
@@ -46,6 +48,28 @@ class BallPositionObserver:
     def is_outside(self) -> bool:
         return self.is_outside_of_left() or self.is_outside_of_right() or \
             self.is_outside_of_top() or self.is_outside_of_bottom()
+
+    def is_outside_of_left_with_margin(self) -> bool:
+        if self._ball_pos.x < -self._field_half_length - self._OUTSIDE_MARGIN:
+            return True
+
+    def is_outside_of_right_with_margin(self) -> bool:
+        if self._ball_pos.x > self._field_half_length + self._OUTSIDE_MARGIN:
+            return True
+
+    def is_outside_of_top_with_margin(self) -> bool:
+        if self._ball_pos.y > self._field_half_width + self._OUTSIDE_MARGIN:
+            return True
+
+    def is_outside_of_bottom_with_margin(self) -> bool:
+        if self._ball_pos.y < -self._field_half_width - self._OUTSIDE_MARGIN:
+            return True
+
+    def is_outside_with_margin(self) -> bool:
+        return self.is_outside_of_left_with_margin() or \
+            self.is_outside_of_right_with_margin() or \
+            self.is_outside_of_top_with_margin() or \
+            self.is_outside_of_bottom_with_margin()
 
     def is_in_our_defense_area(self):
         in_y = math.fabs(self._ball_pos.y) < self._defense_area_half_width
