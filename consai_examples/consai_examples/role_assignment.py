@@ -41,7 +41,7 @@ class RoleName(Enum):
     ZONE1 = 5
     ZONE2 = 6
     ZONE3 = 7
-    SUB_ATTACKER2= 8
+    SUB_ATTACKER2 = 8
     LEFT_WING = 11
     RIGHT_WING = 12
     SIDE_BACK1 = 13

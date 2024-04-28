@@ -22,9 +22,11 @@ from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
 
+
 class SubAttackerID(Enum):
     SUBATTACK1 = 0
     SUBATTACK2 = 1
+
 
 class SubAttackerDecision(DecisionBase):
 
@@ -146,7 +148,7 @@ class SubAttackerDecision(DecisionBase):
                 return
 
         if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
-        # ボール位置が配置目標位置に到着したらボールから離れる
+            # ボール位置が配置目標位置に到着したらボールから離れる
             avoid_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
             self._operator.operate(robot_id, avoid_ball)
