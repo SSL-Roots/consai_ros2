@@ -165,6 +165,7 @@ class AttackerDecision(DecisionBase):
                 return State2D(x=ball_pos.x + offset, y=-wall_y)
 
     def our_ball_placement(self, robot_id, placement_pos):
+        return self.their_ball_placement(robot_id, placement_pos)
         # 壁際にあると判定した場合
         # ボールがフィールド外にある場合は、バックドリブルでボールをフィールド内に戻す
         if self._field_observer.ball_position().is_outside():

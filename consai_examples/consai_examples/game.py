@@ -28,6 +28,7 @@ from decisions.side_wing import SideWingDecision, WingID
 from decisions.sub_attacker import SubAttackerDecision
 from decisions.substitute import SubstituteDecision
 from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
+from decisions.ball_boy import BallBoyDecision
 from field_observer import FieldObserver
 from rclpy.executors import MultiThreadedExecutor
 from referee_parser import RefereeParser
@@ -84,6 +85,7 @@ def enable_role_update():
 def update_decisions(num_of_center_back_roles: int,
                      num_of_side_back_roles: int,
                      num_of_zone_roles: int):
+    BALL_BOY_ID = 10
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # センターバックの担当者数をセットする
         decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
@@ -93,6 +95,15 @@ def update_decisions(num_of_center_back_roles: int,
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
         # 現在のレフリーの経過時間をセットする
         decisions[role].set_command_elapsed_time(referee.command_elapsed_time())
+
+        if robot_id == BALL_BOY_ID:
+            if referee.our_ball_placement():
+                ball_boy_decision.our_ball_placement(robot_id, referee.placement_position())
+            elif referee.their_ball_placement():
+                ball_boy_decision.their_ball_placement(robot_id, referee.placement_position())
+            else:
+                ball_boy_decision.stop(robot_id)
+            continue
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():
@@ -220,6 +231,8 @@ if __name__ == '__main__':
     # エグゼキュータは別スレッドでspinさせ続ける
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
+
+    ball_boy_decision = BallBoyDecision(operator, observer, args.invert)
 
     decisions = {
         RoleName.GOALIE: GoaleDecision(operator, observer),

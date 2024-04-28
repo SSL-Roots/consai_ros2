@@ -102,6 +102,7 @@ class SubAttackerDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
+        return self.their_ball_placement(robot_id, placement_pos)
         if self._field_observer.ball_placement().is_far_from(placement_pos) or \
            not self._field_observer.ball_placement().is_arrived_at(placement_pos):
             # ボールを受け取る

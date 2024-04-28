@@ -100,14 +100,14 @@ class RobotOperator(Node):
 
     def operate(self, robot_id: int, operation: Operation) -> None:
         # 前回と違うOperationが来たときのみ、Goalを設定する
-        hash_goal = operation.get_hash()
-        if self._prev_operation_hash[robot_id] == hash_goal:
-            return
-        self.get_logger().debug(
-            'New operation for Robot {}'.format(robot_id))
+        # hash_goal = operation.get_hash()
+        # if self._prev_operation_hash[robot_id] == hash_goal:
+        #     return
+        # self.get_logger().debug(
+        #     'New operation for Robot {}'.format(robot_id))
 
         if self._stop_game_velocity_has_enabled[robot_id]:
             operation = operation.restrict_velocity_xy(self.STOP_GAME_VELOCITY)
 
         self._pub_robot_control[robot_id].publish(operation.get_goal())
-        self._prev_operation_hash[robot_id] = hash_goal
+        # self._prev_operation_hash[robot_id] = hash_goal
