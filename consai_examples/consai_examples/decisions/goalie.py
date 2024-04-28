@@ -35,13 +35,14 @@ class GoaleDecision(DecisionBase):
         self.our_goal_center_pos = Field()._our_goal_dict['center']
         self.our_goal_lower_pos = Field()._our_goal_dict['lower']
         # ゴール前を守る位置のマージン[m]
-        self.margin = 0.2
+        self.margin_x = 0.2
+        self.margin_y = 0.35
 
     def _defend_goal_operation(self):
-        p1_x = self.our_goal_upper_pos.x + self.margin
-        p1_y = self.our_goal_upper_pos.y
-        p2_x = self.our_goal_lower_pos.x + self.margin
-        p2_y = self.our_goal_lower_pos.y
+        p1_x = self.our_goal_upper_pos.x + self.margin_x
+        p1_y = self.our_goal_upper_pos.y - self.margin_y
+        p2_x = self.our_goal_lower_pos.x + self.margin_x
+        p2_y = self.our_goal_lower_pos.y + self.margin_y
 
         # ボールの座標を取得
         ball_pos = self._field_observer.detection().ball().pos()
@@ -62,20 +63,20 @@ class GoaleDecision(DecisionBase):
             for _ in range(len(distance_ball_to_their_robots)):
                 # ボールに一番近い敵ロボットのIDを取得
                 i = min(distance_ball_to_their_robots, key=distance_ball_to_their_robots.get)
-                _ = distance_ball_to_their_robots.pop(i)
+                distance = distance_ball_to_their_robots.pop(i)
                 # キーが存在している場合
                 if i in robots:
                     # 一番近いロボットの位置を取得
                     robot_pos = robots[i].pos()
 
                     # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
-                    if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
+                    if distance < 0.15 and ball_pos.x < robot_pos.x:
                         # 2点を結ぶ直線の傾きと切片を取得
                         slope, intercept, _ = geometry_tools.get_line_parameter(
                             ball_pos, robot_pos)
                         # ゴール前との交点(y座標)を算出
                         y = slope * p1_x + intercept
-                        if abs(y) < p1_y - 0.35:
+                        if abs(y) < p1_y:
                             x = p1_x
                             defend_pose = TargetXY.value(x, y)
                             flag = 2
@@ -87,7 +88,7 @@ class GoaleDecision(DecisionBase):
             slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
             # ゴール前との交点(y座標)を算出
             y = slope * p1_x + intercept
-            if abs(y) < p1_y:
+            if abs(y) < p1_y + self.margin_y:
                 x = p1_x
                 defend_pose = TargetXY.value(x, y)
                 flag = 2
