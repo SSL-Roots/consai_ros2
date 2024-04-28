@@ -53,7 +53,7 @@ class AttackerDecision(DecisionBase):
                 TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
             self._operator.operate(robot_id, shooting)
             return
-        
+
         ball_pos = self._field_observer.detection().ball().pos()
         if ball_pos.x < -2.0:
             self._search_offset = 0.0
