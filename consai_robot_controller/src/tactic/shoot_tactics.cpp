@@ -89,8 +89,8 @@ tactic_functions_[APPROACH_TO_MOVING_BALL] = [this](TacticDataSet & data_set) ->
       // 近づけば良いので、しきい値を大きくする
       constexpr auto DISTANCE_THRESHOLD = 0.3;  // meters
       const auto THETA_THRESHOLD = tools::to_radians(5.0);
-      const auto GO_AROUND_BALL_X = 0.2; // meters
-      const auto GO_AROUND_BALL_Y = 0.2; // meters
+      const auto GO_AROUND_BALL_X = 0.1; // meters
+      const auto GO_AROUND_BALL_Y = 0.15; // meters
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
@@ -98,24 +98,21 @@ tactic_functions_[APPROACH_TO_MOVING_BALL] = [this](TacticDataSet & data_set) ->
       const auto ball_vel = tools::velocity_ball_state(data_set.get_ball());
 
       const tools::Trans trans_BtoBV(ball_pose, std::atan2(ball_vel.y, ball_vel.x));
-      const auto robot_pose_BVtoB = trans_BtoBV.transform(robot_pose);
+      const auto robot_pose_BtoBV = trans_BtoBV.transform(robot_pose);
       const auto ball_velocity_norm = std::hypot(ball_vel.x, ball_vel.y);
       if (ball_velocity_norm < MAX_BALL_VEL_NORM){
         return ROTATE;
       }
-
+      double go_around_ball_x = GO_AROUND_BALL_X;
       double go_around_ball_y = GO_AROUND_BALL_Y;
-      if (robot_pose_BVtoB.y < 0) {
+      if (robot_pose_BtoBV.y < 0) {
         go_around_ball_y = -GO_AROUND_BALL_Y;
       }
-
-      const auto new_pose = trans_BtoBV.inverted_transform(GO_AROUND_BALL_X, go_around_ball_y, 0);
-
-      // セットプレイ時は回転半径を大きくする
-      double rotation_radius = ROTATE_RADIUS;
-      if (data_set.is_setplay()) {
-        rotation_radius = ROBOT_RADIUS * 4.0;
+      if (robot_pose_BtoBV.x < -0.5) {
+        go_around_ball_x = go_around_ball_x * 3;
       }
+
+      const auto new_pose = trans_BtoBV.inverted_transform(go_around_ball_x, go_around_ball_y, M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
