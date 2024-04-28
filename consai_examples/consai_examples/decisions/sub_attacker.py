@@ -145,10 +145,17 @@ class SubAttackerDecision(DecisionBase):
                 self._operator.operate(robot_id, move_to_behind_target)
                 return
 
+        if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
         # ボール位置が配置目標位置に到着したらボールから離れる
-        avoid_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
-        self._operator.operate(robot_id, avoid_ball)
+            avoid_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+            self._operator.operate(robot_id, avoid_ball)
+        else:
+            operation = self._offend_operation()
+            operation = operation.enable_avoid_ball()
+            operation = operation.enable_avoid_placement_area(placement_pos)
+            operation = operation.enable_avoid_pushing_robots()
+            self._operator.operate(robot_id, operation)
 
     def their_ball_placement(self, robot_id, placement_pos):
         operation = self._offend_operation()
