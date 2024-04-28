@@ -430,7 +430,8 @@ bool ObstacleAvoidance::avoid_defense_area(
         } else if (is_intersect_bottom && is_intersect_inside) {
           target_pose.y = -AVOID_POS_Y;
         }
-      } else if (is_in_defense_area(is_ourside, goal) || is_in_defense_area(is_ourside, robot_pose)) {
+      } else if (is_in_defense_area(is_ourside, goal) ||
+                 is_in_defense_area(is_ourside, robot_pose)) {
         need_avoidance = true;
         // 交差はしてないが、目標位置またはロボットがディフェンスエリア内にある場合
 
