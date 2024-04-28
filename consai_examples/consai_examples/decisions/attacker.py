@@ -241,7 +241,7 @@ def gen_their_kickoff_function():
                 # -2pi ~ piへ変換
                 angle = geometry_tools.angle_normalize(angle)
                 # 指定した範囲内にクリップ
-                if math.radians(-max_angle) <= angle <=0:
+                if math.radians(-max_angle) <= angle <= 0:
                     angle = math.radians(-max_angle)
                 elif 0 < angle <= math.radians(max_angle):
                     angle = math.radians(max_angle)
