@@ -23,7 +23,6 @@ from operation import TargetXY
 from operation import TargetTheta
 from field import Field
 import math
-import operator
 
 
 class AttackerDecision(DecisionBase):
@@ -215,6 +214,8 @@ def gen_their_kickoff_function():
     def function(self, robot_id):
         # 角度の最大値
         max_angle = 100
+        # ボールとの距離
+        margin = 0.7
         # ボールの座標を取得
         ball_pos = self._field_observer.detection().ball().pos()
 
@@ -240,14 +241,14 @@ def gen_their_kickoff_function():
                 # -2pi ~ piへ変換
                 angle = geometry_tools.angle_normalize(angle)
                 # 指定した範囲内にクリップ
-                if math.radians(-100) <= angle <=0:
-                    angle = math.radians(-100)
-                elif 0 < angle <= math.radians(100):
-                    angle = math.radians(100)
+                if math.radians(-max_angle) <= angle <=0:
+                    angle = math.radians(-max_angle)
+                elif 0 < angle <= math.radians(max_angle):
+                    angle = math.radians(max_angle)
                 break
         # 位置を計算
-        x = 0.6 * math.cos(angle)
-        y = 0.6 * math.sin(angle)
+        x = margin * math.cos(angle)
+        y = margin * math.sin(angle)
         chase_ball_pose = TargetXY.value(x, y)
 
         chase_ball = Operation().move_to_pose(chase_ball_pose, TargetTheta.look_ball())
