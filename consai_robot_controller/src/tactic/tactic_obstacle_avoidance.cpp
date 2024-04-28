@@ -404,6 +404,9 @@ bool ObstacleAvoidance::avoid_defense_area(
         sign;
       constexpr auto AVOID_POS_Y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
 
+      const auto goal_is_in_defense = is_in_defense_area(is_ourside, goal);
+      const auto robot_is_in_defense = is_in_defense_area(is_ourside, robot_pose);
+
       // 障害物がなければ、目標位置を回避位置とする
       auto target_pose = goal;
       auto need_avoidance = false;
@@ -430,8 +433,7 @@ bool ObstacleAvoidance::avoid_defense_area(
         } else if (is_intersect_bottom && is_intersect_inside) {
           target_pose.y = -AVOID_POS_Y;
         }
-      } else if (is_in_defense_area(is_ourside, goal) ||
-                 is_in_defense_area(is_ourside, robot_pose)) {
+      } else if (goal_is_in_defense || robot_is_in_defense) {
         need_avoidance = true;
         // 交差はしてないが、目標位置またはロボットがディフェンスエリア内にある場合
 
