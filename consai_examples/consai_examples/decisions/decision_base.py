@@ -28,6 +28,7 @@ class DecisionBase(object):
         self._num_of_side_back_roles = 0
         self._num_of_zone_roles = 0
         self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
+        self.command_elapsed_time = 0.0
 
     def enable_stop_game_velocity(self, robot_id):
         self._operator.enable_stop_game_velocity(robot_id)
@@ -64,6 +65,9 @@ class DecisionBase(object):
             robot_id, placement_pos.x, placement_pos.y))
         operation_halt = Operation().halt()
         self._operator.operate(robot_id, operation_halt)
+
+    def set_command_elapsed_time(self, command_elapsed_time):
+        self._command_elapsed_time = command_elapsed_time
 
 
 def generate_function():
