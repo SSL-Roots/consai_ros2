@@ -37,6 +37,7 @@ class GoaleDecision(DecisionBase):
         # ゴール前を守る位置のマージン[m]
         self.margin_x = 0.2
         self.margin_y = 0.35
+        self._in_flag = 0
 
     def _defend_goal_operation(self):
         p1_x = self.our_goal_upper_pos.x + self.margin_x
@@ -133,30 +134,37 @@ class GoaleDecision(DecisionBase):
         if self._field_observer.ball_position().is_in_our_defense_area() \
            and not self._field_observer.ball_motion().is_moving():
 
-            # パス可能なIDのリストを取得
-            receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
-
             move_to_behind_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.05, TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
-            if len(receivers_id_list) > 0:
-                passing = move_to_behind_ball.with_passing_to(
-                    TargetXY.our_robot(receivers_id_list[0]))
-                self._operator.operate(robot_id, passing)
-                return
+            clear_pos_list = self._field_observer.pass_shoot().get_clear_pos_list()
+            if len(clear_pos_list) > 0 and self._in_flag == 0:
+                self._in_flag = 1
+            # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
+            elif self._field_observer.zone().ball_is_in_left_top() or \
+                    self._field_observer.zone().ball_is_in_left_mid_top() and \
+                    self._in_flag == 0:
+                self._in_flag = 2
             else:
-                # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                if self._field_observer.zone().ball_is_in_left_top() or \
-                     self._field_observer.zone().ball_is_in_left_mid_top():
-                    clear_ball = move_to_behind_ball.with_shooting_to(
-                        TargetXY.their_top_corner())
-                else:
-                    clear_ball = move_to_behind_ball.with_shooting_to(
-                        TargetXY.their_bottom_corner())
-                self._operator.operate(robot_id, clear_ball)
+                self._in_flag = 3
+
+            # フラグによる動作切り替え
+            if self._in_flag == 1:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.value(clear_pos_list[0].x, clear_pos_list[0].y))
+                # self._operator.operate(robot_id, shooting)
+            elif self._in_flag == 2:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.their_top_corner())
+            else:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.their_bottom_corner())
+            self._operator.operate(robot_id, move_to_behind_ball)
             return
+        else:
+            self._in_flag = 0
 
         # ボールとゴールを結ぶ直線上を守る
         defend_our_goal = self._defend_goal_operation()
