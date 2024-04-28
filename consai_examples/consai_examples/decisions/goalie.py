@@ -57,12 +57,13 @@ class GoaleDecision(DecisionBase):
         flag = 1
         # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
         if is_in_our_side and len(distance_ball_to_their_robots.keys()):
-            # ボールに一番近い敵ロボットのIDを取得
-            sorted_distance = sorted(
-                enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
-            sorted_indices = [index for index, _ in sorted_distance]
+            # ロボットの位置を取得
             robots = self._field_observer.detection().their_robots()
-            for i in sorted_indices:
+            for _ in range(len(distance_ball_to_their_robots)):
+                # ボールに一番近い敵ロボットのIDを取得
+                i = min(distance_ball_to_their_robots, key=distance_ball_to_their_robots.get)
+                _ = distance_ball_to_their_robots.pop(i)
+                # キーが存在している場合
                 if i in robots:
                     # 一番近いロボットの位置を取得
                     robot_pos = robots[i].pos()
@@ -78,7 +79,7 @@ class GoaleDecision(DecisionBase):
                             x = p1_x
                             defend_pose = TargetXY.value(x, y)
                             flag = 2
-                    continue
+                    break
 
         # ボールがゴールに向かって来る場合
         elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
