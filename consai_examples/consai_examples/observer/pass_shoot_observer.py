@@ -15,6 +15,7 @@
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
+from operation import TargetXY
 import math
 
 
@@ -24,11 +25,25 @@ class PassShootObserver:
         self._their_robots: dict[int, PosVel] = {}
 
         self._field_half_length = 6.0
+        self._field_half_width = 4.5
         self._goal_pos_list = [
             State2D(x=self._field_half_length, y=0.0),
             State2D(x=self._field_half_length, y=0.45),
             State2D(x=self._field_half_length, y=-0.45)
         ]
+        self._their_top_corner = State2D(
+            x=self._field_half_length, y=self._field_half_width)
+        self._their_bottom_corner = State2D(
+            x=self._field_half_length, y=-self._field_half_width)
+        self._our_top_corner = State2D(
+            x=-self._field_half_length, y=self._field_half_width)
+        self._our_bottom_corner = State2D(
+            x=-self._field_half_length, y=-self._field_half_width)
+        self._clear_pos_list = [
+            self._their_top_corner,
+            self._their_bottom_corner,
+            self._our_top_corner,
+            self._our_bottom_corner]
 
         self._present_shoot_pos_list: list[State2D] = []
 
@@ -41,9 +56,13 @@ class PassShootObserver:
         self._their_robots = their_robots
 
         self._present_shoot_pos_list = self._search_shoot_pos_list()
+        self._present_clear_pos_list = self._search_clear_pos_list()
 
     def get_shoot_pos_list(self) -> list[State2D]:
         return self._present_shoot_pos_list
+
+    def get_clear_pos_list(self) -> list[State2D]:
+        return self._present_clear_pos_list
 
     def search_receivers_list(self, my_robot_id: int, search_offset=0.0) -> list[int]:
         # パス可能なロボットIDのリストを返す関数
@@ -183,6 +202,28 @@ class PassShootObserver:
             shoot_pos_list.append(target)
 
         return shoot_pos_list
+
+    def _search_clear_pos_list(self, search_ours=False) -> list[State2D]:
+        # ボールからの直線上にロボットがいないシュート位置リストを返す
+        TOLERANCE = 0.1  # ロボット半径 + alpha
+
+        clear_pos_list = []
+
+        def obstacle_exists(target: State2D, robots: dict[int, PosVel]) -> bool:
+            # ロボットがシュートポジションを妨害しているか判定
+            for robot in robots.values():
+                if tool.is_on_line(robot.pos(), self._ball.pos(), target, TOLERANCE):
+                    return True
+            return False
+
+        for target in self._clear_pos_list:
+            if obstacle_exists(target, self._our_robots) and search_ours:
+                continue
+            if obstacle_exists(target, self._their_robots):
+                continue
+            clear_pos_list.append(target)
+
+        return clear_pos_list
 
     # def _forward_robots_id(
     #         self, my_robot_id, my_robot_pos, robots_id, robots_pos,
