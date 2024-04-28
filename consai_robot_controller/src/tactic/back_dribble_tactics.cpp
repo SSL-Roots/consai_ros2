@@ -96,7 +96,7 @@ BackDribbleTactics::BackDribbleTactics()
       // ロボットが目標姿勢に近づき、回転速度が小さくなったら次の行動に移行
       const auto robot_vel = tools::velocity_state(data_set.get_my_robot());
       if (tools::is_same(robot_pose, new_pose, DISTANCE_THRESHOLD, THETA_THRESHOLD) &&
-        robot_vel.theta < OMEGA_THRESHOLD)
+        std::fabs(robot_vel.theta) < OMEGA_THRESHOLD)
       {
         return CATCH;
       }
@@ -106,15 +106,20 @@ BackDribbleTactics::BackDribbleTactics()
 
   tactic_functions_[CATCH] = [this](TacticDataSet & data_set) -> TacticName {
       // ボールに向かって前進し、数秒待つ
-      constexpr double CATCH_TIME = 3.0;
+      constexpr double CATCH_TIME = 1.5;
 
+      const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
       const auto target_pose = data_set.get_target();
 
-      // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
-      const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+      // ロボットの位置を中心にした座標系で、前進する
+      const tools::Trans trans_R(robot_pose, robot_pose.theta);
+      auto new_pose = trans_R.inverted_transform(BALL_RADIUS, 0.0, 0.0);
 
-      auto new_pose = trans_BtoT.inverted_transform(ROBOT_RADIUS + BALL_RADIUS, 0.0, M_PI);
+      // // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
+      // const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
+
+      // auto new_pose = trans_BtoT.inverted_transform(ROBOT_RADIUS + BALL_RADIUS, 0.0,M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
