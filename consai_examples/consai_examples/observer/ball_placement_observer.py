@@ -22,7 +22,8 @@ class BallPlacementObserver():
     def __init__(self):
         self._ball = PosVel()
 
-        self._threshold_far = 3.0  # meter
+        # FIXME JapanOpen2024用 パスを切るため
+        self._threshold_far = 100.0  # meter
         self._threshold_arrived = 0.05  # meter
         self._threshold_arrived_velocity = 0.2  # m/s
         self._threshold_margin = 0.1  # meter
