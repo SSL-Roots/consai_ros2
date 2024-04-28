@@ -51,10 +51,10 @@ class SubAttackerDecision(DecisionBase):
         else:
             if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
                 move_to_ball = Operation().move_to_pose(TargetXY.value(
-                    self._penalty_side_x, self._penalty_side_y), TargetTheta.look_ball())
+                    self._penalty_front_x, -self._penalty_front_y), TargetTheta.look_ball())
             else:
                 move_to_ball = Operation().move_to_pose(TargetXY.value(
-                    self._penalty_front_x, -self._penalty_front_y), TargetTheta.look_ball())
+                    self._penalty_side_x, self._penalty_side_y), TargetTheta.look_ball())
         return move_to_ball
 
     def _offend_our_side_operation(self):
