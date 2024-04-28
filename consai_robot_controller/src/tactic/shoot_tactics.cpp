@@ -31,6 +31,7 @@ static constexpr double MIN_SHOOT_SPEED = 2.0;  // m/s
 static constexpr double WAIT_DISTANCE = 0.7;  // meters
 static constexpr double ROTATE_RADIUS = ROBOT_RADIUS * 2.0;  // meters
 static constexpr double BALL_RADIUS = 0.0215;  // meters
+static constexpr double MAX_BALL_VEL_NORM = 0.5;  // m/s
 static constexpr auto WAIT = "WAIT";
 static constexpr auto APPROACH = "APPROACH";
 static constexpr auto ROTATE = "ROTATE";
@@ -88,6 +89,8 @@ tactic_functions_[APPROACH_TO_MOVING_BALL] = [this](TacticDataSet & data_set) ->
       // 近づけば良いので、しきい値を大きくする
       constexpr auto DISTANCE_THRESHOLD = 0.3;  // meters
       const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      const auto GO_AROUND_BALL_X = 0.2; // meters
+      const auto GO_AROUND_BALL_Y = 0.2; // meters
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
@@ -97,16 +100,16 @@ tactic_functions_[APPROACH_TO_MOVING_BALL] = [this](TacticDataSet & data_set) ->
       const tools::Trans trans_BtoBV(ball_pose, std::atan2(ball_vel.y, ball_vel.x));
       const auto robot_pose_BVtoB = trans_BtoBV.transform(robot_pose);
       const auto ball_velocity_norm = std::hypot(ball_vel.x, ball_vel.y);
-      if (ball_velocity_norm < 0.5){
+      if (ball_velocity_norm < MAX_BALL_VEL_NORM){
         return ROTATE;
       }
 
-      double hoge_y = 0.2;
+      double go_around_ball_y = GO_AROUND_BALL_Y;
       if (robot_pose_BVtoB.y < 0) {
-        hoge_y = -0.2;
+        go_around_ball_y = -GO_AROUND_BALL_Y;
       }
 
-      const auto new_pose = trans_BtoBV.inverted_transform(0.2, hoge_y, 0);
+      const auto new_pose = trans_BtoBV.inverted_transform(GO_AROUND_BALL_X, go_around_ball_y, 0);
 
       // セットプレイ時は回転半径を大きくする
       double rotation_radius = ROTATE_RADIUS;
@@ -244,13 +247,13 @@ bool ShootTactics::update(
   const auto ball_vel = tools::velocity_ball_state(ball);
   const auto ball_velocity_norm = std::hypot(ball_vel.x, ball_vel.y);
 
-  if (ball_velocity_norm > 0.5) {
+  if (ball_velocity_norm > MAX_BALL_VEL_NORM) {
     tactic_name_[robot_id] = APPROACH_TO_MOVING_BALL;
     tactic_time_[robot_id] = chrono::system_clock::now();
   }  
 
   // ロボットボールが大きく離れたらリセットする
-  if (tools::distance(tools::pose_state(my_robot), tools::pose_state(ball)) > WAIT_DISTANCE && ball_velocity_norm <= 0.5) {
+  if (tools::distance(tools::pose_state(my_robot), tools::pose_state(ball)) > WAIT_DISTANCE && ball_velocity_norm <= MAX_BALL_VEL_NORM) {
     tactic_name_[robot_id] = WAIT;
     tactic_time_[robot_id] = chrono::system_clock::now();
   }
@@ -268,6 +271,7 @@ bool ShootTactics::update(
     tactic_time_[robot_id] = chrono::system_clock::now();
   }
 
+  // FIXME: デバッグ用なので消してね
   std::cout << tactic_name_[robot_id] << std::endl;
 
   parsed_pose = data_set.get_parsed_pose();
