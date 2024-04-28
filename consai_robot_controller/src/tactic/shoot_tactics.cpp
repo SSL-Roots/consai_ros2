@@ -244,10 +244,19 @@ bool ShootTactics::update(
     tactic_time_[robot_id] = chrono::system_clock::now();
   }
 
+  const auto robot_pose = tools::pose_state(my_robot);
+  const auto ball_pose = tools::pose_state(ball);
   const auto ball_vel = tools::velocity_ball_state(ball);
   const auto ball_velocity_norm = std::hypot(ball_vel.x, ball_vel.y);
 
-  if (ball_velocity_norm > MAX_BALL_VEL_NORM) {
+  const tools::Trans trans_BtoBV(ball_pose, std::atan2(ball_vel.y, ball_vel.x));
+  const auto robot_pose_BtoBV = trans_BtoBV.transform(robot_pose);
+
+  // ボールがロボットから離れている方向
+  // ボール速度がある程度大きい
+  // ボール速度は自陣側（シュートする反対側）
+  if (robot_pose_BtoBV.x < 0 && ball_velocity_norm > MAX_BALL_VEL_NORM && ball_vel.x < 0) {
+    // ボール進行方向に回り込む
     tactic_name_[robot_id] = APPROACH_TO_MOVING_BALL;
     tactic_time_[robot_id] = chrono::system_clock::now();
   }  
