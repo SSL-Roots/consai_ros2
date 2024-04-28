@@ -257,7 +257,6 @@ def gen_their_kickoff_function():
     return function
 
 
-
 def gen_setplay_shoot_function():
     def function(self, robot_id):
         # 該当レフリー信号開始から経過時間の上限
