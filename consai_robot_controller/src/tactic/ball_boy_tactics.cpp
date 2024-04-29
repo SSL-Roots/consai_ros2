@@ -109,7 +109,17 @@ TacticState BallBoyTactics::tactic_approach(DataSet & data_set)
 
   const auto angle_ball_to_center = tools::calc_angle(ball_pose, FIELD_CENTER);
   const tools::Trans trans_BtoC(ball_pose, angle_ball_to_center);
-  const auto new_parsed_pose = trans_BtoC.inverted_transform(DISTANCE_TO_CATCHER, 0.0, -M_PI);
+  auto new_parsed_pose = trans_BtoC.inverted_transform(DISTANCE_TO_CATCHER, 0.0, -M_PI);
+
+  // ボールがゴールの外側の角にある場合は、処理を変更する
+  if (std::fabs(ball_pose.x) >= 6.0 && std::fabs(ball_pose.y) > 0.9 && std::fabs(ball_pose.y) < 1.2) {
+    State pivot;
+    pivot.x = 0.0;
+    pivot.y = std::copysign(4.5, ball_pose.y);
+    const tools::Trans trans_BtoP(ball_pose, tools::calc_angle(ball_pose, pivot));
+    new_parsed_pose = trans_BtoP.inverted_transform(DISTANCE_TO_CATCHER, 0.0, -M_PI);
+  }
+
   data_set.set_parsed_pose(new_parsed_pose);
   data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
 
