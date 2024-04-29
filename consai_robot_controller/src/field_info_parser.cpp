@@ -154,11 +154,6 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
     goal->avoid_ball,
     avoidance_pose);
 
-  if (goal->avoid_placement_area) {
-    tactic_obstacle_avoidance_->avoid_placement_area(
-      my_robot, avoidance_pose, ball, goal->placement_pos, avoidance_pose);
-  }
-
   if (goal->avoid_pushing_robots) {
     tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, avoidance_pose, avoidance_pose);
   }
@@ -168,8 +163,14 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
       my_robot, final_goal_pose, avoidance_pose, ball, avoidance_pose);
   }
 
+  // Overwrite avoidance_pose if avoid_defense_area is true
   if (goal->avoid_defense_area) {
-    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, avoidance_pose, avoidance_pose);
+    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, goal_pose, avoidance_pose);
+  }
+
+  if (goal->avoid_placement_area) {
+    tactic_obstacle_avoidance_->avoid_placement_area(
+      my_robot, avoidance_pose, ball, goal->placement_pos, avoidance_pose);
   }
 
   return avoidance_pose;
