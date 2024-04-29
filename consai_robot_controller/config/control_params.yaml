@@ -1,5 +1,5 @@
 hard_limit_acceleration_xy: 3.0 # m/s^2
-soft_limit_acceleration_xy: 1.5 # m/s^2
+soft_limit_acceleration_xy: 2.5 # m/s^2
 hard_limit_acceleration_theta: 5.0 # rad/s^2
 soft_limit_acceleration_theta: 4.0 # rad/s^2
 hard_limit_velocity_xy: 3.0 # m/s^2
