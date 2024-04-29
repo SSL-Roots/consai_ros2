@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from decisions.decision_base import DecisionBase
+import math
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
@@ -28,25 +29,29 @@ class BallBoyDecision(DecisionBase):
         # サイドチェンジに関わらず退避位置を常に同じするためにinvertフラグを取得する
         stand_by_x = 0.0
         stand_by_y = 4.5 + 0.15
+        self._standby_theta = math.radians(90.0)
 
         if invert:
             stand_by_y *= -1.0
+            self._standby_theta = math.radians(-90.0)
 
         # ボールボーイの待機位置
         self._standby_position = TargetXY.value(stand_by_x, stand_by_y) 
 
     def _standby_operation(self):
         return Operation().move_to_pose(
-            self._standby_position, TargetTheta.look_ball())
+            self._standby_position, TargetTheta.value(self._standby_theta))
 
     def our_ball_placement(self, robot_id, placement_pos):
-        move_to_ball = Operation().move_to_pose(self._standby_position, TargetTheta.look_ball())
+        move_to_ball = Operation().move_to_pose(
+            self._standby_position, TargetTheta.value(self._standby_theta))
         dribble_operation = move_to_ball.with_ball_boy_dribbling_to(
             TargetXY.value(placement_pos.x, placement_pos.y))
         self._operator.operate(robot_id, dribble_operation)
 
     def their_ball_placement(self, robot_id, placement_pos):
-        move_to_ball = Operation().move_to_pose(self._standby_position, TargetTheta.look_ball())
+        move_to_ball = Operation().move_to_pose(
+            self._standby_position, TargetTheta.value(self._standby_theta))
         dribble_operation = move_to_ball.with_ball_boy_dribbling_to(
             TargetXY.value(placement_pos.x, placement_pos.y))
         self._operator.operate(robot_id, dribble_operation)
@@ -55,7 +60,6 @@ class BallBoyDecision(DecisionBase):
 def gen_standby_function():
     def function(self, robot_id, placement_pos=None):
         operation = self._standby_operation()
-        operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
     return function
 

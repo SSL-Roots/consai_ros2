@@ -47,6 +47,7 @@ class RoleName(Enum):
     SIDE_BACK1 = 13
     SIDE_BACK2 = 14
     SUBSTITUTE = 15
+    BALL_BOY = 16
 
 
 class BallState(Enum):
@@ -63,6 +64,7 @@ class RoleAssignment(Node):
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
     ACTIVE_ROLE_LIST = [
         RoleName.GOALIE,
+        RoleName.BALL_BOY,
         RoleName.ATTACKER,
         RoleName.SUB_ATTACKER,
         RoleName.CENTER_BACK1,
@@ -77,7 +79,7 @@ class RoleAssignment(Node):
         # RoleName.RIGHT_WING,
     ]
 
-    def __init__(self, goalie_id: int):
+    def __init__(self, goalie_id: int, ball_boy_id=11):
         super().__init__('assignor')
         # 実際に運用するroleのリスト
         # イエローカードや交代指示などで役割が変更されます
@@ -93,6 +95,9 @@ class RoleAssignment(Node):
 
         self._goalie_id = goalie_id
         self.get_logger().info('goalie IDは{}です'.format(self._goalie_id))
+
+        self._ball_boy_id = ball_boy_id
+        self.get_logger().info('ball_boy IDは{}です'.format(self._ball_boy_id))
 
         self._pub_visualizer_objects = self.create_publisher(
             Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
@@ -237,6 +242,12 @@ class RoleAssignment(Node):
                 self._id_list_ordered_by_role_priority[goalie_priority] = self._goalie_id
                 continue
 
+            # アクティブなIDがball_boyであれば、指定されたスペースにセットする
+            if active_id == self._ball_boy_id:
+                ball_boy_priority = self._get_priority_of_role(RoleName.BALL_BOY)
+                self._id_list_ordered_by_role_priority[ball_boy_priority] = self._ball_boy_id
+                continue
+
             # 空きスペースにIDをセットする
             # ただし、goalieのスペースは空けておく
             priority = self._find_highest_prioiry_from_free_roles(ignore_goalie=True)
@@ -254,6 +265,10 @@ class RoleAssignment(Node):
         for priority, robot_id in enumerate(self._id_list_ordered_by_role_priority):
             # goalieの担当は空けておく
             if priority == self._get_priority_of_role(RoleName.GOALIE):
+                continue
+
+            # ball_boyの担当は空けておく
+            if priority == self._get_priority_of_role(RoleName.BALL_BOY):
                 continue
 
             # 担当がいればスキップ
@@ -284,6 +299,9 @@ class RoleAssignment(Node):
             if priority == self._get_priority_of_role(RoleName.GOALIE) and ignore_goalie:
                 continue
 
+            if priority == self._get_priority_of_role(RoleName.BALL_BOY):
+                continue
+
             if robot_id is None:
                 return priority
         return None
@@ -304,6 +322,10 @@ class RoleAssignment(Node):
             for robot_id, robot in our_robots.items():
                 # Goalieはスキップ
                 if robot_id == self._goalie_id:
+                    continue
+
+                # BallBoyはスキップ
+                if robot_id == self._ball_boy_id:
                     continue
 
                 distance = tool.get_distance(ball.pos(), robot.pos())
@@ -329,6 +351,10 @@ class RoleAssignment(Node):
             for robot_id, robot in our_robots.items():
                 # Goalieはスキップ
                 if robot_id == self._goalie_id:
+                    continue
+
+                # BallBoyはスキップ
+                if robot_id == self._ball_boy_id:
                     continue
 
                 tr_robot_pos = trans.transform(robot.pos())
