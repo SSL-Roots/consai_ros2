@@ -35,13 +35,15 @@ class GoaleDecision(DecisionBase):
         self.our_goal_center_pos = Field()._our_goal_dict['center']
         self.our_goal_lower_pos = Field()._our_goal_dict['lower']
         # ゴール前を守る位置のマージン[m]
-        self.margin = 0.2
+        self.margin_x = 0.2
+        self.margin_y = 0.35
+        self._in_flag = 0
 
     def _defend_goal_operation(self):
-        p1_x = self.our_goal_upper_pos.x + self.margin
-        p1_y = self.our_goal_upper_pos.y
-        p2_x = self.our_goal_lower_pos.x + self.margin
-        p2_y = self.our_goal_lower_pos.y
+        p1_x = self.our_goal_upper_pos.x + self.margin_x
+        p1_y = self.our_goal_upper_pos.y - self.margin_y
+        p2_x = self.our_goal_lower_pos.x + self.margin_x
+        p2_y = self.our_goal_lower_pos.y + self.margin_y
 
         # ボールの座標を取得
         ball_pos = self._field_observer.detection().ball().pos()
@@ -57,28 +59,29 @@ class GoaleDecision(DecisionBase):
         flag = 1
         # 味方エリアにボールが存在かつボールに近い敵ロボットが存在する場合
         if is_in_our_side and len(distance_ball_to_their_robots.keys()):
-            # ボールに一番近い敵ロボットのIDを取得
-            sorted_distance = sorted(
-                enumerate(distance_ball_to_their_robots.keys()), key=lambda x: x[1])
-            sorted_indices = [index for index, _ in sorted_distance]
+            # ロボットの位置を取得
             robots = self._field_observer.detection().their_robots()
-            for i in sorted_indices:
+            for _ in range(len(distance_ball_to_their_robots)):
+                # ボールに一番近い敵ロボットのIDを取得
+                i = min(distance_ball_to_their_robots, key=distance_ball_to_their_robots.get)
+                distance = distance_ball_to_their_robots.pop(i)
+                # キーが存在している場合
                 if i in robots:
                     # 一番近いロボットの位置を取得
                     robot_pos = robots[i].pos()
 
                     # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
-                    if min(distance_ball_to_their_robots) < 0.15 and ball_pos.x < robot_pos.x:
+                    if distance < 0.15 and ball_pos.x < robot_pos.x:
                         # 2点を結ぶ直線の傾きと切片を取得
                         slope, intercept, _ = geometry_tools.get_line_parameter(
                             ball_pos, robot_pos)
                         # ゴール前との交点(y座標)を算出
                         y = slope * p1_x + intercept
-                        if abs(y) < p1_y - 0.35:
+                        if abs(y) < p1_y:
                             x = p1_x
                             defend_pose = TargetXY.value(x, y)
                             flag = 2
-                    continue
+                    break
 
         # ボールがゴールに向かって来る場合
         elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
@@ -86,7 +89,7 @@ class GoaleDecision(DecisionBase):
             slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
             # ゴール前との交点(y座標)を算出
             y = slope * p1_x + intercept
-            if abs(y) < p1_y:
+            if abs(y) < p1_y + self.margin_y:
                 x = p1_x
                 defend_pose = TargetXY.value(x, y)
                 flag = 2
@@ -131,30 +134,37 @@ class GoaleDecision(DecisionBase):
         if self._field_observer.ball_position().is_in_our_defense_area() \
            and not self._field_observer.ball_motion().is_moving():
 
-            # パス可能なIDのリストを取得
-            receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(robot_id)
-
             move_to_behind_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.3, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), 0.05, TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
-            if len(receivers_id_list) > 0:
-                passing = move_to_behind_ball.with_passing_to(
-                    TargetXY.our_robot(receivers_id_list[0]))
-                self._operator.operate(robot_id, passing)
-                return
+            clear_pos_list = self._field_observer.pass_shoot().get_clear_pos_list()
+            if len(clear_pos_list) > 0 and self._in_flag == 0:
+                self._in_flag = 1
+            # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
+            elif self._field_observer.zone().ball_is_in_left_top() or \
+                    self._field_observer.zone().ball_is_in_left_mid_top() and \
+                    self._in_flag == 0:
+                self._in_flag = 2
             else:
-                # ボールがフィールド上側にあるときは、上側コーナを狙って蹴る
-                if self._field_observer.zone().ball_is_in_left_top() or \
-                     self._field_observer.zone().ball_is_in_left_mid_top():
-                    clear_ball = move_to_behind_ball.with_shooting_to(
-                        TargetXY.their_top_corner())
-                else:
-                    clear_ball = move_to_behind_ball.with_shooting_to(
-                        TargetXY.their_bottom_corner())
-                self._operator.operate(robot_id, clear_ball)
+                self._in_flag = 3
+
+            # フラグによる動作切り替え
+            if self._in_flag == 1:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.value(clear_pos_list[0].x, clear_pos_list[0].y))
+                # self._operator.operate(robot_id, shooting)
+            elif self._in_flag == 2:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.their_top_corner())
+            else:
+                move_to_behind_ball = move_to_behind_ball.with_shooting_to(
+                    TargetXY.their_bottom_corner())
+            self._operator.operate(robot_id, move_to_behind_ball)
             return
+        else:
+            self._in_flag = 0
 
         # ボールとゴールを結ぶ直線上を守る
         defend_our_goal = self._defend_goal_operation()

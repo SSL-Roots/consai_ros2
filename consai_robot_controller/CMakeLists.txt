@@ -36,6 +36,7 @@ add_library(controller_component SHARED
   src/detection_extractor.cpp
   src/constraint_parser.cpp
   src/obstacle/obstacle_observer.cpp
+  src/tactic/back_dribble_tactics.cpp
   src/tactic/ball_boy_tactics.cpp
   src/tactic/dribble_tactics.cpp
   src/tactic/shoot_tactics.cpp

@@ -28,6 +28,7 @@ def test_ボールプレースメント時に進入禁止エリアに侵入し�
     target_y = 0.0  # meters
     ball_x = -4.0  # meters
     ball_y = 0.0  # meters
+    time.sleep(2)
     init_placement(
         rcst_comm, color="yellow", target_x=target_x, target_y=target_y,num_of_robots=11, ball_x=ball_x, ball_y=ball_y
     )

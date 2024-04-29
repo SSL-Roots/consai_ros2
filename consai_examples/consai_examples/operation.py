@@ -311,6 +311,12 @@ class Operation():
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
+    def with_back_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.back_dribble_enable = True
+        goal.dribble_target = target_xy.constraint
+        return Operation(goal)
+
     def with_reflecting_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.reflect_shoot = True

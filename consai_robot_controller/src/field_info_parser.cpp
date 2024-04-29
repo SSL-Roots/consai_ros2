@@ -118,6 +118,10 @@ bool FieldInfoParser::parse_goal(
     dribble_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
   }
 
+  if (goal->back_dribble_enable && has_dribble_target) {
+    back_dribble_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
+  }
+
   if (goal->ball_boy_dribble_enable && has_dribble_target) {
     ball_boy_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
   }
