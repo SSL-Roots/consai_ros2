@@ -31,6 +31,13 @@ class AttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
         self._field_quarter_length = Field()._field['quarter_length']
+        self._inpay_flag = 0
+        self._attacker_id = -1
+        self.shoot_pos_list = []
+        self.receivers_id_list = []
+
+    def _paly(self):
+        return 
 
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
@@ -42,40 +49,68 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
-        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
-        search_offset = 0.7
+
+        # 前回のアタッカーのIDと一致しない場合
+        if robot_id is not self._attacker_id:
+            self._in_flag = 0
+            self._attacker_id = robot_id
+
+        # ボールの位置を取得
+        ball_pos = self._field_observer.detection().ball().pos()
+
+        # バックパスをする検索範囲を設定
+        # 疑似sigmoid関数となっている
+        center_offset = 0.5
+        search_offset = (math.tanh((ball_pos.x - center_offset) * 2) + 1) / 2
+
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
-        # シュートできる場合はシュートする
-        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
-        if len(shoot_pos_list) > 0:
+        if self._inpay_flag == 0:
+            self.shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+            # パス可能なIDのリストを取得
+            self.receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
+                robot_id, search_offset)
+
+        # シュートできる場合
+        if len(self.shoot_pos_list) > 0 and self._inpay_flag == 0:
+            self._inpay_flag = 1
+        # パス可能な場合
+        elif len(self.receivers_id_list) > 0 and self._inpay_flag == 0:
+            self._inpay_flag = 2
+        elif self._inpay_flag == 0:
+            self._inpay_flag = 3
+
+        if self._inpay_flag == 1:
             shooting = move_to_ball.with_shooting_to(
-                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+                TargetXY.value(self.shoot_pos_list[0].x, self.shoot_pos_list[0].y))
+            self._operator.operate(robot_id, shooting)
+            return
+        elif self._inpay_flag == 2:
+            passing = move_to_ball.with_passing_to(
+                TargetXY.our_robot(self.receivers_id_list[0]))
+            self._operator.operate(robot_id, passing)
+            return
+        elif self._inpay_flag == 3:
+            if self._field_observer.zone().ball_is_in_left_top() or \
+                    self._field_observer.zone().ball_is_in_left_mid_top():
+                shooting = move_to_ball.with_shooting_to(
+                    TargetXY.their_top_corner())
+            else:
+                shooting = move_to_ball.with_shooting_to(
+                    TargetXY.their_bottom_corner())
             self._operator.operate(robot_id, shooting)
             return
 
-        ball_pos = self._field_observer.detection().ball().pos()
-        if ball_pos.x < -2.0:
-            self._search_offset = 0.0
-        # パス可能なIDのリストを取得
-        receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
-            robot_id, search_offset)
 
-        # パス可能な場合
-        if len(receivers_id_list) > 0:
-            passing = move_to_ball.with_passing_to(
-                TargetXY.our_robot(receivers_id_list[0]))
-            self._operator.operate(robot_id, passing)
-            return
 
         # TODO(Roots):シュートもパスもできない場合の動きを考える
         # 後ろにドリブルとかしたいね
-        dribbling = move_to_ball.with_dribbling_to(
-            TargetXY.their_goal())
-        self._operator.operate(robot_id, dribbling)
+        # dribbling = move_to_ball.with_dribbling_to(
+        #     TargetXY.their_goal())
+        # self._operator.operate(robot_id, dribbling)
         return
 
     def our_direct(self, robot_id):
