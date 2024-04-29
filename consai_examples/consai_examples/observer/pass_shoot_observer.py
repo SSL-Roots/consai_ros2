@@ -182,7 +182,7 @@ class PassShootObserver:
 
     def _search_shoot_pos_list(self, search_ours=False) -> list[State2D]:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
-        TOLERANCE = 0.1  # ロボット半径 + alpha
+        TOLERANCE = 0.2  # ロボット半径 + alpha
 
         shoot_pos_list = []
 
