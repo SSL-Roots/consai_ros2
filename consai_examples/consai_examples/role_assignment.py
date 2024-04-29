@@ -37,11 +37,11 @@ class RoleName(Enum):
     ATTACKER = 1
     CENTER_BACK1 = 2
     CENTER_BACK2 = 3
-    SUB_ATTACKER = 4
+    SUB_ATTACKER1 = 4
     ZONE1 = 5
     ZONE2 = 6
     ZONE3 = 7
-    ZONE4 = 8
+    SUB_ATTACKER2 = 8
     LEFT_WING = 11
     RIGHT_WING = 12
     SIDE_BACK1 = 13
@@ -64,15 +64,15 @@ class RoleAssignment(Node):
     ACTIVE_ROLE_LIST = [
         RoleName.GOALIE,
         RoleName.ATTACKER,
-        RoleName.SUB_ATTACKER,
+        RoleName.SUB_ATTACKER1,
         RoleName.CENTER_BACK1,
         RoleName.CENTER_BACK2,
         RoleName.SIDE_BACK1,
         RoleName.SIDE_BACK2,
+        RoleName.SUB_ATTACKER2,
         RoleName.ZONE1,
         RoleName.ZONE2,
         RoleName.ZONE3,
-        RoleName.ZONE4,
         # RoleName.LEFT_WING,
         # RoleName.RIGHT_WING,
     ]

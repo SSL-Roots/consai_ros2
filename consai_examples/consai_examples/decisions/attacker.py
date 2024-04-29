@@ -16,16 +16,20 @@
 # limitations under the License.
 
 from consai_msgs.msg import State2D
+import copy
 from decisions.decision_base import DecisionBase
+import math
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
+from field import Field
 
 
 class AttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
+        self._field_quarter_length = Field()._field['quarter_length']
 
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
@@ -37,6 +41,8 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
+        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
+        search_offset = 0.7
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
@@ -50,12 +56,9 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, shooting)
             return
 
-        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
-        search_offset = 0.7
         ball_pos = self._field_observer.detection().ball().pos()
-        if ball_pos.x > 0.0:
-            search_offset = ball_pos.x
-
+        if ball_pos.x < -2.0:
+            self._search_offset = 0.0
         # パス可能なIDのリストを取得
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
             robot_id, search_offset)
@@ -77,10 +80,6 @@ class AttackerDecision(DecisionBase):
     def our_direct(self, robot_id):
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
         search_offset = 0.7
-        ball_pos = self._field_observer.detection().ball().pos()
-        if ball_pos.x > 0.0:
-            search_offset = ball_pos.x
-
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
@@ -94,6 +93,9 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, shooting)
             return
 
+        ball_pos = self._field_observer.detection().ball().pos()
+        if ball_pos.x < -0.5:
+            search_offset = 0.0
         # パス可能なIDのリストを取得
         receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
             robot_id, search_offset)
@@ -141,17 +143,17 @@ class AttackerDecision(DecisionBase):
             + self._field_observer.field_margin_to_wall()
         offset = 0.2  # ボールからのオフセット距離。値が大きいほどキック角度が浅くなる
 
-        if self._field_observer.ball_position().is_outside_of_left():
+        if self._field_observer.ball_position().is_outside_of_left_with_margin():
             if ball_pos.y > placement_pos.y:
                 return State2D(x=-wall_x, y=ball_pos.y - offset)
             else:
                 return State2D(x=-wall_x, y=ball_pos.y + offset)
-        elif self._field_observer.ball_position().is_outside_of_right():
+        elif self._field_observer.ball_position().is_outside_of_right_with_margin():
             if ball_pos.y > placement_pos.y:
                 return State2D(x=wall_x, y=ball_pos.y - offset)
             else:
                 return State2D(x=wall_x, y=ball_pos.y + offset)
-        elif self._field_observer.ball_position().is_outside_of_top():
+        elif self._field_observer.ball_position().is_outside_of_top_with_margin():
             if ball_pos.x > placement_pos.x:
                 return State2D(x=ball_pos.x - offset, y=wall_y)
             else:
@@ -164,16 +166,31 @@ class AttackerDecision(DecisionBase):
 
     def our_ball_placement(self, robot_id, placement_pos):
         # 壁際にあると判定した場合
-        # ボールがフィールド外にある場合は、壁に向かってボールを蹴る
+        # ボールがフィールド外にある場合は、バックドリブルでボールをフィールド内に戻す
         if self._field_observer.ball_position().is_outside():
-            kick_pos = self._kick_pos_to_reflect_on_wall(placement_pos)
             move_to_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_robot(robot_id), 0.5, TargetTheta.look_ball())
             move_to_ball = move_to_ball.with_ball_receiving()
-            put_ball_back = move_to_ball.with_shooting_for_setplay_to(
-                TargetXY.value(kick_pos.x, kick_pos.y))
-            put_ball_back = put_ball_back.disable_avoid_defense_area()
-            self._operator.operate(robot_id, put_ball_back)
+
+            # 壁に対して垂直方向にドリブルする
+            ball_pos = self._field_observer.detection().ball().pos()
+            dribble_pos = copy.deepcopy(ball_pos)
+
+            # 壁からどれだけボールを離すのか
+            MARGIN = 0.7
+
+            if self._field_observer.ball_position().is_outside_of_left() or\
+               self._field_observer.ball_position().is_outside_of_right():
+                dribble_pos.x = math.copysign(
+                    self._field_observer.field_half_length() - MARGIN, dribble_pos.x)
+            else:
+                dribble_pos.y = math.copysign(
+                    self._field_observer.field_half_width() - MARGIN, dribble_pos.y)
+
+            back_dribble = move_to_ball.with_back_dribbling_to(
+                TargetXY.value(dribble_pos.x, dribble_pos.y))
+            back_dribble = back_dribble.disable_avoid_defense_area()
+            self._operator.operate(robot_id, back_dribble)
             return
 
         if self._field_observer.ball_placement().is_far_from(placement_pos):
@@ -216,10 +233,55 @@ def gen_chase_ball_function():
 
 def gen_setplay_shoot_function():
     def function(self, robot_id):
+        # 該当レフリー信号開始から経過時間の上限
+        time_out = 4.0
+
+        # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
+        search_offset = 2.0
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.05, TargetTheta.look_ball())
-        setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
-        self._operator.operate(robot_id, setplay_shoot)
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
+
+        # シュート可能なゴールのリストを取得
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        # パス可能なIDのリストを取得
+        receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
+            robot_id, search_offset)
+
+        if time_out < self.command_elapsed_time:
+            # パス可能な場合
+            if len(receivers_id_list) > 0:
+                # パスする
+                passing = move_to_ball.with_passing_for_setplay_to(
+                    TargetXY.our_robot(receivers_id_list[0]))
+            else:
+                x = self._field_quarter_length
+                y = 0
+                # ボールが味方側エリアにあるか取得
+                is_in_our_side = self._field_observer.ball_position().is_in_our_side()
+                if is_in_our_side:
+                    x = -x
+                shooting = move_to_ball.with_passing_to(
+                    TargetXY.value(x, y))
+                self._operator.operate(robot_id, shooting)
+            return
+        else:
+            # シュートできる場合
+            if len(shoot_pos_list) > 0:
+                # シュートする
+                shooting = move_to_ball.with_shooting_for_setplay_to(
+                    TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+                self._operator.operate(robot_id, shooting)
+            # パス可能な場合
+            elif len(receivers_id_list) > 0:
+                # パスする
+                passing = move_to_ball.with_passing_for_setplay_to(
+                    TargetXY.our_robot(receivers_id_list[0]))
+                self._operator.operate(robot_id, passing)
+            else:
+                # パスもできなければ相手ゴールに向かってシュートする
+                setplay_shoot = move_to_ball.with_shooting_for_setplay_to(TargetXY.their_goal())
+                self._operator.operate(robot_id, setplay_shoot)
+            return
     return function
 
 

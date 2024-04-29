@@ -25,7 +25,7 @@ from decisions.center_back import CenterBackDecision, CenterBackID
 from decisions.goalie import GoaleDecision
 from decisions.side_back import SideBackDecision, SideBackID
 from decisions.side_wing import SideWingDecision, WingID
-from decisions.sub_attacker import SubAttackerDecision
+from decisions.sub_attacker import SubAttackerDecision, SubAttackerID
 from decisions.substitute import SubstituteDecision
 from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
 from field_observer import FieldObserver
@@ -56,8 +56,7 @@ def num_of_active_zone_roles(active_roles):
     role_zone_list = [
         RoleName.ZONE1,
         RoleName.ZONE2,
-        RoleName.ZONE3,
-        RoleName.ZONE4]
+        RoleName.ZONE3]
     return len(set(role_zone_list) & set(active_roles))
 
 
@@ -65,7 +64,7 @@ def zone_role_ids(aVctive_roles) -> list[int]:
     # ゾーンディンフェンスを担当するロボットIDのリストを返す
     ids = []
     for role, robot_id in assignor.get_assigned_roles_and_ids():
-        if role in [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3, RoleName.ZONE4]:
+        if role in [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3]:
             ids.append(robot_id)
     return ids
 
@@ -75,6 +74,7 @@ def enable_role_update():
     return not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
         not referee.our_penalty_inplay() and \
+        not referee.our_ball_placement() and \
         not referee.their_pre_penalty() and \
         not referee.their_penalty() and \
         not referee.their_penalty_inplay()
@@ -90,6 +90,8 @@ def update_decisions(num_of_center_back_roles: int,
         decisions[role].set_num_of_side_back_roles(num_of_side_back_roles)
         # ゾーンディフェンスの担当者数をセットする
         decisions[role].set_num_of_zone_roles(num_of_zone_roles)
+        # 現在のレフリーの経過時間をセットする
+        decisions[role].set_command_elapsed_time(referee.command_elapsed_time())
 
         # レフェリーコマンドに合わせて行動を決定する
         if referee.halt():
@@ -223,11 +225,11 @@ if __name__ == '__main__':
         RoleName.ATTACKER: AttackerDecision(operator, observer),
         RoleName.CENTER_BACK1: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK1),
         RoleName.CENTER_BACK2: CenterBackDecision(operator, observer, CenterBackID.CENTER_BACK2),
-        RoleName.SUB_ATTACKER: SubAttackerDecision(operator, observer),
+        RoleName.SUB_ATTACKER1: SubAttackerDecision(operator, observer, SubAttackerID.SUBATTACK1),
+        RoleName.SUB_ATTACKER2: SubAttackerDecision(operator, observer, SubAttackerID.SUBATTACK2),
         RoleName.ZONE1: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE1),
         RoleName.ZONE2: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE2),
         RoleName.ZONE3: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE3),
-        RoleName.ZONE4: ZoneDefenseDecision(operator, observer, ZoneDefenseID.ZONE4),
         RoleName.LEFT_WING: SideWingDecision(operator, observer, WingID.LEFT),
         RoleName.RIGHT_WING: SideWingDecision(operator, observer, WingID.RIGHT),
         RoleName.SIDE_BACK1: SideBackDecision(operator, observer, SideBackID.SIDE1),

@@ -25,6 +25,7 @@
 #include "consai_robot_controller/constraint_parser.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
 #include "consai_robot_controller/obstacle/obstacle_environment.hpp"
+#include "consai_robot_controller/tactic/back_dribble_tactics.hpp"
 #include "consai_robot_controller/tactic/ball_boy_tactics.hpp"
 #include "consai_robot_controller/tactic/dribble_tactics.hpp"
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
@@ -83,6 +84,7 @@ private:
   std::shared_ptr<ParsedReferee> parsed_referee_;
   tactics::BallBoyTactics ball_boy_tactics_;
   dribble_tactics::DribbleTactics dribble_tactics_;
+  back_dribble_tactics::BackDribbleTactics back_dribble_tactics_;
   shoot_tactics::ShootTactics shoot_tactics_;
   std::shared_ptr<parser::ConstraintParser> constraint_parser_;
   std::shared_ptr<tactic::ControlBall> tactic_control_ball_;

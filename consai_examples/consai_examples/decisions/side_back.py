@@ -22,6 +22,8 @@ from decisions.decision_base import DecisionBase
 from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
+from consai_examples.field import Field
+import math
 
 
 class SideBackID(Enum):
@@ -34,8 +36,8 @@ class SideBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, side_id: SideBackID):
         super().__init__(robot_operator, field_observer)
         self._side_id = side_id
-        self._wait_target_x = -4.5
-        self._wait_target_y = 3.0
+        self._wait_target_x = -5.0
+        self._wait_target_y = 2.5
         self._distance_from = 0.25
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
         self._our_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
@@ -43,18 +45,41 @@ class SideBackDecision(DecisionBase):
         self._their_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
         self._ball_placement_pos_x = -6.0 + 2.0
         self._ball_placement_pos_y = 1.8 - 0.3 * (8.0 + self._side_id.value)
+        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
+        self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
 
     def _side_back_operation(self, without_mark=False):
         SIDE_ID = self._side_id.value
+        MARK_THRESHOLD_Y = 3.0
+
+        # 深追いしないライン
+        p1_x = self._penalty_corner_upper_front.x
+        p1_y = MARK_THRESHOLD_Y - 0.2
+        p2_x = self._penalty_goalside_upper_back.x
+        p2_y = MARK_THRESHOLD_Y - 0.2
 
         # FIXME: ボールが相手側にある場合は攻めに役立ちそうなポジションに移動してほしい
 
-        # DFエリア横に相手ロボットがいる、ボールとロボットの間に移動する
+        # DFエリア横に相手ロボットがいる、ゴールとロボットの間に移動する
         if self._field_observer.side_back_target().has_target(SIDE_ID) and without_mark is False:
             target_id = self._field_observer.side_back_target().get_target_id(SIDE_ID)
-            operation = Operation().move_on_line(
-                TargetXY.their_robot(target_id), TargetXY.our_goal(),
-                distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
+            target_pos = self._field_observer.detection().their_robots()[target_id].pos()
+            if math.fabs(target_pos.y) > MARK_THRESHOLD_Y:
+                # DFエリアから距離がある場合は深追いしない
+                if target_pos.y > 0:
+                    operation = Operation().move_to_intersection(
+                        TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
+                        TargetXY.their_robot(target_id), TargetXY.our_goal(),
+                        TargetTheta.look_ball())
+                else:
+                    operation = Operation().move_to_intersection(
+                        TargetXY.value(p1_x, -p1_y), TargetXY.value(p2_x, -p2_y),
+                        TargetXY.their_robot(target_id), TargetXY.our_goal(),
+                        TargetTheta.look_ball())
+            else:
+                operation = Operation().move_on_line(
+                    TargetXY.their_robot(target_id), TargetXY.our_goal(),
+                    distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:
             # DFエリア横付近で待機する

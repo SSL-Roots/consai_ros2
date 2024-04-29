@@ -105,6 +105,7 @@ class RefereeParser(Node):
         self._max_allowed_our_bots = 0
         self._num_of_blue_bots: int = 0
         self._num_of_yellow_bots: int = 0
+        self._command_elapsed_time = 0.0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._pub_visualizer_objects = self.create_publisher(
@@ -259,6 +260,9 @@ class RefereeParser(Node):
                 self.get_logger().info('free kickから10秒経過したのでinplayに変わります')
                 self._current_command = self._COMMAND_INPLAY
 
+        # コマンドの経過時間を格納
+        self._command_elapsed_time = elapsed_time
+
     def present_stage(self):
         # ステージのテキストを返す
         return self._STAGE_STR_DICT.get(self._referee.stage, 'NONE')
@@ -349,3 +353,6 @@ class RefereeParser(Node):
 
     def max_allowed_our_bots(self):
         return self._max_allowed_our_bots
+
+    def command_elapsed_time(self):
+        return self._command_elapsed_time
