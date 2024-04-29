@@ -45,6 +45,7 @@ class BallBoyDecision(DecisionBase):
     def our_ball_placement(self, robot_id, placement_pos):
         move_to_ball = Operation().move_to_pose(
             self._standby_position, TargetTheta.value(self._standby_theta))
+        move_to_ball = move_to_ball.disable_avoid_defense_area()
         dribble_operation = move_to_ball.with_ball_boy_dribbling_to(
             TargetXY.value(placement_pos.x, placement_pos.y))
         self._operator.operate(robot_id, dribble_operation)
@@ -52,6 +53,7 @@ class BallBoyDecision(DecisionBase):
     def their_ball_placement(self, robot_id, placement_pos):
         move_to_ball = Operation().move_to_pose(
             self._standby_position, TargetTheta.value(self._standby_theta))
+        move_to_ball = move_to_ball.disable_avoid_defense_area()
         dribble_operation = move_to_ball.with_ball_boy_dribbling_to(
             TargetXY.value(placement_pos.x, placement_pos.y))
         self._operator.operate(robot_id, dribble_operation)
