@@ -18,6 +18,7 @@
 from consai_msgs.msg import State2D
 import copy
 from decisions.decision_base import DecisionBase
+from consai_tools.geometry import geometry_tools
 import math
 from operation import Operation
 from operation import TargetXY
@@ -231,6 +232,53 @@ def gen_chase_ball_function():
     return function
 
 
+def gen_their_kickoff_function():
+    def function(self, robot_id):
+        # 角度の最大値
+        max_angle = 100
+        # ボールとの距離
+        margin = 0.7
+        # ボールの座標を取得
+        ball_pos = self._field_observer.detection().ball().pos()
+
+        # ボールと敵ロボットの距離を取得
+        distance_ball_to_their_robots = self._field_observer.distance().ball_to_their_robots()
+        # 敵ロボットの位置を取得
+        robots = self._field_observer.detection().their_robots()
+
+        angle = math.pi
+        for _ in range(len(distance_ball_to_their_robots)):
+            # ボールに一番近い敵ロボットのIDを取得
+            i = min(distance_ball_to_their_robots, key=distance_ball_to_their_robots.get)
+            _ = distance_ball_to_their_robots.pop(i)
+            # キーが存在している場合
+            if i in robots:
+                # 一番近い敵ロボットの位置を取得
+                robot_pos = robots[i].pos()
+
+                # ボールと敵ロボットの相対角度を取得
+                angle = geometry_tools.get_angle(ball_pos, robot_pos)
+                # 対角側の角度へ変換
+                angle = angle + math.pi
+                # -2pi ~ piへ変換
+                angle = geometry_tools.angle_normalize(angle)
+                # 指定した範囲内にクリップ
+                if math.radians(-max_angle) <= angle <= 0:
+                    angle = math.radians(-max_angle)
+                elif 0 < angle <= math.radians(max_angle):
+                    angle = math.radians(max_angle)
+                break
+        # 位置を計算
+        x = margin * math.cos(angle)
+        y = margin * math.sin(angle)
+        chase_ball_pose = TargetXY.value(x, y)
+
+        chase_ball = Operation().move_to_pose(chase_ball_pose, TargetTheta.look_ball())
+        chase_ball = chase_ball.enable_avoid_ball()
+        self._operator.operate(robot_id, chase_ball)
+    return function
+
+
 def gen_setplay_shoot_function():
     def function(self, robot_id):
         # 該当レフリー信号開始から経過時間の上限
@@ -321,8 +369,11 @@ def gen_our_penalty_function():
     return function
 
 
-for name in ['our_pre_kickoff', 'their_pre_kickoff', 'their_kickoff', 'our_pre_penalty']:
+for name in ['our_pre_kickoff', 'our_pre_penalty']:
     setattr(AttackerDecision, name, gen_chase_ball_function())
+
+for name in ['their_pre_kickoff', 'their_kickoff']:
+    setattr(AttackerDecision, name, gen_their_kickoff_function())
 
 for name in ['our_kickoff', 'our_penalty', 'our_indirect']:
     setattr(AttackerDecision, name, gen_setplay_shoot_function())
