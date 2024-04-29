@@ -24,7 +24,6 @@ from operation import Operation
 from operation import TargetXY
 from operation import TargetTheta
 from field import Field
-import math
 
 
 class AttackerDecision(DecisionBase):
