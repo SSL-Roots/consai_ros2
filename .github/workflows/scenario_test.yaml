@@ -59,7 +59,10 @@ jobs:
           ${{ runner.os }}-buildx-
 
     - name: Start Docker Compose services
-      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+      run: |
+        docker compose -f .docker/consai-grsim-compose.yml up -d
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
       env:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
