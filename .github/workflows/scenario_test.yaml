@@ -29,6 +29,9 @@ jobs:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_DIR: "tests/test_scenario_*.py"}
           - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_DIR: "tests/yellow_invert/test_scenario_*.py"}
 
+    env:
+      LOCALSTACK_CACHE_PATH: localstack-image
+
     runs-on: ubuntu-latest
 
     steps:
@@ -50,19 +53,24 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - uses: docker/build-push-action@v4
+    - name: Cache Docker layers
+      id: cache-localstack
+      uses: actions/cache@v4
       with:
-        context: .
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        path: ${{ env.LOCALSTACK_CACHE_PATH }}
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
 
-    # - name: Cache Docker layers
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: /tmp/.buildx-cache
-    #     key: ${{ runner.os }}-buildx-${{ github.sha }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-buildx-
+    - name: Pull and save a LocalStack Docker image
+      if: steps.cache-localstack.outputs.cache-hit != 'true'
+      run: |
+        docker pull localstack/localstack:${{ github.sha }}
+        docker save localstack/localstack:${{ github.sha }} -o ${LOCALSTACK_CACHE_PATH}
+
+    - name: Load LocalStack Docker image
+      run: |
+        docker load -i ${LOCALSTACK_CACHE_PATH}
 
     - name: Start Docker Compose services
       run: docker compose -f .docker/consai-grsim-compose.yml up -d
