@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           file: ${{ matrix.dockerfile.path }}
-          build-args: ROS_DISTRO=${{ matrix.env.rosdistro }}
+          build-args: ROS_DISTRO=${{ matrix.dockerfile.rosdistro }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
