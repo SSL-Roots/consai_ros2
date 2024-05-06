@@ -1,26 +1,19 @@
-name: Create and publish a Docker image
+name: Create and publish a Docker image for CI
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}_ci
 
 jobs:
   build-and-push-image:
     strategy:
       matrix:
-        dockerfile:
-          - path: .docker/Dockerfile
-            tag_suffix: humble
-            rosdistro: humble
-          - path: .docker/light/Dockerfile
-            tag_suffix: humble-light
-            rosdistro: humble
+        env:
+          - { ROS_DISTRO: humble}
 
     runs-on: ubuntu-latest
     permissions:
@@ -44,13 +37,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.dockerfile.tag_suffix }}
+            type=sha,format=long
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          file: ${{ matrix.dockerfile.path }}
-          build-args: ROS_DISTRO=${{ matrix.dockerfile.rosdistro }}
+          file: .docker/ci/Dockerfile
+          build-args: ROS_DISTRO=${{ matrix.env.ROS_DISTRO }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

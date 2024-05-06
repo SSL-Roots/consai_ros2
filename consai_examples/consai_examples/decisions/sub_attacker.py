@@ -15,12 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples.decisions.decision_base import DecisionBase
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
 from enum import Enum
-
-from decisions.decision_base import DecisionBase
-from operation import Operation
-from operation import TargetXY
-from operation import TargetTheta
 
 
 class SubAttackerID(Enum):

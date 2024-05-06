@@ -15,15 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples.decisions.decision_base import DecisionBase
+from consai_examples.field import Field
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
 from consai_msgs.msg import State2D
-import copy
-from decisions.decision_base import DecisionBase
 from consai_tools.geometry import geometry_tools
+import copy
 import math
-from operation import Operation
-from operation import TargetXY
-from operation import TargetTheta
-from field import Field
 
 
 class AttackerDecision(DecisionBase):

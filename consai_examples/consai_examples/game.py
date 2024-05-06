@@ -16,23 +16,22 @@
 # limitations under the License.
 
 import argparse
+from consai_examples.decisions.attacker import AttackerDecision
+from consai_examples.decisions.center_back import CenterBackDecision, CenterBackID
+from consai_examples.decisions.goalie import GoaleDecision
+from consai_examples.decisions.side_back import SideBackDecision, SideBackID
+from consai_examples.decisions.side_wing import SideWingDecision, WingID
+from consai_examples.decisions.sub_attacker import SubAttackerDecision, SubAttackerID
+from consai_examples.decisions.substitute import SubstituteDecision
+from consai_examples.decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
+from consai_examples.field_observer import FieldObserver
+from consai_examples.referee_parser import RefereeParser
+from consai_examples.robot_operator import RobotOperator
+from consai_examples.role_assignment import RoleAssignment, RoleName
+import rclpy
+from rclpy.executors import MultiThreadedExecutor
 import threading
 import time
-
-import rclpy
-from decisions.attacker import AttackerDecision
-from decisions.center_back import CenterBackDecision, CenterBackID
-from decisions.goalie import GoaleDecision
-from decisions.side_back import SideBackDecision, SideBackID
-from decisions.side_wing import SideWingDecision, WingID
-from decisions.sub_attacker import SubAttackerDecision, SubAttackerID
-from decisions.substitute import SubstituteDecision
-from decisions.zone_defense import ZoneDefenseDecision, ZoneDefenseID
-from field_observer import FieldObserver
-from rclpy.executors import MultiThreadedExecutor
-from referee_parser import RefereeParser
-from robot_operator import RobotOperator
-from role_assignment import RoleAssignment, RoleName
 
 
 def num_of_active_center_back_roles(active_roles):
