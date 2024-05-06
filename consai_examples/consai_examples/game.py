@@ -34,7 +34,6 @@ import threading
 import time
 
 
-
 def num_of_active_center_back_roles(active_roles):
     # アクティブなセンターバック担当者の数を返す
     role_zone_list = [
