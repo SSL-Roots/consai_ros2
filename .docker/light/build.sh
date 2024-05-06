@@ -17,5 +17,5 @@ fi
 cd $(dirname $0)/../../
 
 # Dockerfileのビルド
-docker build $OPTION -t consai:$ROS_DISTRO-ci -f .docker/ci/Dockerfile . \
+docker build $OPTION -t consai:$ROS_DISTRO-light -f .docker/light/Dockerfile . \
     --build-arg ROS_DISTRO=$ROS_DISTRO \
