@@ -36,9 +36,6 @@ class AttackerDecision(DecisionBase):
         self.shoot_pos_list = []
         self.receivers_id_list = []
 
-    def _paly(self):
-        return 
-
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.enable_avoid_ball()
@@ -103,8 +100,6 @@ class AttackerDecision(DecisionBase):
                     TargetXY.their_bottom_corner())
             self._operator.operate(robot_id, shooting)
             return
-
-
 
         # TODO(Roots):シュートもパスもできない場合の動きを考える
         # 後ろにドリブルとかしたいね
