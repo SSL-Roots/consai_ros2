@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from field_observer import FieldObserver
-from operation import Operation
+from consai_examples.field_observer import FieldObserver
+from consai_examples.operation import Operation
 
 
 class DecisionBase(object):

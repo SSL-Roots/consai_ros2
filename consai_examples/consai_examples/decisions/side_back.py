@@ -16,13 +16,12 @@
 # limitations under the License.
 
 
-from enum import Enum
-
-from decisions.decision_base import DecisionBase
-from operation import Operation
-from operation import TargetXY
-from operation import TargetTheta
+from consai_examples.decisions.decision_base import DecisionBase
 from consai_examples.field import Field
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
+from enum import Enum
 import math
 
 
