@@ -1,27 +1,22 @@
 name: Scenario Test
 
 on:
-  push:
-    branches:
-      - main 
-      - '**-devel'
-    paths-ignore:
-      - '**.md'
-      - '.docker/**'
-      - '.github/workflows/build_docker_image.yaml'
-      - '.github/workflows/build_lint.yaml'
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - '.docker/**'
-      - '.github/workflows/build_docker_image.yaml'
-      - '.github/workflows/build_lint.yaml'
+  workflow_run:
+    workflows: [Create and publish a Docker image for CI]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
   pull-requests: write  # For uploading PR comments
 
 jobs:
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering workflow failed'
+
   scenario_test:
     strategy:
       matrix:
@@ -31,6 +26,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - uses: actions/checkout@v4
 
@@ -50,17 +46,10 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Cache Docker layers
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
-
     - name: Start Docker Compose services
       run: docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
+        GITHUB_SHA: ${{ github.sha }}
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
