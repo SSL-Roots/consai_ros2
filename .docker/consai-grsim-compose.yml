@@ -11,14 +11,11 @@ services:
     restart: "no"
 
   consai_ros2:
-    image: ghcr.io/ssl-roots/consai_ros2:humble
+    image: ghcr.io/ssl-roots/consai_ros2_ci:sha-${GITHUB_SHA}
     container_name: consai
     network_mode: host
-    volumes:
-      - "../:/root/ros2_ws/src/consai_ros2"  # Mount the repository to the container
     command: |
       bash -c "
-      colcon build --symlink-install &&
       source install/setup.bash &&
       ros2 launch consai_examples start.launch.py game:=true invert:=false vision_port:=10020 gui:=false yellow:=${CONSAI_YELLOW} invert:=${CONSAI_INVERT}
       "
