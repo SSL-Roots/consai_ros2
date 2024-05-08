@@ -48,9 +48,9 @@ def test_near_position(rcst_comm):
     assert wait_for_placement(rcst_comm) is True
 
 
-# def test_far_position(rcst_comm):
-#     init_our_placement(rcst_comm, 5.8, 4.3)
-#     assert wait_for_placement(rcst_comm) is True
+def test_far_position(rcst_comm):
+    init_our_placement(rcst_comm, 5.8, 4.3)
+    assert wait_for_placement(rcst_comm) is True
 
 
 def test_so_far_position(rcst_comm):
