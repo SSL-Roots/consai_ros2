@@ -11,7 +11,7 @@ services:
     restart: "no"
 
   consai_ros2:
-    image: ghcr.io/ssl-roots/consai_ros2_ci:sha-${GITHUB_SHA}
+    image: ghcr.io/ssl-roots/consai_ros2_ci:sha-${IMAGE_SHA}
     container_name: consai
     network_mode: host
     command: |
