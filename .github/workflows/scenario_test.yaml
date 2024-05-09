@@ -46,10 +46,16 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Download SHA artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: image_sha
+
     - name: Start Docker Compose services
-      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+      run: |
+        IMAGE_SHA=$(cat image_sha.txt)
+        docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
-        GITHUB_SHA: ${{ github.sha }}
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 

@@ -47,3 +47,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Save SHA
+        run: echo "${{ github.sha }}" > image_sha.txt
+
+      - name: Upload SHA as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: image_sha
+          path: image_sha.txt
