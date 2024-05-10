@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}_ci
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -37,7 +37,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,format=long
+            type=sha,format=long,prefix=${{ matrix.env.ROS_DISTRO }}-light-sha-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -52,7 +52,7 @@ jobs:
         run: echo "${{ github.sha }}" > image_sha.txt
 
       - name: Upload SHA as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: image_sha
           path: image_sha.txt
