@@ -59,6 +59,7 @@ jobs:
         else
           CONSAI_TAG=humble-light
         fi
+        export CONSAI_TAG
         docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
