@@ -10,12 +10,14 @@ on:
       - '.docker/**'
       - '.github/workflows/build_docker_image.yaml'
       - '.github/workflows/build_docker_image_for_ci.yaml'
+      - '.github/workflows/scenario_test.yaml'
   pull_request:
     paths-ignore:
       - '**.md'
       - '.docker/**'
       - '.github/workflows/build_docker_image.yaml'
       - '.github/workflows/build_docker_image_for_ci.yaml'
+      - '.github/workflows/scenario_test.yaml'
   workflow_dispatch:
 
 jobs:
