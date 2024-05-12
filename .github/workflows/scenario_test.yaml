@@ -21,6 +21,8 @@ jobs:
     uses: ./.github/workflows/build_docker_image_for_ci.yaml
 
   environment_setup:
+    needs: create_docker_image
+
     runs-on: ubuntu-latest
 
     steps:
@@ -49,7 +51,7 @@ jobs:
         CONSAI_TAG: ${{ env.CONSAI_TAG }}
 
   scenario_test:
-    needs: [create_docker_image, environment_setup]
+    needs: environment_setup
 
     strategy:
       matrix:
