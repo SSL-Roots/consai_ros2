@@ -13,26 +13,14 @@ permissions:
   contents: read
   packages: write
 
+env:
+  CONSAI_TAG: humble-light-sha-${{ github.sha }}
+
 jobs:
   create_docker_image:
     uses: ./.github/workflows/build_docker_image_for_ci.yaml
 
-  scenario_test:
-    needs: create_docker_image
-    strategy:
-      matrix:
-        env:
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_ball_placement.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_force_start.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_free_kick.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_halt.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_kickoff.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_obstacle_avoidance.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_penalty.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_stop.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_timeout.py"}
-          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "tests/yellow_invert/test_scenario_yellow_invert_kickoff.py"}
-
+  environment_setup:
     runs-on: ubuntu-latest
 
     steps:
@@ -54,11 +42,39 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Pull Docker Compose images
+      run: |
+        docker compose -f .docker/consai-grsim-compose.yml pull
+      env:
+        CONSAI_TAG: ${{ env.CONSAI_TAG }}
+
+  scenario_test:
+    needs: create_docker_image
+    needs: environment_setup
+    strategy:
+      matrix:
+        env:
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_ball_placement.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_force_start.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_free_kick.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_halt.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_kickoff.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_obstacle_avoidance.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_penalty.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_stop.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_timeout.py"}
+          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "tests/yellow_invert/test_scenario_yellow_invert_kickoff.py"}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
     - name: Start Docker Compose services
       run: |
-        export CONSAI_TAG=humble-light-sha-${{ github.sha }}
         docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
+        CONSAI_TAG: ${{ env.CONSAI_TAG }}
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
