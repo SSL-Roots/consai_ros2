@@ -14,7 +14,7 @@ permissions:
   packages: write
 
 env:
-  PYTHON_VERSION: 3.10
+  PYTHON_VERSION: '3.10'
   CONSAI_TAG: humble-light-sha-${{ github.sha }}
 
 jobs:
