@@ -31,7 +31,7 @@ jobs:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_penalty.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_stop.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_timeout.py"}
-          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "tests/yellow_invert/test_scenario_*.py"}
+          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "tests/yellow_invert/test_scenario_yellow_invert_kickoff.py"}
 
     runs-on: ubuntu-latest
 
@@ -81,7 +81,9 @@ jobs:
         chmod +x ssl-log-recorder
 
     - name: Run pytest
-      run: pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+      run: |
+        pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+        echo "LOG_EXISTS=$(ls *.log.gz 2> /dev/null)" >> $GITHUB_ENV
 
     - name: Get and print logs
       if: always()
@@ -93,26 +95,14 @@ jobs:
 
     - name: Upload artifacts
       id: upload-artifact
-      if: always()
+      if: env.LOG_EXISTS != ''
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.env.TEST_NAME}}-failure-logs
         path: '*.log.gz'
 
-    - name: Check if Artifact was uploaded
-      id: check-artifact
-      if: always()
-      run: |
-        if [ -z "${{ steps.upload-artifact.outputs.artifact-url }}" ]; then
-          echo "Artifact URL not found, skipping comment."
-          echo "skip_comment=true" >> $GITHUB_OUTPUT
-        else
-          echo "Artifact URL found."
-          echo "skip_comment=false" >> $GITHUB_OUTPUT
-        fi
-
     - name: Comment PR with Artifact URL
-      if: always() && steps.check-artifact.outputs.skip_comment != 'true'
+      if: env.LOG_EXISTS != ''
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
