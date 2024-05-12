@@ -1,23 +1,21 @@
 name: Scenario Test
 
 on:
-  workflow_run:
-    workflows: [Create and publish a Docker image for CI]
-    types:
-      - completed
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/build_docker_image.yaml'
   workflow_dispatch:
 
 permissions:
   pull-requests: write  # For uploading PR comments
 
 jobs:
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The triggering workflow failed'
+  create_docker_image:
+    uses: ./.github/workflows/build_docker_image_for_ci
 
   scenario_test:
+    needs: create_docker_image
     strategy:
       matrix:
         env:
@@ -34,7 +32,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
     - uses: actions/checkout@v4
 
@@ -54,20 +51,9 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Download SHA artifact
-      if: ${{ github.event.workflow_run.conclusion == 'success' }}
-      uses: actions/download-artifact@v4
-      with:
-        name: image_sha
-
     - name: Start Docker Compose services
       run: |
-        if [ -f image_sha.txt ]; then
-          CONSAI_TAG=humble-light-sha-$(cat image_sha.txt)
-        else
-          CONSAI_TAG=humble-light
-        fi
-        export CONSAI_TAG
+        export CONSAI_TAG=humble-light-sha-${{ github.sha }}
         docker compose -f .docker/consai-grsim-compose.yml up -d
       env:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}

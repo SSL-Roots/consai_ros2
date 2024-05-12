@@ -1,7 +1,7 @@
 name: Create and publish a Docker image for CI
 
 on:
-  pull_request:
+  workflow_call:
   workflow_dispatch:
 
 env:
@@ -48,11 +48,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Save SHA
-        run: echo "${{ github.sha }}" > image_sha.txt
+      # - name: Save SHA
+      #   run: echo "${{ github.sha }}" > image_sha.txt
 
-      - name: Upload SHA as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image_sha
-          path: image_sha.txt
+      # - name: Upload SHA as artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: image_sha
+      #     path: image_sha.txt
