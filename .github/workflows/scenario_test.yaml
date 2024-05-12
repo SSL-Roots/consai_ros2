@@ -9,6 +9,9 @@ on:
 
 permissions:
   pull-requests: write  # For uploading PR comments
+  # For uploading docker image
+  contents: read
+  packages: write
 
 jobs:
   create_docker_image:
