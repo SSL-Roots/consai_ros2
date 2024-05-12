@@ -34,18 +34,22 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Cache pip packages
+    - name: Setup virtual environment
+      run: |
+        python -m venv env
+        source env/bin/activate
+
+    - name: Cache virtual environment
       uses: actions/cache@v4
       with:
-        path: |
-          ~/.cache/pip
-          ~/.cache/pypoetry
-        key: ${{ runner.os }}-pip-${{ github.run_id }}
+        path: env
+        key: ${{ runner.os }}-env-${{ github.run_id }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-env-
 
     - name: Install robocup_scenario_test library
       run: |
+        source env/bin/activate
         python -m pip install --upgrade pip
         sudo apt update
         sudo apt install -y protobuf-compiler
@@ -88,24 +92,18 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Cache pip packages
+    - name: Cache virtual environment
       uses: actions/cache@v4
       with:
-        path: |
-          ~/.cache/pip
-          ~/.cache/pypoetry
-        key: ${{ runner.os }}-pip-${{ github.run_id }}
+        path: env
+        key: ${{ runner.os }}-env-${{ github.run_id }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-env-
 
-    - name: Install robocup_scenario_test library
+    - name: Setup virtual environment
       run: |
-        python -m pip install --upgrade pip
-        pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
-        pip install pytest
-
-    - name: Verify pip cache
-      run: |
+        python -m venv env
+        source env/bin/activate
         python -m pip list
 
     - name: Start Docker Compose services
@@ -136,6 +134,7 @@ jobs:
 
     - name: Run pytest
       run: |
+        source env/bin/activate
         pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
         echo "LOG_EXISTS=$(ls *.log.gz 2> /dev/null)" >> $GITHUB_ENV
 
