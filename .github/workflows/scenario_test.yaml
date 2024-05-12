@@ -22,8 +22,6 @@ jobs:
     uses: ./.github/workflows/build_docker_image_for_ci.yaml
 
   setup_python_lib:
-    needs: create_docker_image
-
     runs-on: ubuntu-latest
 
     steps:
@@ -57,7 +55,7 @@ jobs:
         pip install pytest
 
   scenario_test:
-    needs: setup_python_lib
+    needs: [create_docker_image, setup_python_lib]
 
     strategy:
       fail-fast: false
