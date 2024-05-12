@@ -21,7 +21,7 @@ jobs:
   create_docker_image:
     uses: ./.github/workflows/build_docker_image_for_ci.yaml
 
-  environment_setup:
+  setup_python_lib:
     needs: create_docker_image
 
     runs-on: ubuntu-latest
@@ -56,19 +56,11 @@ jobs:
         pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
         pip install pytest
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Pull Docker Compose images
-      run: |
-        docker compose -f .docker/consai-grsim-compose.yml pull
-      env:
-        CONSAI_TAG: ${{ env.CONSAI_TAG }}
-
   scenario_test:
-    needs: environment_setup
+    needs: setup_python_lib
 
     strategy:
+      fail-fast: false
       matrix:
         env:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_ball_placement.py"}
