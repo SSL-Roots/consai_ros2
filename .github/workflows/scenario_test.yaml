@@ -98,9 +98,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
 
-     - name: Verify pip cache
-        run: |
-          python -m pip list
+    - name: Verify pip cache
+      run: |
+        python -m pip list
 
     - name: Start Docker Compose services
       run: |
