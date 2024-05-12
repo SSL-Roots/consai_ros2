@@ -49,8 +49,8 @@ jobs:
         CONSAI_TAG: ${{ env.CONSAI_TAG }}
 
   scenario_test:
-    needs: create_docker_image
-    needs: environment_setup
+    needs: [create_docker_image, environment_setup]
+
     strategy:
       matrix:
         env:
