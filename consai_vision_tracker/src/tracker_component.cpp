@@ -41,7 +41,8 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 {
   const auto UPDATE_RATE = 0.01s;
 
-  ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
+  // ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
+  ball_kalman_filter_ = std::make_unique<BallKalmanFilter>(UPDATE_RATE.count());
   for (int i = 0; i < 16; i++) {
     blue_robot_tracker_.push_back(
       std::make_shared<RobotTracker>(
@@ -107,7 +108,8 @@ void Tracker::on_timer()
       return false;
     };
 
-  const auto ball = ball_tracker_->prev_estimation();
+  // const auto ball = ball_tracker_->prev_estimation();
+  const auto ball = ball_kalman_filter_->get_estimation();
   bool use_uncertain_sys_model = false;
 
   if (tools::is_visible(ball)) {
@@ -117,7 +119,8 @@ void Tracker::on_timer()
       ball_is_near_a_robot(yellow_robot_tracker_, ball_pose);
   }
 
-  tracked_msg->balls.push_back(ball_tracker_->update(use_uncertain_sys_model));
+  // tracked_msg->balls.push_back(ball_tracker_->update(use_uncertain_sys_model));
+  tracked_msg->balls.push_back(ball_kalman_filter_->update(use_uncertain_sys_model));
 
   tracked_msg = vis_data_handler_->publish_vis_tracked(std::move(tracked_msg));
 
@@ -128,7 +131,8 @@ void Tracker::on_timer()
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
   for (const auto & ball : msg->balls) {
-    ball_tracker_->push_back_observation(ball);
+    // ball_tracker_->push_back_observation(ball);
+    ball_kalman_filter_->push_back_observation(ball);
   }
 
   for (const auto & blue_robot : msg->robots_blue) {
@@ -152,7 +156,8 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
 
   for (auto && ball : msg->balls) {
     invert_ball(ball);
-    ball_tracker_->push_back_observation(ball);
+    // ball_tracker_->push_back_observation(ball);
+    ball_kalman_filter_->push_back_observation(ball);
   }
 
   for (auto && blue_robot : msg->robots_blue) {
