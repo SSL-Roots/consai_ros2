@@ -20,7 +20,13 @@ namespace consai_vision_tracker
 
 using SSLVector3 = robocup_ssl_msgs::msg::Vector3;
 
-BallKalmanFilter::BallKalmanFilter(const double dt)
+BallKalmanFilter::BallKalmanFilter(
+  const double dt, const double lifetime,
+  const double visibility_increase_rate,
+  const double outlier_time_limit) :
+  VISIBILITY_CONTROL_VALUE_(dt / lifetime),
+  VISIBILITY_INCREASE_RATE_(visibility_increase_rate),
+  OUTLIER_COUNT_THRESHOLD_(outlier_time_limit / dt)
 {
   // State vector
   // x_ = (x, y, vx, vy)
@@ -58,14 +64,13 @@ void BallKalmanFilter::push_back_observation(const DetectionBall & ball)
 
 TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
 {
-  Vector2d z;
+  Vector2d z(x_[0], x_[1]);
 
-  // TODO(): Fix me
   if (ball_observations_.empty()) {
-    z << x_[0], x_[1];
+    visibility_ = std::max(0.0, visibility_ - VISIBILITY_CONTROL_VALUE_);
   } else {
-    z[0] = ball_observations_.back().pos.x;
-    z[1] = ball_observations_.back().pos.y;
+    z = make_observation();
+    visibility_ = std::min(1.0, visibility_ + VISIBILITY_INCREASE_RATE_ * VISIBILITY_CONTROL_VALUE_);
     ball_observations_.clear();
   }
 
@@ -83,7 +88,15 @@ TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
   double chi_square = innovation.transpose() * S.inverse() * innovation;
 
   // Check outlier
-  // TODO(): Implement outlier detection
+  if (is_outlier(chi_square)) {
+    outlier_count_++;
+    if (outlier_count_ > OUTLIER_COUNT_THRESHOLD_) {
+      reset_estimation(z);
+    }
+    return get_estimation();
+  } else {
+    outlier_count_ = 0;
+  }
 
   // Update step
   Matrix42d K = P_pred * H_.transpose() * S.inverse();
@@ -103,9 +116,42 @@ TrackedBall BallKalmanFilter::get_estimation(void) const
   vel.x = x_[2];
   vel.y = x_[3];
   estimation.vel.push_back(vel);
-  estimation.visibility.push_back(1.0);
+  estimation.visibility.push_back(visibility_);
 
   return estimation;
+}
+
+Vector2d BallKalmanFilter::make_observation(void) const
+{
+  if (ball_observations_.empty()) {
+    return Vector2d(x_[0], x_[1]);
+  }
+
+  Vector2d mean_observation(0.0, 0.0);
+  for (const auto & observation : ball_observations_) {
+    mean_observation[0] += observation.pos.x;
+    mean_observation[1] += observation.pos.y;
+  }
+  mean_observation /= ball_observations_.size();
+  return mean_observation;
+}
+
+bool BallKalmanFilter::is_outlier(const double chi_squared_value) const
+{
+  constexpr double THRESHOLD = 5.991;  // 2 degrees of freedom, 0.05 significance level
+
+  if (chi_squared_value > THRESHOLD) {
+    return true;
+  }
+  return false;
+}
+
+void BallKalmanFilter::reset_estimation(const Vector2d & observation)
+{
+  x_ << observation[0], observation[1], 0.0, 0.0;
+  P_ = Matrix4d::Identity();
+  visibility_ = 1.0;
+  outlier_count_ = 0;
 }
 
 
