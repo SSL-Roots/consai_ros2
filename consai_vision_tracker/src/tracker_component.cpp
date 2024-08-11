@@ -41,8 +41,11 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 {
   const auto UPDATE_RATE = 0.01s;
 
-  // ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
   ball_kalman_filter_ = std::make_unique<BallKalmanFilter>(UPDATE_RATE.count());
+  declare_parameter("ball_kalman_filter/q_acc", 4.0);
+  declare_parameter("ball_kalman_filter/q_uncertain_acc", 50.0);
+  declare_parameter("ball_kalman_filter/r_pos_stddev", 0.05);
+
   for (int i = 0; i < 16; i++) {
     blue_robot_tracker_.push_back(
       std::make_shared<RobotTracker>(
@@ -81,6 +84,12 @@ void Tracker::on_timer()
   auto tracked_msg = std::make_unique<TrackedFrame>();
   auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
 
+  // TODO: use parameter callback
+  ball_kalman_filter_->update_noise_covariance_matrix(
+    get_parameter("ball_kalman_filter/q_acc").get_value<double>(),
+    get_parameter("ball_kalman_filter/q_uncertain_acc").get_value<double>(),
+    get_parameter("ball_kalman_filter/r_pos_stddev").get_value<double>());
+
   for (auto && tracker : blue_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
     robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
@@ -108,7 +117,6 @@ void Tracker::on_timer()
       return false;
     };
 
-  // const auto ball = ball_tracker_->prev_estimation();
   const auto ball = ball_kalman_filter_->get_estimation();
   bool use_uncertain_sys_model = false;
 
@@ -119,7 +127,6 @@ void Tracker::on_timer()
       ball_is_near_a_robot(yellow_robot_tracker_, ball_pose);
   }
 
-  // tracked_msg->balls.push_back(ball_tracker_->update(use_uncertain_sys_model));
   tracked_msg->balls.push_back(ball_kalman_filter_->update(use_uncertain_sys_model));
 
   tracked_msg = vis_data_handler_->publish_vis_tracked(std::move(tracked_msg));
@@ -131,7 +138,6 @@ void Tracker::on_timer()
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
   for (const auto & ball : msg->balls) {
-    // ball_tracker_->push_back_observation(ball);
     ball_kalman_filter_->push_back_observation(ball);
   }
 
@@ -156,7 +162,6 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
 
   for (auto && ball : msg->balls) {
     invert_ball(ball);
-    // ball_tracker_->push_back_observation(ball);
     ball_kalman_filter_->push_back_observation(ball);
   }
 

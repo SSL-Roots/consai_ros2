@@ -45,12 +45,15 @@ class BallKalmanFilter
   void push_back_observation(const DetectionBall & ball);
   TrackedBall update(const bool use_uncertain_sys_model);
   TrackedBall get_estimation(void) const;
+  void update_noise_covariance_matrix(
+    const double q_max_acc, const double q_uncertain_max_acc, const double r_pos_stddev);
 
  private:
   Vector2d make_observation(void) const;
   bool is_outlier(const double chi_squared_value) const;
-  void reset_estimation(const Vector2d & observation);
+  void reset_x_and_p(const Vector2d & observation);
 
+  const double DT_;
   const double VISIBILITY_CONTROL_VALUE_;
   const double VISIBILITY_INCREASE_RATE_;
   const int OUTLIER_COUNT_THRESHOLD_;

@@ -21,7 +21,6 @@
 #include "consai_msgs/msg/robot_local_velocities.hpp"
 #include "consai_msgs/msg/robot_local_velocity.hpp"
 #include "consai_vision_tracker/visibility_control.h"
-#include "consai_vision_tracker/ball_tracker.hpp"
 #include "consai_vision_tracker/ball_kalman_filter.hpp"
 #include "consai_vision_tracker/robot_tracker.hpp"
 #include "consai_vision_tracker/visualization_data_handler.hpp"
@@ -65,7 +64,6 @@ private:
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
   rclcpp::Publisher<RobotLocalVelocities>::SharedPtr pub_robot_velocities_;
-  std::shared_ptr<BallTracker> ball_tracker_;
   std::unique_ptr<BallKalmanFilter> ball_kalman_filter_;
   std::vector<std::shared_ptr<RobotTracker>> blue_robot_tracker_;
   std::vector<std::shared_ptr<RobotTracker>> yellow_robot_tracker_;
