@@ -64,6 +64,7 @@ class BallKalmanFilter
   Matrix4d F_;
   Matrix24d H_;
   Matrix4d Q_;
+  Matrix4d Q_uncertain_;
   Matrix2d R_;
   Matrix4d P_;
 };

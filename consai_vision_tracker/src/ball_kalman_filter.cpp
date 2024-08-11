@@ -15,6 +15,8 @@
 #include "consai_vision_tracker/ball_kalman_filter.hpp"
 #include "robocup_ssl_msgs/msg/vector3.hpp"
 
+#include <iostream>
+
 namespace consai_vision_tracker
 {
 
@@ -43,12 +45,30 @@ BallKalmanFilter::BallKalmanFilter(
   H_(1, 1) = 1.0;
 
   // Process noise covariance matrix
-  // Q_ = diag(qx, qy, qvx, qvy)
-  Q_ = Matrix4d::Identity() * 0.01;
+  auto gen_Q = [&](const double max_acc) {
+    // Process noise depends on the maximum acceleration
+    const double sigma_vel = max_acc * dt;
+    const double sigma_pos = 0.5 * max_acc * dt * dt;
+    const double var_vel = sigma_vel * sigma_vel;
+    const double var_pos = sigma_pos * sigma_pos;
+    const double var_vel_pos = sigma_vel * sigma_pos;
+
+    Matrix4d Q;
+    Q << var_pos, 0.0, var_vel_pos, 0.0,
+         0.0, var_pos, 0.0, var_vel_pos,
+         var_vel_pos, 0.0, var_vel, 0.0,
+         0.0, var_vel_pos, 0.0, var_vel;
+    return Q;
+  };
+  Q_ = gen_Q(0.1 / dt);  // 0.1 m/s^2
+  Q_uncertain_ = gen_Q(0.5 / dt);  // 0.5 m/s^2
 
   // Observation noise covariance matrix
-  // R_ = diag(rx, ry)
-  R_ = Matrix2d::Identity() * 0.1;
+  auto gen_R = [&](const double std_dev) {
+    const double var = std_dev * std_dev;
+    return Eigen::DiagonalMatrix<double, 2>(var, var);
+  };
+  R_ = gen_R(0.03);  // 0.03 meters
 
   // Error covariance matrix
   P_ = Matrix4d::Identity();
@@ -64,8 +84,42 @@ void BallKalmanFilter::push_back_observation(const DetectionBall & ball)
 
 TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
 {
-  Vector2d z(x_[0], x_[1]);
+  // Select process noise covariance matrix
+  Matrix4d Q = Q_;
+  if (use_uncertain_sys_model) {
+    Q = Q_uncertain_;
+  }
 
+  // Prediction step
+  Vector4d x_pred = F_ * x_;
+  Matrix4d P_pred = F_ * P_ * F_.transpose() + Q;
+
+  // Calculate innovation covariance matrix
+  Matrix2d S = H_ * P_pred * H_.transpose() + R_;
+
+  // Remove outliers
+  for (auto it = ball_observations_.begin(); it != ball_observations_.end(); ) {
+    Vector2d z(it->pos.x, it->pos.y);
+    Vector2d innovation = z - H_ * x_pred;
+    double chi_square = innovation.transpose() * S.inverse() * innovation;
+
+    if (!is_outlier(chi_square)) {
+      outlier_count_ = 0;
+      it++;
+      continue;
+    }
+
+    outlier_count_++;
+    if (outlier_count_ < OUTLIER_COUNT_THRESHOLD_) {
+      it = ball_observations_.erase(it);
+    } else {
+      reset_estimation(z);
+      it++;
+    }
+  }
+
+  // Make observation
+  Vector2d z(x_[0], x_[1]);
   if (ball_observations_.empty()) {
     visibility_ = std::max(0.0, visibility_ - VISIBILITY_CONTROL_VALUE_);
   } else {
@@ -74,29 +128,8 @@ TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
     ball_observations_.clear();
   }
 
-  // Prediction step
-  Vector4d x_pred = F_ * x_;
-  Matrix4d P_pred = F_ * P_ * F_.transpose() + Q_;
-
   // Calculate innovation
   Vector2d innovation = z - H_ * x_pred;
-
-  // Calculate innovation covariance matrix
-  Matrix2d S = H_ * P_pred * H_.transpose() + R_;
-
-  // Calculate chi-square value
-  double chi_square = innovation.transpose() * S.inverse() * innovation;
-
-  // Check outlier
-  if (is_outlier(chi_square)) {
-    outlier_count_++;
-    if (outlier_count_ > OUTLIER_COUNT_THRESHOLD_) {
-      reset_estimation(z);
-    }
-    return get_estimation();
-  } else {
-    outlier_count_ = 0;
-  }
 
   // Update step
   Matrix42d K = P_pred * H_.transpose() * S.inverse();
@@ -151,7 +184,6 @@ void BallKalmanFilter::reset_estimation(const Vector2d & observation)
   x_ << observation[0], observation[1], 0.0, 0.0;
   P_ = Matrix4d::Identity();
   visibility_ = 1.0;
-  outlier_count_ = 0;
 }
 
 
