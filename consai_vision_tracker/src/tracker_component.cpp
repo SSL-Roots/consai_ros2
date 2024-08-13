@@ -81,12 +81,6 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Tracker::callback_geometry, this, _1));
-}
-
-void Tracker::on_timer()
-{
-  auto tracked_msg = std::make_unique<TrackedFrame>();
-  auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
 
   // TODO: use parameter callback
   ball_kalman_filter_->update_noise_covariance_matrix(
@@ -101,8 +95,6 @@ void Tracker::on_timer()
       get_parameter("robot_kalman_filter/q_max_acc_theta").get_value<double>(),
       get_parameter("robot_kalman_filter/r_pos_stddev_xy").get_value<double>(),
       get_parameter("robot_kalman_filter/r_pos_stddev_theta").get_value<double>());
-    tracked_msg->robots.push_back(filter->update());
-    robot_vel_msg->velocities.push_back(filter->calc_local_velocity());
   }
 
   // TODO: use parameter callback
@@ -112,6 +104,20 @@ void Tracker::on_timer()
       get_parameter("robot_kalman_filter/q_max_acc_theta").get_value<double>(),
       get_parameter("robot_kalman_filter/r_pos_stddev_xy").get_value<double>(),
       get_parameter("robot_kalman_filter/r_pos_stddev_theta").get_value<double>());
+  }
+}
+
+void Tracker::on_timer()
+{
+  auto tracked_msg = std::make_unique<TrackedFrame>();
+  auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
+
+  for (auto && filter : blue_robot_kalman_filter_) {
+    tracked_msg->robots.push_back(filter->update());
+    robot_vel_msg->velocities.push_back(filter->calc_local_velocity());
+  }
+
+  for (auto && filter : yellow_robot_kalman_filter_) {
     tracked_msg->robots.push_back(filter->update());
     robot_vel_msg->velocities.push_back(filter->calc_local_velocity());
   }

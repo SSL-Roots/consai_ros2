@@ -55,8 +55,6 @@ class RobotKalmanFilter
   RobotLocalVelocity calc_local_velocity(void) const;
 
  private:
-  Vector6d predict_state(void) const;
-  Matrix6d jacobian_F(void) const;
   Vector3d make_observation(void) const;
   bool is_outlier(const double chi_squared_value) const;
   void reset_x_and_p(const Vector3d & observation);
