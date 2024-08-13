@@ -39,7 +39,7 @@ using Matrix36d = Eigen::Matrix<double, 3, 6>;
 
 class RobotKalmanFilter
 {
- public:
+public:
   explicit RobotKalmanFilter(
     const int team_color, const int id,
     const double dt = 0.01, const double lifetime = 2.0,
@@ -54,7 +54,7 @@ class RobotKalmanFilter
     const double r_pos_stddev_xy, const double r_pos_stddev_theta);
   RobotLocalVelocity calc_local_velocity(void) const;
 
- private:
+private:
   Vector3d make_observation(void) const;
   bool is_outlier(const double chi_squared_value) const;
   void reset_x_and_p(const Vector3d & observation);
@@ -71,7 +71,7 @@ class RobotKalmanFilter
 
   RobotId robot_id_;
   std::vector<TrackedRobot> robot_observations_;
-  
+
   Vector6d x_;
   Matrix6d F_;
   Matrix36d H_;

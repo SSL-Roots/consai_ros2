@@ -25,8 +25,8 @@ using SSLVector3 = robocup_ssl_msgs::msg::Vector3;
 BallKalmanFilter::BallKalmanFilter(
   const double dt, const double lifetime,
   const double visibility_increase_rate,
-  const double outlier_time_limit) :
-  DT_(dt),
+  const double outlier_time_limit)
+:DT_(dt),
   VISIBILITY_CONTROL_VALUE_(dt / lifetime),
   VISIBILITY_INCREASE_RATE_(visibility_increase_rate),
   OUTLIER_COUNT_THRESHOLD_(outlier_time_limit / dt)
@@ -72,16 +72,16 @@ TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
   Matrix4d P_pred;
 
   auto prediction = [&](void) {
-    x_pred = F_ * x_;
-    P_pred = F_ * P_ * F_.transpose() + Q;
-  };
+      x_pred = F_ * x_;
+      P_pred = F_ * P_ * F_.transpose() + Q;
+    };
 
   auto calc_chi_square = [&](const Vector2d & z) {
-    Matrix2d S = H_ * P_pred * H_.transpose() + R_;
-    Vector2d innovation = z - H_ * x_pred;
-    double chi_square = innovation.transpose() * S.inverse() * innovation;
-    return chi_square;
-  };
+      Matrix2d S = H_ * P_pred * H_.transpose() + R_;
+      Vector2d innovation = z - H_ * x_pred;
+      double chi_square = innovation.transpose() * S.inverse() * innovation;
+      return chi_square;
+    };
 
   // Prediction step
   prediction();
@@ -113,7 +113,8 @@ TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
     visibility_ = std::max(0.0, visibility_ - VISIBILITY_CONTROL_VALUE_);
   } else {
     z = make_observation();
-    visibility_ = std::min(1.0, visibility_ + VISIBILITY_INCREASE_RATE_ * VISIBILITY_CONTROL_VALUE_);
+    visibility_ = std::min(1.0,
+        visibility_ + VISIBILITY_INCREASE_RATE_ * VISIBILITY_CONTROL_VALUE_);
     ball_observations_.clear();
   }
 
@@ -146,32 +147,32 @@ TrackedBall BallKalmanFilter::get_estimation(void) const
 }
 
 void BallKalmanFilter::update_noise_covariance_matrix(
-    const double q_max_acc, const double q_uncertain_max_acc, const double r_pos_stddev)
+  const double q_max_acc, const double q_uncertain_max_acc, const double r_pos_stddev)
 {
   // Process noise covariance matrix
   auto gen_Q = [this](const double max_acc) {
     // Process noise depends on the maximum acceleration
-    const double sigma_vel = max_acc * DT_;
-    const double sigma_pos = 0.5 * max_acc * DT_ * DT_;
-    const double var_vel = sigma_vel * sigma_vel;
-    const double var_pos = sigma_pos * sigma_pos;
-    const double var_vel_pos = sigma_vel * sigma_pos;
+      const double sigma_vel = max_acc * DT_;
+      const double sigma_pos = 0.5 * max_acc * DT_ * DT_;
+      const double var_vel = sigma_vel * sigma_vel;
+      const double var_pos = sigma_pos * sigma_pos;
+      const double var_vel_pos = sigma_vel * sigma_pos;
 
-    Matrix4d Q;
-    Q << var_pos, 0.0, var_vel_pos, 0.0,
-         0.0, var_pos, 0.0, var_vel_pos,
-         var_vel_pos, 0.0, var_vel, 0.0,
-         0.0, var_vel_pos, 0.0, var_vel;
-    return Q;
-  };
+      Matrix4d Q;
+      Q << var_pos, 0.0, var_vel_pos, 0.0,
+        0.0, var_pos, 0.0, var_vel_pos,
+        var_vel_pos, 0.0, var_vel, 0.0,
+        0.0, var_vel_pos, 0.0, var_vel;
+      return Q;
+    };
   Q_ = gen_Q(q_max_acc);  // m/s^2
   Q_uncertain_ = gen_Q(q_uncertain_max_acc);  // m/s^2
 
   // Observation noise covariance matrix
   auto gen_R = [&](const double std_dev) {
-    const double var = std_dev * std_dev;
-    return Eigen::DiagonalMatrix<double, 2>(var, var);
-  };
+      const double var = std_dev * std_dev;
+      return Eigen::DiagonalMatrix<double, 2>(var, var);
+    };
   R_ = gen_R(r_pos_stddev);  // meters
 }
 

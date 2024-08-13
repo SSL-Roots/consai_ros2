@@ -29,8 +29,8 @@ RobotKalmanFilter::RobotKalmanFilter(
   const int team_color, const int id,
   const double dt, const double lifetime,
   const double visibility_increase_rate,
-  const double outlier_time_limit) :
-  DT_(dt),
+  const double outlier_time_limit)
+:DT_(dt),
   VISIBILITY_CONTROL_VALUE_(dt / lifetime),
   VISIBILITY_INCREASE_RATE_(visibility_increase_rate),
   OUTLIER_COUNT_THRESHOLD_(outlier_time_limit / dt)
@@ -57,7 +57,7 @@ RobotKalmanFilter::RobotKalmanFilter(
     30.0,  // theta rad/s^2
     0.05,  // xy m
     0.05  // theta rad
-    );
+  );
 
   // State vector
   // x_ = (x, y, theta, vx, vy, vtheta)
@@ -85,28 +85,28 @@ TrackedRobot RobotKalmanFilter::update(void)
   Matrix6d P_pred;
 
   auto prediction = [&, this](void) {
-    x_pred = F_ * x_;
-    x_pred(2) = normalize_angle(x_pred(2));
-    P_pred = F_ * P_ * F_.transpose() + Q_;
-  };
+      x_pred = F_ * x_;
+      x_pred(2) = normalize_angle(x_pred(2));
+      P_pred = F_ * P_ * F_.transpose() + Q_;
+    };
 
   auto calc_innovation = [&](const Vector3d & z) {
-    Vector3d innovation = z - H_ * x_pred;
-    innovation(2) = normalize_angle(z(2) - (H_ * x_pred)(2));
-    return innovation;
-  };
+      Vector3d innovation = z - H_ * x_pred;
+      innovation(2) = normalize_angle(z(2) - (H_ * x_pred)(2));
+      return innovation;
+    };
 
   auto calc_chi_square = [&](const Vector3d & z) {
-    Matrix3d S = H_ * P_pred * H_.transpose() + R_;
-    Vector3d innovation = calc_innovation(z);
+      Matrix3d S = H_ * P_pred * H_.transpose() + R_;
+      Vector3d innovation = calc_innovation(z);
 
     // Use x and y only
-    Matrix2d S_xy = S.block<2, 2>(0, 0);
-    Vector2d innovation_xy = innovation.block<2, 1>(0, 0);
+      Matrix2d S_xy = S.block<2, 2>(0, 0);
+      Vector2d innovation_xy = innovation.block<2, 1>(0, 0);
 
-    double chi_square = innovation_xy.transpose() * S_xy.inverse() * innovation_xy;
-    return chi_square;
-  };
+      double chi_square = innovation_xy.transpose() * S_xy.inverse() * innovation_xy;
+      return chi_square;
+    };
 
   // Prediction step
   prediction();
@@ -138,7 +138,8 @@ TrackedRobot RobotKalmanFilter::update(void)
     visibility_ = std::max(0.0, visibility_ - VISIBILITY_CONTROL_VALUE_);
   } else {
     z = make_observation();
-    visibility_ = std::min(1.0, visibility_ + VISIBILITY_INCREASE_RATE_ * VISIBILITY_CONTROL_VALUE_);
+    visibility_ = std::min(1.0,
+        visibility_ + VISIBILITY_INCREASE_RATE_ * VISIBILITY_CONTROL_VALUE_);
     robot_observations_.clear();
   }
 
@@ -175,49 +176,49 @@ TrackedRobot RobotKalmanFilter::get_estimation(void) const
 }
 
 void RobotKalmanFilter::update_noise_covariance_matrix(
-    const double q_max_acc_xy, const double q_max_acc_theta,
-    const double r_pos_stddev_xy, const double r_pos_stddev_theta)
+  const double q_max_acc_xy, const double q_max_acc_theta,
+  const double r_pos_stddev_xy, const double r_pos_stddev_theta)
 {
   // Process noise covariance matrix
   auto gen_Q = [this](const double q_max_acc_xy, const double q_max_acc_theta) {
     // Process noise depends on the maximum acceleration
-    const double sigma_vel_xy = q_max_acc_xy * DT_;
-    const double sigma_vel_theta = q_max_acc_theta * DT_;
-    const double sigma_pos_xy = 0.5 * q_max_acc_xy * DT_ * DT_;
-    const double sigma_pos_theta = 0.5 * q_max_acc_theta * DT_ * DT_;
+      const double sigma_vel_xy = q_max_acc_xy * DT_;
+      const double sigma_vel_theta = q_max_acc_theta * DT_;
+      const double sigma_pos_xy = 0.5 * q_max_acc_xy * DT_ * DT_;
+      const double sigma_pos_theta = 0.5 * q_max_acc_theta * DT_ * DT_;
 
-    const double var_vel_xy = std::pow(sigma_vel_xy, 2);
-    const double var_vel_theta = std::pow(sigma_vel_theta, 2);
-    const double var_pos_xy = std::pow(sigma_pos_xy, 2);
-    const double var_pos_theta = std::pow(sigma_pos_theta, 2);
+      const double var_vel_xy = std::pow(sigma_vel_xy, 2);
+      const double var_vel_theta = std::pow(sigma_vel_theta, 2);
+      const double var_pos_xy = std::pow(sigma_pos_xy, 2);
+      const double var_pos_theta = std::pow(sigma_pos_theta, 2);
 
-    const double sigma_vel_pos_xy = sigma_vel_xy * sigma_pos_xy;
-    const double sigma_vel_pos_theta = sigma_vel_theta * sigma_pos_theta;
+      const double sigma_vel_pos_xy = sigma_vel_xy * sigma_pos_xy;
+      const double sigma_vel_pos_theta = sigma_vel_theta * sigma_pos_theta;
 
-    Matrix6d Q = Matrix6d::Zero();
-    Q(0, 0) = var_pos_xy;
-    Q(1, 1) = var_pos_xy;
-    Q(2, 2) = var_pos_theta;
-    Q(3, 3) = var_vel_xy;
-    Q(4, 4) = var_vel_xy;
-    Q(5, 5) = var_vel_theta;
+      Matrix6d Q = Matrix6d::Zero();
+      Q(0, 0) = var_pos_xy;
+      Q(1, 1) = var_pos_xy;
+      Q(2, 2) = var_pos_theta;
+      Q(3, 3) = var_vel_xy;
+      Q(4, 4) = var_vel_xy;
+      Q(5, 5) = var_vel_theta;
 
-    Q(0, 3) = sigma_vel_pos_xy;
-    Q(1, 4) = sigma_vel_pos_xy;
-    Q(2, 5) = sigma_vel_pos_theta;
-    Q(3, 0) = sigma_vel_pos_xy;
-    Q(4, 1) = sigma_vel_pos_xy;
-    Q(5, 2) = sigma_vel_pos_theta;
-    return Q;
-  };
+      Q(0, 3) = sigma_vel_pos_xy;
+      Q(1, 4) = sigma_vel_pos_xy;
+      Q(2, 5) = sigma_vel_pos_theta;
+      Q(3, 0) = sigma_vel_pos_xy;
+      Q(4, 1) = sigma_vel_pos_xy;
+      Q(5, 2) = sigma_vel_pos_theta;
+      return Q;
+    };
   Q_ = gen_Q(q_max_acc_xy, q_max_acc_theta);
 
   // Observation noise covariance matrix
   auto gen_R = [&](const double std_dev_xy, const double std_dev_theta) {
-    const double var_xy = std_dev_xy * std_dev_xy;
-    const double var_theta = std_dev_theta * std_dev_theta;
-    return Eigen::DiagonalMatrix<double, 3>(var_xy, var_xy, var_theta);
-  };
+      const double var_xy = std_dev_xy * std_dev_xy;
+      const double var_theta = std_dev_theta * std_dev_theta;
+      return Eigen::DiagonalMatrix<double, 3>(var_xy, var_xy, var_theta);
+    };
   R_ = gen_R(r_pos_stddev_xy, r_pos_stddev_theta);
 }
 
@@ -285,8 +286,8 @@ double RobotKalmanFilter::normalize_angle(const double angle) const
 {
   // Normalize angle to -pi ~ pi
   double result = angle;
-  while (result > M_PI) result -= 2.0 * M_PI;
-  while (result < -M_PI) result += 2.0 * M_PI;
+  while (result > M_PI) {result -= 2.0 * M_PI;}
+  while (result < -M_PI) {result += 2.0 * M_PI;}
   return result;
 }
 

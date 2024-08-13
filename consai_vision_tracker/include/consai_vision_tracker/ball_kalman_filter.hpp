@@ -36,7 +36,7 @@ using Matrix42d = Eigen::Matrix<double, 4, 2>;
 
 class BallKalmanFilter
 {
- public:
+public:
   explicit BallKalmanFilter(
     const double dt = 0.01, const double lifetime = 2.0,
     const double visibility_increase_rate = 5.0,
@@ -48,7 +48,7 @@ class BallKalmanFilter
   void update_noise_covariance_matrix(
     const double q_max_acc, const double q_uncertain_max_acc, const double r_pos_stddev);
 
- private:
+private:
   Vector2d make_observation(void) const;
   bool is_outlier(const double chi_squared_value) const;
   void reset_x_and_p(const Vector2d & observation);
@@ -62,7 +62,7 @@ class BallKalmanFilter
   int outlier_count_ = 0;
 
   std::vector<TrackedBall> ball_observations_;
-  
+
   Vector4d x_;
   Matrix4d F_;
   Matrix24d H_;
