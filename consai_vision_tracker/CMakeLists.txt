@@ -24,14 +24,14 @@ find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
-pkg_check_modules(BFL REQUIRED orocos-bfl)
+# pkg_check_modules(BFL REQUIRED orocos-bfl)
 
 # Tracker Component
 add_library(tracker_component SHARED
   src/tracker_component.cpp
-  src/ball_tracker.cpp
   src/ball_kalman_filter.cpp
-  src/robot_tracker.cpp
+  src/robot_kalman_filter.cpp
+  # src/robot_tracker.cpp
   src/visualization_data_handler.cpp
 )
 target_compile_definitions(tracker_component
@@ -49,10 +49,10 @@ target_include_directories(tracker_component PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   "$<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${BFL_INCLUDE_DIRS}>"
+  # "$<BUILD_INTERFACE:${BFL_INCLUDE_DIRS}>"
 )
 target_link_libraries(tracker_component
-  ${BFL_LIBRARIES}
+  # ${BFL_LIBRARIES}
 )
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
