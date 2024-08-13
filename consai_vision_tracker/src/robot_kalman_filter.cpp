@@ -20,6 +20,8 @@
 namespace consai_vision_tracker
 {
 
+using Vector2d = Eigen::Vector2d;
+using Matrix2d = Eigen::Matrix2d;
 using Matrix63d = Eigen::Matrix<double, 6, 3>;
 using SSLVector2 = robocup_ssl_msgs::msg::Vector2;
 
@@ -35,6 +37,12 @@ RobotKalmanFilter::RobotKalmanFilter(
 {
   robot_id_.team_color = team_color;
   robot_id_.id = id;
+
+  // State transition matrix
+  F_ = Matrix6d::Identity();
+  F_(0, 3) = DT_;
+  F_(1, 4) = DT_;
+  F_(2, 5) = DT_;
 
   // Observation matrix
   H_ = Matrix36d::Zero();
@@ -77,7 +85,8 @@ TrackedRobot RobotKalmanFilter::update(void)
   Matrix6d P_pred;
 
   auto prediction = [&, this](void) {
-    x_pred = predict_state();
+    x_pred = F_ * x_;
+    x_pred(2) = normalize_angle(x_pred(2));
     P_pred = F_ * P_ * F_.transpose() + Q_;
   };
 
@@ -90,7 +99,12 @@ TrackedRobot RobotKalmanFilter::update(void)
   auto calc_chi_square = [&](const Vector3d & z) {
     Matrix3d S = H_ * P_pred * H_.transpose() + R_;
     Vector3d innovation = calc_innovation(z);
-    double chi_square = innovation.transpose() * S.inverse() * innovation;
+
+    // Use x and y only
+    Matrix2d S_xy = S.block<2, 2>(0, 0);
+    Vector2d innovation_xy = innovation.block<2, 1>(0, 0);
+
+    double chi_square = innovation_xy.transpose() * S_xy.inverse() * innovation_xy;
     return chi_square;
   };
 
@@ -136,6 +150,7 @@ TrackedRobot RobotKalmanFilter::update(void)
   // Update step
   Matrix63d K = P_pred * H_.transpose() * S.inverse();
   x_ = x_pred + K * innovation;
+  x_(2) = normalize_angle(x_(2));
   P_ = (Matrix6d::Identity() - K * H_) * P_pred;
 
   return get_estimation();
@@ -328,8 +343,7 @@ Vector3d RobotKalmanFilter::make_observation(void) const
 
 bool RobotKalmanFilter::is_outlier(const double chi_squared_value) const
 {
-  // 3 degrees of freedom (x, y, theta), 0.05 significance level
-  constexpr double THRESHOLD = 7.815;
+  constexpr double THRESHOLD = 5.991;  // 2 degrees of freedom, 0.05 significance level
 
   if (chi_squared_value > THRESHOLD) {
     return true;

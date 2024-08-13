@@ -45,10 +45,10 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   declare_parameter("ball_kalman_filter/q_acc", 5.0);
   declare_parameter("ball_kalman_filter/q_uncertain_acc", 30.0);
   declare_parameter("ball_kalman_filter/r_pos_stddev", 0.05);
-  declare_parameter("robot_kalman_filter/q_max_acc_xy", 100.0);
-  declare_parameter("robot_kalman_filter/q_max_acc_theta", 300.0);
+  declare_parameter("robot_kalman_filter/q_max_acc_xy", 10.0);
+  declare_parameter("robot_kalman_filter/q_max_acc_theta", 6.0);
   declare_parameter("robot_kalman_filter/r_pos_stddev_xy", 0.05);
-  declare_parameter("robot_kalman_filter/r_pos_stddev_theta", 0.03);
+  declare_parameter("robot_kalman_filter/r_pos_stddev_theta", 0.06);
 
   for (int i = 0; i < 16; i++) {
     blue_robot_kalman_filter_.push_back(
