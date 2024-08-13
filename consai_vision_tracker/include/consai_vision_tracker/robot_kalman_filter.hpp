@@ -52,7 +52,7 @@ class RobotKalmanFilter
   void update_noise_covariance_matrix(
     const double q_max_acc_xy, const double q_max_acc_theta,
     const double r_pos_stddev_xy, const double r_pos_stddev_theta);
-  RobotLocalVelocity calc_local_velocity(void);
+  RobotLocalVelocity calc_local_velocity(void) const;
 
  private:
   Vector6d predict_state(void) const;

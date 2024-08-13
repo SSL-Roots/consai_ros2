@@ -79,7 +79,8 @@ TrackedBall BallKalmanFilter::update(const bool use_uncertain_sys_model)
   auto calc_chi_square = [&](const Vector2d & z) {
     Matrix2d S = H_ * P_pred * H_.transpose() + R_;
     Vector2d innovation = z - H_ * x_pred;
-    return innovation.transpose() * S.inverse() * innovation;
+    double chi_square = innovation.transpose() * S.inverse() * innovation;
+    return chi_square;
   };
 
   // Prediction step

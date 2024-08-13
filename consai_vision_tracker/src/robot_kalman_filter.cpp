@@ -73,7 +73,6 @@ void RobotKalmanFilter::push_back_observation(const DetectionRobot & robot)
 
 TrackedRobot RobotKalmanFilter::update(void)
 {
-
   Vector6d x_pred;
   Matrix6d P_pred;
 
@@ -91,7 +90,8 @@ TrackedRobot RobotKalmanFilter::update(void)
   auto calc_chi_square = [&](const Vector3d & z) {
     Matrix3d S = H_ * P_pred * H_.transpose() + R_;
     Vector3d innovation = calc_innovation(z);
-    return innovation.transpose() * S.inverse() * innovation;
+    double chi_square = innovation.transpose() * S.inverse() * innovation;
+    return chi_square;
   };
 
   // Prediction step
@@ -113,7 +113,7 @@ TrackedRobot RobotKalmanFilter::update(void)
       it = robot_observations_.erase(it);
     } else {
       reset_x_and_p(z);
-      prediction();
+      prediction();  // Use new state vector
       it++;
     }
   }
@@ -170,10 +170,14 @@ void RobotKalmanFilter::update_noise_covariance_matrix(
     const double sigma_vel_theta = q_max_acc_theta * DT_;
     const double sigma_pos_xy = 0.5 * q_max_acc_xy * DT_ * DT_;
     const double sigma_pos_theta = 0.5 * q_max_acc_theta * DT_ * DT_;
-    const double var_vel_xy = sigma_vel_xy * sigma_vel_xy;
-    const double var_vel_theta = sigma_vel_theta * sigma_vel_theta;
-    const double var_pos_xy = sigma_pos_xy * sigma_pos_xy;
-    const double var_pos_theta = sigma_pos_theta * sigma_pos_theta;
+
+    const double var_vel_xy = std::pow(sigma_vel_xy, 2);
+    const double var_vel_theta = std::pow(sigma_vel_theta, 2);
+    const double var_pos_xy = std::pow(sigma_pos_xy, 2);
+    const double var_pos_theta = std::pow(sigma_pos_theta, 2);
+
+    const double sigma_vel_pos_xy = sigma_vel_xy * sigma_pos_xy;
+    const double sigma_vel_pos_theta = sigma_vel_theta * sigma_pos_theta;
 
     Matrix6d Q = Matrix6d::Zero();
     Q(0, 0) = var_pos_xy;
@@ -182,6 +186,13 @@ void RobotKalmanFilter::update_noise_covariance_matrix(
     Q(3, 3) = var_vel_xy;
     Q(4, 4) = var_vel_xy;
     Q(5, 5) = var_vel_theta;
+
+    Q(0, 3) = sigma_vel_pos_xy;
+    Q(1, 4) = sigma_vel_pos_xy;
+    Q(2, 5) = sigma_vel_pos_theta;
+    Q(3, 0) = sigma_vel_pos_xy;
+    Q(4, 1) = sigma_vel_pos_xy;
+    Q(5, 2) = sigma_vel_pos_theta;
     return Q;
   };
   Q_ = gen_Q(q_max_acc_xy, q_max_acc_theta);
@@ -195,7 +206,7 @@ void RobotKalmanFilter::update_noise_covariance_matrix(
   R_ = gen_R(r_pos_stddev_xy, r_pos_stddev_theta);
 }
 
-RobotLocalVelocity RobotKalmanFilter::calc_local_velocity(void)
+RobotLocalVelocity RobotKalmanFilter::calc_local_velocity(void) const
 {
   auto local_velocity = RobotLocalVelocity();
   local_velocity.robot_id = robot_id_;
@@ -237,7 +248,7 @@ Vector6d RobotKalmanFilter::predict_state(void) const
     x_pred(1) = y + vy * DT_;
   }
 
-  x_pred(2) = theta + omega * DT_;
+  x_pred(2) = normalize_angle(theta + omega * DT_);
   x_pred(3) = vx;
   x_pred(4) = vy;
   x_pred(5) = omega;

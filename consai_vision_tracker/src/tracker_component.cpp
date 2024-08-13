@@ -42,11 +42,11 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   const auto UPDATE_RATE = 0.01s;
 
   ball_kalman_filter_ = std::make_unique<BallKalmanFilter>(UPDATE_RATE.count());
-  declare_parameter("ball_kalman_filter/q_acc", 4.0);
-  declare_parameter("ball_kalman_filter/q_uncertain_acc", 50.0);
+  declare_parameter("ball_kalman_filter/q_acc", 5.0);
+  declare_parameter("ball_kalman_filter/q_uncertain_acc", 30.0);
   declare_parameter("ball_kalman_filter/r_pos_stddev", 0.05);
-  declare_parameter("robot_kalman_filter/q_max_acc_xy", 50.0);
-  declare_parameter("robot_kalman_filter/q_max_acc_theta", 3.0);
+  declare_parameter("robot_kalman_filter/q_max_acc_xy", 100.0);
+  declare_parameter("robot_kalman_filter/q_max_acc_theta", 300.0);
   declare_parameter("robot_kalman_filter/r_pos_stddev_xy", 0.05);
   declare_parameter("robot_kalman_filter/r_pos_stddev_theta", 0.03);
 
