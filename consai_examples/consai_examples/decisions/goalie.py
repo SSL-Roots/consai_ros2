@@ -48,11 +48,6 @@ class GoaleDecision(DecisionBase):
         # ボールの速度を取得
         ball_vel = self._field_observer.detection().ball().vel()
 
-        # ボールと敵ロボットの距離を取得
-        distance_ball_to_their_robots = self._field_observer.distance().ball_to_their_robots()
-        # ボールが味方側エリアにあるか取得
-        is_in_our_side = self._field_observer.ball_position().is_in_our_side()
-
         # ボールと敵ロボットの状況を見てディフェンス座標を変更するフラグを生成
         flag = 1
         # ボールがゴールに向かって来る場合
@@ -111,7 +106,6 @@ class GoaleDecision(DecisionBase):
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
-            ball_pos = self._field_observer.detection().ball().pos()
             clear_pos_list = self._field_observer.pass_shoot().get_clear_pos_list()
             if self._in_flag == 0:
                 if len(clear_pos_list) > 0:
