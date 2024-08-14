@@ -32,10 +32,10 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, sub_attacker_id: SubAttackerID):
         super().__init__(robot_operator, field_observer)
         self._sub_attacker_id = sub_attacker_id
-        self._penalty_side_x = 5.1
-        self._penalty_side_y = 3.0
-        self._penalty_front_x = 3.8
-        self._penalty_front_y = 2.8
+        self._penalty_side_x = 3.5
+        self._penalty_side_y = 1.5
+        self._penalty_front_x = 2.6
+        self._penalty_front_y = 1.4
 
     def _offend_operation(self):
         ball_pos = self._field_observer.detection().ball().pos()
@@ -62,15 +62,15 @@ class SubAttackerDecision(DecisionBase):
         if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
             if self._field_observer.zone().ball_is_in_left_bottom() or \
                     self._field_observer.zone().ball_is_in_left_mid_bottom():
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(1.2)
             else:
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(-1.2)
         else:
             if self._field_observer.zone().ball_is_in_left_bottom() or \
                     self._field_observer.zone().ball_is_in_left_mid_bottom():
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(-1.2)
             else:
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(1.2)
         move_to_ball = move_to_ball.offset_pose_x(-0.3)
         return move_to_ball
 
@@ -167,12 +167,12 @@ class SubAttackerDecision(DecisionBase):
 
     def _our_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
+            TargetXY.value(-self._PENALTY_WAIT_X, 3.1 - 0.3 * 5.0),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
         return Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
+            TargetXY.value(self._PENALTY_WAIT_X, 3.1 - 0.3 * 5.0),
             TargetTheta.look_ball())
 
 

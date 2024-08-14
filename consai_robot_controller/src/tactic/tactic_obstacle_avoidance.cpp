@@ -183,10 +183,10 @@ bool ObstacleAvoidance::avoid_placement_area(
     avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
 
     // デッドロック回避
-    const double FIELD_HALF_X = 6.0;
-    const double FIELD_HALF_Y = 4.5;
-    const double FIELD_WALL_X = 6.3;
-    const double FIELD_WALL_Y = 4.8;
+    const double FIELD_HALF_X = 4.2;
+    const double FIELD_HALF_Y = 2.1;
+    const double FIELD_WALL_X = 4.8;
+    const double FIELD_WALL_Y = 2.8;
 
     const double FIELD_NEAR_WALL_X = FIELD_HALF_X - 0.0;
     const double FIELD_NEAR_WALL_Y = FIELD_HALF_Y - 0.0;
@@ -359,9 +359,9 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double FIELD_HALF_LENGTH = 6.0;
-  constexpr double DEFENSE_AREA_LENGTH = 1.8;
-  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
+  constexpr double FIELD_HALF_LENGTH = 4.2;
+  constexpr double DEFENSE_AREA_LENGTH = 1.22;
+  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.2;
   constexpr double FIELD_MARGIN = 0.3;
 
   auto is_in_defense_area = [&](const bool is_ourside, const State & state) {

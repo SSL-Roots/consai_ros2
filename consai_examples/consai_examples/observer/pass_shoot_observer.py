@@ -23,8 +23,8 @@ class PassShootObserver:
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
 
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
+        self._field_half_length = 4.2
+        self._field_half_width = 2.1
         self._goal_pos_list = [
             State2D(x=self._field_half_length, y=0.0),
             State2D(x=self._field_half_length, y=0.45),

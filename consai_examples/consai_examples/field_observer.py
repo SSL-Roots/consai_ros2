@@ -41,9 +41,9 @@ class FieldObserver(Node):
     def __init__(self, goalie_id, our_team_is_yellow=False):
         super().__init__('field_observer')
 
-        self._field_length = 12.0  # meters
+        self._field_length = 8.4  # meters
         self._field_half_length = self._field_length * 0.5
-        self._field_width = 9.0  # meters
+        self._field_width = 4.2  # meters
         self._field_half_width = self._field_width * 0.5
 
         self._sub_detection_traced = self.create_subscription(

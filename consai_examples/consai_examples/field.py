@@ -22,41 +22,41 @@ import copy
 class Field:
     # Division A仕様をデフォルトとして設定
     _our_goal_dict = {
-        'upper': State2D(x=-6.0, y=0.9),
-        'center': State2D(x=-6.0, y=0.0),
-        'lower': State2D(x=-6.0, y=-0.9)}
+        'upper': State2D(x=-4.2, y=0.9),
+        'center': State2D(x=-4.2, y=0.0),
+        'lower': State2D(x=-4.2, y=-0.9)}
     _their_goal_dict = {
-        'upper': State2D(x=6.0, y=0.9),
-        'center': State2D(x=6.0, y=0.0),
-        'lower': State2D(x=6.0, y=-0.9)}
+        'upper': State2D(x=4.2, y=0.9),
+        'center': State2D(x=4.2, y=0.0),
+        'lower': State2D(x=4.2, y=-0.9)}
     _goal_pose = {
         'our': copy.deepcopy(_our_goal_dict),
         'their': copy.deepcopy(_their_goal_dict)}
     _our_penalty_dict = {
-        'upper_front': State2D(x=-4.2, y=1.8),
-        'upper_back': State2D(x=-6.0, y=1.8),
-        'lower_front': State2D(x=-4.2, y=-1.8),
-        'lower_back': State2D(x=-6.0, y=-1.8)}
+        'upper_front': State2D(x=-2.9, y=1.8),
+        'upper_back': State2D(x=-4.2, y=1.8),
+        'lower_front': State2D(x=-2.9, y=-1.8),
+        'lower_back': State2D(x=-4.2, y=-1.8)}
     _their_penalty_dict = {
-        'upper_front': State2D(x=4.2, y=1.8),
-        'upper_back': State2D(x=6.0, y=1.2),
-        'lower_front': State2D(x=4.2, y=-1.8),
-        'lower_back': State2D(x=6.0, y=-1.2)}
+        'upper_front': State2D(x=2.9, y=1.8),
+        'upper_back': State2D(x=4.2, y=1.2),
+        'lower_front': State2D(x=2.9, y=-1.8),
+        'lower_back': State2D(x=4.2, y=-1.2)}
     _penalty_pose = {
         'our': copy.deepcopy(_our_penalty_dict),
         'their': copy.deepcopy(_their_penalty_dict)}
     _field = {
-        'length':         12.0,
-        'width':          9.0,
-        'half_length':    6.0,
-        'quarter_length': 3.0,
-        'half_width':     4.5,
-        'quarter_width':  2.25}
+        'length':         8.4,
+        'width':          4.2,
+        'half_length':    4.2,
+        'quarter_length': 2.1,
+        'half_width':     2.1,
+        'quarter_width':  1.15}
     _defense_area = {
-        'length':      1.8,
-        'width':       3.6,
-        'helf_length': 0.9,
-        'helf_width':  1.8}
+        'length':      1.22,
+        'width':       2.41,
+        'helf_length': 0.61,
+        'helf_width':  1.2}
     _geometry_field_lines = {}
 
     # _penalty_poseとfield_lines紐付ける辞書
