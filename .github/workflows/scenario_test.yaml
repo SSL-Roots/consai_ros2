@@ -138,14 +138,14 @@ jobs:
 
     - name: Upload artifacts
       id: upload-artifact
-      if: always() && env.LOG_EXISTS != ''
+      if: always() && ${{ env.LOG_EXISTS }} != ''
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.env.TEST_NAME}}-failure-logs
         path: '*.log.gz'
 
     - name: Comment PR with Artifact URL
-      if: always() && env.LOG_EXISTS != ''
+      if: always() && ${{ env.LOG_EXISTS }} != ''
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
