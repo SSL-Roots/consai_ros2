@@ -109,10 +109,10 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def _penalty_defend_operation(self):
-        p1_x = -6.0 + 0.05
-        p1_y = 0.9
-        p2_x = -6.0 + 0.05
-        p2_y = -0.9
+        p1_x = -4.2 + 0.05
+        p1_y = 0.6
+        p2_x = -4.2 + 0.05
+        p2_y = -0.6
         defend_goal = Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())

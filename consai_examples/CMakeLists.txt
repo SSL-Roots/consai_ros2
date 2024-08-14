@@ -49,7 +49,6 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/zone_ball_observer.py
     ${PROJECT_NAME}/observer/zone_man_mark_target_observer.py
     ${PROJECT_NAME}/observer/zone_target_observer.py
-    ${PROJECT_NAME}/operation_test/alignment_test.py
     ${PROJECT_NAME}/operation_test/ball_boy_test.py
     ${PROJECT_NAME}/operation_test/control.py
     ${PROJECT_NAME}/operation_test/control_by_referee.py

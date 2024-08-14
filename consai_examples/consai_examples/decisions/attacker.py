@@ -77,7 +77,7 @@ class AttackerDecision(DecisionBase):
             their_goal.y = 0.0
             trans = geometry_tools.Trans(ball_pos, geometry_tools.get_angle(ball_pos, their_goal))
             tr_dribble_target = State2D()
-            tr_dribble_target.x = 2.0
+            tr_dribble_target.x = 1.0
             dribble_target = trans.inverted_transform(tr_dribble_target)
             return TargetXY.value(dribble_target.x, dribble_target.y)
 
