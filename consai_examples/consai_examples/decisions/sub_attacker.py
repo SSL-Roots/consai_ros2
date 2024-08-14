@@ -86,6 +86,7 @@ class SubAttackerDecision(DecisionBase):
 
     def inplay(self, robot_id):
         operation = self._offend_operation()
+        operation = operation.with_ball_receiving()
         # シュート可能なIDリストを取得
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
         # シュートできる場合はシュートする

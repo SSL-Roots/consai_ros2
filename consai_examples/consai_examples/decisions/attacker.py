@@ -31,7 +31,7 @@ class AttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
         self._field_quarter_length = Field()._field['quarter_length']
-        self._inpay_flag = 0
+        self._inplay_flag = 0
         self._attacker_id = -1
         self.shoot_pos_list = []
         self.receivers_id_list = []
@@ -49,7 +49,7 @@ class AttackerDecision(DecisionBase):
 
         # 前回のアタッカーのIDと一致しない場合
         if robot_id is not self._attacker_id:
-            self._in_flag = 0
+            self._inplay_flag = 0
             self._attacker_id = robot_id
 
         # ボールの位置を取得
@@ -63,34 +63,37 @@ class AttackerDecision(DecisionBase):
         move_to_ball = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
-        move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
-        if self._inpay_flag == 0:
+        if self._inplay_flag == 0:
             self.shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
             # パス可能なIDのリストを取得
             self.receivers_id_list = self._field_observer.pass_shoot().search_receivers_list(
                 robot_id, search_offset)
 
         # シュートできる場合
-        if len(self.shoot_pos_list) > 0 and self._inpay_flag == 0:
-            self._inpay_flag = 1
+        if len(self.shoot_pos_list) > 0 and self._inplay_flag == 0:
+            self._inplay_flag = 1
         # パス可能な場合
-        elif len(self.receivers_id_list) > 0 and self._inpay_flag == 0:
-            self._inpay_flag = 2
-        elif self._inpay_flag == 0:
-            self._inpay_flag = 3
+        elif len(self.receivers_id_list) > 0 and self._inplay_flag == 0:
+            self._inplay_flag = 2
+        elif ball_pos.x < 0 and self._inplay_flag == 0:
+            self._inplay_flag = 3
+        elif len(self.shoot_pos_list) == 0 and len(self.receivers_id_list) == 0:
+            self._inplay_flag = 4
 
-        if self._inpay_flag == 1:
-            shooting = move_to_ball.with_shooting_to(
-                TargetXY.value(self.shoot_pos_list[0].x, self.shoot_pos_list[0].y))
+        if self._inplay_flag == 1:
+            shoot_target = TargetXY.value(self.shoot_pos_list[0].x, self.shoot_pos_list[0].y)
+            shooting = move_to_ball.with_shooting_to(shoot_target)
+            shooting = shooting.with_reflecting_to(shoot_target)
             self._operator.operate(robot_id, shooting)
             return
-        elif self._inpay_flag == 2:
-            passing = move_to_ball.with_passing_to(
-                TargetXY.our_robot(self.receivers_id_list[0]))
+        elif self._inplay_flag == 2:
+            pass_target = TargetXY.our_robot(self.receivers_id_list[0])
+            passing = move_to_ball.with_passing_to(pass_target)
+            passing = passing.with_reflecting_to(pass_target)
             self._operator.operate(robot_id, passing)
             return
-        elif self._inpay_flag == 3:
+        elif self._inplay_flag == 3:
             if self._field_observer.zone().ball_is_in_left_top() or \
                     self._field_observer.zone().ball_is_in_left_mid_top():
                 shooting = move_to_ball.with_shooting_to(
@@ -98,6 +101,10 @@ class AttackerDecision(DecisionBase):
             else:
                 shooting = move_to_ball.with_shooting_to(
                     TargetXY.their_bottom_corner())
+            self._operator.operate(robot_id, shooting)
+            return
+        else:
+            shooting = move_to_ball.with_shooting_to(TargetXY.their_goal())
             self._operator.operate(robot_id, shooting)
             return
 
