@@ -333,7 +333,7 @@ class RoleAssignment(Node):
 
                 tr_robot_pos = trans.transform(robot.pos())
                 # ボール軌道の後ろにいるロボットはスキップ
-                if tr_robot_pos.x < 0:
+                if tr_robot_pos.x < -0.3:
                     continue
 
                 distance_to_trajectory = abs(tr_robot_pos.y)

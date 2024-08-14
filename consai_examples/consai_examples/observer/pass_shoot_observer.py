@@ -71,6 +71,9 @@ class PassShootObserver:
         robot_r = 0.4
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
+        # パス可能距離
+        CAN_PASS_MAX_DISTANCE = 5.0
+        CAN_PASS_MIN_DISTANCE = 2.0
 
         # パサーがフィールドにいない場合
         if my_robot_id not in self._our_robots.keys():
@@ -102,7 +105,9 @@ class PassShootObserver:
             friend_pos = self._our_robots[friend_id].pos()
             trans_me_to_friend = tool.Trans(
                 my_robot_pos, tool.get_angle(my_robot_pos, friend_pos))
-
+            dist_frend_to_ball = tool.get_distance(friend_pos, self._ball.pos())
+            if dist_frend_to_ball > CAN_PASS_MAX_DISTANCE or dist_frend_to_ball < CAN_PASS_MIN_DISTANCE:
+                continue
             # パサーとレシーバー候補ロボットの間にいる相手ロボットを計算対象とするときの処理
             obstacle_their_id_list = []
             for their_robot_id in forward_their_id_list:
@@ -183,6 +188,7 @@ class PassShootObserver:
     def _search_shoot_pos_list(self, search_ours=False) -> list[State2D]:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
         TOLERANCE = 0.2  # ロボット半径 + alpha
+        CAN_SHOOT_DISTANCE = 4.0
 
         shoot_pos_list = []
 
@@ -194,6 +200,9 @@ class PassShootObserver:
             return False
 
         for target in self._goal_pos_list:
+            if tool.get_distance(target, self._ball.pos()) > CAN_SHOOT_DISTANCE:
+                # 距離が離れていたらシュート対象から外す
+                continue
             if obstacle_exists(target, self._our_robots) and search_ours:
                 continue
             if obstacle_exists(target, self._their_robots):
