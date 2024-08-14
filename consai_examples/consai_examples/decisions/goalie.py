@@ -33,8 +33,8 @@ class GoaleDecision(DecisionBase):
         self.our_goal_center_pos = Field()._our_goal_dict['center']
         self.our_goal_lower_pos = Field()._our_goal_dict['lower']
         # ゴール前を守る位置のマージン[m]
-        self.margin_x = 0.2
-        self.margin_y = 0.1
+        self.margin_x = 0.3
+        self.margin_y = 0.3
         self._in_flag = 0
 
     def _defend_goal_operation(self):
@@ -51,28 +51,54 @@ class GoaleDecision(DecisionBase):
         # ボールと敵ロボットの状況を見てディフェンス座標を変更するフラグを生成
         flag = 1
         # ボールがゴールに向かって来る場合
+        # if ball_vel.x < -0.2 and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
         if 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
             # 2点を結ぶ直線の傾きと切片を取得
-            slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
-            # ゴール前との交点(y座標)を算出
-            y = slope * p1_x + intercept
-            if abs(y) < p1_y + self.margin_y:
-                x = p1_x
+            next_ball_pos = State2D(x=ball_pos.x + ball_vel.x, y=ball_pos.y + ball_vel.y)
+            slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, next_ball_pos)
+            # ゴール前との交点を算出
+            x = p2_x
+            y = slope * x + intercept
+            x1 = self.our_goal_upper_pos.x + 0.0
+            y1 = self.our_goal_upper_pos.y + 0.1
+            x2 = p1_x
+            y2 = p1_y
+            # ゴール際にくるボールの処理
+            if p2_y < abs(y):
+                # フィールドの上下それぞれで処理
+                for _i in range(2):
+                    # 2回目のループでは座標を反転しておく
+                    if _i == 1:
+                        y1 = -y1
+                        y2 = -y2
+                    # 交点を算出
+                    slope2, intercept2, _ = geometry_tools.get_line_parameter(
+                        State2D(x=x1, y=y1), State2D(x=x2, y=y2))
+                    x = (intercept2 - intercept) / (slope - slope2)
+                    y = (slope * intercept2 - slope2 * intercept) / (slope - slope2)
+                    # ゴールを守るべきか判定
+                    if x1 <= x and abs(y) < abs(y1):
+                        if x < x1 + 0.1:
+                            x = x1 + 0.1
+                        defend_pose = TargetXY.value(x, y)
+                        flag = 2
+                        break
+            else:
                 defend_pose = TargetXY.value(x, y)
                 flag = 2
 
         if flag == 1:
             slope, intercept, _ = geometry_tools.get_line_parameter(
-                ball_pos, State2D(x=-6.75, y=0.0))
+                ball_pos, State2D(x=self.our_goal_upper_pos.x - 0.75, y=0.0))
             y = slope * p1_x + intercept
             defend_goal = Operation().move_to_intersection(
                 TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
                 TargetXY.value(p1_x, y), TargetXY.ball(), TargetTheta.look_ball())
-        if flag == 2:
+        elif flag == 2:
             defend_goal = Operation().move_to_pose(
                 defend_pose, TargetTheta.look_ball())
 
-        defend_goal = defend_goal.with_ball_receiving()
+        # defend_goal = defend_goal.with_ball_receiving()
         defend_goal = defend_goal.disable_avoid_defense_area()
 
         return defend_goal
@@ -103,7 +129,7 @@ class GoaleDecision(DecisionBase):
 
             move_to_behind_ball = Operation().move_on_line(
                 TargetXY.ball(), TargetXY.our_goal(), 0.05, TargetTheta.look_ball())
-            move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
+            # move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
             clear_pos_list = self._field_observer.pass_shoot().get_clear_pos_list()
