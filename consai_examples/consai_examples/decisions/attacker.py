@@ -91,14 +91,13 @@ class AttackerDecision(DecisionBase):
             self._operator.operate(robot_id, passing)
             return
         elif self._inpay_flag == 3:
-            shooting = move_to_ball.with_shooting_to(TargetXY.their_goal())
-            # if self._field_observer.zone().ball_is_in_left_top() or \
-            #         self._field_observer.zone().ball_is_in_left_mid_top():
-            #     shooting = move_to_ball.with_shooting_to(
-            #         TargetXY.their_top_corner())
-            # else:
-            #     shooting = move_to_ball.with_shooting_to(
-            #         TargetXY.their_bottom_corner())
+            if self._field_observer.zone().ball_is_in_left_top() or \
+                    self._field_observer.zone().ball_is_in_left_mid_top():
+                shooting = move_to_ball.with_shooting_to(
+                    TargetXY.their_top_corner())
+            else:
+                shooting = move_to_ball.with_shooting_to(
+                    TargetXY.their_bottom_corner())
             self._operator.operate(robot_id, shooting)
             return
 

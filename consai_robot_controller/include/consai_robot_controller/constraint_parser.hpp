@@ -65,8 +65,8 @@ private:
   std::map<std::string, State> named_targets_;
 
   bool team_is_yellow_;
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
+  const double field_half_length_ = 4.2;
+  const double field_half_width_ = 2.1;
 };
 
 }  // namespace parser
