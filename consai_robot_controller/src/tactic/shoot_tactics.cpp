@@ -61,6 +61,8 @@ ShootTactics::ShootTactics()
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto ball_vel = tools::velocity_state(data_set.get_ball());
+      const double dt = 1.0 / 60.0;
 
       // セットプレイ時は回転半径を大きくする
       double rotation_radius = ROTATE_RADIUS;
@@ -69,7 +71,7 @@ ShootTactics::ShootTactics()
       }
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(rotation_radius, 0.0, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(rotation_radius, ball_vel.y * dt, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
