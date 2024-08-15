@@ -126,6 +126,10 @@ jobs:
       run: |
         source env/bin/activate
         pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+
+    - name: Check for log files
+      if: always()
+      run: |
         if ls *.log.gz 1> /dev/null 2>&1; then
           echo "LOG_EXISTS=true" >> $GITHUB_ENV
         else
