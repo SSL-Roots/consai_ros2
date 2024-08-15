@@ -63,6 +63,7 @@ ShootTactics::ShootTactics()
       const auto ball_pose = tools::pose_state(data_set.get_ball());
       const auto ball_vel = tools::velocity_state(data_set.get_ball());
       const double dt = 1.0 / 60.0;
+      const double gain = 10.0;
 
       // セットプレイ時は回転半径を大きくする
       double rotation_radius = ROTATE_RADIUS;
@@ -71,7 +72,7 @@ ShootTactics::ShootTactics()
       }
 
       const tools::Trans trans_BtoR(ball_pose, tools::calc_angle(ball_pose, robot_pose));
-      const auto new_pose = trans_BtoR.inverted_transform(rotation_radius, ball_vel.y * dt, -M_PI);
+      const auto new_pose = trans_BtoR.inverted_transform(rotation_radius + ball_vel.x * dt, gain * ball_vel.y * dt, -M_PI);
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_RELEASE);
@@ -94,6 +95,9 @@ ShootTactics::ShootTactics()
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
+      const auto ball_vel = tools::velocity_state(data_set.get_ball());
+      const double dt = 1.0 / 60.0;
+      const double gain = 20.0;
       const auto target_pose = data_set.get_target();
 
       // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
@@ -102,7 +106,7 @@ ShootTactics::ShootTactics()
       const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
       const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-      const auto ADD_ANGLE = tools::to_radians(50.0);
+      const auto ADD_ANGLE = tools::to_radians(20.0);
       // FIXME: 下2つとaim_angle_thresholdは不要だったら削除
       // const auto AIM_ANGLE_THRETHOLD = tools::to_radians(20.0);
       // const auto AIM_ANGLE_THRETHOLD_FOR_SETPLAY = tools::to_radians(10.0);
@@ -113,7 +117,7 @@ ShootTactics::ShootTactics()
       // double aim_angle_threshold = AIM_ANGLE_THRETHOLD;
       double omega_threshold = OMEGA_THRESHOLD;
       if (data_set.is_setplay()) {
-        rotation_radius = ROBOT_RADIUS * 4.0;
+        rotation_radius = ROBOT_RADIUS * 10.0;
         forward_distance = ROBOT_RADIUS * 2.0;
         // aim_angle_threshold = AIM_ANGLE_THRETHOLD_FOR_SETPLAY;
         omega_threshold = OMEGA_THRESHOLD_FOR_SETPLAY;
@@ -122,12 +126,12 @@ ShootTactics::ShootTactics()
       State new_pose;
       if (std::fabs(angle_robot_position) + ADD_ANGLE > M_PI) {
         // ボールの裏に回ったら、直進する
-        new_pose = trans_BtoT.inverted_transform(-forward_distance, 0.0, 0.0);
+        new_pose = trans_BtoT.inverted_transform(-forward_distance, gain * ball_vel.y * dt, 0.0);
       } else {
         // ボールの周りを旋回する
         const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
-        double pos_x = rotation_radius * std::cos(theta);
-        double pos_y = rotation_radius * std::sin(theta);
+        double pos_x = rotation_radius * std::cos(theta) + gain * ball_vel.x * dt;
+        double pos_y = rotation_radius * std::sin(theta) + gain * ball_vel.y * dt;
         new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
       }
 
