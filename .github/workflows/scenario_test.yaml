@@ -119,6 +119,7 @@ jobs:
 
     - name: Download logger
       run: |
+        cd tests
         curl -L https://github.com/RoboCup-SSL/ssl-go-tools/releases/download/v1.5.2/ssl-log-recorder_v1.5.2_linux_amd64 -o ssl-log-recorder
         chmod +x ssl-log-recorder
 
@@ -131,7 +132,7 @@ jobs:
     - name: Check for log files
       if: always()
       run: |
-        if ls *.log.gz 1> /dev/null 2>&1; then
+        if ls tests/*.log.gz 1> /dev/null 2>&1; then
           echo "LOG_EXISTS=true" >> $GITHUB_ENV
         else
           echo "LOG_EXISTS=false" >> $GITHUB_ENV
@@ -151,7 +152,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.env.TEST_NAME}}-failure-logs
-        path: '*.log.gz'
+        path: 'tests/*.log.gz'
 
     - name: Comment PR with Artifact URL
       if: always() && env.LOG_EXISTS == 'true'
