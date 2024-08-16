@@ -8,50 +8,58 @@ import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from consai_examples.robot_operator import RobotOperator
 
-from consai_examples.operation import OneShotOperation
+from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
+from consai_msgs.msg import State2D
 
-import math
+import numpy as np
+import copy
+import time
 
-def aligment(initial_x: float, initial_y:float, final_x: float, final_y: float):
-    robots = range(5)
-    target_point = []
+def alignment(initial_x: float, initial_y:float):
+    FIELD_MIN_X = -3.0
+    FIELD_MAX_X = 3.0
+    FIELD_MIN_Y = -1.0
+    FIELD_MAX_Y = 1.0
+    robots = [4,8,9]
+    theta = 45
+    count = 0
 
-    between_bots_x = 0.3    # meter
-    between_bots_y = 0.3    # meter
+    between_bots_dist = 0.3    # meter
 
-    dist_x = final_x - initial_x
-    dist_y = final_y - initial_y
+    target_hist = [State2D() for i in range(len(robots))]
 
-    theta_target = math.degrees(math.atan2(dist_y, dist_x))
+    for i in range(len(robots)):
+        target_hist[i].x = initial_x - (i * between_bots_dist)
+        target_hist[i].y = initial_y
 
-    next_target_x = [initial_x - between_bots_x * i * math.cos(theta_target) for i in range(len(robots))]
-    next_target_y = [initial_y - between_bots_y * i * math.sin(theta_target) for i in range(len(robots))]
-
-    for robot in range(len(robots)):
-        target_point.append(OneShotOperation().move_to_pose(
-            TargetXY.value(next_target_x[robot], next_target_y[robot]), 
-            TargetTheta.value(0)))
-        operator_node.operate(robots[robot], target_point[robot])
-
-    span = 15
-
-    delta_x = dist_x / span
-    delta_y = dist_y / span
-
-    next_target_x = [initial_x + 1 * delta_x - between_bots_x * i * math.cos(theta_target) for i in range(len(robots))]
-    next_target_y = [initial_y + 1 * delta_y - between_bots_y * i * math.sin(theta_target) for i in range(len(robots))]
-
-    for n in range(span + 1):
-        next_target_x = [initial_x - n * delta_x - between_bots_x * i * math.cos(theta_target) for i in range(len(robots))]
-        next_target_y = [initial_y - n * delta_y - between_bots_y * i * math.sin(theta_target) for i in range(len(robots))]
-
-        for robot in range(len(robots)):
-            target_point[robot] = (OneShotOperation().move_to_pose(
-                TargetXY.value(next_target_x[robot], next_target_y[robot]), 
-                TargetTheta.value(0)))
-            operator_node.operate(robots[robot], target_point[robot])
+    while True:
+        for i in range(len(robots)):
+            operation = Operation().disable_avoid_defense_area()
+            operation = operation.disable_avoid_our_robots()
+            operation = operation.move_to_pose(TargetXY.value(target_hist[i].x, target_hist[i].y),
+                                            TargetTheta.value(0))
+            operator_node.operate(robots[i], operation)
+        start_time = time.time()
+        while time.time() - start_time < 0.5:
+            pass
+        
+        front_pos = [copy.deepcopy(target_hist[i]) for i in range(len(robots) - 1)]
+        for i in range(1, len(robots)):
+            dx = front_pos[i-1].x - target_hist[i].x
+            dy = front_pos[i-1].y - target_hist[i].y
+            target_hist[i].x += dx
+            target_hist[i].y += dy
+        if ((FIELD_MIN_X <= target_hist[0].x <= FIELD_MAX_X) == False 
+            or (FIELD_MIN_Y <= target_hist[0].y <= FIELD_MAX_Y) == False):
+            theta += 120
+        
+        target_hist[0].x = target_hist[0].x + between_bots_dist * np.cos(theta)
+        target_hist[0].y = target_hist[0].y + between_bots_dist * np.sin(theta)
+        count += 1
+        if count < 16:
+            count = 0 
 
 
 if __name__ == '__main__':
@@ -66,17 +74,11 @@ if __name__ == '__main__':
                             help='ball placementの目標座標を反転する場合にセットする')
     arg_parser.add_argument('-initial_x', type=float, default=-3.0) 
     arg_parser.add_argument('-initial_y', type=float, default=0.0)
-    arg_parser.add_argument('-final_x', type=float, default=3.0)
-    arg_parser.add_argument('-final_y', type=float, default=-1.0)
     args = arg_parser.parse_args()
 
     rclpy.init(args=None)
 
     operator_node = RobotOperator(target_is_yellow=args.yellow)
-
-    # すべてのロボットの衝突回避を解除
-    # for i in range(16):
-    #     operator_node.disable_avoid_obstacles(i)
 
     executor = MultiThreadedExecutor()
     executor.add_node(operator_node)
@@ -86,7 +88,7 @@ if __name__ == '__main__':
     executor_thread.start()
 
     try:
-        aligment(args.initial_x, args.initial_y, args.final_x, args.final_y)
+        alignment(args.initial_x, args.initial_y)
     except KeyboardInterrupt:
         pass
 
