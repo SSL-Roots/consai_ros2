@@ -137,7 +137,10 @@ jobs:
         else
           echo "LOG_EXISTS=false" >> $GITHUB_ENV
         fi
-        echo "log files exist: ${{ env.LOG_EXISTS }}"
+
+    - name: Debug log files
+      if: always()
+      run: echo "log file exists: ${{ env.LOG_EXISTS }}"
 
     - name: Get and print logs
       if: always()
