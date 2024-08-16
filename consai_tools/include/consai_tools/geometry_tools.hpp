@@ -35,6 +35,7 @@ double distance(const State & pose1, const State & pose2);
 State pose_state(const TrackedRobot & robot);
 State pose_state(const TrackedBall & ball);
 State velocity_state(const TrackedRobot & robot);
+State velocity_state(const TrackedBall & ball);
 State gen_state(const double x, const double y, const double theta = 0.0);
 double to_radians(const double degrees);
 double to_degrees(const double radians);
