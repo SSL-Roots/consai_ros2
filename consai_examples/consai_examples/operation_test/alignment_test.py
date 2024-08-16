@@ -24,7 +24,6 @@ def alignment(initial_x: float, initial_y:float):
     FIELD_MAX_Y = 1.0
     robots = [4,8,9]
     theta = 45
-    count = 0
 
     between_bots_dist = 0.3    # meter
 
@@ -54,13 +53,9 @@ def alignment(initial_x: float, initial_y:float):
         if ((FIELD_MIN_X <= target_hist[0].x <= FIELD_MAX_X) == False 
             or (FIELD_MIN_Y <= target_hist[0].y <= FIELD_MAX_Y) == False):
             theta += 120
-        
+
         target_hist[0].x = target_hist[0].x + between_bots_dist * np.cos(theta)
         target_hist[0].y = target_hist[0].y + between_bots_dist * np.sin(theta)
-        count += 1
-        if count < 16:
-            count = 0 
-
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
