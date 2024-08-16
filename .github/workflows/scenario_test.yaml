@@ -140,7 +140,8 @@ jobs:
 
     - name: Debug log files
       if: always()
-      run: echo "log file exists: ${{ env.LOG_EXISTS }}"
+      run: |
+        echo "log file exists: ${{ env.LOG_EXISTS }}"
 
     - name: Get and print logs
       if: always()
