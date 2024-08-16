@@ -132,13 +132,12 @@ jobs:
     - name: Check for log files
       if: always()
       run: |
-        ls tests/*.log.gz
         if ls tests/*.log.gz 1> /dev/null 2>&1; then
           echo "LOG_EXISTS=true" >> $GITHUB_ENV
         else
           echo "LOG_EXISTS=false" >> $GITHUB_ENV
         fi
-        echo ${{ env.LOG_EXISTS }}
+        echo "log files exist: $LOG_EXISTS"
 
     - name: Get and print logs
       if: always()
