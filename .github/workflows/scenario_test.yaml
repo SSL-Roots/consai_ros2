@@ -132,11 +132,13 @@ jobs:
     - name: Check for log files
       if: always()
       run: |
+        ls tests/*.log.gz
         if ls tests/*.log.gz 1> /dev/null 2>&1; then
           echo "LOG_EXISTS=true" >> $GITHUB_ENV
         else
           echo "LOG_EXISTS=false" >> $GITHUB_ENV
         fi
+        echo ${{ env.LOG_EXISTS }}
 
     - name: Get and print logs
       if: always()
@@ -146,18 +148,18 @@ jobs:
       if: always()
       run: docker compose -f .docker/consai-grsim-compose.yml down
 
-    - name: Upload artifacts
-      id: upload-artifact
-      if: ${{ env.LOG_EXISTS }} == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.env.TEST_NAME}}-failure-logs
-        path: 'tests/*.log.gz'
+    # - name: Upload artifacts
+    #   id: upload-artifact
+    #   if: ${{ env.LOG_EXISTS }} == 'true'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ matrix.env.TEST_NAME}}-failure-logs
+    #     path: 'tests/*.log.gz'
 
-    - name: Comment PR with Artifact URL
-      if: ${{ env.LOG_EXISTS }} == 'true'
-      uses: peter-evans/create-or-update-comment@v4
-      with:
-        issue-number: ${{ github.event.pull_request.number }}
-        body: |
-          Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+    # - name: Comment PR with Artifact URL
+    #   if: ${{ env.LOG_EXISTS }} == 'true'
+    #   uses: peter-evans/create-or-update-comment@v4
+    #   with:
+    #     issue-number: ${{ github.event.pull_request.number }}
+    #     body: |
+    #       Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
