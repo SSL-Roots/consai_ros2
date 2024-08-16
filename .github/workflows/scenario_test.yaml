@@ -61,16 +61,16 @@ jobs:
       fail-fast: false
       matrix:
         env:
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_ball_placement.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_force_start.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_free_kick.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_halt.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_kickoff.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_obstacle_avoidance.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_penalty.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_stop.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "tests/test_scenario_timeout.py"}
-          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "tests/yellow_invert/test_scenario_yellow_invert_kickoff.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_force_start.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_free_kick.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_halt.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_kickoff.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_obstacle_avoidance.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_penalty.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_stop.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_timeout.py"}
+          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "yellow_invert/test_scenario_yellow_invert_kickoff.py"}
 
     runs-on: ubuntu-latest
 
@@ -119,14 +119,24 @@ jobs:
 
     - name: Download logger
       run: |
+        cd tests
         curl -L https://github.com/RoboCup-SSL/ssl-go-tools/releases/download/v1.5.2/ssl-log-recorder_v1.5.2_linux_amd64 -o ssl-log-recorder
         chmod +x ssl-log-recorder
 
     - name: Run pytest
       run: |
         source env/bin/activate
+        cd tests
         pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
-        echo "LOG_EXISTS=$(ls *.log.gz 2> /dev/null)" >> $GITHUB_ENV
+
+    - name: Check for log files
+      if: always()
+      run: |
+        if ls tests/*.log.gz 1> /dev/null 2>&1; then
+          echo "LOG_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "LOG_EXISTS=false" >> $GITHUB_ENV
+        fi
 
     - name: Get and print logs
       if: always()
@@ -138,14 +148,14 @@ jobs:
 
     - name: Upload artifacts
       id: upload-artifact
-      if: env.LOG_EXISTS != ''
+      if: always() && ${{ env.LOG_EXISTS }} != ''
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.env.TEST_NAME}}-failure-logs
-        path: '*.log.gz'
+        path: 'tests/*.log.gz'
 
     - name: Comment PR with Artifact URL
-      if: env.LOG_EXISTS != ''
+      if: always() && ${{ env.LOG_EXISTS }} != ''
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
