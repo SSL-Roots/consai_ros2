@@ -130,7 +130,7 @@ jobs:
         pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
 
     - name: Check for log files
-      if: always()
+      if: ${{ failure() }}
       run: |
         if ls tests/*.log.gz 1> /dev/null 2>&1; then
           echo "LOG_EXISTS=true" >> $GITHUB_ENV
@@ -139,23 +139,23 @@ jobs:
         fi
 
     - name: Get and print logs
-      if: always()
+      if: ${{ failure() || success() }}
       run: docker compose -f .docker/consai-grsim-compose.yml logs --tail 100
 
     - name: Clean up Docker Compose services
-      if: always()
+      if: ${{ failure() || success() }}
       run: docker compose -f .docker/consai-grsim-compose.yml down
 
     - name: Upload artifacts
       id: upload-artifact
-      if: always() && env.LOG_EXISTS == 'true'
+      if: ${{ failure() && env.LOG_EXISTS == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.env.TEST_NAME}}-failure-logs
         path: 'tests/*.log.gz'
 
     - name: Comment PR with Artifact URL
-      if: always() && env.LOG_EXISTS == 'true'
+      if: ${{ failure() && env.LOG_EXISTS == 'true' }}
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
