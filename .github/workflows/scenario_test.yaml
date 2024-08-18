@@ -160,4 +160,4 @@ jobs:
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
-          Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+          ${{ matrix.env.TEST_NAME }} failed. Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
