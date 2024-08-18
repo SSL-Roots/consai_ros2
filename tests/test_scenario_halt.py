@@ -37,4 +37,4 @@ def test_halt(rcst_comm: Communication):
             halt_success = False
             break
         time.sleep(1)
-    assert halt_success is False
+    assert halt_success is True
