@@ -101,7 +101,7 @@ ShootTactics::ShootTactics()
       const auto ball_vel = tools::velocity_state(data_set.get_ball());
       const auto target_pose = data_set.get_target();
       const double dt = 1.0 / 60.0;
-      const double gain = 20.0;
+      const double gain = 10.0;
       // 速度による移動量
       const double dx = ball_vel.x * dt;
       const double dy = ball_vel.y * dt;
@@ -112,7 +112,8 @@ ShootTactics::ShootTactics()
       const auto robot_pose_BtoT = trans_BtoT.transform(robot_pose);
       const auto angle_robot_position = tools::calc_angle(State(), robot_pose_BtoT);
 
-      const auto ADD_ANGLE = tools::to_radians(20.0);
+      // const auto ADD_ANGLE = tools::to_radians(30.0);
+      const auto THRESHOLD_ANGLE = tools::to_radians(20.0);
       // FIXME: 下2つとaim_angle_thresholdは不要だったら削除
       // const auto AIM_ANGLE_THRETHOLD = tools::to_radians(20.0);
       // const auto AIM_ANGLE_THRETHOLD_FOR_SETPLAY = tools::to_radians(10.0);
@@ -130,11 +131,16 @@ ShootTactics::ShootTactics()
       }
 
       State new_pose;
-      if (std::fabs(angle_robot_position) + ADD_ANGLE > M_PI) {
+      if (std::fabs(angle_robot_position) + THRESHOLD_ANGLE > M_PI) {
         // ボールの裏に回ったら、直進する
         new_pose = trans_BtoT.inverted_transform(-forward_distance, gain * dy, 0.0);
       } else {
         // ボールの周りを旋回する
+        double angle = 50.0;
+        if (std::fabs(angle_robot_position) > 3 * M_PI / 4) {
+          angle = 20.0;
+        }
+        const auto ADD_ANGLE = tools::to_radians(angle);
         const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
         double pos_x = rotation_radius * std::cos(theta) + gain * dx;
         double pos_y = rotation_radius * std::sin(theta) + gain * dy;
@@ -143,7 +149,6 @@ ShootTactics::ShootTactics()
 
       data_set.set_parsed_pose(new_pose);
       data_set.set_parsed_dribble_power(DRIBBLE_CATCH);
-
 
       // ロボットが目標姿勢に近づき、回転速度が小さくなったら次の行動に移行
       const auto robot_vel = tools::velocity_state(data_set.get_my_robot());
