@@ -101,10 +101,10 @@ ShootTactics::ShootTactics()
       const auto ball_vel = tools::velocity_state(data_set.get_ball());
       const auto target_pose = data_set.get_target();
       const double dt = 1.0 / 60.0;
-      const double gain = 10.0;
+      const double gain = 15.0;
       // 速度による移動量
-      const double dx = ball_vel.x * dt;
-      const double dy = ball_vel.y * dt;
+      const double dx = gain * ball_vel.x * dt;
+      const double dy = gain * ball_vel.y * dt;
 
       // ボールから目標位置を結ぶ直線上で、ロボットがボールを見ながら、ボールの周りを旋回する
       const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, target_pose));
@@ -133,7 +133,7 @@ ShootTactics::ShootTactics()
       State new_pose;
       if (std::fabs(angle_robot_position) + THRESHOLD_ANGLE > M_PI) {
         // ボールの裏に回ったら、直進する
-        new_pose = trans_BtoT.inverted_transform(-forward_distance, gain * dy, 0.0);
+        new_pose = trans_BtoT.inverted_transform(-forward_distance, dy, 0.0);
       } else {
         // ボールの周りを旋回する
         double angle = 50.0;
@@ -142,9 +142,11 @@ ShootTactics::ShootTactics()
         }
         const auto ADD_ANGLE = tools::to_radians(angle);
         const auto theta = angle_robot_position + std::copysign(ADD_ANGLE, angle_robot_position);
-        double pos_x = rotation_radius * std::cos(theta) + gain * dx;
-        double pos_y = rotation_radius * std::sin(theta) + gain * dy;
+        double pos_x = rotation_radius * std::cos(theta);
+        double pos_y = rotation_radius * std::sin(theta);
         new_pose = trans_BtoT.inverted_transform(pos_x, pos_y, theta + M_PI);
+        new_pose.x += dx;
+        new_pose.y += dy;
       }
 
       data_set.set_parsed_pose(new_pose);
