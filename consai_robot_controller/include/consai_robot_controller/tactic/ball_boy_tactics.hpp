@@ -16,6 +16,7 @@
 #define CONSAI_ROBOT_CONTROLLER__TACTIC__BALL_BOY_TACTICS_HPP_
 
 #include <chrono>
+#include <functional>
 #include <map>
 
 #include "consai_msgs/msg/state2_d.hpp"
