@@ -388,61 +388,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   goal_pose_msg.pose = goal_pose;
   goal_poses_map_[robot_id] = goal_pose_msg;
 
-<<<<<<< HEAD
-  GoalPose final_goal_pose_msg;
-  final_goal_pose_msg.robot_id = robot_id;
-  final_goal_pose_msg.team_is_yellow = team_is_yellow_;
-  final_goal_pose_msg.pose = final_goal_pose;
-  final_goal_poses_map_[robot_id] = final_goal_pose_msg;
-
-  // 途中経過を報告する
-  if (need_response_[robot_id]) {
-    auto feedback = std::make_shared<RobotControl::Feedback>();
-    feedback->remaining_pose.x = goal_pose.x - my_robot.pos.x;
-    feedback->remaining_pose.y = goal_pose.y - my_robot.pos.y;
-    feedback->remaining_pose.theta = tools::normalize_theta(goal_pose.theta - my_robot.orientation);
-    if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
-      feedback->present_velocity.x = my_robot.vel[0].x;
-      feedback->present_velocity.y = my_robot.vel[0].y;
-      feedback->present_velocity.theta = my_robot.vel_angular[0];
-    }
-
-    goal_handle_[robot_id]->publish_feedback(feedback);
-  }
-
-  if (arrived(my_robot, goal_pose)) {
-    // アクションクライアントへの応答が必要な場合は、
-    // 目標値に到達した後に制御完了応答を返し、
-    // 速度指令値を0にする
-    if (need_response_[robot_id]) {
-      switch_to_stop_control_mode(robot_id, true, "目的地に到着しました");
-    }
-  }
-}
-
-void Controller::on_timer_pub_stop_command(const unsigned int robot_id)
-{
-  // 停止コマンドをpublishするタイマーコールバック関数
-  // 通信帯域を圧迫しないため、この関数は低周期（例:1s）で実行すること
-  auto command_msg = std::make_unique<RobotCommand>();
-  command_msg->robot_id = robot_id;
-  command_msg->team_is_yellow = team_is_yellow_;
-
-  last_update_time_[robot_id] = steady_clock_.now();
-  // pub_command_[robot_id]->publish(std::move(command_msg));
-
-  // 制御が許可されたらこのタイマーを止めて、制御タイマーを起動する
-  if (control_enable_[robot_id] == true) {
-    timer_pub_stop_command_[robot_id]->cancel();
-    timer_pub_control_command_[robot_id]->reset();
-  }
-=======
   GoalPose destination_msg;
   destination_msg.robot_id = robot_id;
   destination_msg.team_is_yellow = team_is_yellow_;
   destination_msg.pose = destination;
   destinations_map_[robot_id] = destination_msg;
->>>>>>> origin/main
 }
 
 void Controller::on_timer_pub_goal_poses()
