@@ -1,59 +1,111 @@
 name: Scenario Test
 
 on:
-  push:
-    branches:
-      - main 
-      - '**-devel'
-    paths-ignore:
-      - '**.md'
-      - '.docker/**'
-      - '.github/workflows/build_docker_image.yaml'
-      - '.github/workflows/build_lint.yaml'
   pull_request:
     paths-ignore:
       - '**.md'
-      - '.docker/**'
       - '.github/workflows/build_docker_image.yaml'
-      - '.github/workflows/build_lint.yaml'
   workflow_dispatch:
 
 permissions:
   pull-requests: write  # For uploading PR comments
+<<<<<<< HEAD
+=======
+  # For uploading docker image
+  contents: read
+  packages: write
+
+env:
+  PYTHON_VERSION: '3.10'
+  CONSAI_TAG: humble-light-sha-${{ github.sha }}
+>>>>>>> origin/main
 
 jobs:
-  scenario_test:
+  create_docker_image:
+    uses: ./.github/workflows/build_docker_image_for_ci.yaml
+
+  setup_python_lib:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Setup virtual environment
+      run: |
+        python -m venv env
+        source env/bin/activate
+
+    - name: Cache virtual environment
+      uses: actions/cache@v4
+      with:
+        path: env
+        key: ${{ runner.os }}-env-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-env-
 
     - name: Install robocup_scenario_test library
       run: |
+        source env/bin/activate
         python -m pip install --upgrade pip
         sudo apt update
         sudo apt install -y protobuf-compiler
         pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
         pip install pytest
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+  scenario_test:
+    needs: [create_docker_image, setup_python_lib]
 
-    - name: Cache Docker layers
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_force_start.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_free_kick.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_halt.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_kickoff.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_obstacle_avoidance.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_penalty.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_stop.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_timeout.py"}
+          - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "yellow_invert/test_scenario_yellow_invert_kickoff.py"}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache virtual environment
       uses: actions/cache@v4
       with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        path: env
+        key: ${{ runner.os }}-env-${{ github.run_id }}
         restore-keys: |
-          ${{ runner.os }}-buildx-
+          ${{ runner.os }}-env-
+
+    - name: Setup virtual environment
+      run: |
+        python -m venv env
+        source env/bin/activate
+        python -m pip list
 
     - name: Start Docker Compose services
-      run: docker compose -f .docker/consai-grsim-compose.yml up -d
+      run: |
+        docker compose -f .docker/consai-grsim-compose.yml up -d
+      env:
+        CONSAI_TAG: ${{ env.CONSAI_TAG }}
+        CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
+        CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
     - name: Wait for game.py to start
       timeout-minutes: 5
@@ -70,22 +122,43 @@ jobs:
 
     - name: Download logger
       run: |
+<<<<<<< HEAD
+=======
+        cd tests
+>>>>>>> origin/main
         curl -L https://github.com/RoboCup-SSL/ssl-go-tools/releases/download/v1.5.2/ssl-log-recorder_v1.5.2_linux_amd64 -o ssl-log-recorder
         chmod +x ssl-log-recorder
 
     - name: Run pytest
+<<<<<<< HEAD
       run: pytest tests/test_scenario_*.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+=======
+      run: |
+        source env/bin/activate
+        cd tests
+        pytest ${{ matrix.env.TEST_NAME }} --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
+
+    - name: Check for log files
+      if: ${{ failure() }}
+      run: |
+        if ls tests/*.log.gz 1> /dev/null 2>&1; then
+          echo "LOG_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "LOG_EXISTS=false" >> $GITHUB_ENV
+        fi
+>>>>>>> origin/main
 
     - name: Get and print logs
-      if: always()
+      if: ${{ failure() || success() }}
       run: docker compose -f .docker/consai-grsim-compose.yml logs --tail 100
 
     - name: Clean up Docker Compose services
-      if: always()
+      if: ${{ failure() || success() }}
       run: docker compose -f .docker/consai-grsim-compose.yml down
 
     - name: Upload artifacts
       id: upload-artifact
+<<<<<<< HEAD
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -106,8 +179,22 @@ jobs:
 
     - name: Comment PR with Artifact URL
       if: steps.check-artifact.outputs.skip_comment != 'true'
+=======
+      if: ${{ failure() && env.LOG_EXISTS == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.env.TEST_NAME}}-failure-logs
+        path: 'tests/*.log.gz'
+
+    - name: Comment PR with Artifact URL
+      if: ${{ failure() && env.LOG_EXISTS == 'true' }}
+>>>>>>> origin/main
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
+<<<<<<< HEAD
           Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+=======
+          ${{ matrix.env.TEST_NAME }} failed. Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+>>>>>>> origin/main

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include "consai_robot_controller/control_tools.hpp"
+#include "consai_robot_controller/tools/control_tools.hpp"
 
 // tanh関数を用いた速度制御のテスト
 TEST(TestControlTools, velocity_contol_tanh) {

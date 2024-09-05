@@ -43,7 +43,8 @@ public:
   explicit BallTracker(const double dt = 0.01);
 
   void push_back_observation(const DetectionBall & ball);
-  TrackedBall update();
+  TrackedBall update(const bool use_uncertain_sys_model);
+  TrackedBall prev_estimation(void) const {return prev_tracked_ball_;}
 
 private:
   void reset_prior();
@@ -52,12 +53,16 @@ private:
   std::vector<TrackedBall> ball_observations_;
   TrackedBall prev_tracked_ball_;
 
-  std::shared_ptr<ConditionalGaussian> sys_pdf_;
-  std::shared_ptr<SystemModelGaussianUncertainty> sys_model_;
+  std::shared_ptr<ConditionalGaussian> sys_uncertain_pdf_;
+  std::shared_ptr<SystemModelGaussianUncertainty> sys_uncertain_model_;
+  std::shared_ptr<ConditionalGaussian> sys_certain_pdf_;
+  std::shared_ptr<SystemModelGaussianUncertainty> sys_certain_model_;
   std::shared_ptr<ConditionalGaussian> meas_pdf_;
   std::shared_ptr<MeasurementModelGaussianUncertainty> meas_model_;
   std::shared_ptr<Gaussian> prior_;
   std::shared_ptr<ExtendedKalmanFilter> filter_;
+
+  int outlier_count_ = 0;
 };
 
 }  // namespace consai_vision_tracker

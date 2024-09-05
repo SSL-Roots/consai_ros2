@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '.github/workflows/build_docker_image_for_ci.yaml'
+      - '.github/workflows/scenario_test.yaml'
   workflow_dispatch:
 
 env:
@@ -14,9 +17,13 @@ jobs:
   build-and-push-image:
     strategy:
       matrix:
-        env:
-          # - { ROS_DISTRO: foxy}
-          - { ROS_DISTRO: humble}
+        dockerfile:
+          - path: .docker/Dockerfile
+            tag_suffix: humble
+            rosdistro: humble
+          - path: .docker/light/Dockerfile
+            tag_suffix: humble-light
+            rosdistro: humble
 
     runs-on: ubuntu-latest
     permissions:
@@ -40,13 +47,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.env.ROS_DISTRO }}
+            type=raw,value=${{ matrix.dockerfile.tag_suffix }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          file: .docker/Dockerfile
-          build-args: ROS_DISTRO=${{ matrix.env.ROS_DISTRO }}
+          file: ${{ matrix.dockerfile.path }}
+          build-args: ROS_DISTRO=${{ matrix.dockerfile.rosdistro }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

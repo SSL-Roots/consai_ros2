@@ -13,11 +13,11 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include "consai_robot_controller/obstacle_ball.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
-#include "consai_robot_controller/obstacle_robot.hpp"
-#include "consai_robot_controller/obstacle_typedef.hpp"
-#include "consai_robot_controller/prohibited_area.hpp"
+#include "consai_robot_controller/obstacle/obstacle_ball.hpp"
+#include "consai_robot_controller/obstacle/obstacle_environment.hpp"
+#include "consai_robot_controller/obstacle/obstacle_robot.hpp"
+#include "consai_robot_controller/obstacle/obstacle_typedef.hpp"
+#include "consai_robot_controller/obstacle/prohibited_area.hpp"
 
 using ObstArea = obstacle::ProhibitedArea;
 using ObstBall = obstacle::ObstacleBall;

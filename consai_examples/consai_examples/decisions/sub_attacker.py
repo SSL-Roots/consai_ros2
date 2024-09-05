@@ -15,156 +15,185 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from decisions.decision_base import DecisionBase
-from field_observer import FieldObserver
+from consai_examples.decisions.decision_base import DecisionBase
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetXY
+from consai_examples.operation import TargetTheta
+from enum import Enum
+
+
+class SubAttackerID(Enum):
+    SUBATTACK1 = 0
+    SUBATTACK2 = 1
 
 
 class SubAttackerDecision(DecisionBase):
 
-    def __init__(self, robot_operator, field_observer):
+    def __init__(self, robot_operator, field_observer, sub_attacker_id: SubAttackerID):
         super().__init__(robot_operator, field_observer)
+        self._sub_attacker_id = sub_attacker_id
+        self._penalty_side_x = 5.1
+        self._penalty_side_y = 3.0
+        self._penalty_front_x = 3.8
+        self._penalty_front_y = 2.8
 
-        self._ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_TOP,
-                           FieldObserver.BALL_ZONE_LEFT_MID_TOP,
-                           FieldObserver.BALL_ZONE_RIGHT_MID_TOP]
-
-        self._OUR_ZONE_TOPS = [FieldObserver.BALL_ZONE_LEFT_TOP,
-                               FieldObserver.BALL_ZONE_LEFT_MID_TOP]
-        self._OUR_ZONE_BOTTOMS = [FieldObserver.BALL_ZONE_LEFT_BOTTOM,
-                                  FieldObserver.BALL_ZONE_LEFT_MID_BOTTOM]
-
-    def _offend(self, robot_id, base_id):
+    def _offend_operation(self):
+        ball_pos = self._field_observer.detection().ball().pos()
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
-        if self._ball_zone_state in self._ZONE_TOPS:
-            if self._act_id != base_id + 0:
-                self._operator.move_to_ball_x(robot_id, -2.5)
-                self._act_id = base_id + 0
-            return
+        if ball_pos.y > 0:
+            if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
+                move_to_ball = Operation().move_to_pose(TargetXY.value(
+                    self._penalty_side_x, -self._penalty_side_y), TargetTheta.look_ball())
+            else:
+                move_to_ball = Operation().move_to_pose(TargetXY.value(
+                    self._penalty_front_x, self._penalty_front_y), TargetTheta.look_ball())
         else:
-            if self._act_id != base_id + 1:
-                self._operator.move_to_ball_x(robot_id, 2.5)
-                self._act_id = base_id + 1
-            return
+            if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
+                move_to_ball = Operation().move_to_pose(TargetXY.value(
+                    self._penalty_front_x, -self._penalty_front_y), TargetTheta.look_ball())
+            else:
+                move_to_ball = Operation().move_to_pose(TargetXY.value(
+                    self._penalty_side_x, self._penalty_side_y), TargetTheta.look_ball())
+        return move_to_ball
 
-    def _offend_with_kick(self, robot_id, base_id):
+    def _offend_our_side_operation(self):
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
-        if self._ball_zone_state in self._ZONE_TOPS:
-            if self._act_id != base_id + 0:
-                self._operator.move_to_ball_x_with_reflect(robot_id, -2.5)
-                self._act_id = base_id + 0
-            return
+        move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
+        if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
+            if self._field_observer.zone().ball_is_in_left_bottom() or \
+                    self._field_observer.zone().ball_is_in_left_mid_bottom():
+                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+            else:
+                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
         else:
-            if self._act_id != base_id + 1:
-                self._operator.move_to_ball_x_with_reflect(robot_id, 2.5)
-                self._act_id = base_id + 1
-            return
-
-    def _offend_our_side(self, robot_id, base_id):
-        # ボールがフィールド上半分にあるときは、フィールド下側に移動する
-        if self._ball_zone_state in self._OUR_ZONE_TOPS:
-            if self._act_id != base_id + 0:
-                self._operator.move_to_ball_x(robot_id, -2.5, -0.3)
-                self._act_id = base_id + 0
-            return
-        elif self._ball_zone_state in self._OUR_ZONE_BOTTOMS:
-            if self._act_id != base_id + 1:
-                self._operator.move_to_ball_x(robot_id, 2.5, -0.3)
-                self._act_id = base_id + 1
-            return
-        else:
-            if self._act_id != base_id + 2:
-                self._operator.move_to_ball_x(robot_id, -2.5, -0.3)
-                self._act_id = base_id + 2
-            return
+            if self._field_observer.zone().ball_is_in_left_bottom() or \
+                    self._field_observer.zone().ball_is_in_left_mid_bottom():
+                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+            else:
+                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+        move_to_ball = move_to_ball.offset_pose_x(-0.3)
+        return move_to_ball
 
     def stop(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_STOP)
+        ball_pos = self._field_observer.detection().ball().pos()
+        if ball_pos.x > 0.5:
+            operation = self._offend_operation()
+        else:
+            operation = self._offend_our_side_operation()
+        operation = operation.enable_avoid_ball()
+        operation = operation.enable_avoid_pushing_robots()
+        self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_STOP)
-        # self._offend_with_kick(robot_id, self.ACT_ID_INPLAY)
+        operation = self._offend_operation()
+        # シュート可能なIDリストを取得
+        shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
+        # シュートできる場合はシュートする
+        if len(shoot_pos_list) > 0:
+            operation = operation.with_reflecting_to(
+                TargetXY.value(shoot_pos_list[0].x, shoot_pos_list[0].y))
+        self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
-        self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)
+        operation = self._offend_our_side_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_kickoff(self, robot_id):
-        self._offend_our_side(robot_id, self.ACT_ID_KICKOFF)
+        operation = self._offend_our_side_operation()
+        self._operator.operate(robot_id, operation)
 
     def their_pre_kickoff(self, robot_id):
-        self._offend_our_side(robot_id, self.ACT_ID_PRE_KICKOFF)
+        operation = self._offend_our_side_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_kickoff(self, robot_id):
-        self._offend_our_side(robot_id, self.ACT_ID_KICKOFF)
-
-    def our_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def our_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, -self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def their_pre_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def their_penalty(self, robot_id):
-        if self._act_id != self.ACT_ID_PRE_PENALTY:
-            self._operator.move_to_look_ball(
-                robot_id, self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0)
-            self._act_id = self.ACT_ID_PRE_PENALTY
-
-    def our_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.stop(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
-
-    def their_penalty_inplay(self, robot_id):
-        if self._act_id != self.ACT_ID_INPLAY:
-            self._operator.stop(robot_id)
-            self._act_id = self.ACT_ID_INPLAY
+        operation = self._offend_our_side_operation()
+        self._operator.operate(robot_id, operation)
 
     def our_direct(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_DIRECT)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_direct(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_DIRECT)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_indirect(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_INDIRECT)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def their_indirect(self, robot_id):
-        self._offend(robot_id, self.ACT_ID_INDIRECT)
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
 
     def our_ball_placement(self, robot_id, placement_pos):
-        ID_BALL_RECEIVE = self.ACT_ID_OUR_PLACEMENT + 0
-        ID_ARRIVED = self.ACT_ID_OUR_PLACEMENT + 1
+        if self._field_observer.ball_placement().is_far_from(placement_pos) or \
+           not self._field_observer.ball_placement().is_arrived_at(placement_pos):
+            if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
+                # ボールを受け取る
+                move_to_behind_target = Operation().move_on_line(
+                    TargetXY.value(placement_pos.x, placement_pos.y),
+                    TargetXY.ball(),
+                    -0.1,
+                    TargetTheta.look_ball())
+                move_to_behind_target = move_to_behind_target.with_ball_receiving()
+                self._operator.operate(robot_id, move_to_behind_target)
+                return
 
-        # プレースメントを回避しない
-        self._operator.disable_avoid_placement(robot_id)
-
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_FAR_FROM_TARGET or \
-           self._ball_placement_state == FieldObserver.BALL_PLACEMENT_NEAR_TARGET:
-            # ボールを受け取る
-            if self._act_id != ID_BALL_RECEIVE:
-                self._operator.receive_from(robot_id, placement_pos.x, placement_pos.y, 0.1)
-                self._act_id = ID_BALL_RECEIVE
-            return
-
-        if self._ball_placement_state == FieldObserver.BALL_PLACEMENT_ARRIVED_AT_TARGET:
+        if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
             # ボール位置が配置目標位置に到着したらボールから離れる
-            if self._act_id != ID_ARRIVED:
-                self._operator.approach_to_ball(robot_id, 0.6)
-                self._act_id = ID_ARRIVED
+            avoid_ball = Operation().move_on_line(
+                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+            self._operator.operate(robot_id, avoid_ball)
+        else:
+            operation = self._offend_operation()
+            operation = operation.enable_avoid_ball()
+            operation = operation.enable_avoid_placement_area(placement_pos)
+            operation = operation.enable_avoid_pushing_robots()
+            self._operator.operate(robot_id, operation)
 
     def their_ball_placement(self, robot_id, placement_pos):
-        if self._act_id != self.ACT_ID_THEIR_PLACEMENT:
-            self._operator.move_to_look_ball(robot_id, -6.0 + 2.0, 1.8 - 0.3 * 3.0)
-            self._act_id = self.ACT_ID_THEIR_PLACEMENT
+        operation = self._offend_operation()
+        operation = operation.enable_avoid_ball()
+        operation = operation.enable_avoid_placement_area(placement_pos)
+        operation = operation.enable_avoid_pushing_robots()
+        self._operator.operate(robot_id, operation)
+
+    def _our_penalty_operation(self):
+        return Operation().move_to_pose(
+            TargetXY.value(-self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
+            TargetTheta.look_ball())
+
+    def _their_penalty_operation(self):
+        return Operation().move_to_pose(
+            TargetXY.value(self._PENALTY_WAIT_X, 4.5 - 0.3 * 5.0),
+            TargetTheta.look_ball())
+
+
+def gen_our_penalty_function():
+    def function(self, robot_id):
+        operation = self._our_penalty_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
+    return function
+
+
+def gen_their_penalty_function():
+    def function(self, robot_id):
+        operation = self._their_penalty_operation()
+        operation = operation.enable_avoid_ball()
+        self._operator.operate(robot_id, operation)
+    return function
+
+
+for name in ['our_pre_penalty', 'our_penalty', 'our_penalty_inplay']:
+    setattr(SubAttackerDecision, name, gen_our_penalty_function())
+
+for name in ['their_pre_penalty', 'their_penalty', 'their_penalty_inplay']:
+    setattr(SubAttackerDecision, name, gen_their_penalty_function())

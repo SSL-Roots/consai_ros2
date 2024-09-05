@@ -12,65 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <memory>
-#include <vector>
 
 #include "consai_robot_controller/field_info_parser.hpp"
-#include "consai_robot_controller/geometry_tools.hpp"
-#include "consai_robot_controller/obstacle_ball.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
-#include "consai_robot_controller/obstacle_robot.hpp"
-#include "consai_robot_controller/obstacle_typedef.hpp"
-#include "consai_robot_controller/prohibited_area.hpp"
-#include "robocup_ssl_msgs/msg/robot_id.hpp"
 
 namespace consai_robot_controller
 {
 
-using ObstArea = obstacle::ProhibitedArea;
-using ObstBall = obstacle::ObstacleBall;
-using ObstEnv = obstacle::ObstacleEnvironment;
-using ObstPos = obstacle::Position;
-using ObstRadius = obstacle::Radius;
-using ObstRobot = obstacle::ObstacleRobot;
-using RobotId = robocup_ssl_msgs::msg::RobotId;
-namespace tools = geometry_tools;
-const double VISIBILITY_THRESHOLD = 0.01;
-const double MAX_KICK_POWER_SHOOT = 5.5;  // m/s
-const double MAX_KICK_POWER_PASS = 4.0;  // m/s
-const double MIN_KICK_POWER_PASS = 2.0;  // m/s
-
-FieldInfoParser::FieldInfoParser()
-: invert_(false), team_is_yellow_(false)
+FieldInfoParser::FieldInfoParser(
+  const bool team_is_yellow, const bool invert,
+  const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
+: team_is_yellow_(team_is_yellow), invert_(invert), detection_extractor_(detection_extractor)
 {
-  // 不正な値を参照しないように、フィールド情報の初期値をセットする
-  geometry_ = std::make_shared<GeometryData>();
-  geometry_->field.field_length = 12000;
-  geometry_->field.field_width = 9000;
-  geometry_->field.goal_width = 1800;
-  geometry_->field.goal_depth = 180;
-  geometry_->field.boundary_width = 300;
-}
-
-void FieldInfoParser::set_invert(const bool & invert)
-{
-  invert_ = invert;
-}
-
-void FieldInfoParser::set_team_is_yellow(const bool & team_is_yellow)
-{
-  team_is_yellow_ = team_is_yellow;
+  constraint_parser_ = std::make_shared<parser::ConstraintParser>(
+    detection_extractor_, team_is_yellow_);
+  tactic_control_ball_ = std::make_shared<tactic::ControlBall>();
+  tactic_obstacle_avoidance_ = std::make_shared<tactic::ObstacleAvoidance>(detection_extractor);
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
-  detection_tracked_ = detection_tracked;
+  detection_extractor_->set_detection_tracked(detection_tracked);
 }
 
 void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
 {
-  geometry_ = geometry;
 }
 
 void FieldInfoParser::set_referee(const Referee::SharedPtr referee)
@@ -85,97 +51,17 @@ void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_r
 
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
-  // トピックを受け取るたびに初期化する
-  named_targets_.clear();
-
-  for (std::size_t i = 0; i < msg->name.size(); ++i) {
-    auto name = msg->name[i];
-    auto pose = msg->pose[i];
-    named_targets_[name] = pose;
-  }
+  constraint_parser_->set_named_targets(msg);
 }
 
-bool FieldInfoParser::extract_robot(
-  const unsigned int robot_id, const bool team_is_yellow,
-  TrackedRobot & my_robot) const
+bool FieldInfoParser::is_parsable(const RobotControlMsg::SharedPtr goal) const
 {
-  // detection_trackedから指定された色とIDのロボット情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  for (const auto & robot : detection_tracked_->robots) {
-    if (robot_id != robot.robot_id.id) {
-      continue;
-    }
-    bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-    bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-    if (!is_yellow && !is_blue) {
-      continue;
-    }
-    // if((team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_YELLOW) &&
-    //    (!team_is_yellow && robot.robot_id.team_color != RobotId::TEAM_COLOR_BLUE)){
-    //   continue;
-    // }
-    if (robot.visibility.size() == 0) {
-      return false;
-    }
-    if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-      return false;
-    }
-
-    my_robot = robot;
-    break;
-  }
-  return true;
-}
-
-bool FieldInfoParser::extract_ball(TrackedBall & my_ball) const
-{
-  // detection_trackedからボール情報を抽出する
-  // visibilityが低いときは情報が無いと判定する
-  for (const auto & ball : detection_tracked_->balls) {
-    if (ball.visibility.size() == 0) {
-      return false;
-    }
-    if (ball.visibility[0] < VISIBILITY_THRESHOLD) {
-      return false;
-    }
-
-    my_ball = ball;
-    break;
-  }
-  return true;
-}
-
-bool FieldInfoParser::parse_goal(
-  const std::shared_ptr<const RobotControl::Goal> goal,
-  State & parsed_pose) const
-{
-  // RobotControlのgoalを解析し、目標姿勢を出力する
-  // 解析に失敗したらfalseを返す
-  // ここではキック処理や、レシーブ処理をしない
-
-  // 目標姿勢を算出
   State target_pose;
-  bool parse_succeeded = false;
-  if (goal->pose.size() > 0) {
-    if (parse_constraint_pose(goal->pose[0], target_pose)) {
-      parse_succeeded = true;
-    }
-  }
-  if (goal->line.size() > 0) {
-    if (parse_constraint_line(goal->line[0], target_pose)) {
-      parse_succeeded = true;
-    }
-  }
-
-  if (parse_succeeded == false) {
-    return false;
-  }
-  parsed_pose = target_pose;
-  return true;
+  return parse_constraints(goal, target_pose);
 }
 
 bool FieldInfoParser::parse_goal(
-  const std::shared_ptr<const RobotControl::Goal> goal,
+  const RobotControlMsg::SharedPtr goal,
   const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
   double & kick_power, double & dribble_power)
 {
@@ -184,7 +70,7 @@ bool FieldInfoParser::parse_goal(
   // 衝突回避やキック、レシーブの処理も実施する
 
   // 目標姿勢を算出
-  if (!parse_goal(goal, parsed_pose)) {
+  if (!parse_constraints(goal, parsed_pose)) {
     return false;
   }
 
@@ -193,76 +79,58 @@ bool FieldInfoParser::parse_goal(
 
   // 以下、ボールが関わる処理のためボール情報を取得する
   TrackedBall ball;
-  if (!extract_ball(ball)) {
+  if (!detection_extractor_->extract_ball(ball)) {
     // ボール情報を取得できなくても正常終了
     return true;
   }
 
-  State target;
-  bool result = false;
-  if (goal->reflect_shoot && parse_constraint_xy(goal->kick_target, target.x, target.y) ) {
+  State kick_target;
+  State dribble_target;
+  const auto has_kick_target = constraint_parser_->parse_constraint_xy(
+    goal->kick_target, kick_target.x, kick_target.y);
+  const auto has_dribble_target = constraint_parser_->parse_constraint_xy(
+    goal->dribble_target, dribble_target.x, dribble_target.y);
+
+  if (goal->reflect_shoot && has_kick_target) {
     // ボールを受け取りながら目標へ向かって蹴るリフレクトシュート
-    result = reflect_kick(
-      target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power,
-      dribble_power);
-  }
-
-  if (goal->receive_ball && result == false) {
-    // 転がっているボールを受け取る
-    result = receive_ball(my_robot, ball, parsed_pose, dribble_power);
-  }
-
-  if (tools::distance(tools::pose_state(ball), parsed_pose) < 0.7 && result == false) {
-    // 目標姿勢とボールが近ければ、ボールを操作する
-    if (goal->kick_enable &&
-      parse_constraint_xy(goal->kick_target, target.x, target.y))
+    if (tactic_control_ball_->reflect_kick(
+        kick_target, my_robot, ball, goal->kick_pass, parsed_pose, kick_power, dribble_power))
     {
-      parse_kick(
-        target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose,
-        kick_power, dribble_power);
-    } else if (goal->dribble_enable &&  // NOLINT
-      parse_constraint_xy(goal->dribble_target, target.x, target.y))
-    {
-      parse_dribble(target, my_robot, ball, parsed_pose, dribble_power);
+      return true;
     }
   }
 
-  if (goal->ball_boy_dribble_enable &&  // NOLINT
-    parse_constraint_xy(goal->dribble_target, target.x, target.y) && result == false)
-  {
-    ball_boy_tactics_.update(target, my_robot, ball, parsed_pose, dribble_power);
+  if (goal->receive_ball) {
+    // 転がっているボールを受け取る
+    if (tactic_control_ball_->receive_ball(my_robot, ball, parsed_pose, dribble_power)) {
+      return true;
+    }
+  }
+
+  if (goal->kick_enable && has_kick_target) {
+    shoot_tactics_.update(
+      kick_target, my_robot, ball, goal->kick_pass, goal->kick_setplay, parsed_pose, kick_power,
+      dribble_power);
+    return true;
+  }
+
+  if (goal->dribble_enable && has_dribble_target) {
+    dribble_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
+  }
+
+  if (goal->back_dribble_enable && has_dribble_target) {
+    back_dribble_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
+  }
+
+  if (goal->ball_boy_dribble_enable && has_dribble_target) {
+    ball_boy_tactics_.update(dribble_target, my_robot, ball, parsed_pose, dribble_power);
   }
 
   return true;
 }
 
-std::vector<unsigned int> FieldInfoParser::active_robot_id_list(const bool team_is_yellow) const
-{
-  // 存在しているロボットのIDリストを返す
-  std::vector<unsigned int> id_list;
-  if (detection_tracked_) {
-    for (const auto & robot : detection_tracked_->robots) {
-      bool is_yellow = team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_YELLOW;
-      bool is_blue = !team_is_yellow && robot.robot_id.team_color == RobotId::TEAM_COLOR_BLUE;
-      if (!is_yellow && !is_blue) {
-        continue;
-      }
-
-      if (robot.visibility.size() == 0) {
-        continue;
-      }
-      if (robot.visibility[0] < VISIBILITY_THRESHOLD) {
-        continue;
-      }
-
-      id_list.push_back(robot.robot_id.id);
-    }
-  }
-  return id_list;
-}
-
 State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
-  const std::shared_ptr<const RobotControl::Goal> goal,
+  const RobotControlMsg::SharedPtr goal,
   const TrackedRobot & my_robot,
   const State & goal_pose, const State & final_goal_pose) const
 {
@@ -273,69 +141,54 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   TrackedBall ball;
-  if (!extract_ball(ball)) {
-    return avoidance_pose;
+  if (!detection_extractor_->extract_ball(ball)) {
+    // Set dummy value
+    ball.pos.x = 1000.0;
+    ball.pos.y = 1000.0;
   }
 
+<<<<<<< HEAD
   bool avoid_ball = false;
   // STOP_GAME中はボールから離れる
   if (parsed_referee_->is_our_setplay == false && parsed_referee_->is_inplay == false) {
     avoid_ball = true;
   }
   // avoid_obstacles(my_robot, goal_pose, ball, avoid_ball, avoidance_pose);
+=======
+  tactic_obstacle_avoidance_->avoid_obstacles(
+    my_robot, avoidance_pose, ball,
+    goal->avoid_our_robots,
+    goal->avoid_their_robots,
+    goal->avoid_ball,
+    avoidance_pose);
+>>>>>>> origin/main
 
-  // ボールプレイスメントエリアを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE)
-  {
-    if (referee_->designated_position.size() > 0) {
-      State designated_position;
-      designated_position.x = referee_->designated_position[0].x * 0.001;  // mm to meters
-      designated_position.y = referee_->designated_position[0].y * 0.001;  // mm to meters
-
-      // サイド反転
-      if (invert_) {
-        designated_position.x *= -1.0;
-        designated_position.y *= -1.0;
-      }
-
-      bool is_our_placement =
-        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW &&
-        team_is_yellow_ == true) ||
-        (referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE && team_is_yellow_ == false);
-      bool avoid_kick_receive_area = true;
-      // 自チームのプレースメント時は、キック、レシーブエリアを避けない
-      if (is_our_placement) {
-        avoid_kick_receive_area = false;
-      }
-      if (goal->avoid_placement) {
-        avoid_placement_area(
-          my_robot, avoidance_pose, ball, avoid_kick_receive_area,
-          designated_position, avoidance_pose);
-      }
-    }
+  if (goal->avoid_pushing_robots) {
+    tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, avoidance_pose, avoidance_pose);
   }
 
-  // STOP中、プレースメント中は目標位置とロボットの重なりを回避する
-  if (referee_->command == Referee::COMMAND_BALL_PLACEMENT_YELLOW ||
-    referee_->command == Referee::COMMAND_BALL_PLACEMENT_BLUE ||
-    referee_->command == Referee::COMMAND_STOP)
-  {
-    avoid_robots(my_robot, avoidance_pose, avoidance_pose);
+  if (goal->avoid_ball) {
+    tactic_obstacle_avoidance_->avoid_ball_500mm(
+      my_robot, final_goal_pose, avoidance_pose, ball, avoidance_pose);
   }
 
-  // STOP_GAME中はボールから離れる
-  if (avoid_ball) {
-    avoid_ball_500mm(final_goal_pose, avoidance_pose, ball, avoidance_pose);
+  // Overwrite avoidance_pose if avoid_defense_area is true
+  if (goal->avoid_defense_area) {
+    tactic_obstacle_avoidance_->avoid_defense_area(my_robot, goal_pose, avoidance_pose);
+  }
+
+  if (goal->avoid_placement_area) {
+    tactic_obstacle_avoidance_->avoid_placement_area(
+      my_robot, avoidance_pose, ball, goal->placement_pos, avoidance_pose);
   }
 
   return avoidance_pose;
 }
 
-obstacle::ObstacleEnvironment FieldInfoParser::get_obstacle_environment(
-  const std::shared_ptr<const RobotControl::Goal> goal,
-  const TrackedRobot & my_robot) const
+bool FieldInfoParser::parse_constraints(
+  const RobotControlMsg::SharedPtr goal, State & parsed_pose) const
 {
+<<<<<<< HEAD
   constexpr ObstRadius BALL_RADIUS(0.0215);
   constexpr ObstRadius ROBOT_RADIUS(0.09);
 
@@ -1213,34 +1066,20 @@ bool FieldInfoParser::avoid_ball_500mm(
     avoidance_pose.theta = final_goal_pose.theta;
 
     if (!geometry_) {
+=======
+  if (goal->pose.size() > 0) {
+    if (constraint_parser_->parse_constraint_pose(goal->pose[0], parsed_pose)) {
       return true;
     }
-
-    // フィールド外に目標位置が置かれた場合の処理
-    const auto BOUNDARY_WIDTH = geometry_->field.boundary_width * 0.001;
-    const auto FIELD_HALF_X = geometry_->field.field_length * 0.5 * 0.001;
-    const auto FIELD_HALF_Y = geometry_->field.field_width * 0.5 * 0.001;
-    // どれだけフィールドからはみ出たかを、0.0 ~ 1.0に変換する
-    // はみ出た分だけ目標位置をボール周囲でずらす
-    auto gain_x =
-      std::clamp((std::fabs(avoidance_pose.x) - FIELD_HALF_X) / BOUNDARY_WIDTH, 0.0, 1.0);
-    auto gain_y =
-      std::clamp((std::fabs(avoidance_pose.y) - FIELD_HALF_Y) / BOUNDARY_WIDTH, 0.0, 1.0);
-    if (gain_x > 0.0) {
-      auto add_angle = std::copysign(gain_x * M_PI * 0.5, avoidance_pose.y);
-      avoidance_pose = trans_BtoG.inverted_transform(
-        DISTANCE_TO_AVOID * std::cos(add_angle),
-        DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
-    }
-    if (gain_y > 0.0) {
-      auto add_angle = std::copysign(gain_y * M_PI * 0.5, avoidance_pose.x);
-      avoidance_pose = trans_BtoG.inverted_transform(
-        DISTANCE_TO_AVOID * std::cos(add_angle),
-        DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
-    }
-    avoidance_pose.theta = final_goal_pose.theta;
   }
-  return true;
+  if (goal->line.size() > 0) {
+    if (constraint_parser_->parse_constraint_line(goal->line[0], parsed_pose)) {
+>>>>>>> origin/main
+      return true;
+    }
+  }
+  return false;
 }
+
 
 }  // namespace consai_robot_controller

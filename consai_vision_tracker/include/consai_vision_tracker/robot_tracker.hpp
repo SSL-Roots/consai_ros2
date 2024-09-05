@@ -47,6 +47,7 @@ public:
   void push_back_observation(const DetectionRobot & robot);
   TrackedRobot update();
   RobotLocalVelocity calc_local_velocity();
+  TrackedRobot prev_estimation(void) const {return prev_tracked_robot_;}
 
 private:
   void reset_prior();
@@ -64,6 +65,8 @@ private:
   std::shared_ptr<MeasurementModelGaussianUncertainty> meas_model_;
   std::shared_ptr<Gaussian> prior_;
   std::shared_ptr<ExtendedKalmanFilter> filter_;
+
+  int outlier_count_ = 0;
 };
 
 }  // namespace consai_vision_tracker

@@ -20,6 +20,8 @@
 #include <memory>
 #include <utility>
 
+#include "consai_msgs/msg/state2_d.hpp"
+#include "consai_tools/geometry_tools.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -28,7 +30,10 @@ using namespace std::chrono_literals;
 namespace consai_vision_tracker
 {
 
+namespace tools = geometry_tools;
+
 using RobotId = robocup_ssl_msgs::msg::RobotId;
+using State = consai_msgs::msg::State2D;
 using std::placeholders::_1;
 
 Tracker::Tracker(const rclcpp::NodeOptions & options)
@@ -75,8 +80,6 @@ void Tracker::on_timer()
   auto tracked_msg = std::make_unique<TrackedFrame>();
   auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
 
-  tracked_msg->balls.push_back(ball_tracker_->update());
-
   for (auto && tracker : blue_robot_tracker_) {
     tracked_msg->robots.push_back(tracker->update());
     robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
@@ -86,6 +89,35 @@ void Tracker::on_timer()
     tracked_msg->robots.push_back(tracker->update());
     robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
   }
+
+  auto ball_is_near_a_robot = [this](
+    const decltype(blue_robot_tracker_) & trackers,
+    const State & ball_pose) {
+      const auto NEAR_DISTANCE = 0.5;
+      for (auto && tracker : trackers) {
+        const auto robot = tracker->prev_estimation();
+        if (!tools::is_visible(robot)) {
+          continue;
+        }
+        const auto robot_pose = tools::pose_state(robot);
+        if (tools::distance(ball_pose, robot_pose) < NEAR_DISTANCE) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+  const auto ball = ball_tracker_->prev_estimation();
+  bool use_uncertain_sys_model = false;
+
+  if (tools::is_visible(ball)) {
+    const auto ball_pose = tools::pose_state(ball);
+    use_uncertain_sys_model =
+      ball_is_near_a_robot(blue_robot_tracker_, ball_pose) ||
+      ball_is_near_a_robot(yellow_robot_tracker_, ball_pose);
+  }
+
+  tracked_msg->balls.push_back(ball_tracker_->update(use_uncertain_sys_model));
 
   tracked_msg = vis_data_handler_->publish_vis_tracked(std::move(tracked_msg));
 

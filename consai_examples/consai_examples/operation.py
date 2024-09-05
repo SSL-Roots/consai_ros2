@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.action import RobotControl
 from consai_msgs.msg import ConstraintLine
 from consai_msgs.msg import ConstraintObject
 from consai_msgs.msg import ConstraintPose
 from consai_msgs.msg import ConstraintTheta
 from consai_msgs.msg import ConstraintXY
+from consai_msgs.msg import State2D
+from consai_msgs.msg import RobotControlMsg
+from consai_tools.hasher import robot_control_hasher
 from copy import deepcopy
 from typing import NamedTuple
 
@@ -78,6 +80,16 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
+    def their_robot(cls, robot_id: int) -> 'TargetXY':
+        obj = ConstraintObject()
+        obj.type = ConstraintObject.THEIR_ROBOT
+        obj.robot_id = robot_id
+
+        constraint = ConstraintXY()
+        constraint.object.append(obj)
+        return cls(constraint)
+
+    @classmethod
     def their_top_corner(cls) -> 'TargetXY':
         constraint = ConstraintXY()
         constraint.normalized = True
@@ -91,6 +103,14 @@ class TargetXY(NamedTuple):
         constraint.normalized = True
         constraint.value_x.insert(0, 1.0)
         constraint.value_y.insert(0, -1.0)
+        return cls(constraint)
+
+    @classmethod
+    def our_side_center(cls) -> 'TargetXY':
+        constraint = ConstraintXY()
+        constraint.normalized = True
+        constraint.value_x.insert(0, -0.5)
+        constraint.value_y.insert(0, 0.0)
         return cls(constraint)
 
 
@@ -123,15 +143,59 @@ class TargetTheta(NamedTuple):
 
 
 class Operation():
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         if goal:
             self._goal = goal
         else:
-            self._goal = RobotControl.Goal()
+            self._goal = RobotControlMsg()
             self._goal.keep_control = True
 
-    def get_goal(self) -> RobotControl.Goal:
+    def get_goal(self) -> RobotControlMsg:
         return self._goal
+
+    def get_hash(self) -> int:
+        return robot_control_hasher.hash_robot_control(self._goal)
+
+    def halt(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.stop = True
+        return Operation(goal)
+
+    def enable_avoid_placement_area(self, placement_pos: State2D) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_placement_area = True
+        goal.placement_pos = placement_pos
+        return Operation(goal)
+
+    def enable_avoid_ball(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_ball = True
+        return Operation(goal)
+
+    def enable_avoid_pushing_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_pushing_robots = True
+        return Operation(goal)
+
+    def disable_avoid_defense_area(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_defense_area = False
+        return Operation(goal)
+
+    def disable_avoid_our_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_our_robots = False
+        return Operation(goal)
+
+    def disable_avoid_their_robots(self) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.avoid_their_robots = False
+        return Operation(goal)
+
+    def restrict_velocity_xy(self, velocity: float) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.max_velocity_xy.insert(0, velocity)
+        return Operation(goal)
 
     def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
                      target_theta: TargetTheta) -> 'Operation':
@@ -145,13 +209,13 @@ class Operation():
         return Operation(goal)
 
     def move_to_intersection(self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY,
-                             target_theta: TargetTheta) -> 'Operation':
+                             target_theta: TargetTheta, offset: float = 0.0) -> 'Operation':
         line = ConstraintLine()
         line.p1 = p1.constraint
         line.p2 = p2.constraint
         line.p3.insert(0, p3.constraint)
         line.p4.insert(0, p4.constraint)
-        line.offset_intersection_to_p2.insert(0, 0.0)
+        line.offset_intersection_to_p2.insert(0, offset)
         line.theta = target_theta.constraint
         goal = deepcopy(self._goal)
         goal.line.insert(0, line)
@@ -233,9 +297,23 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
+    def with_passing_for_setplay_to(self, target_xy: TargetXY) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.kick_enable = True
+        goal.kick_pass = True
+        goal.kick_setplay = True
+        goal.kick_target = target_xy.constraint
+        return Operation(goal)
+
     def with_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
         goal = deepcopy(self._goal)
         goal.dribble_enable = True
+        goal.dribble_target = target_xy.constraint
+        return Operation(goal)
+
+    def with_back_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+        goal = deepcopy(self._goal)
+        goal.back_dribble_enable = True
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
@@ -253,7 +331,7 @@ class Operation():
 
 
 class OneShotOperation(Operation):
-    def __init__(self, goal: RobotControl.Goal = None) -> None:
+    def __init__(self, goal: RobotControlMsg = None) -> None:
         super().__init__(goal)
 
         # 目標姿勢にたどり着いたら制御を終える

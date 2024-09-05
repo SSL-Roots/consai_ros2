@@ -15,22 +15,22 @@
 #ifndef CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 #define CONSAI_ROBOT_CONTROLLER__FIELD_INFO_PARSER_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
-#include "consai_msgs/action/robot_control.hpp"
-#include "consai_msgs/msg/constraint_line.hpp"
-#include "consai_msgs/msg/constraint_object.hpp"
-#include "consai_msgs/msg/constraint_pose.hpp"
-#include "consai_msgs/msg/constraint_theta.hpp"
-#include "consai_msgs/msg/constraint_xy.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
 #include "consai_msgs/msg/parsed_referee.hpp"
+#include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
-#include "consai_robot_controller/ball_boy_tactics.hpp"
-#include "consai_robot_controller/obstacle_environment.hpp"
+#include "consai_robot_controller/constraint_parser.hpp"
+#include "consai_robot_controller/detection_extractor.hpp"
+#include "consai_robot_controller/obstacle/obstacle_environment.hpp"
+#include "consai_robot_controller/tactic/back_dribble_tactics.hpp"
+#include "consai_robot_controller/tactic/ball_boy_tactics.hpp"
+#include "consai_robot_controller/tactic/dribble_tactics.hpp"
+#include "consai_robot_controller/tactic/shoot_tactics.hpp"
+#include "consai_robot_controller/tactic/tactic_control_ball.hpp"
+#include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
@@ -41,12 +41,7 @@
 namespace consai_robot_controller
 {
 
-using RobotControl = consai_msgs::action::RobotControl;
-using ConstraintLine = consai_msgs::msg::ConstraintLine;
-using ConstraintObject = consai_msgs::msg::ConstraintObject;
-using ConstraintPose = consai_msgs::msg::ConstraintPose;
-using ConstraintTheta = consai_msgs::msg::ConstraintTheta;
-using ConstraintXY = consai_msgs::msg::ConstraintXY;
+using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using GeometryData = robocup_ssl_msgs::msg::GeometryData;
@@ -59,95 +54,41 @@ using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 class FieldInfoParser
 {
 public:
-  FieldInfoParser();
-  void set_invert(const bool & invert);
-  void set_team_is_yellow(const bool & team_is_yellow);
+  FieldInfoParser(
+    const bool team_is_yellow, const bool invert,
+    const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);
-  bool extract_robot(
-    const unsigned int robot_id, const bool team_is_yellow,
-    TrackedRobot & my_robot) const;
-  bool extract_ball(TrackedBall & my_ball) const;
-  bool parse_goal(const std::shared_ptr<const RobotControl::Goal> goal, State & parsed_pose) const;
+  bool is_parsable(const RobotControlMsg::SharedPtr goal) const;
   bool parse_goal(
-    const std::shared_ptr<const RobotControl::Goal> goal,
+    const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot, State & parsed_pose, State & final_goal_pose,
     double & kick_power, double & dribble_power);
-  std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
   State modify_goal_pose_to_avoid_obstacles(
-    const std::shared_ptr<const RobotControl::Goal> goal,
+    const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot,
     const State & goal_pose, const State & final_goal_pose) const;
-  obstacle::ObstacleEnvironment get_obstacle_environment(
-    const std::shared_ptr<const RobotControl::Goal> goal,
-    const TrackedRobot & my_robot) const;
-
-  // controller_componentからアクセスするためpublic変数で定義
-  double param_threshold_looking_ball_distance;
-  double param_threshold_looking_ball_theta;
-  double param_can_dribble_distance;
-  double param_can_shoot_theta;
-  double param_distance_to_look_ball;
-  double param_distance_to_rotate;
 
 private:
-  bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
-  bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
-  bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
-  bool parse_constraint_theta(
-    const ConstraintTheta & theta, const double goal_x,
-    const double goal_y, double & parsed_theta) const;
-  bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
-  bool parse_kick(
-    const State & kick_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass, const bool & kick_setplay,
-    State & parsed_pose, double & parsed_kick_power, double & parsed_dribble_power) const;
-  bool parse_dribble(
-    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const;
-  bool parse_ball_boy_dribble(
-    const State & dribble_target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const;
-  bool control_ball(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const double & dribble_distance, State & parsed_pose, bool & need_kick,
-    bool & need_dribble) const;
-  bool control_ball_at_setplay(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, bool & need_kick, bool & need_dribble) const;
-  bool receive_ball(
-    const TrackedRobot & my_robot, const TrackedBall & ball,
-    State & parsed_pose, double & parsed_dribble_power) const;
-  bool reflect_kick(
-    const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
-    const bool & kick_pass, State & parsed_pose, double & parsed_kick_power,
-    double & parsed_dribble_power) const;
-  bool avoid_obstacles(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const bool & avoid_ball, State & avoidance_pose) const;
-  bool avoid_placement_area(
-    const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
-    const bool avoid_kick_receive_area,
-    const State & designated_position, State & avoidance_pose) const;
-  bool avoid_robots(
-    const TrackedRobot & my_robot, const State & goal_pose,
-    State & avoidance_pose) const;
-  bool avoid_ball_500mm(
-    const State & final_goal_pose,
-    const State & goal_pose, const TrackedBall & ball,
-    State & avoidance_pose) const;
+  bool parse_constraints(
+    const RobotControlMsg::SharedPtr goal, State & parsed_pose) const;
 
-  std::shared_ptr<TrackedFrame> detection_tracked_;
-  std::shared_ptr<GeometryData> geometry_;
+  bool team_is_yellow_ = false;
+  bool invert_ = false;
+  std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
+
   std::shared_ptr<Referee> referee_;
   std::shared_ptr<ParsedReferee> parsed_referee_;
-  bool invert_;
-  bool team_is_yellow_;
-  std::map<std::string, State> named_targets_;
   tactics::BallBoyTactics ball_boy_tactics_;
+  dribble_tactics::DribbleTactics dribble_tactics_;
+  back_dribble_tactics::BackDribbleTactics back_dribble_tactics_;
+  shoot_tactics::ShootTactics shoot_tactics_;
+  std::shared_ptr<parser::ConstraintParser> constraint_parser_;
+  std::shared_ptr<tactic::ControlBall> tactic_control_ball_;
+  std::shared_ptr<tactic::ObstacleAvoidance> tactic_obstacle_avoidance_;
 };
 
 }  // namespace consai_robot_controller

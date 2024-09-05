@@ -22,6 +22,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
+from launch.actions.shutdown_action import Shutdown
 
 
 def generate_launch_description():
@@ -124,6 +125,7 @@ def generate_launch_description():
                     }]),
             ],
             output='screen',
+            on_exit=Shutdown(),
     )
 
     visualizer = Node(

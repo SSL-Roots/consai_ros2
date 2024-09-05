@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import time
-import pytest
 
 
 def init_our_placement(rcst_comm, target_x: float, target_y: float,
@@ -24,13 +23,13 @@ def init_our_placement(rcst_comm, target_x: float, target_y: float,
 
     for i in range(num_of_robots):
         rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5*i, 0.0)
-    time.sleep(3)  # Wait for the robots to be placed.
 
     rcst_comm.observer.ball_placement().set_targets(
         target_x, target_y, for_blue_team=True)
     rcst_comm.set_ball_placement_position(target_x, target_y)
 
     rcst_comm.change_referee_command('STOP', 1.0)
+    time.sleep(1)
     rcst_comm.change_referee_command('BALL_PLACEMENT_BLUE', 0.0)
 
 
@@ -50,12 +49,12 @@ def test_near_position(rcst_comm):
 
 
 def test_far_position(rcst_comm):
-    init_our_placement(rcst_comm, 6.0, 4.5)
+    init_our_placement(rcst_comm, 5.8, 4.3)
     assert wait_for_placement(rcst_comm) is True
 
 
 def test_so_far_position(rcst_comm):
-    init_our_placement(rcst_comm, -6.0, -4.5, ball_x=5.9, ball_y=4.4)
+    init_our_placement(rcst_comm, -5.8, -4.3, ball_x=5.9, ball_y=4.4)
     assert wait_for_placement(rcst_comm) is True
 
 
@@ -68,4 +67,14 @@ def test_so_far_position(rcst_comm):
 
 def test_around_our_defense_area(rcst_comm):
     init_our_placement(rcst_comm, -4.1, 4.4, ball_x=-4.1, ball_y=-4.4)
+    assert wait_for_placement(rcst_comm) is True
+
+
+def test_ball_is_in_our_defense_area(rcst_comm):
+    init_our_placement(rcst_comm, 0.0, 0.0, ball_x=-5.0, ball_y=0.0)
+    assert wait_for_placement(rcst_comm) is True
+
+
+def test_ball_is_in_their_defense_area(rcst_comm):
+    init_our_placement(rcst_comm, 0.0, 0.0, ball_x=5.0, ball_y=0.0)
     assert wait_for_placement(rcst_comm) is True

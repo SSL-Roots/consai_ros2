@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_tools REQUIRED)
 find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -40,6 +41,7 @@ target_compile_definitions(tracker_component
   PRIVATE "CONSAI_VISION_TRACKER_BUILDING_DLL")
 ament_target_dependencies(tracker_component
   consai_msgs
+  consai_tools
   consai_visualizer_msgs
   rclcpp
   rclcpp_components

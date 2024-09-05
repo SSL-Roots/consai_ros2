@@ -11,6 +11,7 @@
 
   <depend>consai_frootspi_msgs</depend>
   <depend>consai_msgs</depend>
+  <depend>consai_tools</depend>
   <depend>consai_visualizer_msgs</depend>
   <depend>launch_ros</depend>
   <depend>rclcpp</depend>

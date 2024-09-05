@@ -19,6 +19,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(consai_frootspi_msgs REQUIRED)
 find_package(consai_msgs REQUIRED)
+find_package(consai_tools REQUIRED)
 find_package(consai_visualizer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -31,18 +32,35 @@ include_directories(include)
 
 # Controller Component
 add_library(controller_component SHARED
-  src/ball_boy_tactics.cpp
   src/controller_component.cpp
   src/field_info_parser.cpp
-  src/geometry_tools.cpp
-  src/control_tools.cpp
   src/visualization_data_handler.cpp
+  src/detection_extractor.cpp
+  src/constraint_parser.cpp
+  src/obstacle/obstacle_observer.cpp
+  src/tactic/back_dribble_tactics.cpp
+  src/tactic/ball_boy_tactics.cpp
+  src/tactic/dribble_tactics.cpp
+  src/tactic/shoot_tactics.cpp
+  src/tactic/tactic_control_ball.cpp
+  src/tactic/tactic_obstacle_avoidance.cpp
+  src/tools/control_tools.cpp
+  src/bangbangtrajectory1d.cpp
+  src/bangbangtrajectory2d.cpp
+  src/bangbangtrajectory3d.cpp
+    src/trajectory_follow_control.cpp
+  src/trajectory_generator.cpp
+  src/trajectory.cpp
+  src/locomotion_controller.cpp
+  src/utils.cpp
+  src/global_for_debug.cpp
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
+  consai_tools
   consai_visualizer_msgs
   rclcpp
   rclcpp_action
@@ -122,17 +140,16 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
   find_package(ament_cmake_gtest)
-  ament_add_gtest(control_tools_test test/control_tools_test.cpp src/control_tools.cpp)
-  ament_add_gtest(field_info_parser_test
-    test/field_info_parser_test.cpp
-    src/ball_boy_tactics.cpp
-    src/geometry_tools.cpp
-    src/field_info_parser.cpp)
-  ament_target_dependencies(field_info_parser_test
-    consai_msgs
-    rclcpp
-    robocup_ssl_msgs
+  ament_add_gtest(control_tools_test
+    test/control_tools_test.cpp
+    src/tools/control_tools.cpp
   )
+
+  ament_add_gtest(obstacle_observer_test
+    test/obstacle_observer_test.cpp
+  )
+  target_link_libraries(obstacle_observer_test controller_component)
+
   ament_add_gtest(obstacle_environment_test test/obstacle_environment_test.cpp)
 endif()
 

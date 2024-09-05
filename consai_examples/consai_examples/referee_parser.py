@@ -20,9 +20,9 @@ import math
 from rclpy import qos
 from rclpy.node import Node
 from consai_msgs.msg import ParsedReferee
+from consai_msgs.msg import State2D
 from consai_visualizer_msgs.msg import Objects
-import referee_visualize_parser as ref_vis_parser
-from robocup_ssl_msgs.msg import Point
+import consai_examples.referee_visualize_parser as ref_vis_parser
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
@@ -101,10 +101,11 @@ class RefereeParser(Node):
         self._command_counter = 0
         self._current_command = 0
         self._prev_command = 0
-        self._placement_pos = Point()
+        self._placement_pos = State2D()
         self._max_allowed_our_bots = 0
         self._num_of_blue_bots: int = 0
         self._num_of_yellow_bots: int = 0
+        self._command_elapsed_time = 0.0
 
         self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
         self._pub_visualizer_objects = self.create_publisher(
@@ -259,6 +260,9 @@ class RefereeParser(Node):
                 self.get_logger().info('free kickから10秒経過したのでinplayに変わります')
                 self._current_command = self._COMMAND_INPLAY
 
+        # コマンドの経過時間を格納
+        self._command_elapsed_time = elapsed_time
+
     def present_stage(self):
         # ステージのテキストを返す
         return self._STAGE_STR_DICT.get(self._referee.stage, 'NONE')
@@ -344,8 +348,11 @@ class RefereeParser(Node):
     def goal_yellow(self):
         return self._current_command == Referee.COMMAND_GOAL_YELLOW
 
-    def placement_position(self):
+    def placement_position(self) -> State2D:
         return self._placement_pos
 
     def max_allowed_our_bots(self):
         return self._max_allowed_our_bots
+
+    def command_elapsed_time(self):
+        return self._command_elapsed_time
