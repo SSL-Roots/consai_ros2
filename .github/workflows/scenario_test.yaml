@@ -9,8 +9,6 @@ on:
 
 permissions:
   pull-requests: write  # For uploading PR comments
-<<<<<<< HEAD
-=======
   # For uploading docker image
   contents: read
   packages: write
@@ -18,7 +16,6 @@ permissions:
 env:
   PYTHON_VERSION: '3.10'
   CONSAI_TAG: humble-light-sha-${{ github.sha }}
->>>>>>> origin/main
 
 jobs:
   create_docker_image:
@@ -122,17 +119,11 @@ jobs:
 
     - name: Download logger
       run: |
-<<<<<<< HEAD
-=======
         cd tests
->>>>>>> origin/main
         curl -L https://github.com/RoboCup-SSL/ssl-go-tools/releases/download/v1.5.2/ssl-log-recorder_v1.5.2_linux_amd64 -o ssl-log-recorder
         chmod +x ssl-log-recorder
 
     - name: Run pytest
-<<<<<<< HEAD
-      run: pytest tests/test_scenario_*.py --vision_port=10020 --logging --log_recorder=./ssl-log-recorder
-=======
       run: |
         source env/bin/activate
         cd tests
@@ -146,7 +137,6 @@ jobs:
         else
           echo "LOG_EXISTS=false" >> $GITHUB_ENV
         fi
->>>>>>> origin/main
 
     - name: Get and print logs
       if: ${{ failure() || success() }}
@@ -158,28 +148,6 @@ jobs:
 
     - name: Upload artifacts
       id: upload-artifact
-<<<<<<< HEAD
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: failure-logs
-        path: '*.log.gz'
-
-    - name: Check if Artifact was uploaded
-      id: check-artifact
-      if: always()
-      run: |
-        if [ -z "${{ steps.upload-artifact.outputs.artifact-url }}" ]; then
-          echo "Artifact URL not found, skipping comment."
-          echo "skip_comment=true" >> $GITHUB_OUTPUT
-        else
-          echo "Artifact URL found."
-          echo "skip_comment=false" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Comment PR with Artifact URL
-      if: steps.check-artifact.outputs.skip_comment != 'true'
-=======
       if: ${{ failure() && env.LOG_EXISTS == 'true' }}
       uses: actions/upload-artifact@v4
       with:
@@ -188,13 +156,8 @@ jobs:
 
     - name: Comment PR with Artifact URL
       if: ${{ failure() && env.LOG_EXISTS == 'true' }}
->>>>>>> origin/main
       uses: peter-evans/create-or-update-comment@v4
       with:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
-<<<<<<< HEAD
-          Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
-=======
           ${{ matrix.env.TEST_NAME }} failed. Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
->>>>>>> origin/main

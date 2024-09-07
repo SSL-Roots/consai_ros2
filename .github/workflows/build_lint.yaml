@@ -16,11 +16,8 @@ on:
       - '**.md'
       - '.docker/**'
       - '.github/workflows/build_docker_image.yaml'
-<<<<<<< HEAD
-=======
       - '.github/workflows/build_docker_image_for_ci.yaml'
       - '.github/workflows/scenario_test.yaml'
->>>>>>> origin/main
   workflow_dispatch:
 
 jobs:
