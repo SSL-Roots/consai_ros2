@@ -55,7 +55,7 @@ void VisualizationDataHandler::publish_vis_detection(const DetectionFrame::Share
   vis_ball.fill_color.name = "orange";
   vis_ball.fill_color.alpha = 0.7;
   vis_ball.line_size = 1;
-  vis_ball.radius = 0.016;
+  vis_ball.radius = 0.008;
   vis_ball.caption = cam_id;
 
   for (const auto & ball : msg->balls) {
@@ -78,6 +78,7 @@ void VisualizationDataHandler::publish_vis_detection(const DetectionFrame::Share
     vis_robot.id = robot.robot_id[0];
     vis_robot.x = robot.x * 0.001;
     vis_robot.y = robot.y * 0.001;
+    vis_robot.radius = 0.04;
     if (robot.orientation.size() > 0) {
       vis_robot.theta = robot.orientation[0];
     }
@@ -94,6 +95,7 @@ void VisualizationDataHandler::publish_vis_detection(const DetectionFrame::Share
     vis_robot.id = robot.robot_id[0];
     vis_robot.x = robot.x * 0.001;
     vis_robot.y = robot.y * 0.001;
+    vis_robot.radius = 0.04;
     if (robot.orientation.size() > 0) {
       vis_robot.theta = robot.orientation[0];
     }
@@ -202,7 +204,7 @@ TrackedFrame::UniquePtr VisualizationDataHandler::publish_vis_tracked(
     vis_ball.line_color.name = "crimson";
     vis_ball.fill_color.alpha = 0.0;
     vis_ball.line_size = 2;
-    vis_ball.radius = 0.4;
+    vis_ball.radius = 0.2;
     vis_ball.caption = "ball is here";
     vis_objects->circles.push_back(vis_ball);
 

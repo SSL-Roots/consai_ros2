@@ -216,7 +216,7 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
         vis_tube.p1.y = parsed_referee.designated_position.y
         vis_tube.p2.x = ball_pos.x
         vis_tube.p2.y = ball_pos.y
-        vis_tube.radius = 0.5
+        vis_tube.radius = 0.2
         vis_tube.line_color.name = COLOR_LINE
         vis_tube.fill_color.name = COLOR_FILL
         vis_tube.fill_color.alpha = FILL_ALPHA
@@ -231,7 +231,7 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
         vis_circle = ShapeCircle()
         vis_circle.center.x = ball_pos.x
         vis_circle.center.y = ball_pos.y
-        vis_circle.radius = 0.5
+        vis_circle.radius = 0.2
         vis_circle.line_color.name = COLOR_LINE
         vis_circle.fill_color.name = COLOR_FILL
         vis_circle.fill_color.alpha = FILL_ALPHA

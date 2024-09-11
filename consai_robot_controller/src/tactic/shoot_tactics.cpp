@@ -23,14 +23,14 @@ namespace shoot_tactics
 namespace tools = geometry_tools;
 namespace chrono = std::chrono;
 
-static constexpr double ROBOT_RADIUS = 0.09;  // ロボットの半径
+static constexpr double ROBOT_RADIUS = 0.005;  // ロボットの半径
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double MAX_SHOOT_SPEED = 5.5;  // m/s
 static constexpr double MIN_SHOOT_SPEED = 2.0;  // m/s
-static constexpr double WAIT_DISTANCE = 0.7;  // meters
+static constexpr double WAIT_DISTANCE = 0.07;  // meters
 static constexpr double ROTATE_RADIUS = ROBOT_RADIUS * 2.0;  // meters
-static constexpr double BALL_RADIUS = 0.0215;  // meters
+static constexpr double BALL_RADIUS = 0.00215;  // meters
 static constexpr auto WAIT = "WAIT";
 static constexpr auto APPROACH = "APPROACH";
 static constexpr auto ROTATE = "ROTATE";
@@ -56,7 +56,7 @@ ShootTactics::ShootTactics()
       // 現在位置からボールに対してまっすぐ進む
 
       // 近づけば良いので、しきい値を大きくする
-      constexpr auto DISTANCE_THRESHOLD = 0.3;  // meters
+      constexpr auto DISTANCE_THRESHOLD = 0.03;  // meters
       const auto THETA_THRESHOLD = tools::to_radians(5.0);
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
@@ -85,7 +85,7 @@ ShootTactics::ShootTactics()
   tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
       // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
       // 目的位置をしっかり狙ったら、次の行動に移行する
-      constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
+      constexpr auto DISTANCE_THRESHOLD = 0.005;  // meters
       const auto THETA_THRESHOLD = tools::to_radians(5.0);
       const auto OMEGA_THRESHOLD = 0.5;  // rad/s
       const auto OMEGA_THRESHOLD_FOR_SETPLAY = 0.01;  // rad/s

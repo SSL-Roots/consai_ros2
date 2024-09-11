@@ -44,13 +44,13 @@ bool ObstacleAvoidance::avoid_obstacles(
   // 自己位置に最も近い障害物付近に回避点を生成し、その回避点を新しい目標位置とする
 
   // 自身から直進方向に何m離れた物体を障害物と判定するか
-  const double OBSTACLE_DETECTION_X = 0.5;
+  const double OBSTACLE_DETECTION_X = 0.05;
   // 自身から直進方向に対して左右何m離れた物体を障害物と判定するか
-  const double OBSTACLE_DETECTION_Y = 0.3;
+  const double OBSTACLE_DETECTION_Y = 0.03;
   // 回避の相対位置
-  const double AVOIDANCE_POS_X_SHORT = 0.1;
-  const double AVOIDANCE_POS_X_LONG = 0.2;
-  const double AVOIDANCE_POS_Y = 0.4;
+  const double AVOIDANCE_POS_X_SHORT = 0.01;
+  const double AVOIDANCE_POS_X_LONG = 0.02;
+  const double AVOIDANCE_POS_Y = 0.04;
 
   // 相対的な回避位置
   double avoidance_pos_x = 0.0;
@@ -183,10 +183,10 @@ bool ObstacleAvoidance::avoid_placement_area(
     avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
 
     // デッドロック回避
-    const double FIELD_HALF_X = 6.0;
-    const double FIELD_HALF_Y = 4.5;
-    const double FIELD_WALL_X = 6.3;
-    const double FIELD_WALL_Y = 4.8;
+    const double FIELD_HALF_X = 0.55;
+    const double FIELD_HALF_Y = 0.3;
+    const double FIELD_WALL_X = 0.6;
+    const double FIELD_WALL_Y = 0.35;
 
     const double FIELD_NEAR_WALL_X = FIELD_HALF_X - 0.0;
     const double FIELD_NEAR_WALL_Y = FIELD_HALF_Y - 0.0;
@@ -264,7 +264,7 @@ bool ObstacleAvoidance::avoid_ball_500mm(
   // ボールから500 mm以上離れるために、回避処理を実行する
   // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
   // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
-  const double DISTANCE_TO_AVOID_THRESHOLD = 0.60;
+  const double DISTANCE_TO_AVOID_THRESHOLD = 0.20;
   const double AVOID_MARGIN = 0.09;
   const double DISTANCE_TO_AVOID = DISTANCE_TO_AVOID_THRESHOLD + AVOID_MARGIN;
 
@@ -359,10 +359,10 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double FIELD_HALF_LENGTH = 6.0;
-  constexpr double DEFENSE_AREA_LENGTH = 1.8;
-  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
-  constexpr double FIELD_MARGIN = 0.3;
+  constexpr double FIELD_HALF_LENGTH = 0.55;
+  constexpr double DEFENSE_AREA_LENGTH = 0.15;
+  constexpr double DEFENSE_AREA_HALF_WIDTH = 0.15;
+  constexpr double FIELD_MARGIN = 0.03;
 
   auto is_in_defense_area = [&](const bool is_ourside, const State & state) {
       if (is_ourside) {

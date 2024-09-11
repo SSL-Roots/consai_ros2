@@ -47,6 +47,7 @@ bool VisualizationDataHandler::append_vis_goal(
   vis_robot.id = goal_pose.robot_id;
   vis_robot.x = goal_pose.pose.x;
   vis_robot.y = goal_pose.pose.y;
+  vis_robot.radius = 0.04;
   vis_robot.theta = goal_pose.pose.theta;
   vis_objects_goal_->robots.push_back(vis_robot);
 
@@ -55,6 +56,7 @@ bool VisualizationDataHandler::append_vis_goal(
   vis_robot.id = final_goal_pose.robot_id;
   vis_robot.x = final_goal_pose.pose.x;
   vis_robot.y = final_goal_pose.pose.y;
+  vis_robot.radius = 0.04;
   vis_robot.theta = final_goal_pose.pose.theta;
   vis_objects_goal_->robots.push_back(vis_robot);
 

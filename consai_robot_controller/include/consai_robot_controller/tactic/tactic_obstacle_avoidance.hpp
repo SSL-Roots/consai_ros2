@@ -62,8 +62,8 @@ public:
 private:
   std::shared_ptr<DetectionExtractor> detection_;
 
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
+  const double field_half_length_ = 0.55;
+  const double field_half_width_ = 0.3;
   const double field_boundary_width_ = 0.3;
 };
 
