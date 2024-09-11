@@ -51,8 +51,8 @@ class FieldWidget(QWidget):
         # 定数
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
-        self._FULL_FIELD_LENGTH = 1.05
-        self._FULL_FIELD_WIDTH = 0.45
+        self._FULL_FIELD_LENGTH = 1.1
+        self._FULL_FIELD_WIDTH = 0.6
 
         # 外部からセットするパラメータ
         self._logger = None
