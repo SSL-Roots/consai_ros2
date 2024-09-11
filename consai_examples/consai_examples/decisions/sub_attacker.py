@@ -32,10 +32,10 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, sub_attacker_id: SubAttackerID):
         super().__init__(robot_operator, field_observer)
         self._sub_attacker_id = sub_attacker_id
-        self._penalty_side_x = 5.1
-        self._penalty_side_y = 3.0
-        self._penalty_front_x = 3.8
-        self._penalty_front_y = 2.8
+        self._penalty_side_x = 0.4
+        self._penalty_side_y = 0.2
+        self._penalty_front_x = 0.3
+        self._penalty_front_y = 0.15
 
     def _offend_operation(self):
         ball_pos = self._field_observer.detection().ball().pos()

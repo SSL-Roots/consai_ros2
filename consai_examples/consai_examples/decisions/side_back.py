@@ -35,15 +35,15 @@ class SideBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, side_id: SideBackID):
         super().__init__(robot_operator, field_observer)
         self._side_id = side_id
-        self._wait_target_x = -5.0
-        self._wait_target_y = 2.5
-        self._distance_from = 0.25
+        self._wait_target_x = -0.4
+        self._wait_target_y = 0.15
+        self._distance_from = 0.1
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
-        self._our_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
+        self._our_penalty_pos_y = 0.3 - 0.08 * (3.0 + self._side_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
-        self._their_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (8.0 + self._side_id.value)
+        self._their_penalty_pos_y = 0.3 - 0.08 * (3.0 + self._side_id.value)
+        self._ball_placement_pos_x = -0.55 + 0.2
+        self._ball_placement_pos_y = 0.12 - 0.08 * (8.0 + self._side_id.value)
         self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
         self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
 

@@ -34,11 +34,11 @@ class SideWingDecision(DecisionBase):
         super().__init__(robot_operator, field_observer)
         self._wing_id = wing_id
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
-        self._our_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._wing_id.value)
+        self._our_penalty_pos_y = 0.3 - 0.08 * (3.0 + self._wing_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
-        self._their_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._wing_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (8.0 + self._wing_id.value)
+        self._their_penalty_pos_y = 0.3 - 0.08 * (3.0 + self._wing_id.value)
+        self._ball_placement_pos_x = -0.55 + 0.2
+        self._ball_placement_pos_y = 0.12 - 0.08 * (8.0 + self._wing_id.value)
 
     def _defend_upper_defense_area(self, robot_id):
         # ディフェンスエリアの外側を守る

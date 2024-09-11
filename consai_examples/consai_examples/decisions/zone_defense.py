@@ -38,11 +38,11 @@ class ZoneDefenseDecision(DecisionBase):
         self._zone_id = zone_id
         self._distance_from = 0.4
         self._our_penalty_pos_x = -self._PENALTY_WAIT_X
-        self._our_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
+        self._our_penalty_pos_y = 0.3 - 0.3 * (6.0 + self._zone_id.value)
         self._their_penalty_pos_x = self._PENALTY_WAIT_X
-        self._their_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (4.0 + self._zone_id.value)
+        self._their_penalty_pos_y = 0.3 - 0.3 * (6.0 + self._zone_id.value)
+        self._ball_placement_pos_x = -0.55 + 0.2
+        self._ball_placement_pos_y = 0.12 - 0.08 * (4.0 + self._zone_id.value)
 
     def _zone_defense_operation(self, robot_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する

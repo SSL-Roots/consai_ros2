@@ -26,9 +26,9 @@ import math
 
 
 class GoaleDecision(DecisionBase):
-    FIELD_LENGTH = 0.9
+    FIELD_LENGTH = 1.1
     GOAL_WIDTH = 0.180
-    ROBOT_RADIUS = 0.08
+    ROBOT_RADIUS = 0.004
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
@@ -36,8 +36,8 @@ class GoaleDecision(DecisionBase):
         self.our_goal_center_pos = Field()._our_goal_dict['center']
         self.our_goal_lower_pos = Field()._our_goal_dict['lower']
         # ゴール前を守る位置のマージン[m]
-        self.margin_x = 0.2
-        self.margin_y = 0.35
+        self.margin_x = 0.05
+        self.margin_y = 0.15
         self._in_flag = 0
 
     def _defend_goal_operation(self):

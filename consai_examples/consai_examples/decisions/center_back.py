@@ -36,12 +36,12 @@ class CenterBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, center_back_id: CenterBackID):
         super().__init__(robot_operator, field_observer)
         self._center_back_id = center_back_id
-        self._our_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
-        self._their_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (1.0 + self._center_back_id.value)
+        self._our_penalty_pos_y = 0.3 - 0.08 * (1.0 + self._center_back_id.value)
+        self._their_penalty_pos_y = 0.3 - 0.08 * (1.0 + self._center_back_id.value)
+        self._ball_placement_pos_x = -0.55 + 0.2
+        self._ball_placement_pos_y = 0.12 - 0.08 * (1.0 + self._center_back_id.value)
         # ペナルティエリアからどれだけ離れるか
-        self._MARGIN_LINE = 0.3
+        self._MARGIN_LINE = 0.05
         # 2台でディフェンスする時のお互いの距離
         self._MARGIN_ROBOT = 0.1
         self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
@@ -70,9 +70,9 @@ class CenterBackDecision(DecisionBase):
 
     def _defend_upper_operation(self, offset: float):
         # ディフェンスエリアの上側を守る
-        p1_x = self._penalty_goalside_upper_back.x + 0.3
+        p1_x = self._penalty_goalside_upper_back.x + 0.05
         p1_y = self._penalty_goalside_upper_back.y + self._MARGIN_LINE
-        p2_x = self._penalty_corner_upper_front.x + 0.3
+        p2_x = self._penalty_corner_upper_front.x + 0.05
         p2_y = self._penalty_corner_upper_front.y + self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
@@ -80,9 +80,9 @@ class CenterBackDecision(DecisionBase):
 
     def _defend_lower_operation(self, offset: float):
         # ディフェンスエリアの下側を守る
-        p1_x = self._penalty_corner_lower_front.x + 0.3
+        p1_x = self._penalty_corner_lower_front.x + 0.05
         p1_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
-        p2_x = self._penalty_goalside_lower_back.x + 0.3
+        p2_x = self._penalty_goalside_lower_back.x + 0.05
         p2_y = self._penalty_goalside_lower_back.y - self._MARGIN_LINE
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
@@ -107,7 +107,7 @@ class CenterBackDecision(DecisionBase):
         # ディンフェスエリアに近づいたら、our robot回避を無効にする
         my_pos = self._field_observer.detection().our_robots()[robot_id].pos()
         our_goal_center = Field.goal_pose('our', 'center')
-        if tool.get_distance(my_pos, our_goal_center) < 3.0:
+        if tool.get_distance(my_pos, our_goal_center) < 0.25:
             operation = operation.disable_avoid_our_robots()
         return operation
 

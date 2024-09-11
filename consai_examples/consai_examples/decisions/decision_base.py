@@ -27,7 +27,7 @@ class DecisionBase(object):
         self._num_of_center_back_roles = 0
         self._num_of_side_back_roles = 0
         self._num_of_zone_roles = 0
-        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
+        self._PENALTY_WAIT_X = 0.35  # ペナルティキック待機位置のX座標
         self.command_elapsed_time = 0.0
 
     def enable_stop_game_velocity(self, robot_id):

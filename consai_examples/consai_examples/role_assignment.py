@@ -64,8 +64,8 @@ class RoleAssignment(Node):
     ACTIVE_ROLE_LIST = [
         RoleName.GOALIE,
         RoleName.ATTACKER,
-        RoleName.SUB_ATTACKER1,
         RoleName.CENTER_BACK1,
+        RoleName.SUB_ATTACKER1,
         RoleName.CENTER_BACK2,
         RoleName.SIDE_BACK1,
         RoleName.SIDE_BACK2,
