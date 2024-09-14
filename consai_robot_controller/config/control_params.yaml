@@ -1,15 +1,15 @@
-hard_limit_acceleration_xy: 3.0 # m/s^2
-soft_limit_acceleration_xy: 2.5 # m/s^2
+hard_limit_acceleration_xy: 0.5 # m/s^2
+soft_limit_acceleration_xy: 0.5 # m/s^2
 hard_limit_acceleration_theta: 5.0 # rad/s^2
 soft_limit_acceleration_theta: 4.0 # rad/s^2
-hard_limit_velocity_xy: 3.0 # m/s^2
-soft_limit_velocity_xy: 2.5 # m/s^2
+hard_limit_velocity_xy: 0.4 # m/s^2
+soft_limit_velocity_xy: 0.4 # m/s^2
 hard_limit_velocity_theta: 5.0 # rad/s^2
 soft_limit_velocity_theta: 4.0 # rad/s^2
 
 control_range_xy: 1.0
 control_a_xy: 1.0
-control_a_theta: 1.0
+control_a_theta: 0.5
 
 p_gain_xy: 1.5
 d_gain_xy: 0.0

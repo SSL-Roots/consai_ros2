@@ -28,17 +28,16 @@ VsslCommandSender::VsslCommandSender(const rclcpp::NodeOptions & options)
 {
   using namespace std::placeholders;
 
-  declare_parameter("udp_address", "192.168.1.32");
-  declare_parameter("udp_port_base", 10000);
+  declare_parameter("udp_address_base", "192.168.2.");
+  declare_parameter("udp_port", 10000);
 
   for (int i = 0; i < 16; i++) {
-    int addr_index = 131 + i;
-    std::string addr = "192.168.1." + std::to_string(addr_index);
+    int addr_index = 20 + i;
+    std::string addr = get_parameter("udp_address_base").as_string() + std::to_string(addr_index);
     senders_.push_back(
       std::make_unique<udp_sender::UDPSender>(
         addr,
-        // get_parameter("udp_address").get_value<std::string>(),
-        get_parameter("udp_port_base").get_value<int>() + i));
+        get_parameter("udp_port").as_int()));
 
     std::function<void(const ConsaiCommand::SharedPtr)> callback =
       std::bind(&VsslCommandSender::callback_consai_command, this, _1, i);
