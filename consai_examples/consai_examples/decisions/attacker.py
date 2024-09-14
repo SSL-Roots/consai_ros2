@@ -39,7 +39,10 @@ class AttackerDecision(DecisionBase):
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.enable_avoid_ball()
-        move_to_ball = move_to_ball.enable_avoid_pushing_robots()
+        # move_to_ball = move_to_ball.able_avoid_pushing_robots()
+        move_to_ball = move_to_ball.disable_avoid_defense_area()
+        move_to_ball = move_to_ball.disable_avoid_our_robots()
+        move_to_ball = move_to_ball.disable_avoid_their_robots()
 
         # ボールを追いかける
         chase_ball = move_to_ball.offset_pose_x(-0.2)
@@ -61,9 +64,12 @@ class AttackerDecision(DecisionBase):
         search_offset = (math.tanh((ball_pos.x - center_offset) * 2) + 1) / 2
 
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.15, TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.04, TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
+        move_to_ball = move_to_ball.disable_avoid_defense_area()
+        move_to_ball = move_to_ball.disable_avoid_our_robots()
+        move_to_ball = move_to_ball.disable_avoid_their_robots()
 
         if self._inpay_flag == 0:
             self.shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()

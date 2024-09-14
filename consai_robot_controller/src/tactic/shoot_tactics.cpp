@@ -23,12 +23,12 @@ namespace shoot_tactics
 namespace tools = geometry_tools;
 namespace chrono = std::chrono;
 
-static constexpr double ROBOT_RADIUS = 0.005;  // ロボットの半径
+static constexpr double ROBOT_RADIUS = 0.04;  // ロボットの半径
 static constexpr double DRIBBLE_CATCH = 1.0;
 static constexpr double DRIBBLE_RELEASE = 0.0;
 static constexpr double MAX_SHOOT_SPEED = 5.5;  // m/s
 static constexpr double MIN_SHOOT_SPEED = 2.0;  // m/s
-static constexpr double WAIT_DISTANCE = 0.07;  // meters
+static constexpr double WAIT_DISTANCE = 0.2;  // meters
 static constexpr double ROTATE_RADIUS = ROBOT_RADIUS * 2.0;  // meters
 static constexpr double BALL_RADIUS = 0.00215;  // meters
 static constexpr auto WAIT = "WAIT";
@@ -57,7 +57,7 @@ ShootTactics::ShootTactics()
 
       // 近づけば良いので、しきい値を大きくする
       constexpr auto DISTANCE_THRESHOLD = 0.03;  // meters
-      const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      const auto THETA_THRESHOLD = tools::to_radians(30.0);
 
       const auto robot_pose = tools::pose_state(data_set.get_my_robot());
       const auto ball_pose = tools::pose_state(data_set.get_ball());
@@ -85,8 +85,8 @@ ShootTactics::ShootTactics()
   tactic_functions_[ROTATE] = [this](TacticDataSet & data_set) -> TacticName {
       // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
       // 目的位置をしっかり狙ったら、次の行動に移行する
-      constexpr auto DISTANCE_THRESHOLD = 0.005;  // meters
-      const auto THETA_THRESHOLD = tools::to_radians(5.0);
+      constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
+      const auto THETA_THRESHOLD = tools::to_radians(20.0);
       const auto OMEGA_THRESHOLD = 0.5;  // rad/s
       const auto OMEGA_THRESHOLD_FOR_SETPLAY = 0.01;  // rad/s
 
@@ -173,7 +173,7 @@ ShootTactics::ShootTactics()
 
       // 目標位置をボールの奥に設定し、前進する
       const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, shoot_target_));
-      const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS, 0.0, 0.0);
+      const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS * 2, 0.0, 0.0);
 
       // ロボットから見てボールが正面にない場合は
       // SHOOTを抜けて、APPROACHに戻る

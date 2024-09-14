@@ -115,13 +115,17 @@ class CenterBackDecision(DecisionBase):
         offset = self._get_offset()
         operation = self._defend_front_operation(offset)
         operation = operation.enable_avoid_ball()
-        operation = operation.enable_avoid_pushing_robots()
+        # operation = operation.enable_avoid_pushing_robots()
+        operation = operation.disable_avoid_our_robots()
+        operation = operation.disable_avoid_their_robots()
         operation = self._modify_our_robots_avoidance(robot_id, operation)
         self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
         operation = self._defend_defense_area_operation(robot_id)
         operation = self._modify_our_robots_avoidance(robot_id, operation)
+        operation = operation.disable_avoid_our_robots()
+        operation = operation.disable_avoid_their_robots()
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):

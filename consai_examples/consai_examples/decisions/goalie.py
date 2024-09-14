@@ -126,8 +126,10 @@ class GoaleDecision(DecisionBase):
     def stop(self, robot_id):
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_ball()
-        defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
+        # defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
         defend_our_goal = defend_our_goal.disable_avoid_defense_area()
+        defend_our_goal = defend_our_goal.disable_avoid_our_robots()
+        defend_our_goal = defend_our_goal.disable_avoid_their_robots()
         self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
