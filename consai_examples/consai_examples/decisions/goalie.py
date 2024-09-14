@@ -26,9 +26,9 @@ import math
 
 
 class GoaleDecision(DecisionBase):
-    FIELD_LENGTH = 1.1
+    FIELD_LENGTH = 1.08
     GOAL_WIDTH = 0.180
-    ROBOT_RADIUS = 0.004
+    ROBOT_RADIUS = 0.04
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)

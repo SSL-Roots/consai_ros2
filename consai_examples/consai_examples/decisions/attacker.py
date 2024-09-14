@@ -315,9 +315,9 @@ def gen_setplay_shoot_function():
         time_out = 4.0
 
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
-        search_offset = 0.5
+        search_offset = 0.05
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.3, TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), 0.15, TargetTheta.look_ball())
 
         # シュート可能なゴールのリストを取得
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()

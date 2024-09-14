@@ -25,7 +25,7 @@ from rclpy.node import Node
 # consai_robot_controllerに指令を送るノード
 class RobotOperator(Node):
 
-    STOP_GAME_VELOCITY = 0.8  # m/s
+    STOP_GAME_VELOCITY = 0.01  # m/s
 
     def __init__(self, target_is_yellow=False):
         super().__init__('operator')

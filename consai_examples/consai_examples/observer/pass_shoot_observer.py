@@ -23,8 +23,8 @@ class PassShootObserver:
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
 
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
+        self._field_half_length = 1.08 / 2
+        self._field_half_width = 0.58 / 2
         self._goal_pos_list = [
             State2D(x=self._field_half_length, y=0.0),
             State2D(x=self._field_half_length, y=0.45),
@@ -68,7 +68,7 @@ class PassShootObserver:
         # TODO(Roots): パスできるリストの探索と、シュートできるリストの探索は別関数に分けたほうが良い
 
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
-        robot_r = 0.4
+        robot_r = 0.01
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
 
