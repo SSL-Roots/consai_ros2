@@ -86,7 +86,7 @@ ShootTactics::ShootTactics()
       // ボールを中心にロボットが回転移動し、ボールと目標値の直線上に移動する
       // 目的位置をしっかり狙ったら、次の行動に移行する
       constexpr auto DISTANCE_THRESHOLD = 0.05;  // meters
-      const auto THETA_THRESHOLD = tools::to_radians(20.0);
+      const auto THETA_THRESHOLD = tools::to_radians(10.0);
       const auto OMEGA_THRESHOLD = 0.5;  // rad/s
       const auto OMEGA_THRESHOLD_FOR_SETPLAY = 0.01;  // rad/s
 
@@ -173,7 +173,7 @@ ShootTactics::ShootTactics()
 
       // 目標位置をボールの奥に設定し、前進する
       const tools::Trans trans_BtoT(ball_pose, tools::calc_angle(ball_pose, shoot_target_));
-      const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS * 2, 0.0, 0.0);
+      const auto new_pose = trans_BtoT.inverted_transform(BALL_RADIUS * 150, 0.0, 0.0);
 
       // ロボットから見てボールが正面にない場合は
       // SHOOTを抜けて、APPROACHに戻る
