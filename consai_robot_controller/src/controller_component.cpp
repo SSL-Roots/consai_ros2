@@ -506,7 +506,7 @@ bool Controller::publish_stop_command(const unsigned int robot_id)
   auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
   stop_command_msg->team_is_yellow = team_is_yellow_;
-  pub_command_[robot_id]->publish(std::move(stop_command_msg));
+  // pub_command_[robot_id]->publish(std::move(stop_command_msg));
 
   return true;
 }
