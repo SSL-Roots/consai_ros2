@@ -36,9 +36,6 @@ using Vector3 = robocup_ssl_msgs::msg::Vector3;
 // 追跡対象が消失してから5秒かけてvisibilityが1.0から0.0になる
 static const double VISIBILITY_CONTROL_VALUE = 0.005;
 
-static constexpr auto FIELD_MAX_X = 6.5;
-static constexpr auto FIELD_MAX_Y = 5.0;
-
 BallTracker::BallTracker(const double dt)
 {
   // visibilityはoptionalなので、ここでデフォルト値を設定しておく
@@ -199,8 +196,14 @@ TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
   auto expected_value = filter_->PostGet()->ExpectedValueGet();
   // prev_tracked_ball_.pos.x = expected_value(1);
   // prev_tracked_ball_.pos.y = expected_value(2);
-  prev_tracked_ball_.pos.x = std::clamp(expected_value(1), -FIELD_MAX_X, FIELD_MAX_X);
-  prev_tracked_ball_.pos.y = std::clamp(expected_value(2), -FIELD_MAX_Y, FIELD_MAX_Y);
+  prev_tracked_ball_.pos.x = std::clamp(
+    expected_value(1),
+    -field_half_length_with_margin_,
+    field_half_length_with_margin_);
+  prev_tracked_ball_.pos.y = std::clamp(
+    expected_value(2),
+    -field_half_width_with_margin_,
+    field_half_width_with_margin_);
   prev_tracked_ball_.vel[0].x = expected_value(3);
   prev_tracked_ball_.vel[0].y = expected_value(4);
 
@@ -218,6 +221,12 @@ TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
   }
 
   return prev_tracked_ball_;
+}
+
+void BallTracker::set_full_field_size(const double length, const double width)
+{
+  field_half_length_with_margin_ = length * 0.5;
+  field_half_width_with_margin_ = width * 0.5;
 }
 
 void BallTracker::reset_prior()

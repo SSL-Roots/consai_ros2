@@ -45,6 +45,7 @@ public:
   void push_back_observation(const DetectionBall & ball);
   TrackedBall update(const bool use_uncertain_sys_model);
   TrackedBall prev_estimation(void) const {return prev_tracked_ball_;}
+  void set_full_field_size(const double length, const double width);
 
 private:
   void reset_prior();
@@ -63,6 +64,9 @@ private:
   std::shared_ptr<ExtendedKalmanFilter> filter_;
 
   int outlier_count_ = 0;
+
+  double field_half_length_with_margin_ = 12.0 * 0.5 + 0.3;
+  double field_half_width_with_margin_ = 9.0 * 0.5 + 0.3;
 };
 
 }  // namespace consai_vision_tracker
