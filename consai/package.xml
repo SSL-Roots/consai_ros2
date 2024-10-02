@@ -15,7 +15,6 @@
 
   <exec_depend>consai_examples</exec_depend>
   <exec_depend>consai_msgs</exec_depend>
-  <exec_depend>consai_observer</exec_depend>
   <exec_depend>consai_robot_controller</exec_depend>
   <exec_depend>consai_vision_tracker</exec_depend>
   <exec_depend>consai_visualizer</exec_depend>
