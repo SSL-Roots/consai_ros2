@@ -74,9 +74,6 @@ CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を
   - CON-SAIの各種パッケージを使ったサンプル集です
 - consai_msgs
   - CON-SAIで使用するデータ型を定義するパッケージです
-- consai_observer
-  - フィールド情報を解析するパッケージです
-  - 機能は未実装です
 - consai_robot_control_utils
   - ロボットの走行制御をテストするためのパッケージです
 - consai_robot_controller
