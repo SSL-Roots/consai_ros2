@@ -51,14 +51,17 @@ class FieldWidget(QWidget):
         # 定数
         self._MOUSE_WHEEL_ZOOM_RATE = 0.2  # マウスホイール操作による拡大縮小操作量
         self._LIMIT_SCALE = 0.2  # 縮小率の限界値
-        self._FULL_FIELD_LENGTH = 12.6
-        self._FULL_FIELD_WIDTH = 9.6
 
         # 外部からセットするパラメータ
         self._logger = None
         self._invert = False
         self._visualizer_objects: Dict[int, Dict[tuple[str, str], VisObjects]] = {}
         self._active_layers: list[tuple[str, str]] = []
+
+        self._field_full_length = 12.6
+        self._field_full_width = 9.6
+        self._field_l_per_w = self._field_full_length / self._field_full_width
+        self._field_w_per_l = 1.0 / self._field_l_per_w
 
         # 内部で変更するパラメータ
         self._draw_area_scale = 1.0  # 描画領域の拡大縮小率
@@ -85,6 +88,12 @@ class FieldWidget(QWidget):
 
     def set_active_layers(self, layers: list[tuple[str, str]]):
         self._active_layers = layers
+
+    def set_full_field_size(self, length: float, width: float):
+        self._field_full_length = length
+        self._field_full_width = width
+        self._field_l_per_w = self._field_full_length / self._field_full_width
+        self._field_w_per_l = 1.0 / self._field_l_per_w
 
     def get_mouse_double_click_updated(self) -> bool:
         return self._mouse_double_click_updated
@@ -208,32 +217,26 @@ class FieldWidget(QWidget):
         widget_height = float(self.height())
         widget_w_per_h = widget_width / widget_height
 
-        # フィールドの縦横比を算出
-        field_full_width = self._FULL_FIELD_LENGTH
-        field_full_height = self._FULL_FIELD_WIDTH
-        field_w_per_h = field_full_width / field_full_height
-        field_h_per_w = 1.0 / field_w_per_h
-
         # 描画領域のサイズを決める
         # Widgetのサイズによって描画領域を回転するか判定する
-        if widget_w_per_h >= field_w_per_h:
+        if widget_w_per_h >= self._field_l_per_w:
             # Widgetが横長のとき
-            self._draw_area_size = QSizeF(widget_height * field_w_per_h, widget_height)
+            self._draw_area_size = QSizeF(widget_height * self._field_l_per_w, widget_height)
             self._do_rotate_draw_area = False
 
-        elif widget_w_per_h <= field_h_per_w:
+        elif widget_w_per_h <= self._field_w_per_l:
             # Widgetが縦長のとき
-            self._draw_area_size = QSizeF(widget_width * field_w_per_h, widget_width)
+            self._draw_area_size = QSizeF(widget_width * self._field_l_per_w, widget_width)
             self._do_rotate_draw_area = True
 
         else:
             # 描画回転にヒステリシスをもたせる
             if self._do_rotate_draw_area is True:
-                self._draw_area_size = QSizeF(widget_height, widget_height * field_h_per_w)
+                self._draw_area_size = QSizeF(widget_height, widget_height * self._field_w_per_l)
             else:
-                self._draw_area_size = QSizeF(widget_width, widget_width * field_h_per_w)
+                self._draw_area_size = QSizeF(widget_width, widget_width * self._field_w_per_l)
 
-        self._scale_field_to_draw = self._draw_area_size.width() / field_full_width
+        self._scale_field_to_draw = self._draw_area_size.width() / self._field_full_length
 
     def _draw_text(self, painter: QPainter, pos: QPointF, text: str, font_size: int = 10):
         # 回転を考慮したテキスト描画関数
