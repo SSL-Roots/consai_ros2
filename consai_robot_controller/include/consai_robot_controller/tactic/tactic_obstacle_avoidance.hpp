@@ -59,12 +59,18 @@ public:
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
 
+  void set_field_size(
+    const double & length, const double & width, const double & boundary_width,
+    const double & defense_area_width, const double & defense_area_depth);
+
 private:
   std::shared_ptr<DetectionExtractor> detection_;
 
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
-  const double field_boundary_width_ = 0.3;
+  double field_half_length_ = 6.0;
+  double field_half_width_ = 4.5;
+  double field_boundary_width_ = 0.3;
+  double field_half_defense_area_width_ = 1.8;
+  double field_defense_area_depth_ = 1.8;
 };
 
 }  // namespace tactic

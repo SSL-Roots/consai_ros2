@@ -183,20 +183,18 @@ bool ObstacleAvoidance::avoid_placement_area(
     avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
 
     // デッドロック回避
-    const double FIELD_HALF_X = 6.0;
-    const double FIELD_HALF_Y = 4.5;
-    const double FIELD_WALL_X = 6.3;
-    const double FIELD_WALL_Y = 4.8;
+    const double FIELD_HALF_X = field_half_length_;
+    const double FIELD_HALF_Y = field_half_width_;
+    const double FIELD_WALL_X = FIELD_HALF_X + field_boundary_width_;
+    const double FIELD_WALL_Y = FIELD_HALF_Y + field_boundary_width_;
 
-    const double FIELD_NEAR_WALL_X = FIELD_HALF_X - 0.0;
-    const double FIELD_NEAR_WALL_Y = FIELD_HALF_Y - 0.0;
     auto avoid_x = std::copysign(AVOIDANCE_POS_X + 0.7, avoidance_pose.x);
     avoid_y = std::copysign(AVOIDANCE_POS_Y + 0.7, avoidance_pose.y);
 
     // フィールド外の場合，壁沿いに回避位置を生成
-    if (FIELD_NEAR_WALL_Y < std::fabs(avoidance_pose.y)) {
+    if (FIELD_HALF_Y < std::fabs(avoidance_pose.y)) {
       avoidance_pose.x = my_robot_pose.x - avoid_x;
-    } else if (FIELD_NEAR_WALL_X < std::fabs(avoidance_pose.x)) {
+    } else if (FIELD_HALF_X < std::fabs(avoidance_pose.x)) {
       avoidance_pose.y = my_robot_pose.y - avoid_y;
     }
 
@@ -359,18 +357,14 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double FIELD_HALF_LENGTH = 6.0;
-  constexpr double DEFENSE_AREA_LENGTH = 1.8;
-  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
-  constexpr double FIELD_MARGIN = 0.3;
 
   auto is_in_defense_area = [&](const bool is_ourside, const State & state) {
       if (is_ourside) {
-        return state.x < -FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH &&
-               std::fabs(state.y) < DEFENSE_AREA_HALF_WIDTH;
+        return state.x < -field_half_length_ + field_defense_area_depth_ &&
+               std::fabs(state.y) < field_half_defense_area_width_;
       } else {
-        return state.x > FIELD_HALF_LENGTH - DEFENSE_AREA_LENGTH &&
-               std::fabs(state.y) < DEFENSE_AREA_HALF_WIDTH;
+        return state.x > field_half_length_ - field_defense_area_depth_ &&
+               std::fabs(state.y) < field_half_defense_area_width_;
       }
     };
 
@@ -378,17 +372,17 @@ bool ObstacleAvoidance::avoid_defense_area(
     -> std::pair<bool, State> {
       const auto sign = is_ourside ? 1.0 : -1.0;
       const auto TOP_OUTSIDE = tools::gen_state(
-        -(FIELD_HALF_LENGTH + FIELD_MARGIN) * sign,
-        DEFENSE_AREA_HALF_WIDTH + ROBOT_RADIUS);
+        -(field_half_length_ + field_boundary_width_) * sign,
+        field_half_defense_area_width_ + ROBOT_RADIUS);
       const auto TOP_INSIDE = tools::gen_state(
-        (-FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH + ROBOT_RADIUS) * sign,
-        DEFENSE_AREA_HALF_WIDTH + ROBOT_RADIUS);
+        (-field_half_length_ + field_defense_area_depth_ + ROBOT_RADIUS) * sign,
+        field_half_defense_area_width_ + ROBOT_RADIUS);
       const auto BOTTOM_OUTSIDE = tools::gen_state(
-        -(FIELD_HALF_LENGTH + FIELD_MARGIN) * sign,
-        -DEFENSE_AREA_HALF_WIDTH - ROBOT_RADIUS);
+        -(field_half_length_ + field_boundary_width_) * sign,
+        -field_half_defense_area_width_ - ROBOT_RADIUS);
       const auto BOTTOM_INSIDE = tools::gen_state(
-        (-FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH + ROBOT_RADIUS) * sign,
-        -DEFENSE_AREA_HALF_WIDTH - ROBOT_RADIUS);
+        (-field_half_length_ + field_defense_area_depth_ + ROBOT_RADIUS) * sign,
+        -field_half_defense_area_width_ - ROBOT_RADIUS);
 
       const auto is_intersect_top = tools::is_lines_intersect(
         robot_pose, goal, TOP_OUTSIDE, TOP_INSIDE);
@@ -400,9 +394,9 @@ bool ObstacleAvoidance::avoid_defense_area(
         is_intersect_inside;
 
       constexpr double AVOID_DISTANCE = ROBOT_RADIUS * 2.0;
-      const auto AVOID_POS_X = (-FIELD_HALF_LENGTH + DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE) *
+      const auto AVOID_POS_X = (-field_half_length_ + field_half_defense_area_width_ + AVOID_DISTANCE) *
         sign;
-      constexpr auto AVOID_POS_Y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
+      const auto AVOID_POS_Y = field_half_defense_area_width_ + AVOID_DISTANCE;
 
       const auto goal_is_in_defense = is_in_defense_area(is_ourside, goal);
       const auto robot_is_in_defense = is_in_defense_area(is_ourside, robot_pose);
@@ -438,7 +432,7 @@ bool ObstacleAvoidance::avoid_defense_area(
         // 交差はしてないが、目標位置またはロボットがディフェンスエリア内にある場合
 
         // ディフェンスエリア内で、ロボットがTOP or BOTTOM側に近いとき
-        if (FIELD_HALF_LENGTH - std::fabs(robot_pose.x) < std::fabs(robot_pose.y)) {
+        if (field_half_length_ - std::fabs(robot_pose.x) < std::fabs(robot_pose.y)) {
           target_pose.y = std::copysign(AVOID_POS_Y, robot_pose.y);
         } else {
           target_pose.x = AVOID_POS_X;
@@ -457,6 +451,17 @@ bool ObstacleAvoidance::avoid_defense_area(
   }
 
   return true;
+}
+
+void ObstacleAvoidance::set_field_size(
+    const double & length, const double & width, const double & boundary_width,
+    const double & defense_area_width, const double & defense_area_depth)
+{
+  field_half_length_ = length / 2;
+  field_half_width_ = width / 2;
+  field_boundary_width_ = boundary_width;
+  field_half_defense_area_width_ = defense_area_width / 2;
+  field_defense_area_depth_ = defense_area_depth;
 }
 
 }  // namespace tactic

@@ -247,5 +247,11 @@ bool ConstraintParser::parse_constraint_line(
   return true;
 }
 
+void ConstraintParser::set_field_size(const double length, const double width)
+{
+  field_half_length_ = length / 2.0;
+  field_half_width_ = width / 2.0;
+}
+
 
 }  // namespace parser

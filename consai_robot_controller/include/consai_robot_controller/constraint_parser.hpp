@@ -59,14 +59,15 @@ public:
     const double goal_y, double & parsed_theta) const;
   bool parse_constraint_pose(const ConstraintPose & pose, State & parsed_pose) const;
   bool parse_constraint_line(const ConstraintLine & line, State & parsed_pose) const;
+  void set_field_size(const double length, const double width);
 
 private:
   std::shared_ptr<DetectionExtractor> detection_;
   std::map<std::string, State> named_targets_;
 
   bool team_is_yellow_;
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
+  double field_half_length_ = 6.0;
+  double field_half_width_ = 4.5;
 };
 
 }  // namespace parser
