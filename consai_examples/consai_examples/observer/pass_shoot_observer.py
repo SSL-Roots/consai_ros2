@@ -22,13 +22,19 @@ class PassShootObserver:
     def __init__(self, goalie_id):
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
+        self._present_shoot_pos_list: list[State2D] = []
 
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
+        self._goalie_id = goalie_id
+
+        self.set_field_size()
+
+    def set_field_size(self, half_length=6.0, half_width=4.5, half_goal_width=0.45) -> None:
+        self._field_half_length = half_length
+        self._field_half_width = half_width
         self._goal_pos_list = [
             State2D(x=self._field_half_length, y=0.0),
-            State2D(x=self._field_half_length, y=0.45),
-            State2D(x=self._field_half_length, y=-0.45)
+            State2D(x=self._field_half_length, y=half_goal_width * 0.5),
+            State2D(x=self._field_half_length, y=-half_goal_width * 0.5)
         ]
         self._their_top_corner = State2D(
             x=self._field_half_length, y=self._field_half_width)
@@ -43,10 +49,6 @@ class PassShootObserver:
             self._their_bottom_corner,
             self._our_top_corner,
             self._our_bottom_corner]
-
-        self._present_shoot_pos_list: list[State2D] = []
-
-        self._goalie_id = goalie_id
 
     def update(self, ball: PosVel,
                our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:

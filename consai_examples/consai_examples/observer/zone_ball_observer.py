@@ -27,11 +27,16 @@ class ZoneBallObserver():
     BALL_ZONE_RIGHT_BOTTOM = 8
 
     def __init__(self):
-        self._field_half_width = 4.5  # meters
-        self._field_quarter_width = self._field_half_width * 0.5
-
         self._ball_pos = State2D()
         self._ball_zone_state = self.BALL_ZONE_NONE
+
+        self.set_field_size()
+
+    def set_field_size(self, field_half_width=4.5) -> None:
+        self._field_half_width = field_half_width
+        self._field_quarter_width = self._field_half_width * 0.5
+
+        self._ZONE_THRESHOLD = 0.2 * self._field_half_width / 4.5
 
     def update(self, ball_pos: State2D, ball_is_in_our_side: bool) -> None:
         self._ball_pos = ball_pos
@@ -67,23 +72,22 @@ class ZoneBallObserver():
             self.BALL_ZONE_LEFT_MID_TOP, self.BALL_ZONE_RIGHT_MID_TOP]
 
     def _update_ball_zone_state(self, ball_is_in_our_side: bool) -> None:
-        ZONE_THRESHOLD = 0.2  # meters
         # ボールがどのZONEに存在するのかを判定する
         threshold_x = 0.0
         if ball_is_in_our_side:
-            threshold_x += ZONE_THRESHOLD
+            threshold_x += self._ZONE_THRESHOLD
 
         threshold_y_top = self._field_quarter_width
         if self.ball_is_in_right_top() or self.ball_is_in_left_top():
-            threshold_y_top -= ZONE_THRESHOLD
+            threshold_y_top -= self._ZONE_THRESHOLD
 
         threshold_y_mid_top = 0.0
         if self.ball_is_in_right_mid_top() or self.ball_is_in_left_mid_top():
-            threshold_y_mid_top -= ZONE_THRESHOLD
+            threshold_y_mid_top -= self._ZONE_THRESHOLD
 
         threshold_y_mid_bottom = -self._field_quarter_width
         if self.ball_is_in_right_mid_bottom() or self.ball_is_in_left_mid_bottom():
-            threshold_y_mid_bottom -= ZONE_THRESHOLD
+            threshold_y_mid_bottom -= self._ZONE_THRESHOLD
 
         if self._ball_pos.x > threshold_x:
             if self._ball_pos.y > threshold_y_top:

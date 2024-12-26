@@ -35,6 +35,9 @@ from consai_msgs.msg import GoalPoses
 from consai_msgs.msg import State2D
 from consai_visualizer_msgs.msg import Objects
 
+import json
+from std_msgs.msg import String
+
 
 class FieldObserver(Node):
 
@@ -46,6 +49,10 @@ class FieldObserver(Node):
         self._field_width = 9.0  # meters
         self._field_half_width = self._field_width * 0.5
 
+        # 座標の正規化に使用する
+        self._div_a_field_length = 12.0
+        self._div_a_field_width = 9.0
+
         self._sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
 
@@ -54,6 +61,11 @@ class FieldObserver(Node):
 
         self._sub_destinations = self.create_subscription(
             GoalPoses, 'destinations', self._destinations_callback, 10)
+
+        self._sub_param_rule = self.create_subscription(
+            String, 'consai_param/rule', self._param_rule_callback, 10)
+        self._sub_param_strategy = self.create_subscription(
+            String, 'consai_param/strategy', self._param_strategy_callback, 10)
 
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
@@ -70,6 +82,27 @@ class FieldObserver(Node):
         self._destinations = GoalPoses()
 
         self._num_of_zone_roles = 0
+
+    def _param_rule_callback(self, msg):
+        param_dict = json.loads(msg.data)
+        self._field_length = param_dict['field']['length']
+        self._field_half_length = self._field_length * 0.5
+        self._field_width = param_dict['field']['width']
+        self._field_half_width = self._field_width * 0.5
+        self._field_goal_width = param_dict['field']['goal_width']
+        self._field_half_goal_width = self._field_goal_width * 0.5
+
+        self._pass_shoot_observer.set_field_size(
+            self._field_half_length,
+            self._field_half_width,
+            self._field_half_goal_width)
+
+        self._zone_ball_observer.set_field_size(self._field_half_width)
+
+    def _param_strategy_callback(self, msg):
+        param_dict = json.loads(msg.data)
+        self._div_a_field_length = param_dict['div_a_field']['length']
+        self._div_a_field_width = param_dict['div_a_field']['width']
 
     def detection(self) -> DetectionWrapper:
         return self._detection_wrapper
@@ -121,6 +154,14 @@ class FieldObserver(Node):
 
     def field_margin_to_wall(self) -> float:
         return 0.3
+
+    def on_div_a_x(self, x: float) -> float:
+        # X座標を正規化する
+        return x * self._field_length / self._div_a_field_length
+
+    def on_div_a_y(self, y: float) -> float:
+        # Y座標を正規化する
+        return y * self._field_width / self._div_a_field_width
 
     def _detection_tracked_callback(self, msg):
         self._detection_wrapper.update(msg)

@@ -25,7 +25,7 @@ import yaml
 
 
 class ParameterPublisher(Node):
-    def __init__(self, config_rule:str):
+    def __init__(self, config_rule:str, config_strategy:str):
         super().__init__('parameter_publisher')
 
         self._logger = self.get_logger()
@@ -46,6 +46,7 @@ class ParameterPublisher(Node):
             self._publish_parameters(key)
 
         initialize_param(config_rule, 'rule')
+        initialize_param(config_strategy, 'strategy')
 
         self.add_on_set_parameters_callback(self.on_parameter_set)
 
@@ -102,11 +103,14 @@ class ParameterPublisher(Node):
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--config_rule', type=str)
+    arg_parser.add_argument('--config_strategy', type=str)
 
     args, other_args = arg_parser.parse_known_args()
 
     rclpy.init(args=other_args)
 
-    node = ParameterPublisher(args.config_rule)
+    node = ParameterPublisher(
+        args.config_rule,
+        args.config_strategy)
     rclpy.spin(node)
     rclpy.shutdown()
