@@ -1,0 +1,9 @@
+/**:
+  ros__parameters:
+    # 2. Playing Environment
+    # field:
+    # 3. Robots
+    robots:
+      max_num_in_field: 11
+      num_of_ids: 16
+      
