@@ -80,7 +80,7 @@ def generate_launch_description():
     controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             get_package_share_directory('consai_robot_controller'),
-            '/launch/test.launch.py']),
+            '/launch/controller.launch.py']),
         launch_arguments={'invert': LaunchConfiguration('invert'),
                           'yellow': LaunchConfiguration('yellow'),
                           'vision_addr': LaunchConfiguration('vision_addr'),
