@@ -24,10 +24,15 @@ class DecisionBase(object):
     def __init__(self, robot_operator, field_observer: FieldObserver):
         self._operator = robot_operator
         self._field_observer = field_observer
+
+        self._div_a_x = self._field_observer.on_div_a_x
+        self._div_a_y = self._field_observer.on_div_a_y
+        self._div_a_dia = self._field_observer.on_div_a_robot_diameter
+
         self._num_of_center_back_roles = 0
         self._num_of_side_back_roles = 0
         self._num_of_zone_roles = 0
-        self._PENALTY_WAIT_X = 4.1  # ペナルティキック待機位置のX座標
+        self._PENALTY_WAIT_X = self._div_a_x(4.1)  # ペナルティキック待機位置のX座標
         self.command_elapsed_time = 0.0
 
     def enable_stop_game_velocity(self, robot_id):

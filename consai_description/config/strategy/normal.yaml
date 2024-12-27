@@ -1,6 +1,7 @@
 /**:
   ros__parameters:
-    div_a_field:  # division_aのフィールドサイズを基準に、座標を正規化する
+    div_a_field:  # division_aのフィールドルールを基準に、座標を正規化する
       length: 12.0
       width: 9.0
+      robot_diameter: 0.18
       

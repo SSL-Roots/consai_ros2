@@ -10,4 +10,6 @@
     robots:
       max_num_in_field: 11
       num_of_ids: 16
+      max_diameter: 0.18
+      max_height: 0.15
       

@@ -36,16 +36,13 @@ class AttackerDecision(DecisionBase):
         self.shoot_pos_list = []
         self.receivers_id_list = []
 
-        self._div_a_x = self._field_observer.on_div_a_x
-        self._div_a_y = self._field_observer.on_div_a_y
-
     def stop(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.enable_avoid_ball()
         move_to_ball = move_to_ball.enable_avoid_pushing_robots()
 
         # ボールを追いかける
-        chase_ball = move_to_ball.offset_pose_x(-0.6)
+        chase_ball = move_to_ball.offset_pose_x(self._div_a_x(-0.6))
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):

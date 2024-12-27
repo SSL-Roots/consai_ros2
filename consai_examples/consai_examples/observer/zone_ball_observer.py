@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_msgs.msg import State2D
+from consai_examples.observer.field_normalizer import FieldNormalizer
 
 
 class ZoneBallObserver():
@@ -30,13 +31,10 @@ class ZoneBallObserver():
         self._ball_pos = State2D()
         self._ball_zone_state = self.BALL_ZONE_NONE
 
-        self.set_field_size()
+        self._field = FieldNormalizer()
 
-    def set_field_size(self, field_half_width=4.5) -> None:
-        self._field_half_width = field_half_width
-        self._field_quarter_width = self._field_half_width * 0.5
-
-        self._ZONE_THRESHOLD = 0.2 * self._field_half_width / 4.5
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
 
     def update(self, ball_pos: State2D, ball_is_in_our_side: bool) -> None:
         self._ball_pos = ball_pos
@@ -73,21 +71,24 @@ class ZoneBallObserver():
 
     def _update_ball_zone_state(self, ball_is_in_our_side: bool) -> None:
         # ボールがどのZONEに存在するのかを判定する
+        ZONE_THRESHOLD = 0.2 * self._field.half_width() / 4.5
+        field_quarter_width = self._field.half_width() * 0.5
+
         threshold_x = 0.0
         if ball_is_in_our_side:
-            threshold_x += self._ZONE_THRESHOLD
+            threshold_x += ZONE_THRESHOLD
 
-        threshold_y_top = self._field_quarter_width
+        threshold_y_top = field_quarter_width
         if self.ball_is_in_right_top() or self.ball_is_in_left_top():
-            threshold_y_top -= self._ZONE_THRESHOLD
+            threshold_y_top -= ZONE_THRESHOLD
 
         threshold_y_mid_top = 0.0
         if self.ball_is_in_right_mid_top() or self.ball_is_in_left_mid_top():
-            threshold_y_mid_top -= self._ZONE_THRESHOLD
+            threshold_y_mid_top -= ZONE_THRESHOLD
 
-        threshold_y_mid_bottom = -self._field_quarter_width
+        threshold_y_mid_bottom = -field_quarter_width
         if self.ball_is_in_right_mid_bottom() or self.ball_is_in_left_mid_bottom():
-            threshold_y_mid_bottom -= self._ZONE_THRESHOLD
+            threshold_y_mid_bottom -= ZONE_THRESHOLD
 
         if self._ball_pos.x > threshold_x:
             if self._ball_pos.y > threshold_y_top:

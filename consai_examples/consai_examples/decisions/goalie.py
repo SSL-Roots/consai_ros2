@@ -33,8 +33,8 @@ class GoaleDecision(DecisionBase):
         self.our_goal_center_pos = Field()._our_goal_dict['center']
         self.our_goal_lower_pos = Field()._our_goal_dict['lower']
         # ゴール前を守る位置のマージン[m]
-        self.margin_x = 0.2
-        self.margin_y = 0.35
+        self.margin_x = self._div_a_x(0.2)
+        self.margin_y = self._div_a_y(0.35)
         self._in_flag = 0
 
     def _defend_goal_operation(self):
@@ -69,7 +69,7 @@ class GoaleDecision(DecisionBase):
                     robot_pos = robots[i].pos()
 
                     # 敵ロボットの距離が近いかつ距離の近い敵ロボットよりボールがゴール側にある場合
-                    if distance < 0.15 and ball_pos.x < robot_pos.x:
+                    if distance < self._div_a_dia(0.15) and ball_pos.x < robot_pos.x:
                         # 2点を結ぶ直線の傾きと切片を取得
                         slope, intercept, _ = geometry_tools.get_line_parameter(
                             ball_pos, robot_pos)
@@ -82,7 +82,8 @@ class GoaleDecision(DecisionBase):
                     break
 
         # ボールがゴールに向かって来る場合
-        elif 0.2 < abs(ball_vel.x) and 0.1 < math.hypot(ball_vel.x, ball_vel.y):
+        elif self._div_a_x(0.2) < abs(ball_vel.x) and \
+                self._div_a_x(0.1) < math.hypot(ball_vel.x, ball_vel.y):
             # 2点を結ぶ直線の傾きと切片を取得
             slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
             # ゴール前との交点(y座標)を算出
@@ -94,7 +95,7 @@ class GoaleDecision(DecisionBase):
 
         if flag == 1:
             slope, intercept, _ = geometry_tools.get_line_parameter(
-                ball_pos, State2D(x=-6.75, y=0.0))
+                ball_pos, State2D(x=self._div_a_x(-6.75), y=0.0))
             y = slope * p1_x + intercept
             defend_goal = Operation().move_to_intersection(
                 TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
@@ -109,10 +110,10 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def _penalty_defend_operation(self):
-        p1_x = -6.0 + 0.05
-        p1_y = 0.9
-        p2_x = -6.0 + 0.05
-        p2_y = -0.9
+        p1_x = self._div_a_x(-6.0 + 0.05)
+        p1_y = self._div_a_y(0.9)
+        p2_x = self._div_a_x(-6.0 + 0.05)
+        p2_y = self._div_a_y(-0.9)
         defend_goal = Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball())
@@ -133,7 +134,7 @@ class GoaleDecision(DecisionBase):
            and not self._field_observer.ball_motion().is_moving():
 
             move_to_behind_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_goal(), 0.05, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_goal(), self._div_a_x(0.05), TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             move_to_behind_ball = move_to_behind_ball.disable_avoid_defense_area()
 
