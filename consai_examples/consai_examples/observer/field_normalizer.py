@@ -31,7 +31,7 @@ class FieldNormalizer:
     def set_robot_diameter(self, diameter=0.18):
         self._robot_diameter = diameter
 
-    def set_div_a_size(self, length=12.0, width=9.0, robot_diameter=1.8):
+    def set_div_a_size(self, length=12.0, width=9.0, robot_diameter=0.18):
         self._div_a_length = length
         self._div_a_width = width
         self._div_a_robot_diameter = robot_diameter

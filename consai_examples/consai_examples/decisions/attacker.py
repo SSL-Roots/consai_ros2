@@ -29,7 +29,6 @@ class AttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
-        self._field_quarter_length = self._field_observer.field_half_length() * 0.5
         self._inpay_flag = 0
         self._attacker_id = -1
         self.shoot_pos_list = []
@@ -337,7 +336,7 @@ def gen_setplay_shoot_function():
                 passing = move_to_ball.with_passing_for_setplay_to(
                     TargetXY.our_robot(receivers_id_list[0]))
             else:
-                x = self._field_quarter_length
+                x = self._field_observer.field_half_length() * 0.5
                 y = 0
                 # ボールが味方側エリアにあるか取得
                 is_in_our_side = self._field_observer.ball_position().is_in_our_side()

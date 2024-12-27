@@ -28,19 +28,16 @@ class GoaleDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
-        self.our_goal_upper_pos = self._field_pos().goal_pose('our', 'upper')
-        self.our_goal_center_pos = self._field_pos().goal_pose('our', 'center')
-        self.our_goal_lower_pos = self._field_pos().goal_pose('our', 'lower')
-        # ゴール前を守る位置のマージン[m]
-        self.margin_x = self._div_a_x(0.2)
-        self.margin_y = self._div_a_y(0.35)
         self._in_flag = 0
 
     def _defend_goal_operation(self):
-        p1_x = self.our_goal_upper_pos.x + self.margin_x
-        p1_y = self.our_goal_upper_pos.y - self.margin_y
-        p2_x = self.our_goal_lower_pos.x + self.margin_x
-        p2_y = self.our_goal_lower_pos.y + self.margin_y
+        # ゴール前を守る位置のマージン[m]
+        MARGIN_X = self._div_a_x(0.2)
+        MARGIN_Y = self._div_a_y(0.35)
+        p1_x = self._field_pos().goal_pose('our', 'upper').x + MARGIN_X
+        p1_y = self._field_pos().goal_pose('our', 'upper').y - MARGIN_Y
+        p2_x = self._field_pos().goal_pose('our', 'lower').x + MARGIN_X
+        p2_y = self._field_pos().goal_pose('our', 'lower').y + MARGIN_Y
 
         # ボールの座標を取得
         ball_pos = self._field_observer.detection().ball().pos()
@@ -87,7 +84,7 @@ class GoaleDecision(DecisionBase):
             slope, intercept, _ = geometry_tools.get_line_parameter(ball_pos, ball_vel)
             # ゴール前との交点(y座標)を算出
             y = slope * p1_x + intercept
-            if abs(y) < p1_y + self.margin_y:
+            if abs(y) < p1_y + MARGIN_Y:
                 x = p1_x
                 defend_pose = TargetXY.value(x, y)
                 flag = 2
