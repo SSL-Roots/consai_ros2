@@ -9,7 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>python-yaml</depend>
+  <depend>python3-yaml</depend>
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
 
