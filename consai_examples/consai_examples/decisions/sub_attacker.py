@@ -32,12 +32,13 @@ class SubAttackerDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, sub_attacker_id: SubAttackerID):
         super().__init__(robot_operator, field_observer)
         self._sub_attacker_id = sub_attacker_id
-        self._penalty_side_x = 5.1
-        self._penalty_side_y = 3.0
-        self._penalty_front_x = 3.8
-        self._penalty_front_y = 2.8
 
     def _offend_operation(self):
+        self._penalty_side_x = self._div_a_x(5.1)
+        self._penalty_side_y = self._div_a_y(3.0)
+        self._penalty_front_x = self._div_a_x(3.8)
+        self._penalty_front_y = self._div_a_y(2.8)
+
         ball_pos = self._field_observer.detection().ball().pos()
         # ボールがフィールド上半分にあるときは、フィールド下側に移動する
         if ball_pos.y > 0:
@@ -62,21 +63,21 @@ class SubAttackerDecision(DecisionBase):
         if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
             if self._field_observer.zone().ball_is_in_left_bottom() or \
                     self._field_observer.zone().ball_is_in_left_mid_bottom():
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(self._div_a_y(2.5))
             else:
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(self._div_a_y(-2.5))
         else:
             if self._field_observer.zone().ball_is_in_left_bottom() or \
                     self._field_observer.zone().ball_is_in_left_mid_bottom():
-                move_to_ball = move_to_ball.overwrite_pose_y(-2.5)
+                move_to_ball = move_to_ball.overwrite_pose_y(self._div_a_y(-2.5))
             else:
-                move_to_ball = move_to_ball.overwrite_pose_y(2.5)
-        move_to_ball = move_to_ball.offset_pose_x(-0.3)
+                move_to_ball = move_to_ball.overwrite_pose_y(self._div_a_y(2.5))
+        move_to_ball = move_to_ball.offset_pose_x(self._div_a_x(-0.3))
         return move_to_ball
 
     def stop(self, robot_id):
         ball_pos = self._field_observer.detection().ball().pos()
-        if ball_pos.x > 0.5:
+        if ball_pos.x > self._div_a_x(0.5):
             operation = self._offend_operation()
         else:
             operation = self._offend_our_side_operation()
@@ -140,7 +141,7 @@ class SubAttackerDecision(DecisionBase):
                 move_to_behind_target = Operation().move_on_line(
                     TargetXY.value(placement_pos.x, placement_pos.y),
                     TargetXY.ball(),
-                    -0.1,
+                    -self._div_a_dia(0.1),
                     TargetTheta.look_ball())
                 move_to_behind_target = move_to_behind_target.with_ball_receiving()
                 self._operator.operate(robot_id, move_to_behind_target)
@@ -149,7 +150,8 @@ class SubAttackerDecision(DecisionBase):
         if self._sub_attacker_id == SubAttackerID.SUBATTACK1:
             # ボール位置が配置目標位置に到着したらボールから離れる
             avoid_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), 0.6, TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_dia(0.6),
+                TargetTheta.look_ball())
             self._operator.operate(robot_id, avoid_ball)
         else:
             operation = self._offend_operation()
@@ -166,13 +168,15 @@ class SubAttackerDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
+        penalty_y = self._div_a_y(4.5 - 0.3 * (5.0 + self._sub_attacker_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(-self._penalty_wait_x(), 4.5 - 0.3 * 5.0),
+            TargetXY.value(-self._penalty_wait_x(), penalty_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
+        penalty_y = self._div_a_y(4.5 - 0.3 * (5.0 + self._sub_attacker_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(self._penalty_wait_x(), 4.5 - 0.3 * 5.0),
+            TargetXY.value(self._penalty_wait_x(), penalty_y),
             TargetTheta.look_ball())
 
 
