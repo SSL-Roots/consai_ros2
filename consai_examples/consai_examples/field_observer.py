@@ -17,6 +17,7 @@
 
 from rclpy import qos
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from robocup_ssl_msgs.msg import TrackedFrame
 
 from consai_examples.observer.detection_wrapper import DetectionWrapper
@@ -62,10 +63,16 @@ class FieldObserver(Node):
         self._sub_destinations = self.create_subscription(
             GoalPoses, 'destinations', self._destinations_callback, 10)
 
+        qos_profile = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=ReliabilityPolicy.RELIABLE
+        )
+
         self._sub_param_rule = self.create_subscription(
-            String, 'consai_param/rule', self._param_rule_callback, 10)
+            String, 'consai_param/rule', self._param_rule_callback, qos_profile)
         self._sub_param_strategy = self.create_subscription(
-            String, 'consai_param/strategy', self._param_strategy_callback, 10)
+            String, 'consai_param/strategy', self._param_strategy_callback, qos_profile)
 
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
