@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.field import Field
 from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
@@ -30,7 +29,7 @@ class AttackerDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
-        self._field_quarter_length = Field()._field['quarter_length']
+        self._field_quarter_length = self._field_observer.field_half_length() * 0.5
         self._inpay_flag = 0
         self._attacker_id = -1
         self.shoot_pos_list = []

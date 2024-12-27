@@ -28,6 +28,7 @@ class DecisionBase(object):
         self._div_a_x = self._field_observer.on_div_a_x
         self._div_a_y = self._field_observer.on_div_a_y
         self._div_a_dia = self._field_observer.on_div_a_robot_diameter
+        self._field_pos = self._field_observer.field_pos
 
         self._num_of_center_back_roles = 0
         self._num_of_side_back_roles = 0

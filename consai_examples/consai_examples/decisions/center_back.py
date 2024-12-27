@@ -17,7 +17,6 @@
 
 
 from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.field import Field
 from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
@@ -44,10 +43,10 @@ class CenterBackDecision(DecisionBase):
         self._MARGIN_LINE = 0.3
         # 2台でディフェンスする時のお互いの距離
         self._MARGIN_ROBOT = 0.1
-        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
-        self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
-        self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
-        self._penalty_goalside_lower_back = Field.penalty_pose('our', 'lower_back')
+        self._penalty_corner_upper_front = self._field_pos().penalty_pose('our', 'upper_front')
+        self._penalty_corner_lower_front = self._field_pos().penalty_pose('our', 'lower_front')
+        self._penalty_goalside_upper_back = self._field_pos().penalty_pose('our', 'upper_back')
+        self._penalty_goalside_lower_back = self._field_pos().penalty_pose('our', 'lower_back')
 
     def _get_offset(self) -> float:
         offset = 0.0
@@ -106,7 +105,7 @@ class CenterBackDecision(DecisionBase):
         # 隣同士の衝突回避をやめるため、
         # ディンフェスエリアに近づいたら、our robot回避を無効にする
         my_pos = self._field_observer.detection().our_robots()[robot_id].pos()
-        our_goal_center = Field.goal_pose('our', 'center')
+        our_goal_center = self._field_pos().goal_pose('our', 'center')
         if tool.get_distance(my_pos, our_goal_center) < 3.0:
             operation = operation.disable_avoid_our_robots()
         return operation

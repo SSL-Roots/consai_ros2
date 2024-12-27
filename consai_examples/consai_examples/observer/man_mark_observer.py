@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples.field import Field
+from consai_examples.observer.field_positions import FieldPositions
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
@@ -32,6 +32,11 @@ class ManMarkObserver:
     def __init__(self):
         self._mark_dict: dict[OurIDType, TheirIDType] = {}
         self._our_active_bot_ids: list[OurIDType] = []
+
+        self._field_pos = FieldPositions()
+
+    def set_field_positions(self, field_positions: FieldPositions) -> None:
+        self._field_pos = field_positions
 
     def update(self, ball: PosVel,
                our_robots: dict[OurIDType, PosVel],
@@ -125,7 +130,7 @@ class ManMarkObserver:
 
     def _detect_their_bots_in_our_side_without_our_df_area_side(
             self, their_robots: dict[OurIDType, PosVel]) -> list[OurIDType]:
-        penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
+        penalty_corner_upper_front = self._field_pos.penalty_pose('our', 'upper_front')
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
         DEFENSE_AREA_MARGIN = 0.2
         DETECTION_THRESHOLD_X_MAX = 0.0

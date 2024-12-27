@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples.observer.field_positions import FieldPositions
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
-from consai_examples.field import Field
 
 
 class ZoneManMarkTargetObserver():
@@ -25,8 +25,11 @@ class ZoneManMarkTargetObserver():
 
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
         self._DEFENSE_AREA_MARGIN = 0.2
-        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
-        self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
+
+        self._field_pos = FieldPositions()
+
+    def set_field_positions(self, field_positions: FieldPositions) -> None:
+        self._field_pos = field_positions
 
     def has_target(self, zone_id: int) -> bool:
         return self._zone_man_mark_targets[zone_id] is not None
@@ -46,7 +49,7 @@ class ZoneManMarkTargetObserver():
         robot_x_id_pairs = [(robot.pos().x, robot_id) for robot_id, robot in their_robots.items()]
 
         # xがある値より小さい場合はそのロボットIDを無視する
-        threshold_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
+        threshold_x = self._field_pos.penalty_pose('our', 'upper_front').x + self._DEFENSE_AREA_MARGIN
         filtered_pairs = [(x, robot_id)
                           for x, robot_id in robot_x_id_pairs if (x < 0 and x > threshold_x)]
 
@@ -68,7 +71,7 @@ class ZoneManMarkTargetObserver():
 
     def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
-        defense_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
+        defense_x = self._field_pos.penalty_pose('our', 'upper_front').x + self._DEFENSE_AREA_MARGIN
 
         # ディデンスエリア横はサイドバックが守るので無視
         if pos.x < defense_x:

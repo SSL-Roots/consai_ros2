@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.field import Field
 from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
@@ -29,9 +28,9 @@ class GoaleDecision(DecisionBase):
 
     def __init__(self, robot_operator, field_observer):
         super().__init__(robot_operator, field_observer)
-        self.our_goal_upper_pos = Field()._our_goal_dict['upper']
-        self.our_goal_center_pos = Field()._our_goal_dict['center']
-        self.our_goal_lower_pos = Field()._our_goal_dict['lower']
+        self.our_goal_upper_pos = self._field_pos().goal_pose('our', 'upper')
+        self.our_goal_center_pos = self._field_pos().goal_pose('our', 'center')
+        self.our_goal_lower_pos = self._field_pos().goal_pose('our', 'lower')
         # ゴール前を守る位置のマージン[m]
         self.margin_x = self._div_a_x(0.2)
         self.margin_y = self._div_a_y(0.35)

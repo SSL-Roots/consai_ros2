@@ -19,10 +19,14 @@ class FieldNormalizer:
         self.set_robot_diameter()
         self.set_div_a_size()
 
-    def set_field_size(self, length=12.0, width=9.0, goal_width=1.8):
+    def set_field_size(
+            self, length=12.0, width=9.0, goal_width=1.8,
+            penalty_depth=1.8, penalty_width=3.6):
         self._field_length = length
         self._field_width = width
         self._goal_width = goal_width
+        self._penalty_depth = penalty_depth
+        self._penalty_width = penalty_width
 
     def set_robot_diameter(self, diameter=0.18):
         self._robot_diameter = diameter
@@ -49,6 +53,15 @@ class FieldNormalizer:
 
     def half_goal_width(self) -> float:
         return self._goal_width * 0.5
+
+    def penalty_depth(self) -> float:
+        return self._penalty_depth
+
+    def penalty_width(self) -> float:
+        return self._penalty_width
+
+    def half_penalty_width(self) -> float:
+        return self._penalty_width * 0.5
 
     def on_div_a_x(self, x: float) -> float:
         # X座標を正規化する
