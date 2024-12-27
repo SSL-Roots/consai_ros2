@@ -71,7 +71,7 @@ class ZoneBallObserver():
 
     def _update_ball_zone_state(self, ball_is_in_our_side: bool) -> None:
         # ボールがどのZONEに存在するのかを判定する
-        ZONE_THRESHOLD = 0.2 * self._field.half_width() / 4.5
+        ZONE_THRESHOLD = 0.2 * self._field.half_width() / self._field.on_div_a_y(4.5)
         field_quarter_width = self._field.half_width() * 0.5
 
         threshold_x = 0.0

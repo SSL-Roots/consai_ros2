@@ -19,11 +19,6 @@ from consai_tools.geometry import geometry_tools
 
 class DistanceObserver:
     def __init__(self):
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
-        self._defense_area_length = 1.8
-        self._defense_area_half_width = 1.8
-
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
         self._ball_pos = State2D()

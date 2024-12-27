@@ -100,6 +100,9 @@ class FieldObserver(Node):
         self._field_normalizer.set_robot_diameter(
             param_dict['robots']['max_diameter']
         )
+        self._field_normalizer.set_ball_diameter(
+            param_dict['ball']['diameter']
+        )
 
         self._field_positions.set_field_size(
             param_dict['field']['length'],
@@ -122,7 +125,8 @@ class FieldObserver(Node):
         self._field_normalizer.set_div_a_size(
             param_dict['div_a_field']['length'],
             param_dict['div_a_field']['width'],
-            param_dict['div_a_field']['robot_diameter']
+            param_dict['div_a_field']['robot_diameter'],
+            param_dict['div_a_field']['ball_diameter']
         )
 
         self._logger.info('Div A size is updated')

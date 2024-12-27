@@ -13,15 +13,18 @@
 # limitations under the License.
 
 from consai_examples.observer.pos_vel import PosVel
+from consai_examples.observer.field_normalizer import FieldNormalizer
 import math
 
 
 class BallMotionObserver:
-    BALL_MOVING_THRESHOLD = 1.0  # m/s
-    BALL_MOVING_HYSTERESIS = 0.3  # m/s
-
     def __init__(self):
         self._ball_is_moving = False
+
+        self._field = FieldNormalizer()
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
 
     def update(self, ball: PosVel) -> None:
         self._update_ball_moving_state(ball)
@@ -31,12 +34,15 @@ class BallMotionObserver:
 
     def _update_ball_moving_state(self, ball: PosVel) -> None:
         # ボールが動いているか判定する
+        BALL_MOVING_THRESHOLD = self._field.on_div_a_x(1.0)  # m/s
+        BALL_MOVING_HYSTERESIS = self._field.on_div_a_x(0.3)  # m/s
+
         velocity_norm = math.hypot(ball.vel().x, ball.vel().y)
 
         # ボール速度がしきい値付近で揺れても、判定が切り替わらないようにヒステリシスを設ける
-        threshold = self.BALL_MOVING_THRESHOLD
+        threshold = BALL_MOVING_THRESHOLD
         if self._ball_is_moving:
-            threshold = self.BALL_MOVING_THRESHOLD - self.BALL_MOVING_HYSTERESIS
+            threshold = BALL_MOVING_THRESHOLD - BALL_MOVING_HYSTERESIS
 
         if velocity_norm > threshold:
             self._ball_is_moving = True

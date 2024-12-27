@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_examples.observer.field_positions import FieldPositions
+from consai_examples.observer.field_normalizer import FieldNormalizer
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
 
@@ -23,13 +24,18 @@ class ZoneManMarkTargetObserver():
         self._zone_man_mark_targets: dict[int, int] = {0: None, 1: None, 2: None, 3: None}
         self._max_targets = 4
 
-        # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
-        self._DEFENSE_AREA_MARGIN = 0.2
-
         self._field_pos = FieldPositions()
+        self._field = FieldNormalizer()
+
+    def _defense_area_margin(self) -> float:
+        # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
+        return self._field.on_div_a_x(0.2)
 
     def set_field_positions(self, field_positions: FieldPositions) -> None:
         self._field_pos = field_positions
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
 
     def has_target(self, zone_id: int) -> bool:
         return self._zone_man_mark_targets[zone_id] is not None
@@ -49,7 +55,8 @@ class ZoneManMarkTargetObserver():
         robot_x_id_pairs = [(robot.pos().x, robot_id) for robot_id, robot in their_robots.items()]
 
         # xがある値より小さい場合はそのロボットIDを無視する
-        threshold_x = self._field_pos.penalty_pose('our', 'upper_front').x + self._DEFENSE_AREA_MARGIN
+        threshold_x = \
+            self._field_pos.penalty_pose('our', 'upper_front').x + self._defense_area_margin()
         filtered_pairs = [(x, robot_id)
                           for x, robot_id in robot_x_id_pairs if (x < 0 and x > threshold_x)]
 
@@ -71,7 +78,8 @@ class ZoneManMarkTargetObserver():
 
     def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
-        defense_x = self._field_pos.penalty_pose('our', 'upper_front').x + self._DEFENSE_AREA_MARGIN
+        defense_x = \
+            self._field_pos.penalty_pose('our', 'upper_front').x + self._defense_area_margin()
 
         # ディデンスエリア横はサイドバックが守るので無視
         if pos.x < defense_x:

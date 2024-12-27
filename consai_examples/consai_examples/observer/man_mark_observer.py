@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_examples.observer.field_normalizer import FieldNormalizer
 from consai_examples.observer.field_positions import FieldPositions
 from consai_examples.observer.pos_vel import PosVel
 from consai_msgs.msg import State2D
@@ -34,9 +35,13 @@ class ManMarkObserver:
         self._our_active_bot_ids: list[OurIDType] = []
 
         self._field_pos = FieldPositions()
+        self._field = FieldNormalizer()
 
     def set_field_positions(self, field_positions: FieldPositions) -> None:
         self._field_pos = field_positions
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
 
     def update(self, ball: PosVel,
                our_robots: dict[OurIDType, PosVel],
@@ -132,7 +137,7 @@ class ManMarkObserver:
             self, their_robots: dict[OurIDType, PosVel]) -> list[OurIDType]:
         penalty_corner_upper_front = self._field_pos.penalty_pose('our', 'upper_front')
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
-        DEFENSE_AREA_MARGIN = 0.2
+        DEFENSE_AREA_MARGIN = self._field.on_div_a_x(0.2)
         DETECTION_THRESHOLD_X_MAX = 0.0
         DETECTION_THRESHOLD_X_MIN = penalty_corner_upper_front.x + DEFENSE_AREA_MARGIN
 

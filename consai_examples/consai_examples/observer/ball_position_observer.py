@@ -20,12 +20,13 @@ import math
 class BallPositionObserver:
     def __init__(self):
         self._ball_pos = State2D()
-        self._OUTSIDE_MARGIN = 0.05
-
         self._field = FieldNormalizer()
 
     def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
         self._field = field_normalizer
+
+    def _outside_margin(self) -> float:
+        return self._field.on_div_a_ball_diameter(0.05)
 
     def update(self, ball_pos: State2D) -> None:
         self._ball_pos = ball_pos
@@ -51,19 +52,19 @@ class BallPositionObserver:
             self.is_outside_of_top() or self.is_outside_of_bottom()
 
     def is_outside_of_left_with_margin(self) -> bool:
-        if self._ball_pos.x < -self._field.half_length() - self._OUTSIDE_MARGIN:
+        if self._ball_pos.x < -self._field.half_length() - self._outside_margin():
             return True
 
     def is_outside_of_right_with_margin(self) -> bool:
-        if self._ball_pos.x > self._field.half_length() + self._OUTSIDE_MARGIN:
+        if self._ball_pos.x > self._field.half_length() + self._outside_margin():
             return True
 
     def is_outside_of_top_with_margin(self) -> bool:
-        if self._ball_pos.y > self._field.half_width() + self._OUTSIDE_MARGIN:
+        if self._ball_pos.y > self._field.half_width() + self._outside_margin():
             return True
 
     def is_outside_of_bottom_with_margin(self) -> bool:
-        if self._ball_pos.y < -self._field.half_width() - self._OUTSIDE_MARGIN:
+        if self._ball_pos.y < -self._field.half_width() - self._outside_margin():
             return True
 
     def is_outside_with_margin(self) -> bool:

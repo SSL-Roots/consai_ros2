@@ -17,6 +17,7 @@ class FieldNormalizer:
     def __init__(self):
         self.set_field_size()
         self.set_robot_diameter()
+        self.set_ball_diameter()
         self.set_div_a_size()
 
     def set_field_size(
@@ -31,10 +32,15 @@ class FieldNormalizer:
     def set_robot_diameter(self, diameter=0.18):
         self._robot_diameter = diameter
 
-    def set_div_a_size(self, length=12.0, width=9.0, robot_diameter=0.18):
+    def set_ball_diameter(self, diameter=0.043):
+        self._ball_diameter = diameter
+
+    def set_div_a_size(
+            self, length=12.0, width=9.0, robot_diameter=0.18, ball_diameter=0.043):
         self._div_a_length = length
         self._div_a_width = width
         self._div_a_robot_diameter = robot_diameter
+        self._div_a_ball_diameter = ball_diameter
 
     def length(self) -> float:
         return self._field_length
@@ -74,3 +80,7 @@ class FieldNormalizer:
     def on_div_a_robot_diameter(self, size: float) -> float:
         # ロボットの直径を正規化する
         return size * self._robot_diameter / self._div_a_robot_diameter
+
+    def on_div_a_ball_diameter(self, size: float) -> float:
+        # ボールの直径を正規化する
+        return size * self._ball_diameter / self._div_a_ball_diameter

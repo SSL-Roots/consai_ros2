@@ -8,6 +8,9 @@
       penalty_depth: 1.8
       penalty_width: 3.6
 
+    ball:
+      diameter: 0.043
+
     # 3. Robots
     robots:
       max_num_in_field: 11
