@@ -64,7 +64,8 @@ class AttackerDecision(DecisionBase):
         search_offset = self._div_a_x((math.tanh((ball_pos.x - center_offset) * 2) + 1) / 2)
 
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.3), TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.3),
+            TargetTheta.look_ball())
         move_to_ball = move_to_ball.with_ball_receiving()
         move_to_ball = move_to_ball.with_reflecting_to(TargetXY.their_goal())
 
@@ -203,7 +204,8 @@ class AttackerDecision(DecisionBase):
         # ボールがフィールド外にある場合は、バックドリブルでボールをフィールド内に戻す
         if self._field_observer.ball_position().is_outside():
             move_to_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.5), TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.5),
+                TargetTheta.look_ball())
             move_to_ball = move_to_ball.with_ball_receiving()
 
             # 壁に対して垂直方向にドリブルする
@@ -230,7 +232,8 @@ class AttackerDecision(DecisionBase):
         if self._field_observer.ball_placement().is_far_from(placement_pos):
             # ボール位置が配置目標位置から離れているときはパスする
             move_to_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.5), TargetTheta.look_ball())
+                TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.5),
+                TargetTheta.look_ball())
             move_to_ball = move_to_ball.with_ball_receiving()
             passing = move_to_ball.with_passing_for_setplay_to(TargetXY.value(
                 placement_pos.x, placement_pos.y))
@@ -241,7 +244,8 @@ class AttackerDecision(DecisionBase):
         if not self._field_observer.ball_placement().is_arrived_at(placement_pos):
             # ボール位置が配置目標位置に近づいたときはドリブルする
             move_to_behind_ball = Operation().move_on_line(
-                TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y), -self._div_a_x(0.3),
+                TargetXY.ball(), TargetXY.value(placement_pos.x, placement_pos.y),
+                -self._div_a_x(0.3),
                 TargetTheta.look_ball())
             move_to_behind_ball = move_to_behind_ball.with_ball_receiving()
             dribbling = move_to_behind_ball.with_dribbling_to(
@@ -252,7 +256,8 @@ class AttackerDecision(DecisionBase):
 
         # ボール位置が配置目標位置に到着したらボールから離れる
         avoid_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.6), TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.6),
+            TargetTheta.look_ball())
         self._operator.operate(robot_id, avoid_ball)
 
 
@@ -320,7 +325,8 @@ def gen_setplay_shoot_function():
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
         search_offset = self._div_a_x(2.0)
         move_to_ball = Operation().move_on_line(
-            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.3), TargetTheta.look_ball())
+            TargetXY.ball(), TargetXY.our_robot(robot_id), self._div_a_x(0.3),
+            TargetTheta.look_ball())
 
         # シュート可能なゴールのリストを取得
         shoot_pos_list = self._field_observer.pass_shoot().get_shoot_pos_list()
