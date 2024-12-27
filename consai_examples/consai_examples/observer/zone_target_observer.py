@@ -236,7 +236,7 @@ class ZoneTargetObserver():
         # ZONE4 (左サイドの下半分の上)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y <= 0.0 and pos.y >self._field.on_div_a_y(-4.5 * 0.5):
+        if pos.x < 0.0 and pos.y <= 0.0 and pos.y > self._field.on_div_a_y(-4.5 * 0.5):
             return True
         return False
 
