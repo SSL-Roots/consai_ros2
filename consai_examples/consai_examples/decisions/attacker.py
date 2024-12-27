@@ -370,7 +370,7 @@ def gen_setplay_shoot_function():
 def gen_their_penalty_function():
     def function(self, robot_id):
         operation = Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, self._div_a_y(4.5 - 0.3 * 0.0)),
+            TargetXY.value(self._penalty_wait_x(), self._div_a_y(4.5 - 0.3 * 0.0)),
             TargetTheta.look_ball())
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)

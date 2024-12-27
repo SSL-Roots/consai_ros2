@@ -119,13 +119,13 @@ class CenterBackDecision(DecisionBase):
     def _our_penalty_operation(self):
         our_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (1.0 + self._center_back_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, our_penalty_pos_y),
+            TargetXY.value(-self._penalty_wait_x(), our_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
         their_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (1.0 + self._center_back_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, their_penalty_pos_y),
+            TargetXY.value(self._penalty_wait_x(), their_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
