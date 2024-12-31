@@ -79,6 +79,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
       try {
         nlohmann::json json_data = nlohmann::json::parse(msg->data);
         gen_pubs_and_subs(json_data["robots"]["num_of_ids"]);
+        parser_->set_field_size(json_data["field"]["length"], json_data["field"]["width"]);
       } catch (const std::exception & e) {
         RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
       }
