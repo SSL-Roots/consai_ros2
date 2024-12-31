@@ -32,7 +32,6 @@
 #include "consai_robot_controller/tactic/tactic_control_ball.hpp"
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
@@ -44,7 +43,6 @@ namespace consai_robot_controller
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
-using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
