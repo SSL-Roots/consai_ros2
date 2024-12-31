@@ -25,6 +25,10 @@ find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
 pkg_check_modules(BFL REQUIRED orocos-bfl)
 
+include(FetchContent)
+fetchcontent_declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+fetchcontent_makeavailable(json)
+
 include_directories(
   include
   ${BFL_INCLUDE_DIRS}
@@ -49,6 +53,7 @@ ament_target_dependencies(tracker_component
 )
 target_link_libraries(tracker_component
   ${BFL_LIBRARIES}
+  nlohmann_json::nlohmann_json
 )
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
@@ -82,6 +87,18 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
+
+# FetchContentで取得したnlohmann/jsonのターゲットもインストール
+install(
+  TARGETS nlohmann_json
+  EXPORT export_${PROJECT_NAME}
+)
+
+# エクスポートセットをインストール
+install(
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

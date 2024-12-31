@@ -31,6 +31,7 @@
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace consai_vision_tracker
 {
@@ -53,15 +54,19 @@ protected:
   void on_timer();
 
 private:
+  void gen_robot_trackers(const unsigned int num);
   void callback_detection(const DetectionFrame::SharedPtr msg);
   void callback_detection_invert(const DetectionFrame::SharedPtr msg);
   void callback_geometry(const GeometryData::SharedPtr msg);
   void invert_ball(DetectionBall & ball);
   void invert_robot(DetectionRobot & robot);
 
+  std::chrono::duration<double> update_rate_;
+
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<DetectionFrame>::SharedPtr sub_detection_;
   rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
   rclcpp::Publisher<TrackedFrame>::SharedPtr pub_tracked_;
   rclcpp::Publisher<RobotLocalVelocities>::SharedPtr pub_robot_velocities_;
   std::shared_ptr<BallTracker> ball_tracker_;
