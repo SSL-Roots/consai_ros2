@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 project(consai_robot_controller)
 
 # Default to C99
@@ -25,6 +25,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
 
 include_directories(include)
 
@@ -73,6 +77,7 @@ add_library(grsim_command_converter SHARED
 )
 target_compile_definitions(grsim_command_converter
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
+target_link_libraries(grsim_command_converter nlohmann_json::nlohmann_json)
 ament_target_dependencies(grsim_command_converter
   consai_frootspi_msgs
   consai_msgs
@@ -116,6 +121,18 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
+
+# FetchContentで取得したnlohmann/jsonのターゲットもインストール
+install(
+  TARGETS nlohmann_json
+  EXPORT export_${PROJECT_NAME}
+)
+
+# エクスポートセットをインストール
+install(
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

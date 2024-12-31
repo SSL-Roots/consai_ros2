@@ -23,6 +23,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/commands.hpp"
 #include "robocup_ssl_msgs/msg/robot_command.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace consai_robot_controller
 {
@@ -41,12 +42,15 @@ protected:
   void on_timer();
 
 private:
+  void gen_command_subscribers(const unsigned int num);
   void callback_consai_command_(const ConsaiCommand::SharedPtr msg);
 
   rclcpp::TimerBase::SharedPtr timer_;
   std::vector<rclcpp::Subscription<ConsaiCommand>::SharedPtr> subs_consai_command_;
   rclcpp::Publisher<GrSimCommands>::SharedPtr pub_grsim_commands_;
   std::vector<ConsaiCommand::SharedPtr> consai_commands_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
 };
 
 }  // namespace consai_robot_controller
