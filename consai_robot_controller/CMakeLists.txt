@@ -25,6 +25,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 include(FetchContent)
 fetchcontent_declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
@@ -59,6 +60,7 @@ add_library(controller_component SHARED
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
+target_link_libraries(controller_component nlohmann_json::nlohmann_json)
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
@@ -68,6 +70,7 @@ ament_target_dependencies(controller_component
   rclcpp_action
   rclcpp_components
   robocup_ssl_msgs
+  std_msgs
 )
 rclcpp_components_register_nodes(controller_component "consai_robot_controller::Controller")
 
@@ -85,6 +88,7 @@ ament_target_dependencies(grsim_command_converter
   rclcpp
   rclcpp_components
   robocup_ssl_msgs
+  std_msgs
 )
 rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controller::GrSimCommandConverter")
 

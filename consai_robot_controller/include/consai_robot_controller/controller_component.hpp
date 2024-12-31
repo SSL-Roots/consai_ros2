@@ -41,6 +41,7 @@
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace consai_robot_controller
 {
@@ -69,6 +70,7 @@ protected:
   void on_timer_pub_goal_poses();
 
 private:
+  void gen_pubs_and_subs(const unsigned int num);
   State limit_world_velocity(
     const State & velocity, const double & max_velocity_xy,
     const double & max_velocity_theta) const;
@@ -106,6 +108,8 @@ private:
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_destinations_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;
   std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
 
   RobotControlMap robot_control_map_;
   GoalPosesMap goal_poses_map_;

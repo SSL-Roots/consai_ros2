@@ -161,7 +161,9 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
   }
 
   for (const auto & yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0 && yellow_robot.robot_id[0] < yellow_robot_tracker_.size()) {
+    if (yellow_robot.robot_id.size() > 0 &&
+      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
+    {
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
@@ -186,7 +188,9 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
   }
 
   for (auto && yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0 && yellow_robot.robot_id[0] < yellow_robot_tracker_.size()) {
+    if (yellow_robot.robot_id.size() > 0 &&
+      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
+    {
       invert_robot(yellow_robot);
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
