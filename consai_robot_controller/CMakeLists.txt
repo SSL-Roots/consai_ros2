@@ -27,8 +27,8 @@ find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
 
 include(FetchContent)
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
-FetchContent_MakeAvailable(json)
+fetchcontent_declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+fetchcontent_makeavailable(json)
 
 include_directories(include)
 

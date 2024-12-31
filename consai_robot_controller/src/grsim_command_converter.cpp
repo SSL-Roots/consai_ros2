@@ -34,15 +34,14 @@ GrSimCommandConverter::GrSimCommandConverter(const rclcpp::NodeOptions & options
     .reliable();
 
   auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
-  {
-    try {
+    {
+      try {
         nlohmann::json json_data = nlohmann::json::parse(msg->data);
         gen_command_subscribers(json_data["robots"]["num_of_ids"]);
-    }
-    catch (const std::exception& e) {
-      RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
-    }
-  };
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
+      }
+    };
 
   sub_consai_param_rule_ = create_subscription<std_msgs::msg::String>(
     "consai_param/rule", qos, callback_param);
