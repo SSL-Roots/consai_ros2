@@ -36,12 +36,8 @@ GrSimCommandConverter::GrSimCommandConverter(const rclcpp::NodeOptions & options
   auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
   {
     try {
-        // JSON文字列をパース
         nlohmann::json json_data = nlohmann::json::parse(msg->data);
-
-        // JSONデータのアクセス例
-        int num_of_ids = json_data["robots"]["num_of_ids"];
-        RCLCPP_INFO(get_logger(), "num_of_ids: %d", num_of_ids);
+        gen_command_subscribers(json_data["robots"]["num_of_ids"]);
     }
     catch (const std::exception& e) {
       RCLCPP_ERROR(get_logger(), "Error: %s", e.what());

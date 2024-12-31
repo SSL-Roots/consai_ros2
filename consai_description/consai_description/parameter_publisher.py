@@ -48,7 +48,10 @@ class ParameterPublisher(Node):
         initialize_param(config_rule, 'rule')
         initialize_param(config_strategy, 'strategy')
 
-        self.add_on_set_parameters_callback(self.on_parameter_set)
+        self.add_on_set_parameters_callback(self._on_parameter_set)
+
+        self._subs_count = {}
+        self._timer_check_republish = self.create_timer(1.0, self._check_republish)
 
     def _declare_parameters_from_yaml(self, yaml_file, prefix='') -> dict:
         # yamlファイルからパラメータを宣言する
@@ -80,7 +83,7 @@ class ParameterPublisher(Node):
         self._pub_param[key].publish(msg)
         self._logger.info(f"Published parameters: {key}")
 
-    def on_parameter_set(self, parameters):
+    def _on_parameter_set(self, parameters):
         # パラメータが更新されたら、トピックとして再publishする
 
         def update_nested_dict(nested_dict, keys, value):
@@ -98,6 +101,15 @@ class ParameterPublisher(Node):
             self._publish_parameters(prefix)
 
         return SetParametersResult(successful=True)
+
+    def _check_republish(self):
+        # Subscriberが増減したら、パラメータを再配信する
+        for key in self._pub_param.keys():
+            subs_count = self._pub_param[key].get_subscription_count()
+            if subs_count != self._subs_count.get(key, 0):
+                self._publish_parameters(key)
+                self._subs_count[key] = subs_count
+                self._logger.info(f"New subscriber joins. Republish parameters: {key}")
 
 
 if __name__ == '__main__':
