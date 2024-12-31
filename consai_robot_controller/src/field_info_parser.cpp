@@ -40,10 +40,6 @@ void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detect
   detection_extractor_->set_detection_tracked(detection_tracked);
 }
 
-void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
-{
-}
-
 void FieldInfoParser::set_referee(const Referee::SharedPtr referee)
 {
   referee_ = referee;

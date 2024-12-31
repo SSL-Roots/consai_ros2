@@ -104,12 +104,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, detection_callback);
 
-  auto geometry_callback = [this](const GeometryData::SharedPtr msg) {
-      parser_->set_geometry(msg);
-    };
-  sub_geometry_ = create_subscription<GeometryData>(
-    "geometry", 10, geometry_callback);
-
   auto referee_callback = [this](const Referee::SharedPtr msg) {
       parser_->set_referee(msg);
     };

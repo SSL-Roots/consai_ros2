@@ -37,7 +37,6 @@
 #include "consai_robot_controller/obstacle/obstacle_observer.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -51,7 +50,6 @@ using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
-using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
@@ -100,7 +98,6 @@ private:
   std::shared_ptr<obstacle::ObstacleObserver> obstacle_observer_;
 
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
   rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
   rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
