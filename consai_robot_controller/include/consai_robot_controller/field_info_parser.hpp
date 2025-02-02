@@ -31,6 +31,7 @@
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
 #include "consai_robot_controller/tactic/tactic_control_ball.hpp"
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
+#include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
@@ -55,7 +56,7 @@ public:
   FieldInfoParser(
     const bool team_is_yellow, const bool invert,
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
-  void set_field_size(const double field_length, const double field_width);
+  void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);

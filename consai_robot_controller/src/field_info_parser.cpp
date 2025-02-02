@@ -30,9 +30,9 @@ FieldInfoParser::FieldInfoParser(
   tactic_obstacle_avoidance_ = std::make_shared<tactic::ObstacleAvoidance>(detection_extractor);
 }
 
-void FieldInfoParser::set_field_size(const double field_length, const double field_width)
+void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
 {
-  constraint_parser_->set_field_size(field_length, field_width);
+  constraint_parser_->set_field_size(param["field"]["length"], param["field"]["width"]);
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)

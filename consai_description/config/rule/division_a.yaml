@@ -17,4 +17,6 @@
       num_of_ids: 16
       max_diameter: 0.18
       max_height: 0.15
-      
+
+    keep_outs:
+      distance_to_ball_at_stop: 0.5  # 5.1.1. Stop
