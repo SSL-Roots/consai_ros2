@@ -77,10 +77,16 @@ def generate_launch_description():
         description=('Set GrSim control port.')
     )
 
+    param_publisher = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            get_package_share_directory('consai_description'),
+            '/launch/parameter_publisher.launch.py'])
+    )
+
     controller = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             get_package_share_directory('consai_robot_controller'),
-            '/launch/test.launch.py']),
+            '/launch/controller.launch.py']),
         launch_arguments={'invert': LaunchConfiguration('invert'),
                           'yellow': LaunchConfiguration('yellow'),
                           'vision_addr': LaunchConfiguration('vision_addr'),
@@ -131,6 +137,7 @@ def generate_launch_description():
         declare_arg_referee_port,
         declare_arg_robot_control_ip,
         declare_arg_robot_control_port,
+        param_publisher,
         controller,
         container,
         game_node

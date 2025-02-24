@@ -17,7 +17,6 @@
 
 
 from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.field import Field
 from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
@@ -35,27 +34,23 @@ class SideBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, side_id: SideBackID):
         super().__init__(robot_operator, field_observer)
         self._side_id = side_id
-        self._wait_target_x = -5.0
-        self._wait_target_y = 2.5
-        self._distance_from = 0.25
-        self._our_penalty_pos_x = -self._PENALTY_WAIT_X
-        self._our_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
-        self._their_penalty_pos_x = self._PENALTY_WAIT_X
-        self._their_penalty_pos_y = 4.5 - 0.3 * (3.0 + self._side_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (8.0 + self._side_id.value)
-        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
-        self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
+
+    def _wait_target_x(self):
+        return self._div_a_x(-5.0)
+
+    def _wait_target_y(self):
+        return self._div_a_y(2.5)
 
     def _side_back_operation(self, without_mark=False):
         SIDE_ID = self._side_id.value
-        MARK_THRESHOLD_Y = 3.0
+        MARK_THRESHOLD_Y = self._div_a_y(3.0)
+        DISTANCE_FROM = self._div_a_x(0.25)
 
         # 深追いしないライン
-        p1_x = self._penalty_corner_upper_front.x
-        p1_y = MARK_THRESHOLD_Y - 0.2
-        p2_x = self._penalty_goalside_upper_back.x
-        p2_y = MARK_THRESHOLD_Y - 0.2
+        p1_x = self._field_pos().penalty_pose('our', 'upper_front').x
+        p1_y = MARK_THRESHOLD_Y - self._div_a_y(0.2)
+        p2_x = self._field_pos().penalty_pose('our', 'upper_back').x
+        p2_y = MARK_THRESHOLD_Y - self._div_a_y(0.2)
 
         # FIXME: ボールが相手側にある場合は攻めに役立ちそうなポジションに移動してほしい
 
@@ -78,7 +73,7 @@ class SideBackDecision(DecisionBase):
             else:
                 operation = Operation().move_on_line(
                     TargetXY.their_robot(target_id), TargetXY.our_goal(),
-                    distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
+                    distance_from_p1=DISTANCE_FROM, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:
             # DFエリア横付近で待機する
@@ -90,8 +85,8 @@ class SideBackDecision(DecisionBase):
 
     def _get_side_target_xy(self):
         # 待機場所をそれぞれの関数で算出する
-        target_x = self._wait_target_x
-        target_y = self._wait_target_y
+        target_x = self._wait_target_x()
+        target_y = self._wait_target_y()
         if self._side_id == SideBackID.SIDE1:
             return self._get_side1_target_xy()
         elif self._side_id == SideBackID.SIDE2:
@@ -99,13 +94,13 @@ class SideBackDecision(DecisionBase):
         return target_x, target_y
 
     def _get_side1_target_xy(self):
-        target_x = self._wait_target_x
-        target_y = self._wait_target_y
+        target_x = self._wait_target_x()
+        target_y = self._wait_target_y()
         return target_x, target_y
 
     def _get_side2_target_xy(self):
-        target_x = self._wait_target_x
-        target_y = -self._wait_target_y
+        target_x = self._wait_target_x()
+        target_y = -self._wait_target_y()
         return target_x, target_y
 
     def stop(self, robot_id):
@@ -157,16 +152,22 @@ class SideBackDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
+        self._our_penalty_pos_x = -self._penalty_wait_x()
+        self._our_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (3.0 + self._side_id.value))
         return Operation().move_to_pose(
             TargetXY.value(self._our_penalty_pos_x, self._our_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
+        self._their_penalty_pos_x = self._penalty_wait_x()
+        self._their_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (3.0 + self._side_id.value))
         return Operation().move_to_pose(
             TargetXY.value(self._their_penalty_pos_x, self._their_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
+        self._ball_placement_pos_x = self._div_a_x(-6.0 + 2.0)
+        self._ball_placement_pos_y = self._div_a_y(1.8 - 0.3 * (8.0 + self._side_id.value))
         return Operation().move_to_pose(
             TargetXY.value(
                 self._ball_placement_pos_x, self._ball_placement_pos_y),

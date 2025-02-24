@@ -37,10 +37,10 @@
 #include "consai_robot_controller/obstacle/obstacle_observer.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace consai_robot_controller
 {
@@ -50,7 +50,6 @@ using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
-using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
@@ -69,6 +68,7 @@ protected:
   void on_timer_pub_goal_poses();
 
 private:
+  void gen_pubs_and_subs(const unsigned int num);
   State limit_world_velocity(
     const State & velocity, const double & max_velocity_xy,
     const double & max_velocity_theta) const;
@@ -98,7 +98,6 @@ private:
   std::shared_ptr<obstacle::ObstacleObserver> obstacle_observer_;
 
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  rclcpp::Subscription<GeometryData>::SharedPtr sub_geometry_;
   rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
   rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
   rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
@@ -106,6 +105,8 @@ private:
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_destinations_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;
   std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
 
   RobotControlMap robot_control_map_;
   GoalPosesMap goal_poses_map_;

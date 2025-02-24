@@ -25,6 +25,7 @@
 #include "consai_robot_controller/tools/control_tools.hpp"
 #include "consai_robot_controller/global_for_debug.hpp"
 #include "consai_tools/geometry_tools.hpp"
+#include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace consai_robot_controller
@@ -33,13 +34,11 @@ namespace consai_robot_controller
 namespace tools = geometry_tools;
 namespace ctools = control_tools;
 
-const int ROBOT_NUM = 16;
+using namespace std::placeholders;
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
 {
-  using namespace std::placeholders;
-
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
   declare_parameter("hard_limit_acceleration_xy", 2.0);
@@ -70,84 +69,24 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
 
-  std::string team_color = "blue";
-  if (team_is_yellow_) {
-    team_color = "yellow";
-  }
-
   steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
 
-  for (int i = 0; i < ROBOT_NUM; i++) {
-    pub_command_.push_back(
-      create_publisher<RobotCommand>(
-        "robot" + std::to_string(i) + "/command", 10)
-    );
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    .reliable();
 
-    robot_control_map_[i] = std::make_shared<RobotControlMsg>();
-    auto robot_control_callback = [this](
-      const RobotControlMsg::SharedPtr msg, const unsigned int robot_id) {
-        this->robot_control_map_[robot_id] = msg;
-      };
-    // Can not use auto. Ref: https://github.com/ros2/rclcpp/issues/273
-    std::function<void(const RobotControlMsg::SharedPtr msg)> fcn = std::bind(
-      robot_control_callback, _1, i);
+  auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
+    {
+      try {
+        nlohmann::json json_data = nlohmann::json::parse(msg->data);
+        gen_pubs_and_subs(json_data["robots"]["num_of_ids"]);
+        parser_->set_consai_param_rule(json_data);
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
+      }
+    };
 
-    pub_current_pose_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/current_pose", 10)
-    );
-
-    pub_current_vel_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/current_vel", 10)
-    );
-
-    pub_goal_pose_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/goal_pose", 10)
-    );
-
-    pub_target_speed_world_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/target_speed_world", 10)
-    );
-
-    pub_control_output_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output", 10)
-    );
-
-    pub_control_output_ff_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output_ff", 10)
-    );
-
-    pub_control_output_p_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output_p", 10)
-    );
-
-    std::string name_space = team_color + std::to_string(i);
-    sub_robot_control_.push_back(
-      create_subscription<RobotControlMsg>(
-        name_space + "/control", 10, fcn));
-
-    last_update_time_.push_back(steady_clock_.now());
-
-    // bindでは関数を宣言できなかったので、ラムダ式を使用する
-    // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
-    timer_pub_control_command_.push_back(
-      create_wall_timer(
-        control_loop_cycle_, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
-      )
-    );
-
-    locomotion_controller_.push_back(
-      LocomotionController(i, control_loop_cycle_.count() / 1000.0)
-    );
-
-    last_world_vel_.push_back(State());
-  }
+  sub_consai_param_rule_ = create_subscription<std_msgs::msg::String>(
+    "consai_param/rule", qos, callback_param);
 
   pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
   pub_destinations_ = create_publisher<GoalPoses>("destinations", 10);
@@ -164,12 +103,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     };
   sub_detection_tracked_ = create_subscription<TrackedFrame>(
     "detection_tracked", 10, detection_callback);
-
-  auto geometry_callback = [this](const GeometryData::SharedPtr msg) {
-      parser_->set_geometry(msg);
-    };
-  sub_geometry_ = create_subscription<GeometryData>(
-    "geometry", 10, geometry_callback);
 
   auto referee_callback = [this](const Referee::SharedPtr msg) {
       parser_->set_referee(msg);
@@ -416,6 +349,90 @@ void Controller::on_timer_pub_goal_poses()
   pub_destinations_->publish(std::move(destinations_msg));
 }
 
+void Controller::gen_pubs_and_subs(const unsigned int num)
+{
+  if (pub_command_.size() >= num) {
+    return;
+  }
+
+  std::string team_color = "blue";
+  if (team_is_yellow_) {
+    team_color = "yellow";
+  }
+
+  for (auto i = pub_command_.size(); i < num; i++) {
+    pub_command_.push_back(
+      create_publisher<RobotCommand>(
+        "robot" + std::to_string(i) + "/command", 10)
+    );
+
+    robot_control_map_[i] = std::make_shared<RobotControlMsg>();
+    auto robot_control_callback = [this](
+      const RobotControlMsg::SharedPtr msg, const unsigned int robot_id) {
+        this->robot_control_map_[robot_id] = msg;
+      };
+    // Can not use auto. Ref: https://github.com/ros2/rclcpp/issues/273
+    std::function<void(const RobotControlMsg::SharedPtr msg)> fcn = std::bind(
+      robot_control_callback, _1, i);
+
+    pub_current_pose_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/current_pose", 10)
+    );
+
+    pub_current_vel_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/current_vel", 10)
+    );
+
+    pub_goal_pose_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/goal_pose", 10)
+    );
+
+    pub_target_speed_world_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/target_speed_world", 10)
+    );
+
+    pub_control_output_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/control_output", 10)
+    );
+
+    pub_control_output_ff_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/control_output_ff", 10)
+    );
+
+    pub_control_output_p_.push_back(
+      create_publisher<State>(
+        "robot" + std::to_string(i) + "/control_output_p", 10)
+    );
+
+    std::string name_space = team_color + std::to_string(i);
+    sub_robot_control_.push_back(
+      create_subscription<RobotControlMsg>(
+        name_space + "/control", 10, fcn));
+
+    last_update_time_.push_back(steady_clock_.now());
+
+    // bindでは関数を宣言できなかったので、ラムダ式を使用する
+    // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
+    timer_pub_control_command_.push_back(
+      create_wall_timer(
+        control_loop_cycle_, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
+      )
+    );
+
+    locomotion_controller_.push_back(
+      LocomotionController(i, control_loop_cycle_.count() / 1000.0)
+    );
+
+    last_world_vel_.push_back(State());
+  }
+}
+
 State Controller::limit_world_velocity(
   const State & velocity, const double & max_velocity_xy,
   const double & max_velocity_theta) const
@@ -498,11 +515,6 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
 
 bool Controller::publish_stop_command(const unsigned int robot_id)
 {
-  if (robot_id >= ROBOT_NUM) {
-    RCLCPP_WARN(this->get_logger(), "無効なロボットID: %d(>=%d)です", robot_id, ROBOT_NUM);
-    return false;
-  }
-
   auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
   stop_command_msg->team_is_yellow = team_is_yellow_;

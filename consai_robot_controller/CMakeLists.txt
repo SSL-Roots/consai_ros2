@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 project(consai_robot_controller)
 
 # Default to C99
@@ -25,6 +25,11 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+
+include(FetchContent)
+fetchcontent_declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+fetchcontent_makeavailable(json)
 
 include_directories(include)
 
@@ -55,6 +60,7 @@ add_library(controller_component SHARED
 )
 target_compile_definitions(controller_component
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
+target_link_libraries(controller_component nlohmann_json::nlohmann_json)
 ament_target_dependencies(controller_component
   consai_frootspi_msgs
   consai_msgs
@@ -64,6 +70,7 @@ ament_target_dependencies(controller_component
   rclcpp_action
   rclcpp_components
   robocup_ssl_msgs
+  std_msgs
 )
 rclcpp_components_register_nodes(controller_component "consai_robot_controller::Controller")
 
@@ -73,6 +80,7 @@ add_library(grsim_command_converter SHARED
 )
 target_compile_definitions(grsim_command_converter
   PRIVATE "CONSAI_ROBOT_CONTROLLER_BUILDING_DLL")
+target_link_libraries(grsim_command_converter nlohmann_json::nlohmann_json)
 ament_target_dependencies(grsim_command_converter
   consai_frootspi_msgs
   consai_msgs
@@ -80,6 +88,7 @@ ament_target_dependencies(grsim_command_converter
   rclcpp
   rclcpp_components
   robocup_ssl_msgs
+  std_msgs
 )
 rclcpp_components_register_nodes(grsim_command_converter "consai_robot_controller::GrSimCommandConverter")
 
@@ -116,6 +125,18 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
+
+# FetchContentで取得したnlohmann/jsonのターゲットもインストール
+install(
+  TARGETS nlohmann_json
+  EXPORT export_${PROJECT_NAME}
+)
+
+# エクスポートセットをインストール
+install(
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

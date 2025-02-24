@@ -1,0 +1,22 @@
+/**:
+  ros__parameters:
+    # 2. Playing Environment
+    field:
+      length: 12.0
+      width: 9.0
+      goal_width: 1.8
+      penalty_depth: 1.8
+      penalty_width: 3.6
+
+    ball:
+      diameter: 0.043
+
+    # 3. Robots
+    robots:
+      max_num_in_field: 11
+      num_of_ids: 16
+      max_diameter: 0.18
+      max_height: 0.15
+
+    keep_outs:
+      distance_to_ball_at_stop: 0.5  # 5.1.1. Stop

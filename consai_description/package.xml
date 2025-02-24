@@ -1,28 +1,20 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>consai_robot_controller</name>
+  <name>consai_description</name>
   <version>0.1.0</version>
-  <description>This package provides a component that controls a RoboCup SSL robot in game field space.</description>
+  <description>This package defines some parameters for the CON-SAI system.</description>
   <maintainer email="macakasit@gmail.com">shotaak</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>consai_frootspi_msgs</depend>
-  <depend>consai_msgs</depend>
-  <depend>consai_tools</depend>
-  <depend>consai_visualizer_msgs</depend>
-  <depend>launch_ros</depend>
-  <depend>rclcpp</depend>
-  <depend>rclcpp_action</depend>
-  <depend>rclcpp_components</depend>
-  <depend>robocup_ssl_msgs</depend>
+  <depend>python3-yaml</depend>
+  <depend>rclpy</depend>
   <depend>std_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

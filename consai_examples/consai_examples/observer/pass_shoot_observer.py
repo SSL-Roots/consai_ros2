@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_examples.observer.pos_vel import PosVel
+from consai_examples.observer.field_normalizer import FieldNormalizer
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
 import math
@@ -22,31 +23,41 @@ class PassShootObserver:
     def __init__(self, goalie_id):
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
+        self._present_shoot_pos_list: list[State2D] = []
 
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
-        self._goal_pos_list = [
-            State2D(x=self._field_half_length, y=0.0),
-            State2D(x=self._field_half_length, y=0.45),
-            State2D(x=self._field_half_length, y=-0.45)
-        ]
+        self._goalie_id = goalie_id
+
+        self._field = FieldNormalizer()
+
+        self._set_field_corner()
+        self._set_goal_pos_list()
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
+        self._set_field_corner()
+        self._set_goal_pos_list()
+
+    def _set_field_corner(self) -> None:
         self._their_top_corner = State2D(
-            x=self._field_half_length, y=self._field_half_width)
+            x=self._field.half_length(), y=self._field.half_width())
         self._their_bottom_corner = State2D(
-            x=self._field_half_length, y=-self._field_half_width)
+            x=self._field.half_length(), y=-self._field.half_width())
         self._our_top_corner = State2D(
-            x=-self._field_half_length, y=self._field_half_width)
+            x=-self._field.half_length(), y=self._field.half_width())
         self._our_bottom_corner = State2D(
-            x=-self._field_half_length, y=-self._field_half_width)
+            x=-self._field.half_length(), y=-self._field.half_width())
         self._clear_pos_list = [
             self._their_top_corner,
             self._their_bottom_corner,
             self._our_top_corner,
             self._our_bottom_corner]
 
-        self._present_shoot_pos_list: list[State2D] = []
-
-        self._goalie_id = goalie_id
+    def _set_goal_pos_list(self) -> None:
+        self._goal_pos_list = [
+            State2D(x=self._field.half_length(), y=0.0),
+            State2D(x=self._field.half_length(), y=self._field.half_goal_width() * 0.5),
+            State2D(x=self._field.half_length(), y=-self._field.half_goal_width() * 0.5)
+        ]
 
     def update(self, ball: PosVel,
                our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:
@@ -68,7 +79,7 @@ class PassShootObserver:
         # TODO(Roots): パスできるリストの探索と、シュートできるリストの探索は別関数に分けたほうが良い
 
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
-        robot_r = 0.4
+        robot_r = self._field.on_div_a_robot_diameter(0.4)
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
 
@@ -182,7 +193,7 @@ class PassShootObserver:
 
     def _search_shoot_pos_list(self, search_ours=False) -> list[State2D]:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
-        TOLERANCE = 0.2  # ロボット半径 + alpha
+        TOLERANCE = self._field.on_div_a_robot_diameter(0.2)  # ロボット半径 + alpha
 
         shoot_pos_list = []
 
@@ -204,7 +215,7 @@ class PassShootObserver:
 
     def _search_clear_pos_list(self, search_ours=False) -> list[State2D]:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
-        TOLERANCE = 0.1  # ロボット半径 + alpha
+        TOLERANCE = self._field.on_div_a_robot_diameter(0.1)  # ロボット半径 + alpha
 
         clear_pos_list = []
 

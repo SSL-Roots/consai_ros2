@@ -51,6 +51,7 @@ public:
     const std::shared_ptr<DetectionExtractor> & detection_extractor,
     const bool team_is_yellow);
 
+  void set_field_size(const double field_length, const double field_width);
   void set_named_targets(const NamedTargets::SharedPtr msg);
   bool parse_constraint_object(const ConstraintObject & object, State & object_pose) const;
   bool parse_constraint_xy(const ConstraintXY & xy, double & parsed_x, double & parsed_y) const;
@@ -65,8 +66,8 @@ private:
   std::map<std::string, State> named_targets_;
 
   bool team_is_yellow_;
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
+  double field_half_length_ = 6.0;
+  double field_half_width_ = 4.5;
 };
 
 }  // namespace parser

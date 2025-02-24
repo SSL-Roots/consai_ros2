@@ -31,8 +31,8 @@
 #include "consai_robot_controller/tactic/shoot_tactics.hpp"
 #include "consai_robot_controller/tactic/tactic_control_ball.hpp"
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
+#include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robocup_ssl_msgs/msg/geometry_data.hpp"
 #include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
@@ -44,7 +44,6 @@ namespace consai_robot_controller
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
-using GeometryData = robocup_ssl_msgs::msg::GeometryData;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
@@ -57,8 +56,8 @@ public:
   FieldInfoParser(
     const bool team_is_yellow, const bool invert,
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
+  void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
-  void set_geometry(const GeometryData::SharedPtr geometry);
   void set_referee(const Referee::SharedPtr referee);
   void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);

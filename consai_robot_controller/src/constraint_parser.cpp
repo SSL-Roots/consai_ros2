@@ -40,6 +40,12 @@ ConstraintParser::ConstraintParser(
   team_is_yellow_ = team_is_yellow;
 }
 
+void ConstraintParser::set_field_size(const double field_length, const double field_width)
+{
+  field_half_length_ = field_length / 2.0;
+  field_half_width_ = field_width / 2.0;
+}
+
 void ConstraintParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
   // トピックを受け取るたびに初期化する

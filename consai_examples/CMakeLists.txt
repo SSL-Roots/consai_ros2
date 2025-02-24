@@ -21,7 +21,6 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/field_observer.py
-    ${PROJECT_NAME}/field.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
@@ -42,6 +41,8 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/ball_placement_observer.py
     ${PROJECT_NAME}/observer/ball_position_observer.py
     ${PROJECT_NAME}/observer/detection_wrapper.py
+    ${PROJECT_NAME}/observer/field_normalizer.py
+    ${PROJECT_NAME}/observer/field_positions.py
     ${PROJECT_NAME}/observer/man_mark_observer.py
     ${PROJECT_NAME}/observer/pass_shoot_observer.py
     ${PROJECT_NAME}/observer/pos_vel.py

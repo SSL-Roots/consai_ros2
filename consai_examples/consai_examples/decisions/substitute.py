@@ -39,7 +39,7 @@ class SubstituteDecision(DecisionBase):
         # https://robocup-ssl.github.io/ssl-rules/sslrules.html#_robot_substitution
         target_name = "SUBSTITUTION_POS"
         pos_x = 0.0
-        pos_y = -4.5 + -0.15
+        pos_y = self._div_a_y(-4.5 + -0.15)
         if self._invert:
             pos_y *= -1.0
         self._operator.set_named_target(target_name, pos_x, pos_y)

@@ -13,36 +13,38 @@
 # limitations under the License.
 
 from consai_msgs.msg import State2D
-from consai_examples.field import Field
+from consai_examples.observer.field_normalizer import FieldNormalizer
 import math
 
 
 class BallPositionObserver:
     def __init__(self):
-        self._field_half_length = Field.field('half_length')
-        self._field_half_width = Field.field('half_width')
-        self._defense_area_length = Field.defense_area('length')
-        self._defense_area_half_width = Field.defense_area('helf_width')
         self._ball_pos = State2D()
-        self._OUTSIDE_MARGIN = 0.05
+        self._field = FieldNormalizer()
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
+
+    def _outside_margin(self) -> float:
+        return self._field.on_div_a_ball_diameter(0.05)
 
     def update(self, ball_pos: State2D) -> None:
         self._ball_pos = ball_pos
 
     def is_outside_of_left(self) -> bool:
-        if self._ball_pos.x < -self._field_half_length:
+        if self._ball_pos.x < -self._field.half_length():
             return True
 
     def is_outside_of_right(self) -> bool:
-        if self._ball_pos.x > self._field_half_length:
+        if self._ball_pos.x > self._field.half_length():
             return True
 
     def is_outside_of_top(self) -> bool:
-        if self._ball_pos.y > self._field_half_width:
+        if self._ball_pos.y > self._field.half_width():
             return True
 
     def is_outside_of_bottom(self) -> bool:
-        if self._ball_pos.y < -self._field_half_width:
+        if self._ball_pos.y < -self._field.half_width():
             return True
 
     def is_outside(self) -> bool:
@@ -50,19 +52,19 @@ class BallPositionObserver:
             self.is_outside_of_top() or self.is_outside_of_bottom()
 
     def is_outside_of_left_with_margin(self) -> bool:
-        if self._ball_pos.x < -self._field_half_length - self._OUTSIDE_MARGIN:
+        if self._ball_pos.x < -self._field.half_length() - self._outside_margin():
             return True
 
     def is_outside_of_right_with_margin(self) -> bool:
-        if self._ball_pos.x > self._field_half_length + self._OUTSIDE_MARGIN:
+        if self._ball_pos.x > self._field.half_length() + self._outside_margin():
             return True
 
     def is_outside_of_top_with_margin(self) -> bool:
-        if self._ball_pos.y > self._field_half_width + self._OUTSIDE_MARGIN:
+        if self._ball_pos.y > self._field.half_width() + self._outside_margin():
             return True
 
     def is_outside_of_bottom_with_margin(self) -> bool:
-        if self._ball_pos.y < -self._field_half_width - self._OUTSIDE_MARGIN:
+        if self._ball_pos.y < -self._field.half_width() - self._outside_margin():
             return True
 
     def is_outside_with_margin(self) -> bool:
@@ -72,13 +74,13 @@ class BallPositionObserver:
             self.is_outside_of_bottom_with_margin()
 
     def is_in_our_defense_area(self):
-        in_y = math.fabs(self._ball_pos.y) < self._defense_area_half_width
-        in_x = self._ball_pos.x < -self._field_half_length + self._defense_area_length
+        in_y = math.fabs(self._ball_pos.y) < self._field.half_penalty_width()
+        in_x = self._ball_pos.x < -self._field.half_length() + self._field.penalty_depth()
         return in_y and in_x
 
     def is_in_their_defense_area(self):
-        in_y = math.fabs(self._ball_pos.y) < self._defense_area_half_width
-        in_x = self._ball_pos.x > self._field_half_length - self._defense_area_length
+        in_y = math.fabs(self._ball_pos.y) < self._field.half_penalty_width()
+        in_x = self._ball_pos.x > self._field.half_length() - self._field.penalty_depth()
         return in_y and in_x
 
     def is_in_our_side(self):

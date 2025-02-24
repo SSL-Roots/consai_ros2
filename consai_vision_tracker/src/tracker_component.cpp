@@ -22,6 +22,7 @@
 
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_tools/geometry_tools.hpp"
+#include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -37,23 +38,9 @@ using State = consai_msgs::msg::State2D;
 using std::placeholders::_1;
 
 Tracker::Tracker(const rclcpp::NodeOptions & options)
-: Node("tracker", options)
+: Node("tracker", options), update_rate_(0.01s)
 {
-  const auto UPDATE_RATE = 0.01s;
-
-  ball_tracker_ = std::make_shared<BallTracker>(UPDATE_RATE.count());
-  for (int i = 0; i < 16; i++) {
-    blue_robot_tracker_.push_back(
-      std::make_shared<RobotTracker>(
-        RobotId::TEAM_COLOR_BLUE, i,
-        UPDATE_RATE.count()));
-    yellow_robot_tracker_.push_back(
-      std::make_shared<RobotTracker>(
-        RobotId::TEAM_COLOR_YELLOW, i,
-        UPDATE_RATE.count()));
-  }
-
-  timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
+  ball_tracker_ = std::make_shared<BallTracker>(update_rate_.count());
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
   pub_robot_velocities_ = create_publisher<RobotLocalVelocities>("robot_local_velocities", 10);
@@ -73,6 +60,24 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
 
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Tracker::callback_geometry, this, _1));
+
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    .reliable();
+
+  auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
+    {
+      try {
+        nlohmann::json json_data = nlohmann::json::parse(msg->data);
+        gen_robot_trackers(json_data["robots"]["num_of_ids"]);
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
+      }
+    };
+
+  sub_consai_param_rule_ = create_subscription<std_msgs::msg::String>(
+    "consai_param/rule", qos, callback_param);
+
+  timer_ = create_wall_timer(update_rate_, std::bind(&Tracker::on_timer, this));
 }
 
 void Tracker::on_timer()
@@ -125,6 +130,24 @@ void Tracker::on_timer()
   pub_robot_velocities_->publish(std::move(robot_vel_msg));
 }
 
+void Tracker::gen_robot_trackers(const unsigned int num)
+{
+  if (blue_robot_tracker_.size() >= num) {
+    return;
+  }
+
+  for (auto i = blue_robot_tracker_.size(); i < num; i++) {
+    blue_robot_tracker_.push_back(
+      std::make_shared<RobotTracker>(
+        RobotId::TEAM_COLOR_BLUE, i,
+        update_rate_.count()));
+    yellow_robot_tracker_.push_back(
+      std::make_shared<RobotTracker>(
+        RobotId::TEAM_COLOR_YELLOW, i,
+        update_rate_.count()));
+  }
+}
+
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
   for (const auto & ball : msg->balls) {
@@ -132,13 +155,15 @@ void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
   }
 
   for (const auto & blue_robot : msg->robots_blue) {
-    if (blue_robot.robot_id.size() > 0) {
+    if (blue_robot.robot_id.size() > 0 && blue_robot.robot_id[0] < blue_robot_tracker_.size()) {
       blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
   for (const auto & yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0) {
+    if (yellow_robot.robot_id.size() > 0 &&
+      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
+    {
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
@@ -156,14 +181,16 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
   }
 
   for (auto && blue_robot : msg->robots_blue) {
-    if (blue_robot.robot_id.size() > 0) {
+    if (blue_robot.robot_id.size() > 0 && blue_robot.robot_id[0] < blue_robot_tracker_.size()) {
       invert_robot(blue_robot);
       blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
   for (auto && yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0) {
+    if (yellow_robot.robot_id.size() > 0 &&
+      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
+    {
       invert_robot(yellow_robot);
       yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }

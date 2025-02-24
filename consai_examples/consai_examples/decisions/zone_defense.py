@@ -36,16 +36,11 @@ class ZoneDefenseDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, zone_id: ZoneDefenseID):
         super().__init__(robot_operator, field_observer)
         self._zone_id = zone_id
-        self._distance_from = 0.4
-        self._our_penalty_pos_x = -self._PENALTY_WAIT_X
-        self._our_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
-        self._their_penalty_pos_x = self._PENALTY_WAIT_X
-        self._their_penalty_pos_y = 4.5 - 0.3 * (6.0 + self._zone_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (4.0 + self._zone_id.value)
 
     def _zone_defense_operation(self, robot_id, without_mark=False):
         # ゾーンディフェンスの担当者数に合わせて、待機位置を変更する
+        DISTANCE_FROM = self._div_a_x(0.4)
+
         # ZONE_ID = self._zone_id.value
         target_id = self._field_observer.man_mark().get_mark_robot_id(robot_id)
 
@@ -59,7 +54,7 @@ class ZoneDefenseDecision(DecisionBase):
         if target_id != -1 and without_mark is False:
             operation = Operation().move_on_line(
                 TargetXY.their_robot(target_id), TargetXY.ball(),
-                distance_from_p1=self._distance_from, target_theta=TargetTheta.look_ball())
+                distance_from_p1=DISTANCE_FROM, target_theta=TargetTheta.look_ball())
             operation = operation.with_ball_receiving()
         else:
             # ゾーン内で待機する
@@ -219,16 +214,22 @@ class ZoneDefenseDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
+        self._our_penalty_pos_x = -self._penalty_wait_x()
+        self._our_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (7.0 + self._zone_id.value))
         return Operation().move_to_pose(
             TargetXY.value(self._our_penalty_pos_x, self._our_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
+        self._their_penalty_pos_x = self._penalty_wait_x()
+        self._their_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (7.0 + self._zone_id.value))
         return Operation().move_to_pose(
             TargetXY.value(self._their_penalty_pos_x, self._their_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
+        self._ball_placement_pos_x = self._div_a_x(-6.0 + 2.0)
+        self._ball_placement_pos_y = self._div_a_y(1.8 - 0.3 * (4.0 + self._zone_id.value))
         return Operation().move_to_pose(
             TargetXY.value(
                 self._ball_placement_pos_x, self._ball_placement_pos_y),

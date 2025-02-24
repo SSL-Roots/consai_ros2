@@ -17,7 +17,6 @@
 
 
 from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.field import Field
 from consai_examples.operation import Operation
 from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
@@ -36,54 +35,47 @@ class CenterBackDecision(DecisionBase):
     def __init__(self, robot_operator, field_observer, center_back_id: CenterBackID):
         super().__init__(robot_operator, field_observer)
         self._center_back_id = center_back_id
-        self._our_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
-        self._their_penalty_pos_y = 4.5 - 0.3 * (1.0 + self._center_back_id.value)
-        self._ball_placement_pos_x = -6.0 + 2.0
-        self._ball_placement_pos_y = 1.8 - 0.3 * (1.0 + self._center_back_id.value)
+
+    def _margin_line(self) -> float:
         # ペナルティエリアからどれだけ離れるか
-        self._MARGIN_LINE = 0.3
-        # 2台でディフェンスする時のお互いの距離
-        self._MARGIN_ROBOT = 0.1
-        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
-        self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
-        self._penalty_goalside_upper_back = Field.penalty_pose('our', 'upper_back')
-        self._penalty_goalside_lower_back = Field.penalty_pose('our', 'lower_back')
+        return self._div_a_dia(0.3)
 
     def _get_offset(self) -> float:
+        MARGIN_ROBOT = self._div_a_dia(0.1)
         offset = 0.0
         if self._num_of_center_back_roles > 1:
             if self._center_back_id == CenterBackID.CENTER_BACK1:
-                offset = -self._MARGIN_ROBOT
+                offset = -MARGIN_ROBOT
             else:
-                offset = self._MARGIN_ROBOT
+                offset = MARGIN_ROBOT
         return offset
 
     def _defend_front_operation(self, offset: float):
         # ディフェンスエリアの前側を守る
-        p1_x = self._penalty_corner_upper_front.x + self._MARGIN_LINE
-        p1_y = self._penalty_corner_upper_front.y
-        p2_x = self._penalty_corner_lower_front.x + self._MARGIN_LINE
-        p2_y = self._penalty_corner_lower_front.y
+        p1_x = self._field_pos().penalty_pose('our', 'upper_front').x + self._margin_line()
+        p1_y = self._field_pos().penalty_pose('our', 'upper_front').y
+        p2_x = self._field_pos().penalty_pose('our', 'lower_front').x + self._margin_line()
+        p2_y = self._field_pos().penalty_pose('our', 'lower_front').y
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
     def _defend_upper_operation(self, offset: float):
         # ディフェンスエリアの上側を守る
-        p1_x = self._penalty_goalside_upper_back.x + 0.3
-        p1_y = self._penalty_goalside_upper_back.y + self._MARGIN_LINE
-        p2_x = self._penalty_corner_upper_front.x + 0.3
-        p2_y = self._penalty_corner_upper_front.y + self._MARGIN_LINE
+        p1_x = self._field_pos().penalty_pose('our', 'upper_back').x + self._margin_line()
+        p1_y = self._field_pos().penalty_pose('our', 'upper_back').y + self._margin_line()
+        p2_x = self._field_pos().penalty_pose('our', 'upper_front').x + self._margin_line()
+        p2_y = self._field_pos().penalty_pose('our', 'upper_front').y + self._margin_line()
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
 
     def _defend_lower_operation(self, offset: float):
         # ディフェンスエリアの下側を守る
-        p1_x = self._penalty_corner_lower_front.x + 0.3
-        p1_y = self._penalty_corner_lower_front.y - self._MARGIN_LINE
-        p2_x = self._penalty_goalside_lower_back.x + 0.3
-        p2_y = self._penalty_goalside_lower_back.y - self._MARGIN_LINE
+        p1_x = self._field_pos().penalty_pose('our', 'lower_front').x + self._margin_line()
+        p1_y = self._field_pos().penalty_pose('our', 'lower_front').y - self._margin_line()
+        p2_x = self._field_pos().penalty_pose('our', 'lower_back').x + self._margin_line()
+        p2_y = self._field_pos().penalty_pose('our', 'lower_back').y - self._margin_line()
         return Operation().move_to_intersection(
             TargetXY.value(p1_x, p1_y), TargetXY.value(p2_x, p2_y),
             TargetXY.our_goal(), TargetXY.ball(), TargetTheta.look_ball(), offset)
@@ -106,8 +98,8 @@ class CenterBackDecision(DecisionBase):
         # 隣同士の衝突回避をやめるため、
         # ディンフェスエリアに近づいたら、our robot回避を無効にする
         my_pos = self._field_observer.detection().our_robots()[robot_id].pos()
-        our_goal_center = Field.goal_pose('our', 'center')
-        if tool.get_distance(my_pos, our_goal_center) < 3.0:
+        our_goal_center = self._field_pos().goal_pose('our', 'center')
+        if tool.get_distance(my_pos, our_goal_center) < self._div_a_x(3.0):
             operation = operation.disable_avoid_our_robots()
         return operation
 
@@ -125,18 +117,22 @@ class CenterBackDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
+        our_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (1.0 + self._center_back_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(-self._PENALTY_WAIT_X, self._our_penalty_pos_y),
+            TargetXY.value(-self._penalty_wait_x(), our_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
+        their_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (1.0 + self._center_back_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(self._PENALTY_WAIT_X, self._their_penalty_pos_y),
+            TargetXY.value(self._penalty_wait_x(), their_penalty_pos_y),
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
+        ball_placement_pos_x = self._div_a_x(-6.0 + 2.0)
+        ball_placement_pos_y = self._div_a_y(1.8 - 0.3 * (1.0 + self._center_back_id.value))
         return Operation().move_to_pose(
-            TargetXY.value(self._ball_placement_pos_x, self._ball_placement_pos_y),
+            TargetXY.value(ball_placement_pos_x, ball_placement_pos_y),
             TargetTheta.look_ball())
 
 

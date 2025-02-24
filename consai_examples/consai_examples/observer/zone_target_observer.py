@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_examples.observer.pos_vel import PosVel
+from consai_examples.observer.field_normalizer import FieldNormalizer
 from consai_msgs.msg import State2D
 import math
 
@@ -21,6 +22,11 @@ class ZoneTargetObserver():
 
     def __init__(self):
         self._zone_targets: dict[int, int] = {0: None, 1: None, 2: None, 3: None}
+
+        self._field = FieldNormalizer()
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        self._field = field_normalizer
 
     def has_zone_target(self, zone_id: int) -> bool:
         return self._zone_targets[zone_id] is not None
@@ -153,8 +159,10 @@ class ZoneTargetObserver():
 
     def _is_in_defense_area(self, pos: State2D) -> bool:
         # ディフェンスエリアに入ってたらtrue
-        defense_x = -6.0 + 1.8 + 0.6  # 0.4はロボットの直径x2
-        defense_y = 1.8 + 0.6  # 0.4はロボットの直径x2
+        defense_x = self._field.on_div_a_x(-6.0 + 1.8) \
+            + self._field.on_div_a_robot_diameter(0.6)  # 0.4はロボットの直径x2
+        defense_y = self._field.on_div_a_y(1.8) \
+            + self._field.on_div_a_robot_diameter(0.6)  # 0.4はロボットの直径x2
         if pos.x < defense_x and math.fabs(pos.y) < defense_y:
             return True
         return False
@@ -188,7 +196,7 @@ class ZoneTargetObserver():
         # ZONE3 (左サイドの上半分の上)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y > 4.5 * 0.5:
+        if pos.x < 0.0 and pos.y > self._field.on_div_a_y(4.5 * 0.5):
             return True
         return False
 
@@ -196,7 +204,7 @@ class ZoneTargetObserver():
         # ZONE3 (左サイドの真ん中)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and math.fabs(pos.y) <= 4.5 * 0.5:
+        if pos.x < 0.0 and math.fabs(pos.y) <= self._field.on_div_a_y(4.5 * 0.5):
             return True
         return False
 
@@ -204,7 +212,7 @@ class ZoneTargetObserver():
         # ZONE3 (左サイドの下半分の下)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y < -4.5 * 0.5:
+        if pos.x < 0.0 and pos.y < self._field.on_div_a_y(-4.5 * 0.5):
             return True
         return False
 
@@ -212,7 +220,7 @@ class ZoneTargetObserver():
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y > 4.5 * 0.5:
+        if pos.x < 0.0 and pos.y > self._field.on_div_a_y(4.5 * 0.5):
             return True
         return False
 
@@ -220,7 +228,7 @@ class ZoneTargetObserver():
         # ZONE4 (左サイドの上半分の上)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y > 0.0 and pos.y <= 4.5 * 0.5:
+        if pos.x < 0.0 and pos.y > 0.0 and pos.y <= self._field.on_div_a_y(4.5 * 0.5):
             return True
         return False
 
@@ -228,7 +236,7 @@ class ZoneTargetObserver():
         # ZONE4 (左サイドの下半分の上)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y <= 0.0 and pos.y > -4.5 * 0.5:
+        if pos.x < 0.0 and pos.y <= 0.0 and pos.y > self._field.on_div_a_y(-4.5 * 0.5):
             return True
         return False
 
@@ -236,6 +244,6 @@ class ZoneTargetObserver():
         # ZONE4 (左サイドの下半分の下)にロボットがいればtrue
         if self._is_in_defense_area(pos):
             return False
-        if pos.x < 0.0 and pos.y <= -4.5 * 0.5:
+        if pos.x < 0.0 and pos.y <= self._field.on_div_a_y(-4.5 * 0.5):
             return True
         return False
