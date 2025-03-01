@@ -1,0 +1,25 @@
+
+name: "blank"
+description: "デバッグ用の空のPlayファイルです"
+
+applicable:
+  - "halt"
+
+aborted:
+  - "!applicable"
+
+timeout_ms: 0
+
+role0: ["blank"]
+role1: ["blank"]
+role2: ["blank"]
+role3: ["blank"]
+
+role4: ["blank"]
+role5: ["blank"]
+role6: ["blank"]
+role7: ["blank"]
+
+role8: ["blank"]
+role9: ["blank"]
+role10: ["blank"]

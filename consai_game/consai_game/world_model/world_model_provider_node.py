@@ -15,30 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 from consai_game.utils.process_info import process_info
-from consai_game.play.play_book import PlayBook
+from consai_game.world_model.world_model import WorldModel
 from rclpy.node import Node
 
 
-class PlayNode(Node):
-    def __init__(self, update_hz: float = 10, playbook_dir: str = ''):
-        super().__init__('play_node')
-
+class WorldModelProviderNode(Node):
+    def __init__(self, update_hz: float = 10):
+        super().__init__('world_model_provider_node')
         self.timer = self.create_timer(1.0/update_hz, self.update)
-        self.play_book = PlayBook.load_from_directory(playbook_dir)
-
-        if len(self.play_book.plays) == 0:
-            raise ValueError('No plays found in playbook')
-
-        print(f"playbook: {self.play_book.plays}")
-
-    @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser):
-        parser.add_argument('--playbook',
-                            default="",
-                            type=str,
-                            help='playbook directory')
 
     def update(self):
-        self.get_logger().info(f'Play update, {process_info()}')
+        self.get_logger().info(f'WorldModelProvider update, {process_info()}')

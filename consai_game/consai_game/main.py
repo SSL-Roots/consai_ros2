@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from consai_game.play_node import PlayNode
+from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 from consai_game.utils.process_info import process_info
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -32,12 +34,18 @@ def main():
 
 if __name__ == '__main__':
 
-    rclpy.init()
+    arg_parser = argparse.ArgumentParser()
+    PlayNode.add_arguments(arg_parser)
 
-    play_node = PlayNode(10)
+    args, other_args = arg_parser.parse_known_args()
+    rclpy.init(args=other_args)
+
+    play_node = PlayNode(update_hz=10, playbook_dir=args.playbook)
+    world_model_provider_node = WorldModelProviderNode(update_hz=10)
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)
+    executor.add_node(world_model_provider_node)
 
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
