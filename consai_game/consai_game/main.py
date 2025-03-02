@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import argparse
-from consai_game.play_node import PlayNode
+from consai_game.play.play_node import PlayNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 from consai_game.utils.process_info import process_info
 import rclpy
