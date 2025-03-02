@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from consai_game.play.applicable_condition import ApplicableCondition
+from consai_game.world_model.world_model import WorldModel
 from dataclasses import dataclass, field
 from typing import List
 
@@ -38,3 +39,7 @@ class Play:
     role8: List[str] = field(default_factory=list)
     role9: List[str] = field(default_factory=list)
     role10: List[str] = field(default_factory=list)
+
+    def is_applicable(self, world_model: WorldModel) -> bool:
+        """Playが適用可能か判定"""
+        return all(cond.is_met(world_model) for cond in self.applicable)

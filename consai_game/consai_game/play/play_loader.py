@@ -18,6 +18,7 @@
 from consai_game.play.play import Play
 from consai_game.play.applicable_condition import ApplicableCondition
 from consai_game.play.referee_conditions import CONDITION_MAP_REFEREE
+from pathlib import Path
 import yaml
 
 # すべてのCONDITION_MAPを統合
@@ -48,7 +49,7 @@ class PlayLoader:
                 #     applicable_conditions.append(numeric_condition)
 
         return Play(
-            name=data["name"],
+            name=Path(yaml_file).stem,
             description=data["description"],
             applicable=applicable_conditions,
             aborted=data["aborted"],

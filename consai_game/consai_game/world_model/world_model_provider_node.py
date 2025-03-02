@@ -25,5 +25,7 @@ class WorldModelProviderNode(Node):
         super().__init__('world_model_provider_node')
         self.timer = self.create_timer(1.0/update_hz, self.update)
 
+        self.world_model = WorldModel()
+
     def update(self):
         self.get_logger().info(f'WorldModelProvider update, {process_info()}')

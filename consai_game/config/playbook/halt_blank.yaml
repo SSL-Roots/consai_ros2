@@ -1,5 +1,4 @@
 
-name: "blank"
 description: "HALT信号をトリガーにした、デバッグ用の空のPlayファイルです"
 
 applicable:
