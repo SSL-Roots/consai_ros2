@@ -16,10 +16,11 @@
 # limitations under the License.
 
 from consai_game.play.play import Play
+from consai_game.play.play_loader import PlayLoader
 from dataclasses import dataclass, field
-import os
+from itertools import chain
+from pathlib import Path
 from typing import List
-import yaml
 
 
 @dataclass
@@ -31,11 +32,10 @@ class PlayBook:
     def load_from_directory(cls, dir_path: str) -> "PlayBook":
         """ディレクトリ内のすべての YAML ファイルをロード"""
         plays = []
-        for file_name in os.listdir(dir_path):
-            if file_name.endswith(".yaml") or file_name.endswith(".yml"):
-                file_path = os.path.join(dir_path, file_name)
-                with open(file_path, "r", encoding="utf-8") as f:
-                    data = yaml.safe_load(f)
-                    play = Play(**data)
-                    plays.append(play)
+
+        directory = Path(dir_path)
+        for yaml_file in chain(directory.rglob("*.yaml"), directory.rglob("*.yml")):
+            print(f"Loading playbook from {yaml_file}")
+            plays.append(PlayLoader.load_from_yaml(yaml_file))
+
         return cls(plays=plays)

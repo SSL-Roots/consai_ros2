@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_game.play.applicable_condition import ApplicableCondition
 from dataclasses import dataclass, field
 from typing import List
 
@@ -23,7 +24,7 @@ from typing import List
 class Play:
     name: str
     description: str
-    applicable: List[str]
+    applicable: List[ApplicableCondition]
     aborted: List[str]
     timeout_ms: int
     role0: List[str] = field(default_factory=list)

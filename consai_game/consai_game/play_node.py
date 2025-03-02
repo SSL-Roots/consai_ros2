@@ -31,8 +31,6 @@ class PlayNode(Node):
         if len(self.play_book.plays) == 0:
             raise ValueError('No plays found in playbook')
 
-        print(f"playbook: {self.play_book.plays}")
-
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument('--playbook',
