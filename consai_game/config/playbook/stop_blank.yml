@@ -1,9 +1,9 @@
 
 name: "blank"
-description: "デバッグ用の空のPlayファイルです"
+description: "STOP信号をトリガーにした、デバッグ用の空のPlayファイルです"
 
 applicable:
-  - "halt"
+  - "stop"
 
 aborted:
   - "!applicable"
