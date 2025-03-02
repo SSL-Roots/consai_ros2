@@ -28,11 +28,11 @@ CONDITION_MAP = {
 
 
 class PlayLoader:
-    """YAMLファイルから Play データを読み込むクラス"""
+    """YAMLファイルから Play データを読み込むクラス."""
+
     @staticmethod
     def load_from_yaml(yaml_file: str) -> Play:
-        """YAMLファイルを読み込み、Playオブジェクトを作成"""
-
+        """YAMLファイルを読み込み、Playオブジェクトを作成."""
         with open(yaml_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
@@ -40,7 +40,9 @@ class PlayLoader:
         applicable_conditions = []
         for cond in data.get("applicable", []):
             if cond in CONDITION_MAP:
-                applicable_conditions.append(ApplicableCondition(cond, CONDITION_MAP[cond]))
+                applicable_conditions.append(
+                    ApplicableCondition(cond, CONDITION_MAP[cond])
+                )
             else:
                 # 数値条件の場合は `parse_numeric_condition` で変換
                 pass

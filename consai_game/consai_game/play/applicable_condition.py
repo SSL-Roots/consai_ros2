@@ -23,10 +23,11 @@ from typing import Callable
 
 @dataclass
 class ApplicableCondition:
-    """Play が適用可能かを判定する条件"""
+    """Play が適用可能かを判定する条件."""
+
     condition: str  # 条件名 (例: "halt", "stop")
     check_func: Callable[[WorldModel], bool]  # 条件を満たしているか判定する関数
 
     def is_met(self, game_state: WorldModel) -> bool:
-        """ゲームの状態を渡して条件を満たしているかチェック"""
+        """ゲームの状態を渡して条件を満たしているかチェック."""
         return self.check_func(game_state)

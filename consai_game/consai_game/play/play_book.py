@@ -25,12 +25,13 @@ from typing import List
 
 @dataclass
 class PlayBook:
-    """複数のPlayを管理するPlayBook"""
+    """複数のPlayを管理するPlayBook."""
+
     plays: List[Play] = field(default_factory=list)
 
     @classmethod
     def load_from_directory(cls, dir_path: str) -> "PlayBook":
-        """ディレクトリ内のすべての YAML ファイルをロード"""
+        """ディレクトリ内のすべての YAML ファイルをロード."""
         plays = []
 
         directory = Path(dir_path)

@@ -24,43 +24,46 @@ from rclpy.node import Node
 
 
 class PlayNode(Node):
-    def __init__(self, update_hz: float = 10, playbook_dir: str = ''):
-        super().__init__('play_node')
+    def __init__(self, update_hz: float = 10, playbook_dir: str = ""):
+        super().__init__("play_node")
 
-        self.timer = self.create_timer(1.0/update_hz, self.update)
+        self.timer = self.create_timer(1.0 / update_hz, self.update)
         self.play_book = PlayBook.load_from_directory(playbook_dir)
         self.current_play = None
 
         self.world_model = WorldModel()
 
         if len(self.play_book.plays) == 0:
-            raise ValueError('No plays found in playbook')
+            raise ValueError("No plays found in playbook")
 
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser):
-        parser.add_argument('--playbook',
-                            default="",
-                            type=str,
-                            help='playbook directory')
+        parser.add_argument(
+            "--playbook", default="", type=str, help="playbook directory"
+        )
 
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model
 
     def update(self):
-        self.get_logger().info(f'Play update, {process_info()}')
+        self.get_logger().info(f"Play update, {process_info()}")
 
         self.evaluate_play()
 
         if self.current_play is None:
             self.current_play = self.select_play()
-            self.get_logger().info(f'Selected play: {self.current_play.name}')
+            self.get_logger().info(f"Selected play: {self.current_play.name}")
             self.evaluate_play()
 
     def select_play(self) -> Play:
-        applicable_plays = [play for play in self.play_book.plays if play.is_applicable(self.world_model)]
+        applicable_plays = [
+            play
+            for play in self.play_book.plays
+            if play.is_applicable(self.world_model)
+        ]
 
         if not applicable_plays:
-            raise ValueError('No applicable plays found')
+            raise ValueError("No applicable plays found")
 
         # TODO: 評価関数を実装して選択する
         return applicable_plays[0]
