@@ -42,4 +42,5 @@ class Play:
 
     def is_applicable(self, world_model: WorldModel) -> bool:
         """Playが適用可能か判定."""
+        print(f'play: {self.name} is_applicable called')
         return all(cond.is_met(world_model) for cond in self.applicable)

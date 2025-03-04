@@ -41,7 +41,7 @@ if __name__ == '__main__':
     args, other_args = arg_parser.parse_known_args()
     rclpy.init(args=other_args)
 
-    play_node = PlayNode(update_hz=10, playbook_dir=args.playbook)
+    play_node = PlayNode(update_hz=10, book_name=args.playbook)
     world_model_provider_node = WorldModelProviderNode(update_hz=10)
 
     executor = MultiThreadedExecutor()

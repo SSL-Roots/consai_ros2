@@ -17,29 +17,27 @@
 
 import argparse
 from consai_game.utils.process_info import process_info
-from consai_game.play.play_book import PlayBook
 from consai_game.play.play import Play
+from consai_game.play.books.librarian import PlaybooksLibrarian
 from consai_game.world_model.world_model import WorldModel
 from rclpy.node import Node
 
 
 class PlayNode(Node):
-    def __init__(self, update_hz: float = 10, playbook_dir: str = ""):
+    def __init__(self, update_hz: float = 10, book_name: str = ""):
         super().__init__("play_node")
 
         self.timer = self.create_timer(1.0 / update_hz, self.update)
-        self.play_book = PlayBook.load_from_directory(playbook_dir)
+        self.play_book = PlaybooksLibrarian.get(book_name)
         self.current_play = None
 
         self.world_model = WorldModel()
 
-        if len(self.play_book.plays) == 0:
-            raise ValueError("No plays found in playbook")
-
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
-            "--playbook", default="", type=str, help="playbook directory"
+            "--playbook", default="", type=str,
+            help=f"Set playbook name [{', '.join(PlaybooksLibrarian.keys())}]"
         )
 
     def set_world_model(self, world_model: WorldModel):
@@ -58,7 +56,7 @@ class PlayNode(Node):
     def select_play(self) -> Play:
         applicable_plays = [
             play
-            for play in self.play_book.plays
+            for play in self.play_book
             if play.is_applicable(self.world_model)
         ]
 

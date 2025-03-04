@@ -15,21 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.world_model.world_model import WorldModel
-from consai_game.play.applicable_condition import ApplicableCondition
+from consai_game.play.factory import blank_plays
 
-
-def halt_condition(world_model: WorldModel) -> bool:
-    # TODO: レフェリー信号のHALTを判定する
-    print('halt_condition called')
-    return False
-
-
-def stop_condition(world_model: WorldModel) -> bool:
-    print('stop_condition called')
-    return True
-
-
-class RefereeConditions:
-    halt = ApplicableCondition(halt_condition)
-    stop = ApplicableCondition(stop_condition)
+plays = [
+    blank_plays.halt(),
+    blank_plays.stop(),
+]
