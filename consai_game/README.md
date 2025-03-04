@@ -2,17 +2,18 @@
 
 ## Usage
 
-
 ```bash
 $ cd /path/to/consai_game
-$ ros2 run consai_game main.py --playbook config/playbook
+$ ros2 run consai_game main.py --playbook default
 
-Loading playbook from config/playbook/halt_blank.yaml
-Loading playbook from config/playbook/stop_blank.yml
-Main update, process ID: 327819, CPU: 10
-[INFO] [1740903633.467007250] [play_node]: Play update, process ID: 327819, CPU: 10
-[INFO] [1740903633.467724011] [world_model_provider_node]: WorldModelProvider update, process ID: 327819, CPU: 10
-[INFO] [1740903633.468261754] [play_node]: Selected play: halt_blank
-[INFO] [1740903633.546697317] [play_node]: Play update, process ID: 327819, CPU: 10
-[INFO] [1740903633.549544920] [world_model_provider_node]: WorldModelProvider update, process ID: 327819, CPU: 10
+Main update, process ID: 73249, CPU: 6
+[INFO] [1741099072.963532789] [play_node]: Play update, process ID: 73249, CPU: 6
+play: halt is_applicable called
+[INFO] [1741099072.963691864] [world_model_provider_node]: WorldModelProvider update, process ID: 73249, CPU: 6
+halt_condition called
+play: stop is_applicable called
+stop_condition called
+[INFO] [1741099072.964335132] [play_node]: Selected play: stop
+[INFO] [1741099073.036225410] [play_node]: Play update, process ID: 73249, CPU: 6
+[INFO] [1741099073.037897218] [world_model_provider_node]: WorldModelProvider update, process ID: 73249, CPU: 6
 ```

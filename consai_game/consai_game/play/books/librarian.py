@@ -20,6 +20,7 @@ from consai_game.play.books import playbook_default
 
 class PlaybooksLibrarian:
     """Playbook を管理するクラス."""
+
     _playbooks = {
         "default": playbook_default.plays,
     }
