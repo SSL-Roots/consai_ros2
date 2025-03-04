@@ -16,7 +16,7 @@
 # limitations under the License.
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.play.applicable_condition import ApplicableCondition
+from consai_game.play.conditions.play_condition import PlayCondition
 
 
 def halt_condition(world_model: WorldModel) -> bool:
@@ -31,5 +31,5 @@ def stop_condition(world_model: WorldModel) -> bool:
 
 
 class RefereeConditions:
-    halt = ApplicableCondition(halt_condition)
-    stop = ApplicableCondition(stop_condition)
+    halt = PlayCondition(halt_condition)
+    stop = PlayCondition(stop_condition)

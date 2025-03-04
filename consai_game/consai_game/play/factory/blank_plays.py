@@ -17,7 +17,7 @@
 
 
 from consai_game.play.play import Play
-from consai_game.play.referee_conditions import RefereeConditions
+from consai_game.play.conditions.referee_conditions import RefereeConditions
 
 
 def halt() -> Play:

@@ -22,7 +22,7 @@ from typing import Callable
 
 
 @dataclass
-class ApplicableCondition:
+class PlayCondition:
     """Play が適用可能かを判定する条件."""
 
     check_func: Callable[[WorldModel], bool]  # 条件を満たしているか判定する関数
