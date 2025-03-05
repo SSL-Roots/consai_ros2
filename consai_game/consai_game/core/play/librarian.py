@@ -21,19 +21,20 @@ from dataclasses import dataclass, field
 
 @dataclass
 class PlaybooksLibrarian:
-    """Playbookを管理するクラス"""
+    """Playbookを管理するクラス."""
+
     playbooks: dict[str, list[Play]] = field(default_factory=dict)
 
     def register(self, name: str, playbook: list[Play]):
-        """Playbookを登録する"""
+        """Playbookを登録する."""
         self.playbooks[name] = playbook
 
     def get(self, playbook_name: str):
-        """Playbookを取得する"""
+        """Playbookを取得する."""
         if playbook_name not in self.playbooks:
             raise ValueError(f'Playbook "{playbook_name}" is not found')
         return self.playbooks[playbook_name]
 
     def keys(self) -> list[str]:
-        """登録されているPlaybookのキー一覧を取得"""
+        """登録されているPlaybookのキー一覧を取得."""
         return list(self.playbooks.keys())
