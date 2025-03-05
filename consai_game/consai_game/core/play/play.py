@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.play.conditions.play_condition import PlayCondition
+from consai_game.core.play.play_condition import PlayCondition
 from consai_game.world_model.world_model import WorldModel
 from dataclasses import dataclass, field
 from typing import List

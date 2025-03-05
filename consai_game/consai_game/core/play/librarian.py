@@ -15,24 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.play.books import playbook_default
+from consai_game.core.play.play import Play
+from dataclasses import dataclass, field
 
 
+@dataclass
 class PlaybooksLibrarian:
-    """Playbook を管理するクラス."""
+    """Playbookを管理するクラス"""
+    playbooks: dict[str, list[Play]] = field(default_factory=dict)
 
-    _playbooks = {
-        "default": playbook_default.plays,
-    }
+    def register(self, name: str, playbook: list[Play]):
+        """Playbookを登録する"""
+        self.playbooks[name] = playbook
 
-    @classmethod
-    def get(cls, playbook_name: str):
-        """Playbook を取得する."""
-        if playbook_name not in cls._playbooks:
+    def get(self, playbook_name: str):
+        """Playbookを取得する"""
+        if playbook_name not in self.playbooks:
             raise ValueError(f'Playbook "{playbook_name}" is not found')
-        return cls._playbooks[playbook_name]
+        return self.playbooks[playbook_name]
 
-    @classmethod
-    def keys(cls) -> list[str]:
-        """登録されている Playbook のキー一覧を取得."""
-        return list(cls._playbooks.keys())
+    def keys(self) -> list[str]:
+        """登録されているPlaybookのキー一覧を取得"""
+        return list(self.playbooks.keys())

@@ -16,29 +16,35 @@
 # limitations under the License.
 
 import argparse
+from consai_game.core.play.play import Play
+from consai_game.core.play.librarian import PlaybooksLibrarian
 from consai_game.utils.process_info import process_info
-from consai_game.play.play import Play
-from consai_game.play.books.librarian import PlaybooksLibrarian
 from consai_game.world_model.world_model import WorldModel
 from rclpy.node import Node
 
 
 class PlayNode(Node):
+    librarian = PlaybooksLibrarian()
+
     def __init__(self, update_hz: float = 10, book_name: str = ""):
         super().__init__("play_node")
 
         self.timer = self.create_timer(1.0 / update_hz, self.update)
-        self.play_book = PlaybooksLibrarian.get(book_name)
+        self.play_book = self.librarian.get(book_name)
         self.current_play = None
 
         self.world_model = WorldModel()
 
-    @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser):
+    @classmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "--playbook", default="", type=str,
-            help=f"Set playbook name [{', '.join(PlaybooksLibrarian.keys())}]"
+            help=f"Set playbook name from: [{', '.join(cls.librarian.keys())}]"
         )
+
+    @classmethod
+    def register_playbook(cls, name: str, plays: list[Play]):
+        cls.librarian.register(name, plays)
 
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model

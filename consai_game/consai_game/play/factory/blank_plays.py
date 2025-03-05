@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-from consai_game.play.play import Play
+from consai_game.core.play.play import Play
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 
 

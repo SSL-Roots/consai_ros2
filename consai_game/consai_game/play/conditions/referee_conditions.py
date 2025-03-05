@@ -16,7 +16,7 @@
 # limitations under the License.
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.play.conditions.play_condition import PlayCondition
+from consai_game.core.play.play_condition import PlayCondition
 
 
 def halt_condition(world_model: WorldModel) -> bool:
