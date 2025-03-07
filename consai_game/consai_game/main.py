@@ -17,7 +17,6 @@
 
 import argparse
 from consai_game.core.play.play_node import PlayNode
-from consai_game.play.books import playbook_default
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 from consai_game.utils.process_info import process_info
 import rclpy
@@ -35,11 +34,6 @@ def main():
 
 
 if __name__ == '__main__':
-
-    PlayNode.register_playbook('default', playbook_default.plays)
-    PlayNode.register_playbook('hoge', playbook_default.plays)
-    PlayNode.register_playbook('fuga', playbook_default.plays)
-
     arg_parser = argparse.ArgumentParser()
     PlayNode.add_arguments(arg_parser)
 

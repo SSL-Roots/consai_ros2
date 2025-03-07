@@ -4,8 +4,9 @@
 
 ```bash
 $ cd /path/to/consai_game
-$ ros2 run consai_game main.py --playbook default
+$ ros2 run consai_game main.py --playbook play/books/playbook_default.py
 
+Loaded playbook: /path/to/consai_game/play/books/playbook_default.py
 Main update, process ID: 73249, CPU: 6
 [INFO] [1741099072.963532789] [play_node]: Play update, process ID: 73249, CPU: 6
 play: halt is_applicable called

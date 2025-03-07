@@ -17,20 +17,19 @@
 
 import argparse
 from consai_game.core.play.play import Play
-from consai_game.core.play.librarian import PlaybooksLibrarian
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
+import importlib.util
+from pathlib import Path
 from rclpy.node import Node
 
 
 class PlayNode(Node):
-    librarian = PlaybooksLibrarian()
-
     def __init__(self, update_hz: float = 10, book_name: str = ""):
         super().__init__("play_node")
 
         self.timer = self.create_timer(1.0 / update_hz, self.update)
-        self.play_book = self.librarian.get(book_name)
+        self.playbook = self.load_playbook(book_name)
         self.current_play = None
 
         self.world_model = WorldModel()
@@ -39,12 +38,23 @@ class PlayNode(Node):
     def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "--playbook", default="", type=str,
-            help=f"Set playbook name from: [{', '.join(cls.librarian.keys())}]"
+            help="Set playbook file path (e.g.: path/to/playbook.py)"
         )
 
-    @classmethod
-    def register_playbook(cls, name: str, plays: list[Play]):
-        cls.librarian.register(name, plays)
+    def load_playbook(self, file_path: str) -> list[Play]:
+        file_path = Path(file_path).resolve()
+        spec = importlib.util.spec_from_file_location(file_path.stem, file_path)
+        if spec and spec.loader:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            if hasattr(module, "plays"):
+                print(f"Loaded playbook: {file_path}")
+                return module.plays
+            else:
+                raise ValueError(f"Playbook: {file_path} does not have 'plays'")
+        else:
+            raise ValueError(f"Failed to load playbook: {file_path}")
 
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model
@@ -62,7 +72,7 @@ class PlayNode(Node):
     def select_play(self) -> Play:
         applicable_plays = [
             play
-            for play in self.play_book
+            for play in self.playbook
             if play.is_applicable(self.world_model)
         ]
 
