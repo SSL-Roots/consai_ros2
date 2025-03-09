@@ -29,6 +29,7 @@ set(msg_files
   "msg/ConstraintXY.msg"
   "msg/GoalPose.msg"
   "msg/GoalPoses.msg"
+  "msg/MotionCommand.msg"
   "msg/NamedTargets.msg"
   "msg/ParsedReferee.msg"
   "msg/RobotControlMsg.msg"

@@ -16,11 +16,12 @@
 # limitations under the License.
 
 from consai_game.utils.process_info import process_info
+from consai_msgs.msg import MotionCommand
 from rclpy.node import Node
 
 
 class AgentNode(Node):
-    def __init__(self, update_hz: float = 10, index: int = 0):
+    def __init__(self, update_hz: float = 10, index: int = 0, team_is_yellow: bool = False):
         super().__init__(f"agent_node_{index}")
 
         self.timer = self.create_timer(1.0 / update_hz, self.update)
@@ -28,6 +29,10 @@ class AgentNode(Node):
         self.robot_id = None
         self.tactics = []
         self.present_tactic = 0
+
+        self.team_is_yellow = team_is_yellow
+
+        self.pub_motion_command = self.create_publisher(MotionCommand, f'motion_command{index}', 1)
 
     def update(self):
         self.get_logger().info(f"Tactic update, {process_info()}")
@@ -38,11 +43,21 @@ class AgentNode(Node):
         if len(self.tactics) == 0:
             return
 
+        self.execute_tactic()
+
         if self.present_tactic >= len(self.tactics):
             self.present_tactic = 0
-
-        self.get_logger().info(f"Robot ID: {self.robot_id}, Tactic: {self.tactics[self.present_tactic]}")
 
     def set_role(self, tactics: list[str], robot_id: int):
         self.tactics = tactics
         self.robot_id = robot_id
+
+    def execute_tactic(self):
+        command = MotionCommand()
+        command.header.stamp = self.get_clock().now().to_msg()
+        command.robot_id = self.robot_id
+        command.mode = MotionCommand.MODE_RAW_VELOCITY
+        command.raw_velocity.x = 0.0
+        command.raw_velocity.y = 0.0
+        command.raw_velocity.theta = 0.0
+        self.pub_motion_command.publish(command)
