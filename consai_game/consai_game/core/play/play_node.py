@@ -105,5 +105,4 @@ class PlayNode(Node):
         for i in range(len(self.update_role_callbacks)):
             # TODO: robot_idの取得方法を実装する
             robot_id = i
-            self.update_role_callbacks[i](
-                getattr(self.current_play, f"role{i}"), robot_id)
+            self.update_role_callbacks[i](self.current_play.roles[i], robot_id)

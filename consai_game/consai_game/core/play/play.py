@@ -28,17 +28,7 @@ class Play:
     applicable: List[PlayCondition]
     aborted: List[str]
     timeout_ms: int
-    role0: List[str] = field(default_factory=list)
-    role1: List[str] = field(default_factory=list)
-    role2: List[str] = field(default_factory=list)
-    role3: List[str] = field(default_factory=list)
-    role4: List[str] = field(default_factory=list)
-    role5: List[str] = field(default_factory=list)
-    role6: List[str] = field(default_factory=list)
-    role7: List[str] = field(default_factory=list)
-    role8: List[str] = field(default_factory=list)
-    role9: List[str] = field(default_factory=list)
-    role10: List[str] = field(default_factory=list)
+    roles: List[List[str]] = field(default_factory=lambda: [[] for _ in range(11)])
 
     def is_applicable(self, world_model: WorldModel) -> bool:
         """Playが適用可能か判定."""

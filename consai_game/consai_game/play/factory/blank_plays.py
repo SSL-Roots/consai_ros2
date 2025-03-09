@@ -29,17 +29,19 @@ def halt() -> Play:
         ],
         aborted=['!applicable'],
         timeout_ms=0,
-        role0=['goalie'],
-        role1=['stop'],
-        role2=['stop'],
-        role3=['stop'],
-        role4=['stop'],
-        role5=['stop'],
-        role6=['stop'],
-        role7=['stop'],
-        role8=['stop'],
-        role9=['stop'],
-        role10=['stop']
+        roles=[
+            ['goalie'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop']
+        ]
     )
 
 
@@ -52,15 +54,17 @@ def stop() -> Play:
         ],
         aborted=['!applicable'],
         timeout_ms=0,
-        role0=['goalie'],
-        role1=['stop'],
-        role2=['stop'],
-        role3=['stop'],
-        role4=['stop'],
-        role5=['stop'],
-        role6=['stop'],
-        role7=['stop'],
-        role8=['stop'],
-        role9=['stop'],
-        role10=['stop']
+        roles=[
+            ['goalie'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop'],
+            ['stop']
+        ]
     )
