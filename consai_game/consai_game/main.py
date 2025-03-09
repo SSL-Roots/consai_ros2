@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import argparse
+from consai_game.core.agent_node import AgentNode
 from consai_game.core.play.play_node import PlayNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 from consai_game.utils.process_info import process_info
@@ -42,10 +43,13 @@ if __name__ == '__main__':
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
     world_model_provider_node = WorldModelProviderNode(update_hz=10)
+    agent_nodes = [AgentNode(update_hz=10, index=i) for i in range(11)]
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)
     executor.add_node(world_model_provider_node)
+    for agent_node in agent_nodes:
+        executor.add_node(agent_node)
 
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
