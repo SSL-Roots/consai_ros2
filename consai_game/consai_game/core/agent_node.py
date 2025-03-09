@@ -24,6 +24,7 @@ class AgentNode(Node):
         super().__init__(f"agent_node_{index}")
 
         self.timer = self.create_timer(1.0 / update_hz, self.update)
+        self.index = index
         self.robot_id = None
         self.tactics = []
         self.present_tactic = 0
@@ -39,3 +40,9 @@ class AgentNode(Node):
 
         if self.present_tactic >= len(self.tactics):
             self.present_tactic = 0
+
+        self.get_logger().info(f"Robot ID: {self.robot_id}, Tactic: {self.tactics[self.present_tactic]}")
+
+    def set_role(self, tactics: list[str], robot_id: int):
+        self.tactics = tactics
+        self.robot_id = robot_id

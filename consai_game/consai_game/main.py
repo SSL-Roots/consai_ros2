@@ -44,6 +44,8 @@ if __name__ == '__main__':
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
     world_model_provider_node = WorldModelProviderNode(update_hz=10)
     agent_nodes = [AgentNode(update_hz=10, index=i) for i in range(11)]
+    for agent_node in agent_nodes:
+        play_node.set_update_role_callback(agent_node.set_role, agent_node.index)
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)

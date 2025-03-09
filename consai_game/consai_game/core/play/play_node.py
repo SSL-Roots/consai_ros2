@@ -22,6 +22,10 @@ from consai_game.world_model.world_model import WorldModel
 import importlib.util
 from pathlib import Path
 from rclpy.node import Node
+from typing import Callable
+
+
+UpdateRoleCallback = Callable[[list[str], int], None]
 
 
 class PlayNode(Node):
@@ -33,6 +37,8 @@ class PlayNode(Node):
         self.current_play = None
 
         self.world_model = WorldModel()
+
+        self.update_role_callbacks: list[UpdateRoleCallback] = [None] * 11
 
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
@@ -59,6 +65,9 @@ class PlayNode(Node):
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model
 
+    def set_update_role_callback(self, callback: UpdateRoleCallback, index: int):
+        self.update_role_callbacks[index] = callback
+
     def update(self):
         self.get_logger().info(f"Play update, {process_info()}")
 
@@ -66,6 +75,7 @@ class PlayNode(Node):
 
         if self.current_play is None:
             self.current_play = self.select_play()
+            self.update_role()
             self.get_logger().info(f"Selected play: {self.current_play.name}")
             self.evaluate_play()
 
@@ -89,3 +99,11 @@ class PlayNode(Node):
     def evaluate_play(self):
         # TODO: current_playを継続して実行できるか評価する
         pass
+
+    def update_role(self):
+        # Role(tacticとrobot_id)を更新し、callback関数にセットする
+        for i in range(len(self.update_role_callbacks)):
+            # TODO: robot_idの取得方法を実装する
+            robot_id = i
+            self.update_role_callbacks[i](
+                getattr(self.current_play, f"role{i}"), robot_id)
