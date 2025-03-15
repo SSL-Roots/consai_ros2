@@ -29,13 +29,17 @@ class ControllerUnit
 {
 
 public:
+  ControllerUnit(unsigned int robot_id, bool team_is_yellow) 
+  : robot_id_(robot_id), team_is_yellow_(team_is_yellow) {};
   void set_robot_command_publisher(rclcpp::Node::SharedPtr node, const std::string & topic_name);
   void publish_robot_command(RobotCommand::UniquePtr msg);
-
+  void publish_stop_command(void);
 
 private:
 
   rclcpp::Publisher<RobotCommand>::SharedPtr pub_command_;
+  unsigned int robot_id_;
+  bool team_is_yellow_;
 
 
 };

@@ -126,12 +126,12 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
   if (robot_control_map_[robot_id]->stop) {
-    publish_stop_command(robot_id);
+    controller_unit_[robot_id].publish_stop_command();
     return;
   }
 
   if (!parser_->is_parsable(robot_control_map_[robot_id])) {
-    publish_stop_command(robot_id);
+    controller_unit_[robot_id].publish_stop_command();
     return;
   }
 
@@ -143,7 +143,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       " robot from detection_tracked msg.";
     RCLCPP_WARN(this->get_logger(), error_msg.c_str());
 
-    publish_stop_command(robot_id);
+    controller_unit_[robot_id].publish_stop_command();
     robot_control_map_[robot_id]->stop = true;
     return;
   }
@@ -162,7 +162,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       dribble_power))
   {
     RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
-    publish_stop_command(robot_id);
+    controller_unit_[robot_id].publish_stop_command();
     return;
   }
 
@@ -361,7 +361,7 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
   }
 
   for (auto i = controller_unit_.size(); i < num; i++) {
-    controller_unit_.push_back(ControllerUnit());
+    controller_unit_.push_back(ControllerUnit(i, team_is_yellow_));
     controller_unit_[i].set_robot_command_publisher(
       this->shared_from_this(), "robot" + std::to_string(i) + "/command");
 
@@ -509,18 +509,6 @@ bool Controller::arrived(const TrackedRobot & my_robot, const State & goal_pose)
     return true;
   }
   return false;
-}
-
-
-bool Controller::publish_stop_command(const unsigned int robot_id)
-{
-  auto stop_command_msg = std::make_unique<RobotCommand>();
-  stop_command_msg->robot_id = robot_id;
-  stop_command_msg->team_is_yellow = team_is_yellow_;
-
-  controller_unit_[robot_id].publish_robot_command(std::move(stop_command_msg));
-
-  return true;
 }
 
 }  // namespace consai_robot_controller

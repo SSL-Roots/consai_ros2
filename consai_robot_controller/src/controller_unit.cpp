@@ -33,5 +33,13 @@ void ControllerUnit::publish_robot_command(RobotCommand::UniquePtr msg)
   pub_command_->publish(std::move(msg));
 }
 
+void ControllerUnit::publish_stop_command(void)
+{
+  auto stop_command_msg = std::make_unique<RobotCommand>();
+  stop_command_msg->robot_id = robot_id_;
+  stop_command_msg->team_is_yellow = team_is_yellow_;
+  pub_command_->publish(std::move(stop_command_msg));
+}
+
 
 }  // namespace consai_robot_controller

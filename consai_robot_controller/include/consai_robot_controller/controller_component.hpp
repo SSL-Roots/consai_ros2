@@ -77,7 +77,6 @@ private:
     const State & velocity, const State & last_velocity,
     const rclcpp::Duration & dt) const;
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
-  bool publish_stop_command(const unsigned int robot_id);
 
   std::vector<ControllerUnit> controller_unit_;
 
