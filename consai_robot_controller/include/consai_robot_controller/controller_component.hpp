@@ -28,6 +28,7 @@
 #include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
+#include "consai_robot_controller/controller_unit.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/locomotion_controller.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
@@ -78,7 +79,8 @@ private:
   bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
   bool publish_stop_command(const unsigned int robot_id);
 
-  std::vector<rclcpp::Publisher<RobotCommand>::SharedPtr> pub_command_;
+  std::vector<ControllerUnit> controller_unit_;
+
   std::vector<rclcpp::Subscription<RobotControlMsg>::SharedPtr> sub_robot_control_;
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;

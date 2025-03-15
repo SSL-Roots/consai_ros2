@@ -269,7 +269,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   command_msg->dribble_power = dribble_power;
 
   // 制御値を出力する
-  pub_command_[robot_id]->publish(std::move(command_msg));
+  controller_unit_[robot_id].publish_robot_command(std::move(command_msg));
 
   // デバッグ用に出力する
   {
@@ -351,7 +351,7 @@ void Controller::on_timer_pub_goal_poses()
 
 void Controller::gen_pubs_and_subs(const unsigned int num)
 {
-  if (pub_command_.size() >= num) {
+  if (controller_unit_.size() >= num) {
     return;
   }
 
@@ -360,11 +360,10 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
     team_color = "yellow";
   }
 
-  for (auto i = pub_command_.size(); i < num; i++) {
-    pub_command_.push_back(
-      create_publisher<RobotCommand>(
-        "robot" + std::to_string(i) + "/command", 10)
-    );
+  for (auto i = controller_unit_.size(); i < num; i++) {
+    controller_unit_.push_back(ControllerUnit());
+    controller_unit_[i].set_robot_command_publisher(
+      this->shared_from_this(), "robot" + std::to_string(i) + "/command");
 
     robot_control_map_[i] = std::make_shared<RobotControlMsg>();
     auto robot_control_callback = [this](
@@ -518,7 +517,8 @@ bool Controller::publish_stop_command(const unsigned int robot_id)
   auto stop_command_msg = std::make_unique<RobotCommand>();
   stop_command_msg->robot_id = robot_id;
   stop_command_msg->team_is_yellow = team_is_yellow_;
-  pub_command_[robot_id]->publish(std::move(stop_command_msg));
+
+  controller_unit_[robot_id].publish_robot_command(std::move(stop_command_msg));
 
   return true;
 }
