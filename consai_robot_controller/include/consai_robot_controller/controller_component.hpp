@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/msg/goal_pose.hpp"
 #include "consai_msgs/msg/goal_poses.hpp"
 #include "consai_msgs/msg/named_targets.hpp"
@@ -48,7 +47,6 @@ using GoalPose = consai_msgs::msg::GoalPose;
 using GoalPoses = consai_msgs::msg::GoalPoses;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
-using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using ParsedReferee = consai_msgs::msg::ParsedReferee;
 using Referee = robocup_ssl_msgs::msg::Referee;

@@ -79,12 +79,14 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         nlohmann::json json_data = nlohmann::json::parse(msg->data);
         ControlParams control_params;
         control_params.hard_limit_acceleration_xy = json_data["hard_limits"]["acceleration_xy"];
-        control_params.hard_limit_acceleration_theta = json_data["hard_limits"]["acceleration_theta"];
+        control_params.hard_limit_acceleration_theta =
+          json_data["hard_limits"]["acceleration_theta"];
         control_params.hard_limit_velocity_xy = json_data["hard_limits"]["velocity_xy"];
         control_params.hard_limit_velocity_theta = json_data["hard_limits"]["velocity_theta"];
 
         control_params.soft_limit_acceleration_xy = json_data["soft_limits"]["acceleration_xy"];
-        control_params.soft_limit_acceleration_theta = json_data["soft_limits"]["acceleration_theta"];
+        control_params.soft_limit_acceleration_theta =
+          json_data["soft_limits"]["acceleration_theta"];
         control_params.soft_limit_velocity_xy = json_data["soft_limits"]["velocity_xy"];
         control_params.soft_limit_velocity_theta = json_data["soft_limits"]["velocity_theta"];
 

@@ -18,8 +18,10 @@
 
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
-LocomotionController::LocomotionController(int robot_id_for_debug, double dt, double delayfactor_sec):
-  robot_id_for_debug_(robot_id_for_debug), dt_(dt), delayfactor_sec_(delayfactor_sec)
+LocomotionController::LocomotionController(
+  int robot_id_for_debug, double dt,
+  double delayfactor_sec)
+: robot_id_for_debug_(robot_id_for_debug), dt_(dt), delayfactor_sec_(delayfactor_sec)
 {
   this->target_velocity_ = Velocity2D(0, 0, 0);
   this->output_velocity_ = Velocity2D(0, 0, 0);
@@ -133,7 +135,8 @@ Velocity2D LocomotionController::limitAcceleration(
     acc.y /= acc_ratio;
   }
   acc.theta = std::clamp(
-    acc.theta, -control_params_.hard_limit_acceleration_theta, control_params_.hard_limit_acceleration_theta);
+    acc.theta, -control_params_.hard_limit_acceleration_theta,
+    control_params_.hard_limit_acceleration_theta);
 
   Velocity2D modified_velocity = velocity;
   modified_velocity.x = last_velocity.x + acc.x * dt;
@@ -156,7 +159,8 @@ Velocity2D LocomotionController::limitVelocity(
     modified_velocity.y /= velocity_ratio;
   }
   modified_velocity.theta = std::clamp(
-    velocity.theta, -control_params_.hard_limit_velocity_theta, control_params_.hard_limit_velocity_theta);
+    velocity.theta, -control_params_.hard_limit_velocity_theta,
+    control_params_.hard_limit_velocity_theta);
 
   return modified_velocity;
 }

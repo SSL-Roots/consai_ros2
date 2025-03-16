@@ -41,7 +41,8 @@ public:
   double d_gain_theta;
 
 private:
-  auto tie() const {
+  auto tie() const
+  {
     return std::tie(
       hard_limit_acceleration_xy, soft_limit_acceleration_xy,
       hard_limit_acceleration_theta, soft_limit_acceleration_theta,
@@ -51,11 +52,13 @@ private:
   }
 
 public:
-  bool operator==(const ControlParams& other) const {
+  bool operator==(const ControlParams & other) const
+  {
     return tie() == other.tie();
   }
 
-  bool operator!=(const ControlParams& other) const {
+  bool operator!=(const ControlParams & other) const
+  {
     return !(*this == other);
   }
 };

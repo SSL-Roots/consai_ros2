@@ -47,10 +47,12 @@ public:
   State2D getCurrentTargetState() const;
   Pose2D getGoal() const;
 
-  consai_robot_controller::ControlParams getControlParams() const {
+  consai_robot_controller::ControlParams getControlParams() const
+  {
     return control_params_;
   }
-  void setControlParams(const consai_robot_controller::ControlParams & control_params) {
+  void setControlParams(const consai_robot_controller::ControlParams & control_params)
+  {
     control_params_ = control_params;
   }
 

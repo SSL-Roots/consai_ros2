@@ -36,7 +36,7 @@ using State = consai_msgs::msg::State2D;
 
 class ControllerUnit
 {
- public:
+public:
   ControllerUnit(unsigned int robot_id, bool team_is_yellow, double dt)
   : robot_id_(robot_id), team_is_yellow_(team_is_yellow),
     locomotion_controller_(LocomotionController(robot_id, dt)) {}
@@ -51,7 +51,7 @@ class ControllerUnit
   void set_control_params(const ControlParams & control_params);
   void publish_debug_data(const TrackedRobot & my_robot);
 
- private:
+private:
   double calculate_angular_velocity(
     const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot);
 

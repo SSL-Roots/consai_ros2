@@ -75,7 +75,9 @@ void ControllerUnit::move_to_desired_pose(
 
   if (need_regenerate_trajectory) {
     locomotion_controller_.moveToPose(goal_pose);
-    RCLCPP_DEBUG(rclcpp::get_logger("ControllerUnit"), "Regenerate trajectory via updated control params");
+    RCLCPP_DEBUG(
+      rclcpp::get_logger(
+        "ControllerUnit"), "Regenerate trajectory via updated control params");
   }
 
   // 制御の実行
@@ -93,8 +95,10 @@ void ControllerUnit::move_to_desired_pose(
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   const auto robot_theta = my_robot.orientation;
-  command_msg->velocity_x = std::cos(robot_theta) * world_vel_.x + std::sin(robot_theta) * world_vel_.y;
-  command_msg->velocity_y = -std::sin(robot_theta) * world_vel_.x + std::cos(robot_theta) * world_vel_.y;
+  command_msg->velocity_x = std::cos(robot_theta) * world_vel_.x + std::sin(robot_theta) *
+    world_vel_.y;
+  command_msg->velocity_y = -std::sin(robot_theta) * world_vel_.x + std::cos(robot_theta) *
+    world_vel_.y;
   command_msg->velocity_theta = world_vel_.theta;
 
   // キックパワー、ドリブルパワーをセット
@@ -149,7 +153,7 @@ void ControllerUnit::publish_debug_data(const TrackedRobot & my_robot)
 }
 
 double ControllerUnit::calculate_angular_velocity(
-    const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot)
+  const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot)
 {
   // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
   const auto vel_norm = std::hypot(desired_velocity.x, desired_velocity.y);

@@ -97,7 +97,7 @@ Pose2D::Pose2D(double x, double y, double theta)
   this->theta = theta;
 }
 
-Pose2D::Pose2D(const consai_msgs::msg::State2D &state2d)
+Pose2D::Pose2D(const consai_msgs::msg::State2D & state2d)
 {
   this->x = state2d.x;
   this->y = state2d.y;
