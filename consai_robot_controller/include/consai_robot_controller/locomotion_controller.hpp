@@ -35,23 +35,18 @@ public:
     FAILED,
   };
 
-  LocomotionController();
-
-  LocomotionController(int robot_id_for_debug, double dt);
-
   LocomotionController(
     int robot_id_for_debug,
-    double delayfactor_sec, double dt);
+    double dt,
+    double delayfactor_sec = 0.0);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
   ControllerState moveToPose(const Pose2D & goal_pose);
-  ControllerState halt();
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
-  ControllerState getState();
-  State2D getCurrentTargetState();
-  Pose2D getGoal();
+  ControllerState getState() const;
+  State2D getCurrentTargetState() const;
+  Pose2D getGoal() const;
 
-  // TODO: ControlParamsを使うように書き換える
   consai_robot_controller::ControlParams getControlParams() const {
     return control_params_;
   }
@@ -66,9 +61,9 @@ private:
   Pose2D goal_pose_;
   ControllerState state_;
 
-  int robot_id_for_debug_;
-  double delayfactor_sec_;
-  double dt_;           // 制御周期
+  const int robot_id_for_debug_;
+  const double dt_;  // 制御周期
+  const double delayfactor_sec_;
   consai_robot_controller::ControlParams control_params_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);

@@ -37,58 +37,39 @@ void ControllerUnit::move_to_desired_pose(
   std::optional<double> limit_vel_xy
 )
 {
+  auto control_params = desired_control_params_;
+
+  // 最低速度が指定されている場合は、リミットを更新する
   if (limit_vel_xy) {
-    if (*limit_vel_xy < desired_control_params_.soft_limit_velocity_xy) {
-      desired_control_params_.soft_limit_velocity_xy = *limit_vel_xy;
+    if (*limit_vel_xy < control_params.soft_limit_velocity_xy) {
+      control_params.soft_limit_velocity_xy = *limit_vel_xy;
     }
   }
 
-  // パラメータが更新された場合は、ロボットの制御器に反映する
-  if (desired_control_params_ != locomotion_controller_.getControlParams()) {
-    locomotion_controller_.setControlParams(desired_control_params_);
+  // パラメータが更新された場合、
+  // またはgoal_poseが変わった場合に軌道を再生成する
+  bool need_regenerate_trajectory = false;
+  if (control_params != locomotion_controller_.getControlParams()) {
+    locomotion_controller_.setControlParams(control_params);
+    need_regenerate_trajectory = true;
 
-    // 軌道の再生成
+  } else if (goal_pose != locomotion_controller_.getGoal()) {
+    need_regenerate_trajectory = true;
+  }
+
+  if (need_regenerate_trajectory) {
     locomotion_controller_.moveToPose(goal_pose);
-
     RCLCPP_DEBUG(rclcpp::get_logger("ControllerUnit"), "Regenerate trajectory via updated control params");
   }
 
-  // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
-  if (goal_pose != locomotion_controller_.getGoal()) {
-    locomotion_controller_.moveToPose(goal_pose);
-  }
-
   // 制御の実行
-  auto [output_vel, controller_state] = this->locomotion_controller_.run(
+  auto [world_vel_, controller_state] = this->locomotion_controller_.run(
     State2D(
       Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
       Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
     )
   );
-
-  // TODO: パラメータを動的に更新する
-  const auto control_a_theta = 0.5;
-  const auto hard_limit_vel_theta = 2.0 * M_PI;
-
-  State world_vel;
-
-  world_vel.x = output_vel.x;
-  world_vel.y = output_vel.y;
-  world_vel.theta = output_vel.theta;
-
-  // sin関数を用いた角速度制御
-  double diff_theta = geometry_tools::normalize_theta(
-    goal_pose.theta - my_robot.orientation);
-  world_vel.theta = control_tools::angular_velocity_contol_sin(
-    diff_theta,
-    control_a_theta *
-    hard_limit_vel_theta);
-
-  // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
-  const auto vel_norm = std::hypot(world_vel.x, world_vel.y);
-  if (vel_norm > 1.5) {
-    world_vel.theta = 0.0;
-  }
+  world_vel_.theta = calculate_angular_velocity(world_vel_, goal_pose, my_robot);
 
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id_;
@@ -96,11 +77,9 @@ void ControllerUnit::move_to_desired_pose(
 
   // ワールド座標系でのxy速度をロボット座標系に変換
   const auto robot_theta = my_robot.orientation;
-  command_msg->velocity_x = std::cos(robot_theta) * world_vel.x + std::sin(
-    robot_theta) * world_vel.y;
-  command_msg->velocity_y = -std::sin(robot_theta) * world_vel.x + std::cos(
-    robot_theta) * world_vel.y;
-  command_msg->velocity_theta = world_vel.theta;
+  command_msg->velocity_x = std::cos(robot_theta) * world_vel_.x + std::sin(robot_theta) * world_vel_.y;
+  command_msg->velocity_y = -std::sin(robot_theta) * world_vel_.x + std::cos(robot_theta) * world_vel_.y;
+  command_msg->velocity_theta = world_vel_.theta;
 
   // キックパワー、ドリブルパワーをセット
   command_msg->kick_power = kick_power;
@@ -120,6 +99,24 @@ void ControllerUnit::publish_stop_command(void)
 void ControllerUnit::set_control_params(const ControlParams & control_params)
 {
   desired_control_params_ = control_params;
+}
+
+double ControllerUnit::calculate_angular_velocity(
+    const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot)
+{
+  // 直進を安定させるため、xy速度が大きいときは、角度制御をしない
+  const auto vel_norm = std::hypot(desired_velocity.x, desired_velocity.y);
+  if (vel_norm > 1.5) {
+    return 0.0;
+  }
+
+  // sin関数を用いた角速度制御
+  const auto diff_theta = geometry_tools::normalize_theta(
+    goal_pose.theta - my_robot.orientation);
+  const auto angular_velocity = control_tools::angular_velocity_contol_sin(
+    diff_theta,
+    desired_control_params_.control_a_theta * desired_control_params_.hard_limit_velocity_theta);
+  return angular_velocity;
 }
 
 

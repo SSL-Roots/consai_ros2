@@ -43,19 +43,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 {
   declare_parameter("team_is_yellow", false);
   declare_parameter("invert", false);
-  // declare_parameter("hard_limit_acceleration_xy", 2.0);
-  // declare_parameter("soft_limit_acceleration_xy", 2.0 * 0.8);
-  // declare_parameter("hard_limit_acceleration_theta", 2.0 * M_PI);
-  // declare_parameter("soft_limit_acceleration_theta", 2.0 * M_PI * 0.8);
-  // declare_parameter("hard_limit_velocity_xy", 2.0);
-  // declare_parameter("soft_limit_velocity_xy", 2.0 * 0.8);
-  // declare_parameter("hard_limit_velocity_theta", 2.0 * M_PI);
-  // declare_parameter("soft_limit_velocity_theta", 2.0 * M_PI * 0.8);
-  // declare_parameter("control_a_theta", 0.5);
-  // declare_parameter("p_gain_xy", 1.5);
-  // declare_parameter("d_gain_xy", 0.0);
-  // declare_parameter("p_gain_theta", 2.5);
-  // declare_parameter("d_gain_theta", 0.0);
 
   const auto visibility_threshold = 0.01;
   detection_extractor_ = std::make_shared<parser::DetectionExtractor>(visibility_threshold);
@@ -108,7 +95,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         control_params.d_gain_theta = json_data["gains"]["d_theta"];
         control_params.control_a_theta = json_data["gains"]["a_theta"];
 
-        for (auto & unit: controller_unit_) {
+        for (auto & unit : controller_unit_) {
           unit.set_control_params(control_params);
         }
         RCLCPP_INFO(get_logger(), "Update control parameters");
@@ -188,7 +175,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   double dribble_power = 0.0;
 
   const auto current_time = steady_clock_.now();
-  const auto duration = current_time - last_update_time_[robot_id];
   if (!parser_->parse_goal(
       robot_control_map_[robot_id], my_robot, goal_pose, destination, kick_power,
       dribble_power))
@@ -202,17 +188,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
     robot_control_map_[robot_id], my_robot, goal_pose, destination);
 
-  // 各種パラメータの設定
-  // TODO(後で移植する)
-  // auto hard_limit_vel_xy = get_parameter("hard_limit_velocity_xy").as_double();
-  // auto soft_limit_vel_xy = get_parameter("soft_limit_velocity_xy").as_double();
-  // auto hard_limit_vel_theta = get_parameter("hard_limit_velocity_theta").as_double();
-  // auto soft_limit_vel_theta = get_parameter("soft_limit_velocity_theta").as_double();
-  // auto hard_limit_acc_xy = get_parameter("hard_limit_acceleration_xy").as_double();
-  // auto soft_limit_acc_xy = get_parameter("soft_limit_acceleration_xy").as_double();
-  // auto hard_limit_acc_theta = get_parameter("hard_limit_acceleration_theta").as_double();
-  // auto soft_limit_acc_theta = get_parameter("soft_limit_acceleration_theta").as_double();
-  // const auto control_a_theta = get_parameter("control_a_theta").as_double();
 
   // 最大速度が上書きされていたらそちらの値を使う
   std::optional<double> limit_vel_xy = std::nullopt;
@@ -220,69 +195,13 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
   }
 
-  // // パラメータが更新された場合は、ロボットの制御器に反映する
-  // if (locomotion_controller_[robot_id].getHardLimitLinearVelocity() != hard_limit_vel_xy ||
-  //   locomotion_controller_[robot_id].getSoftLimitLinearVelocity() != soft_limit_vel_xy ||
-  //   locomotion_controller_[robot_id].getHardLimitAngularVelocity() != hard_limit_vel_theta ||
-  //   locomotion_controller_[robot_id].getSoftLimitAngluarVelocity() != soft_limit_vel_theta ||
-  //   locomotion_controller_[robot_id].getHardLimitLinearAcceleration() != hard_limit_acc_xy ||
-  //   locomotion_controller_[robot_id].getSoftLimitLinearAcceleration() != soft_limit_acc_xy ||
-  //   locomotion_controller_[robot_id].getHardLimitAngularAcceleration() != hard_limit_acc_theta ||
-  //   locomotion_controller_[robot_id].getSoftLimitAngularAcceleration() != soft_limit_acc_theta)
-  // {
-  //   locomotion_controller_[robot_id].setParameters(
-  //     get_parameter("p_gain_xy").as_double(),
-  //     get_parameter("d_gain_xy").as_double(),
-  //     get_parameter("p_gain_theta").as_double(),
-  //     get_parameter("d_gain_theta").as_double(),
-  //     hard_limit_vel_xy, soft_limit_vel_xy,
-  //     hard_limit_vel_theta, soft_limit_vel_theta,
-  //     hard_limit_acc_xy, soft_limit_acc_xy,
-  //     hard_limit_acc_theta, soft_limit_acc_theta
-  //   );
-
-  //   // 軌道の再生成
-  //   locomotion_controller_[robot_id].moveToPose(
-  //     Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
-  //   );
-  // }
-
-  // // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
-  // Pose2D current_goal_pose = this->locomotion_controller_[robot_id].getGoal();
-  // if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y ||
-  //   goal_pose.theta != current_goal_pose.theta)
-  // {
-  //   this->locomotion_controller_[robot_id].moveToPose(
-  //     Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
-  //   );
-  // }
-
-  // // 制御の実行
-  // auto [output_vel, controller_state] = this->locomotion_controller_[robot_id].run(
-  //   State2D(
-  //     Pose2D(my_robot.pos.x, my_robot.pos.y, my_robot.orientation),
-  //     Velocity2D(my_robot.vel[0].x, my_robot.vel[0].y, my_robot.vel_angular[0])
-  //   )
-  // );
-
-  // // 制御値を出力する
-  // controller_unit_[robot_id].publish_robot_command(
-  //   output_vel, my_robot.orientation, goal_pose.theta, kick_power, dribble_power);
-
   controller_unit_[robot_id].move_to_desired_pose(
     Pose2D(goal_pose), my_robot, kick_power, dribble_power, limit_vel_xy);
 
   // デバッグ用に出力する
   {
-    // TODO: 後で治す
-    // State2D current_goal = State2D(this->locomotion_controller_[robot_id].getCurrentTargetState());
-    // State current_goal_state;
-    // current_goal_state.x = current_goal.pose.x;
-    // current_goal_state.y = current_goal.pose.y;
-    // current_goal_state.theta = current_goal.pose.theta;
-    // pub_goal_pose_[robot_id]->publish(current_goal_state);
-    // 後で治す
-    // pub_target_speed_world_[robot_id]->publish(world_vel);
+    pub_goal_pose_[robot_id]->publish(controller_unit_[robot_id].current_target_pose());
+    pub_target_speed_world_[robot_id]->publish(controller_unit_[robot_id].world_vel());
 
     State my_pose;
     my_pose.x = my_robot.pos.x;
@@ -299,9 +218,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       pub_current_vel_[robot_id]->publish(std::move(my_vel));
     }
 
-    // TODO:後で治す
-    // pub_control_output_[robot_id]->publish(output_vel.toState2DMsg());
-
     State control_output_ff, control_output_p;
     control_output_ff.x = global_for_debug::last_control_output_ff.x;
     control_output_ff.y = global_for_debug::last_control_output_ff.y;
@@ -312,12 +228,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     pub_control_output_ff_[robot_id]->publish(control_output_ff);
     pub_control_output_p_[robot_id]->publish(control_output_p);
   }
-
-
-  // 制御更新時間と速度を保存する
-  last_update_time_[robot_id] = current_time;
-  // 後で治す
-  // last_world_vel_[robot_id] = world_vel;
 
   // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
   GoalPose goal_pose_msg;
@@ -401,11 +311,6 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
         "robot" + std::to_string(i) + "/target_speed_world", 10)
     );
 
-    pub_control_output_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output", 10)
-    );
-
     pub_control_output_ff_.push_back(
       create_publisher<State>(
         "robot" + std::to_string(i) + "/control_output_ff", 10)
@@ -421,8 +326,6 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
       create_subscription<RobotControlMsg>(
         name_space + "/control", 10, fcn));
 
-    last_update_time_.push_back(steady_clock_.now());
-
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
     timer_pub_control_command_.push_back(
@@ -430,13 +333,6 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
         control_loop_cycle_, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
       )
     );
-
-    // locomotion_controller_.push_back(
-    //   LocomotionController(i, control_loop_cycle_.count() / 1000.0)
-    // );
-
-    // TODO後で治す
-    // last_world_vel_.push_back(State());
   }
 }
 

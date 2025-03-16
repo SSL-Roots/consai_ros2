@@ -30,7 +30,6 @@
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/controller_unit.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
-// #include "consai_robot_controller/locomotion_controller.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
@@ -74,16 +73,12 @@ private:
   std::vector<ControllerUnit> controller_unit_;
 
   std::vector<rclcpp::Subscription<RobotControlMsg>::SharedPtr> sub_robot_control_;
-  std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
-  std::vector<State> last_world_vel_;
-  // std::vector<LocomotionController> locomotion_controller_;
 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_vel_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_goal_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_target_speed_world_;
-  std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_ff_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_control_output_p_;
 

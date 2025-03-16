@@ -49,16 +49,19 @@ public:
   );
   void publish_stop_command(void);
   void set_control_params(const ControlParams & control_params);
+  State world_vel(void) const { return world_vel_.toState2DMsg(); }
+  State current_target_pose(void) const { return locomotion_controller_.getCurrentTargetState().pose.toState2DMsg(); }
 
 private:
+  double calculate_angular_velocity(
+    const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot);
 
   rclcpp::Publisher<RobotCommand>::SharedPtr pub_command_;
   unsigned int robot_id_;
   bool team_is_yellow_;
   LocomotionController locomotion_controller_;
   ControlParams desired_control_params_;
-
-
+  Velocity2D world_vel_;
 };
 
 }  // namespace consai_robot_controller

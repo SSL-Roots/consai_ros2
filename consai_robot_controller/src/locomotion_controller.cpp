@@ -18,29 +18,12 @@
 
 #include "consai_robot_controller/trajectory/bangbangtrajectory3d.hpp"
 
-LocomotionController::LocomotionController()
-:  robot_id_for_debug_(0),
-  delayfactor_sec_(0.0),
-  dt_(0.0)
-{}
-
-LocomotionController::LocomotionController(int robot_id_for_debug, double dt)
-:  robot_id_for_debug_(robot_id_for_debug),
-  delayfactor_sec_(0.0),
-  dt_(dt)
-{}
-
-LocomotionController::LocomotionController(
-  int robot_id_for_debug,
-  double delayfactor_sec, double dt
-)
+LocomotionController::LocomotionController(int robot_id_for_debug, double dt, double delayfactor_sec):
+  robot_id_for_debug_(robot_id_for_debug), dt_(dt), delayfactor_sec_(delayfactor_sec)
 {
-  this->robot_id_for_debug_ = robot_id_for_debug;
   this->target_velocity_ = Velocity2D(0, 0, 0);
   this->output_velocity_ = Velocity2D(0, 0, 0);
   this->state_ = INITIALIZED;
-  this->delayfactor_sec_ = delayfactor_sec;
-  this->dt_ = dt;
 }
 
 LocomotionController::ControllerState LocomotionController::moveConstantVelocity(
@@ -107,7 +90,7 @@ std::pair<Velocity2D, LocomotionController::ControllerState> LocomotionControlle
   return std::make_pair(this->output_velocity_, state_);
 }
 
-LocomotionController::ControllerState LocomotionController::getState()
+LocomotionController::ControllerState LocomotionController::getState() const
 {
   // コントローラの状態を取得するメソッドの実装
   return state_;
@@ -116,7 +99,7 @@ LocomotionController::ControllerState LocomotionController::getState()
 /**
  * @brief 現在の軌道上の仮想の目標状態を取得する
 */
-State2D LocomotionController::getCurrentTargetState()
+State2D LocomotionController::getCurrentTargetState() const
 {
   return this->trajectory_follow_controller_.latest_target_state_;
 }
@@ -124,7 +107,7 @@ State2D LocomotionController::getCurrentTargetState()
 /**
  * @brief 現在の最終目標位置を取得する
 */
-Pose2D LocomotionController::getGoal()
+Pose2D LocomotionController::getGoal() const
 {
   return this->goal_pose_;
 }
