@@ -30,7 +30,7 @@
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/controller_unit.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
-#include "consai_robot_controller/locomotion_controller.hpp"
+// #include "consai_robot_controller/locomotion_controller.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
@@ -70,13 +70,6 @@ protected:
 
 private:
   void gen_pubs_and_subs(const unsigned int num);
-  State limit_world_velocity(
-    const State & velocity, const double & max_velocity_xy,
-    const double & max_velocity_theta) const;
-  State limit_world_acceleration(
-    const State & velocity, const State & last_velocity,
-    const rclcpp::Duration & dt) const;
-  bool arrived(const TrackedRobot & my_robot, const State & goal_pose);
 
   std::vector<ControllerUnit> controller_unit_;
 
@@ -84,7 +77,7 @@ private:
   std::vector<rclcpp::Time> last_update_time_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
   std::vector<State> last_world_vel_;
-  std::vector<LocomotionController> locomotion_controller_;
+  // std::vector<LocomotionController> locomotion_controller_;
 
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_pose_;
   std::vector<rclcpp::Publisher<State>::SharedPtr> pub_current_vel_;
@@ -108,6 +101,7 @@ private:
   std::shared_ptr<VisualizationDataHandler> vis_data_handler_;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_control_;
 
   RobotControlMap robot_control_map_;
   GoalPosesMap goal_poses_map_;

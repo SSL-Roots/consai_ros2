@@ -16,30 +16,45 @@
 #define CONSAI_ROBOT_CONTROLLER__CONTROLLER_UNIT_HPP_
 
 #include <memory>
+#include <optional>
 
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
+#include "consai_msgs/msg/state2_d.hpp"
+#include "consai_robot_controller/control_params.hpp"
+#include "consai_robot_controller/locomotion_controller.hpp"
+#include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace consai_robot_controller
 {
 
 using RobotCommand = consai_frootspi_msgs::msg::RobotCommand;
+using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
+using State = consai_msgs::msg::State2D;
 
 class ControllerUnit
 {
 
 public:
-  ControllerUnit(unsigned int robot_id, bool team_is_yellow) 
-  : robot_id_(robot_id), team_is_yellow_(team_is_yellow) {};
+  ControllerUnit(unsigned int robot_id, bool team_is_yellow, double dt) 
+  : robot_id_(robot_id), team_is_yellow_(team_is_yellow),
+    locomotion_controller_(LocomotionController(robot_id, dt)) {};
   void set_robot_command_publisher(rclcpp::Node::SharedPtr node, const std::string & topic_name);
-  void publish_robot_command(RobotCommand::UniquePtr msg);
+  void publish_robot_command(const State & goal_pose, 
+    const TrackedRobot & my_robot,
+    const double kick_power, const double dribble_power,
+    std::optional<double> limit_vel_xy = std::nullopt
+  );
   void publish_stop_command(void);
+  void set_control_params(const ControlParams & control_params);
 
 private:
 
   rclcpp::Publisher<RobotCommand>::SharedPtr pub_command_;
   unsigned int robot_id_;
   bool team_is_yellow_;
+  LocomotionController locomotion_controller_;
+  ControlParams desired_control_params_;
 
 
 };

@@ -17,6 +17,7 @@
 #include <memory>
 #include <utility>
 #include "rclcpp/rclcpp.hpp"
+#include "consai_robot_controller/control_params.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/trajectory_generator.hpp"
 
@@ -60,6 +61,14 @@ public:
     double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
     double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
 
+  // TODO: ControlParamsを使うように書き換える
+  consai_robot_controller::ControlParams getControlParams() const {
+    return control_params_;
+  }
+  void setControlParams(const consai_robot_controller::ControlParams & control_params) {
+    control_params_ = control_params;
+  }
+
   double getHardLimitLinearVelocity();
   double getSoftLimitLinearVelocity();
   double getHardLimitAngularVelocity();
@@ -93,6 +102,7 @@ private:
   double soft_limit_linear_acceleration_;    // [m/s^2]
   double hard_limit_angular_acceleration_;   // [rad/s^2]
   double soft_limit_angular_acceleration_;   // [rad/s^2]
+  consai_robot_controller::ControlParams control_params_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);
   void generateTrajectory(const Pose2D & goal_pose, const State2D & current_state);
