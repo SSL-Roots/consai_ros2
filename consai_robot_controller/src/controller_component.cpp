@@ -24,7 +24,6 @@
 
 #include "consai_robot_controller/controller_component.hpp"
 #include "consai_robot_controller/tools/control_tools.hpp"
-#include "consai_robot_controller/global_for_debug.hpp"
 #include "consai_robot_controller/control_params.hpp"
 #include "consai_tools/geometry_tools.hpp"
 #include "nlohmann/json.hpp"
@@ -198,36 +197,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   controller_unit_[robot_id].move_to_desired_pose(
     Pose2D(goal_pose), my_robot, kick_power, dribble_power, limit_vel_xy);
 
-  // デバッグ用に出力する
-  {
-    pub_goal_pose_[robot_id]->publish(controller_unit_[robot_id].current_target_pose());
-    pub_target_speed_world_[robot_id]->publish(controller_unit_[robot_id].world_vel());
-
-    State my_pose;
-    my_pose.x = my_robot.pos.x;
-    my_pose.y = my_robot.pos.y;
-    my_pose.theta = my_robot.orientation;
-    pub_current_pose_[robot_id]->publish(my_pose);
-
-    // velが存在するときのみ速度情報をPublish
-    if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
-      auto my_vel = std::make_unique<State>();
-      my_vel->x = my_robot.vel[0].x;
-      my_vel->y = my_robot.vel[0].y;
-      my_vel->theta = my_robot.vel_angular[0];
-      pub_current_vel_[robot_id]->publish(std::move(my_vel));
-    }
-
-    State control_output_ff, control_output_p;
-    control_output_ff.x = global_for_debug::last_control_output_ff.x;
-    control_output_ff.y = global_for_debug::last_control_output_ff.y;
-    control_output_ff.theta = global_for_debug::last_control_output_ff.theta;
-    control_output_p.x = global_for_debug::last_control_output_p.x;
-    control_output_p.y = global_for_debug::last_control_output_p.y;
-    control_output_p.theta = global_for_debug::last_control_output_p.theta;
-    pub_control_output_ff_[robot_id]->publish(control_output_ff);
-    pub_control_output_p_[robot_id]->publish(control_output_p);
-  }
+  controller_unit_[robot_id].publish_debug_data(my_robot);
 
   // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
   GoalPose goal_pose_msg;
@@ -281,6 +251,7 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
     controller_unit_.push_back(ControllerUnit(i, team_is_yellow_, dt));
     controller_unit_[i].set_robot_command_publisher(
       this->shared_from_this(), "robot" + std::to_string(i) + "/command");
+    controller_unit_[i].set_debug_publishers(this->shared_from_this());
 
     robot_control_map_[i] = std::make_shared<RobotControlMsg>();
     auto robot_control_callback = [this](
@@ -290,36 +261,6 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
     // Can not use auto. Ref: https://github.com/ros2/rclcpp/issues/273
     std::function<void(const RobotControlMsg::SharedPtr msg)> fcn = std::bind(
       robot_control_callback, _1, i);
-
-    pub_current_pose_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/current_pose", 10)
-    );
-
-    pub_current_vel_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/current_vel", 10)
-    );
-
-    pub_goal_pose_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/goal_pose", 10)
-    );
-
-    pub_target_speed_world_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/target_speed_world", 10)
-    );
-
-    pub_control_output_ff_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output_ff", 10)
-    );
-
-    pub_control_output_p_.push_back(
-      create_publisher<State>(
-        "robot" + std::to_string(i) + "/control_output_p", 10)
-    );
 
     std::string name_space = team_color + std::to_string(i);
     sub_robot_control_.push_back(

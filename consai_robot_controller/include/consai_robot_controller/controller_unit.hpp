@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "consai_frootspi_msgs/msg/robot_command.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
@@ -35,24 +36,22 @@ using State = consai_msgs::msg::State2D;
 
 class ControllerUnit
 {
-
-public:
-  ControllerUnit(unsigned int robot_id, bool team_is_yellow, double dt) 
+ public:
+  ControllerUnit(unsigned int robot_id, bool team_is_yellow, double dt)
   : robot_id_(robot_id), team_is_yellow_(team_is_yellow),
-    locomotion_controller_(LocomotionController(robot_id, dt)) {};
+    locomotion_controller_(LocomotionController(robot_id, dt)) {}
   void set_robot_command_publisher(rclcpp::Node::SharedPtr node, const std::string & topic_name);
+  void set_debug_publishers(rclcpp::Node::SharedPtr node);
   void move_to_desired_pose(
     const Pose2D & goal_pose,
     const TrackedRobot & my_robot,
     const double kick_power, const double dribble_power,
-    std::optional<double> limit_vel_xy = std::nullopt
-  );
+    std::optional<double> limit_vel_xy = std::nullopt);
   void publish_stop_command(void);
   void set_control_params(const ControlParams & control_params);
-  State world_vel(void) const { return world_vel_.toState2DMsg(); }
-  State current_target_pose(void) const { return locomotion_controller_.getCurrentTargetState().pose.toState2DMsg(); }
+  void publish_debug_data(const TrackedRobot & my_robot);
 
-private:
+ private:
   double calculate_angular_velocity(
     const Velocity2D & desired_velocity, const Pose2D & goal_pose, const TrackedRobot & my_robot);
 
@@ -62,6 +61,13 @@ private:
   LocomotionController locomotion_controller_;
   ControlParams desired_control_params_;
   Velocity2D world_vel_;
+
+  rclcpp::Publisher<State>::SharedPtr pub_debug_current_pose_;
+  rclcpp::Publisher<State>::SharedPtr pub_debug_current_vel_;
+  rclcpp::Publisher<State>::SharedPtr pub_debug_goal_pose_;
+  rclcpp::Publisher<State>::SharedPtr pub_debug_target_speed_world_;
+  rclcpp::Publisher<State>::SharedPtr pub_debug_control_output_ff_;
+  rclcpp::Publisher<State>::SharedPtr pub_debug_control_output_p_;
 };
 
 }  // namespace consai_robot_controller

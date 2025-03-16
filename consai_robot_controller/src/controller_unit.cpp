@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "consai_robot_controller/controller_unit.hpp"
+#include "consai_robot_controller/global_for_debug.hpp"
 #include "consai_robot_controller/tools/control_tools.hpp"
 #include "consai_tools/geometry_tools.hpp"
 
@@ -27,6 +28,21 @@ void ControllerUnit::set_robot_command_publisher(
     .durability_volatile();  // データの保存を行わない
 
   pub_command_ = node->create_publisher<RobotCommand>(topic_name, qos);
+}
+
+void ControllerUnit::set_debug_publishers(rclcpp::Node::SharedPtr node)
+{
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    .best_effort()  // データの損失を許容する
+    .durability_volatile();  // データの保存を行わない
+
+  const std::string prefix = "robot" + std::to_string(robot_id_) + "/control_debug/";
+  pub_debug_current_pose_ = node->create_publisher<State>(prefix + "current_pose", qos);
+  pub_debug_current_vel_ = node->create_publisher<State>(prefix + "current_vel", qos);
+  pub_debug_goal_pose_ = node->create_publisher<State>(prefix + "goal_pose", qos);
+  pub_debug_target_speed_world_ = node->create_publisher<State>(prefix + "target_speed_world", qos);
+  pub_debug_control_output_ff_ = node->create_publisher<State>(prefix + "control_output_ff", qos);
+  pub_debug_control_output_p_ = node->create_publisher<State>(prefix + "control_output_p", qos);
 }
 
 
@@ -99,6 +115,37 @@ void ControllerUnit::publish_stop_command(void)
 void ControllerUnit::set_control_params(const ControlParams & control_params)
 {
   desired_control_params_ = control_params;
+}
+
+void ControllerUnit::publish_debug_data(const TrackedRobot & my_robot)
+{
+  pub_debug_goal_pose_->publish(locomotion_controller_.getCurrentTargetState().pose.toState2DMsg());
+  pub_debug_target_speed_world_->publish(world_vel_.toState2DMsg());
+
+  State my_pose;
+  my_pose.x = my_robot.pos.x;
+  my_pose.y = my_robot.pos.y;
+  my_pose.theta = my_robot.orientation;
+  pub_debug_current_pose_->publish(my_pose);
+
+  // velが存在するときのみ速度情報をPublish
+  if (my_robot.vel.size() > 0 && my_robot.vel_angular.size() > 0) {
+    auto my_vel = std::make_unique<State>();
+    my_vel->x = my_robot.vel[0].x;
+    my_vel->y = my_robot.vel[0].y;
+    my_vel->theta = my_robot.vel_angular[0];
+    pub_debug_current_vel_->publish(std::move(my_vel));
+  }
+
+  State control_output_ff, control_output_p;
+  control_output_ff.x = global_for_debug::last_control_output_ff.x;
+  control_output_ff.y = global_for_debug::last_control_output_ff.y;
+  control_output_ff.theta = global_for_debug::last_control_output_ff.theta;
+  control_output_p.x = global_for_debug::last_control_output_p.x;
+  control_output_p.y = global_for_debug::last_control_output_p.y;
+  control_output_p.theta = global_for_debug::last_control_output_p.theta;
+  pub_debug_control_output_ff_->publish(control_output_ff);
+  pub_debug_control_output_p_->publish(control_output_p);
 }
 
 double ControllerUnit::calculate_angular_velocity(
