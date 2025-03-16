@@ -111,6 +111,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
         for (auto & unit: controller_unit_) {
           unit.set_control_params(control_params);
         }
+        RCLCPP_INFO(get_logger(), "Update control parameters");
       } catch (const std::exception & e) {
         RCLCPP_ERROR(get_logger(), "Param control callback error: %s", e.what());
       }

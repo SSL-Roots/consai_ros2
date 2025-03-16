@@ -45,27 +45,14 @@ void ControllerUnit::publish_robot_command(
 
   // パラメータが更新された場合は、ロボットの制御器に反映する
   if (desired_control_params_ != locomotion_controller_.getControlParams()) {
-    // TODO: ControlParamをそのまま参照するように書き換える
-    locomotion_controller_.setParameters(
-      desired_control_params_.p_gain_xy, 
-      desired_control_params_.d_gain_xy,
-      desired_control_params_.p_gain_theta,
-      desired_control_params_.d_gain_theta,
-      desired_control_params_.hard_limit_velocity_xy,
-      desired_control_params_.soft_limit_velocity_xy,
-      desired_control_params_.hard_limit_velocity_theta,
-      desired_control_params_.soft_limit_velocity_theta,
-      desired_control_params_.hard_limit_acceleration_xy,
-      desired_control_params_.soft_limit_acceleration_xy,
-      desired_control_params_.hard_limit_acceleration_theta,
-      desired_control_params_.soft_limit_acceleration_theta
-    );
     locomotion_controller_.setControlParams(desired_control_params_);
 
     // 軌道の再生成
     locomotion_controller_.moveToPose(
       Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
     );
+
+    RCLCPP_DEBUG(rclcpp::get_logger("ControllerUnit"), "Regenerate trajectory via updated control params");
   }
 
   // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
