@@ -269,8 +269,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // controller_unit_[robot_id].publish_robot_command(
   //   output_vel, my_robot.orientation, goal_pose.theta, kick_power, dribble_power);
 
-  controller_unit_[robot_id].publish_robot_command(
-    goal_pose, my_robot, kick_power, dribble_power, limit_vel_xy);
+  controller_unit_[robot_id].move_to_desired_pose(
+    Pose2D(goal_pose), my_robot, kick_power, dribble_power, limit_vel_xy);
 
   // デバッグ用に出力する
   {

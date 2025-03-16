@@ -30,8 +30,8 @@ void ControllerUnit::set_robot_command_publisher(
 }
 
 
-void ControllerUnit::publish_robot_command(
-  const State & goal_pose,
+void ControllerUnit::move_to_desired_pose(
+  const Pose2D & goal_pose,
   const TrackedRobot & my_robot,
   const double kick_power, const double dribble_power,
   std::optional<double> limit_vel_xy
@@ -48,21 +48,14 @@ void ControllerUnit::publish_robot_command(
     locomotion_controller_.setControlParams(desired_control_params_);
 
     // 軌道の再生成
-    locomotion_controller_.moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
-    );
+    locomotion_controller_.moveToPose(goal_pose);
 
     RCLCPP_DEBUG(rclcpp::get_logger("ControllerUnit"), "Regenerate trajectory via updated control params");
   }
 
   // 前回の目標値と今回が異なる場合にのみmoveToPoseを呼び出す
-  Pose2D current_goal_pose = locomotion_controller_.getGoal();
-  if (goal_pose.x != current_goal_pose.x || goal_pose.y != current_goal_pose.y ||
-    goal_pose.theta != current_goal_pose.theta)
-  {
-    locomotion_controller_.moveToPose(
-      Pose2D(goal_pose.x, goal_pose.y, goal_pose.theta)
-    );
+  if (goal_pose != locomotion_controller_.getGoal()) {
+    locomotion_controller_.moveToPose(goal_pose);
   }
 
   // 制御の実行
