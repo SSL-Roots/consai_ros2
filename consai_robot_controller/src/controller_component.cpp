@@ -49,7 +49,6 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     get_parameter("team_is_yellow").get_value<bool>(),
     get_parameter("invert").get_value<bool>(),
     detection_extractor_);
-  obstacle_observer_ = std::make_shared<obstacle::ObstacleObserver>(detection_extractor_);
 
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
@@ -118,29 +117,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     this->control_loop_cycle_, std::bind(&Controller::on_timer_pub_goal_poses, this)
     );
 
-  auto detection_callback = [this](const TrackedFrame::SharedPtr msg) {
-      parser_->set_detection_tracked(msg);
-    };
-  sub_detection_tracked_ = create_subscription<TrackedFrame>(
-    "detection_tracked", 10, detection_callback);
-
-  auto referee_callback = [this](const Referee::SharedPtr msg) {
-      parser_->set_referee(msg);
-    };
-  sub_referee_ = create_subscription<Referee>(
-    "referee", 10, referee_callback);
-
-  auto parsed_referee_callback = [this](const ParsedReferee::SharedPtr msg) {
-      parser_->set_parsed_referee(msg);
-    };
-  sub_parsed_referee_ = create_subscription<ParsedReferee>(
-    "parsed_referee", 10, parsed_referee_callback);
-
-  auto named_targets_callback = [this](const NamedTargets::SharedPtr msg) {
-      parser_->set_named_targets(msg);
-    };
-  sub_named_targets_ = create_subscription<NamedTargets>(
-    "named_targets", 10, named_targets_callback);
+  parser_->set_subscriptions(this);
 }
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)

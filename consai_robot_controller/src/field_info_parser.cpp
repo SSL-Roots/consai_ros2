@@ -19,6 +19,8 @@
 namespace consai_robot_controller
 {
 
+using std::placeholders::_1;
+
 FieldInfoParser::FieldInfoParser(
   const bool team_is_yellow, const bool invert,
   const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
@@ -28,6 +30,27 @@ FieldInfoParser::FieldInfoParser(
     detection_extractor_, team_is_yellow_);
   tactic_control_ball_ = std::make_shared<tactic::ControlBall>();
   tactic_obstacle_avoidance_ = std::make_shared<tactic::ObstacleAvoidance>(detection_extractor);
+}
+
+void FieldInfoParser::set_subscriptions(rclcpp::Node* node)
+{
+  // 別クラスのコンストラクタから呼び出されるため、Node::SharedPtrが使えない
+  // 変わりにNode*を使用する。生ポインタを使用するため、所有権を持たないように実装すること
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    // .best_effort()  // データの損失を許容する
+    .durability_volatile();  // データの保存を行わない
+
+  sub_detection_tracked_ = node->create_subscription<TrackedFrame>(
+    "detection_tracked", qos, std::bind(&FieldInfoParser::set_detection_tracked, this, _1));
+
+  sub_referee_ = node->create_subscription<Referee>(
+    "referee", qos, std::bind(&FieldInfoParser::set_referee, this, _1));
+
+  sub_parsed_referee_ = node->create_subscription<ParsedReferee>(
+    "parsed_referee", qos, std::bind(&FieldInfoParser::set_parsed_referee, this, _1));
+
+  sub_named_targets_ = node->create_subscription<NamedTargets>(
+    "named_targets", qos, std::bind(&FieldInfoParser::set_named_targets, this, _1));
 }
 
 void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)

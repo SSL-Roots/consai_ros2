@@ -23,8 +23,6 @@
 
 #include "consai_msgs/msg/goal_pose.hpp"
 #include "consai_msgs/msg/goal_poses.hpp"
-#include "consai_msgs/msg/named_targets.hpp"
-#include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/controller_unit.hpp"
@@ -33,11 +31,8 @@
 #include "consai_robot_controller/visibility_control.h"
 #include "consai_robot_controller/visualization_data_handler.hpp"
 #include "consai_robot_controller/detection_extractor.hpp"
-#include "consai_robot_controller/obstacle/obstacle_observer.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
-#include "robocup_ssl_msgs/msg/referee.hpp"
-#include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
 #include "std_msgs/msg/string.hpp"
 
@@ -45,12 +40,8 @@ namespace consai_robot_controller
 {
 using GoalPose = consai_msgs::msg::GoalPose;
 using GoalPoses = consai_msgs::msg::GoalPoses;
-using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
-using ParsedReferee = consai_msgs::msg::ParsedReferee;
-using Referee = robocup_ssl_msgs::msg::Referee;
-using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using GoalPosesMap = std::map<unsigned int, GoalPose>;
 using RobotControlMap = std::map<unsigned int, RobotControlMsg::SharedPtr>;
@@ -75,12 +66,7 @@ private:
 
   std::shared_ptr<consai_robot_controller::FieldInfoParser> parser_;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
-  std::shared_ptr<obstacle::ObstacleObserver> obstacle_observer_;
 
-  rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
-  rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
-  rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
-  rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_goal_poses_;
   rclcpp::Publisher<GoalPoses>::SharedPtr pub_destinations_;
   rclcpp::TimerBase::SharedPtr timer_pub_goal_poses_;

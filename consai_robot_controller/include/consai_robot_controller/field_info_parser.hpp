@@ -56,6 +56,7 @@ public:
   FieldInfoParser(
     const bool team_is_yellow, const bool invert,
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
+  void set_subscriptions(rclcpp::Node* node);
   void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_referee(const Referee::SharedPtr referee);
@@ -74,6 +75,11 @@ public:
 private:
   bool parse_constraints(
     const RobotControlMsg::SharedPtr goal, State & parsed_pose) const;
+
+  rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
+  rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
+  rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
+  rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;
