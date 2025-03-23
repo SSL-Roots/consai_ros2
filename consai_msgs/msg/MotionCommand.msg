@@ -4,7 +4,6 @@ uint8 MODE_DIRECT = 1  # desired_poseまで直接移動する
 uint8 MODE_RAW_VELOCITY = 2  # raw_velocityをロボットに直接指示する
 
 std_msgs/Header header
-
 uint8 mode 0
 
 uint32 robot_id

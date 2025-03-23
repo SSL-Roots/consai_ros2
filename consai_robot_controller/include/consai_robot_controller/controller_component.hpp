@@ -25,6 +25,8 @@
 #include "consai_msgs/msg/goal_poses.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
+#include "consai_msgs/msg/motion_command.hpp"
+#include "consai_msgs/msg/motion_command_array.hpp"
 #include "consai_robot_controller/controller_unit.hpp"
 #include "consai_robot_controller/field_info_parser.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
@@ -45,6 +47,9 @@ using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
 using GoalPosesMap = std::map<unsigned int, GoalPose>;
 using RobotControlMap = std::map<unsigned int, RobotControlMsg::SharedPtr>;
+using MotionCommand = consai_msgs::msg::MotionCommand;
+using MotionCommandArray = consai_msgs::msg::MotionCommandArray;
+using MotionCommandMap = std::map<unsigned int, MotionCommand>;
 
 class Controller : public rclcpp::Node
 {
@@ -63,6 +68,7 @@ private:
 
   std::vector<rclcpp::Subscription<RobotControlMsg>::SharedPtr> sub_robot_control_;
   std::vector<rclcpp::TimerBase::SharedPtr> timer_pub_control_command_;
+  rclcpp::Subscription<MotionCommandArray>::SharedPtr sub_motion_command_array_;
 
   std::shared_ptr<consai_robot_controller::FieldInfoParser> parser_;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
@@ -76,6 +82,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_control_;
 
   RobotControlMap robot_control_map_;
+  MotionCommandMap motion_command_map_;
   GoalPosesMap goal_poses_map_;
   GoalPosesMap destinations_map_;
   bool team_is_yellow_;

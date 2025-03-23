@@ -21,21 +21,10 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-set(msg_files
-  "msg/ConstraintLine.msg"
-  "msg/ConstraintObject.msg"
-  "msg/ConstraintPose.msg"
-  "msg/ConstraintTheta.msg"
-  "msg/ConstraintXY.msg"
-  "msg/GoalPose.msg"
-  "msg/GoalPoses.msg"
-  "msg/MotionCommand.msg"
-  "msg/NamedTargets.msg"
-  "msg/ParsedReferee.msg"
-  "msg/RobotControlMsg.msg"
-  "msg/RobotLocalVelocities.msg"
-  "msg/RobotLocalVelocity.msg"
-  "msg/State2D.msg"
+
+file(GLOB_RECURSE MSG_FILES
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/msg/*.msg
 )
 
 set(action_files
@@ -43,7 +32,7 @@ set(action_files
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
+  ${MSG_FILES}
   ${action_files}
   DEPENDENCIES std_msgs robocup_ssl_msgs
   # ADD_LINTER_TESTS

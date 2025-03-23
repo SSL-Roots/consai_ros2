@@ -107,6 +107,15 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   sub_consai_param_control_ = create_subscription<std_msgs::msg::String>(
     "consai_param/control", qos, callback_param_control);
 
+  auto callback_motion_command_array = [this](const MotionCommandArray::SharedPtr msg)
+    {
+      for (const auto & command : msg->commands) {
+        motion_command_map_[command.robot_id] = command;
+      }
+    };
+  sub_motion_command_array_ = create_subscription<MotionCommandArray>(
+    "motion_commands", qos, callback_motion_command_array);
+
   pub_goal_poses_ = create_publisher<GoalPoses>("goal_poses", 10);
   pub_destinations_ = create_publisher<GoalPoses>("destinations", 10);
   vis_data_handler_ = std::make_shared<VisualizationDataHandler>(
@@ -232,19 +241,15 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
       this->shared_from_this(), "robot" + std::to_string(i) + "/command");
     controller_unit_[i].set_debug_publishers(this->shared_from_this());
 
-    robot_control_map_[i] = std::make_shared<RobotControlMsg>();
-    auto robot_control_callback = [this](
-      const RobotControlMsg::SharedPtr msg, const unsigned int robot_id) {
-        this->robot_control_map_[robot_id] = msg;
-      };
-    // Can not use auto. Ref: https://github.com/ros2/rclcpp/issues/273
-    std::function<void(const RobotControlMsg::SharedPtr msg)> fcn = std::bind(
-      robot_control_callback, _1, i);
+    const std::string name_space = team_color + std::to_string(i);
 
-    std::string name_space = team_color + std::to_string(i);
+    robot_control_map_[i] = std::make_shared<RobotControlMsg>();
     sub_robot_control_.push_back(
       create_subscription<RobotControlMsg>(
-        name_space + "/control", 10, fcn));
+        name_space + "/control", 10,
+        [this, i](const RobotControlMsg::SharedPtr msg) {
+          this->robot_control_map_[i] = msg;
+        }));
 
     // bindでは関数を宣言できなかったので、ラムダ式を使用する
     // Ref: https://github.com/ros2/rclcpp/issues/273#issuecomment-263826519
