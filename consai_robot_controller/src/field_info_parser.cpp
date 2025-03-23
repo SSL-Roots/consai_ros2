@@ -43,12 +43,6 @@ void FieldInfoParser::set_subscriptions(rclcpp::Node* node)
   sub_detection_tracked_ = node->create_subscription<TrackedFrame>(
     "detection_tracked", qos, std::bind(&FieldInfoParser::set_detection_tracked, this, _1));
 
-  sub_referee_ = node->create_subscription<Referee>(
-    "referee", qos, std::bind(&FieldInfoParser::set_referee, this, _1));
-
-  sub_parsed_referee_ = node->create_subscription<ParsedReferee>(
-    "parsed_referee", qos, std::bind(&FieldInfoParser::set_parsed_referee, this, _1));
-
   sub_named_targets_ = node->create_subscription<NamedTargets>(
     "named_targets", qos, std::bind(&FieldInfoParser::set_named_targets, this, _1));
 }
@@ -61,16 +55,6 @@ void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
   detection_extractor_->set_detection_tracked(detection_tracked);
-}
-
-void FieldInfoParser::set_referee(const Referee::SharedPtr referee)
-{
-  referee_ = referee;
-}
-
-void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee)
-{
-  parsed_referee_ = parsed_referee;
 }
 
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)

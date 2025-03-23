@@ -19,7 +19,6 @@
 #include <string>
 
 #include "consai_msgs/msg/named_targets.hpp"
-#include "consai_msgs/msg/parsed_referee.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/constraint_parser.hpp"
@@ -33,7 +32,6 @@
 #include "consai_robot_controller/tactic/tactic_obstacle_avoidance.hpp"
 #include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robocup_ssl_msgs/msg/referee.hpp"
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
 #include "robocup_ssl_msgs/msg/tracked_frame.hpp"
 #include "robocup_ssl_msgs/msg/tracked_robot.hpp"
@@ -44,8 +42,6 @@ namespace consai_robot_controller
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
-using ParsedReferee = consai_msgs::msg::ParsedReferee;
-using Referee = robocup_ssl_msgs::msg::Referee;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
@@ -59,8 +55,6 @@ public:
   void set_subscriptions(rclcpp::Node* node);
   void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
-  void set_referee(const Referee::SharedPtr referee);
-  void set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee);
   void set_named_targets(const NamedTargets::SharedPtr msg);
   bool is_parsable(const RobotControlMsg::SharedPtr goal) const;
   bool parse_goal(
@@ -78,15 +72,11 @@ private:
 
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
-  rclcpp::Subscription<Referee>::SharedPtr sub_referee_;
-  rclcpp::Subscription<ParsedReferee>::SharedPtr sub_parsed_referee_;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;
   std::shared_ptr<parser::DetectionExtractor> detection_extractor_;
 
-  std::shared_ptr<Referee> referee_;
-  std::shared_ptr<ParsedReferee> parsed_referee_;
   tactics::BallBoyTactics ball_boy_tactics_;
   dribble_tactics::DribbleTactics dribble_tactics_;
   back_dribble_tactics::BackDribbleTactics back_dribble_tactics_;
