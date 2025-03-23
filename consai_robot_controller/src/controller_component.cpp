@@ -36,6 +36,7 @@ namespace tools = geometry_tools;
 namespace ctools = control_tools;
 
 using namespace std::placeholders;
+using namespace std::chrono_literals;
 
 Controller::Controller(const rclcpp::NodeOptions & options)
 : Node("controller", options)
@@ -111,6 +112,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     {
       for (const auto & command : msg->commands) {
         motion_command_map_[command.robot_id] = command;
+        motion_command_map_[command.robot_id].header.stamp = steady_clock_.now();
       }
     };
   sub_motion_command_array_ = create_subscription<MotionCommandArray>(
@@ -137,25 +139,45 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     return;
   }
 
-  const auto navi = calc_navi_data_from_control_msg(my_robot);
+  // 古い動作コマンド（control_msg）と新しいコマンド（motion_command）の両方に対応する
+  MotionCommand command;
+  State destination;
+  std::optional<double> limit_vel_xy = std::nullopt;
+  if (auto navi = calc_navi_data_from_control_msg(my_robot)) {
+    navi->motion_command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
+      robot_control_map_.at(robot_id),
+      my_robot,
+      navi->motion_command.desired_pose,
+      navi->destination);
 
-  if (!navi) {
+
+    command = navi->motion_command;
+    destination = navi->destination;
+    // 最大速度が上書きされていたらそちらの値を使う
+    if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
+      limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
+    }
+  } else if (auto it = motion_command_map_.find(robot_id); it != motion_command_map_.end()) {
+    const auto & motion_command = it->second;
+
+    // 古いコマンドは無視する
+    if (steady_clock_.now() - motion_command.header.stamp > 1s) {
+      controller_unit_[robot_id].publish_stop_command();
+      return;
+    }
+
+    command = motion_command;
+    destination = command.desired_pose;
+  } else {
     controller_unit_[robot_id].publish_stop_command();
-    // robot_control_map_[robot_id]->stop = true;
     return;
   }
 
-  // 最大速度が上書きされていたらそちらの値を使う
-  std::optional<double> limit_vel_xy = std::nullopt;
-  if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
-    limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
-  }
-
   controller_unit_[robot_id].move_to_desired_pose(
-    Pose2D(navi->motion_command.desired_pose),
+    Pose2D(command.desired_pose),
     my_robot,
-    navi->motion_command.kick_power,
-    navi->motion_command.dribble_power,
+    command.kick_power,
+    command.dribble_power,
     limit_vel_xy);
 
   controller_unit_[robot_id].publish_debug_data(my_robot);
@@ -164,10 +186,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   GoalPose msg;
   msg.robot_id = robot_id;
   msg.team_is_yellow = team_is_yellow_;
-  msg.pose = navi->motion_command.desired_pose;
+  msg.pose = command.desired_pose;
   goal_poses_map_[robot_id] = msg;
 
-  msg.pose = navi->destination;
+  msg.pose = destination;
   destinations_map_[robot_id] = msg;
 }
 
@@ -261,12 +283,6 @@ std::optional<NaviData> Controller::calc_navi_data_from_control_msg(const Tracke
     RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
     return std::nullopt;
   }
-
-  navi.motion_command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-    robot_control_map_.at(robot_id),
-    my_robot,
-    navi.motion_command.desired_pose,
-    navi.destination);
 
   return navi;
 }
