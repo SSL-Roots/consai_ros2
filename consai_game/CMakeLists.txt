@@ -22,6 +22,7 @@ install(
 
 install(DIRECTORY
   launch
+  consai_game/play
   DESTINATION share/${PROJECT_NAME}/
 )
 

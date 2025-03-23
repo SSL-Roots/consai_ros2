@@ -54,7 +54,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   team_is_yellow_ = get_parameter("team_is_yellow").get_value<bool>();
   RCLCPP_INFO(this->get_logger(), "is yellow:%d", team_is_yellow_);
 
-  steady_clock_ = rclcpp::Clock(RCL_STEADY_TIME);
+  clock_ = rclcpp::Clock(RCL_ROS_TIME);
 
   auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
     .reliable();
@@ -112,7 +112,7 @@ Controller::Controller(const rclcpp::NodeOptions & options)
     {
       for (const auto & command : msg->commands) {
         motion_command_map_[command.robot_id] = command;
-        motion_command_map_[command.robot_id].header.stamp = steady_clock_.now();
+        motion_command_map_[command.robot_id].header.stamp = clock_.now();
       }
     };
   sub_motion_command_array_ = create_subscription<MotionCommandArray>(
@@ -161,7 +161,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     const auto & motion_command = it->second;
 
     // 古いコマンドは無視する
-    if (steady_clock_.now() - motion_command.header.stamp > 1s) {
+    if (clock_.now() - motion_command.header.stamp > 1s) {
       controller_unit_[robot_id].publish_stop_command();
       return;
     }

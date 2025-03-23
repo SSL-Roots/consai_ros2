@@ -30,4 +30,12 @@
       <extra_arg name="use_intra_process_comms" value="false" />
     </composable_node>
   </node_container>
+
+  <arg name="playbook" default="playbook_default" />
+
+  <node pkg="consai_game"
+        exec="main.py"
+        name="consai_game"
+        output="screen"
+        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py" />
 </launch>

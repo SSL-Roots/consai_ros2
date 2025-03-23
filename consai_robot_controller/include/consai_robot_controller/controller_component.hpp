@@ -93,7 +93,7 @@ private:
   GoalPosesMap goal_poses_map_;
   GoalPosesMap destinations_map_;
   bool team_is_yellow_;
-  rclcpp::Clock steady_clock_;
+  rclcpp::Clock clock_;
 
   const std::chrono::milliseconds control_loop_cycle_ = std::chrono::milliseconds(10);
 };

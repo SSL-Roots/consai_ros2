@@ -17,6 +17,7 @@
 
 import argparse
 from consai_game.core.play.play import Play
+from consai_game.core.tactic.role import Role
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
 import importlib.util
@@ -25,7 +26,7 @@ from rclpy.node import Node
 from typing import Callable
 
 
-UpdateRoleCallback = Callable[[list[str], int], None]
+UpdateRoleCallback = Callable[[list[Role]], None]
 
 
 class PlayNode(Node):
@@ -38,7 +39,7 @@ class PlayNode(Node):
 
         self.world_model = WorldModel()
 
-        self.update_role_callbacks: list[UpdateRoleCallback] = [None] * 11
+        self.update_role_callback: UpdateRoleCallback = None
 
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
@@ -65,11 +66,11 @@ class PlayNode(Node):
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model
 
-    def set_update_role_callback(self, callback: UpdateRoleCallback, index: int):
-        self.update_role_callbacks[index] = callback
+    def set_update_role_callback(self, callback: UpdateRoleCallback):
+        self.update_role_callback = callback
 
     def update(self):
-        self.get_logger().info(f"Play update, {process_info()}")
+        self.get_logger().debug(f"Play update, {process_info()}")
 
         self.evaluate_play()
 
@@ -102,7 +103,11 @@ class PlayNode(Node):
 
     def update_role(self):
         # Role(tacticとrobot_id)を更新し、callback関数にセットする
-        for i in range(len(self.update_role_callbacks)):
+        roles = []
+
+        for i in range(len(self.current_play.roles)):
             # TODO: robot_idの取得方法を実装する
             robot_id = i
-            self.update_role_callbacks[i](self.current_play.roles[i], robot_id)
+            roles.append(Role(tactics=self.current_play.roles[i], robot_id=robot_id))
+
+        self.update_role_callback(roles)

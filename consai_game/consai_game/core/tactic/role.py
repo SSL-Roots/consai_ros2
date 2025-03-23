@@ -15,17 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.utils.process_info import process_info
-from consai_game.world_model.world_model import WorldModel
-from rclpy.node import Node
+from dataclasses import dataclass, field
+from typing import List
 
 
-class WorldModelProviderNode(Node):
-    def __init__(self, update_hz: float = 10):
-        super().__init__('world_model_provider_node')
-        self.timer = self.create_timer(1.0/update_hz, self.update)
-
-        self.world_model = WorldModel()
-
-    def update(self):
-        self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
+@dataclass
+class Role:
+    tactics: List[str] = field(default_factory=list)
+    robot_id: int = -1
