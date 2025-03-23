@@ -13,6 +13,6 @@ State2D desired_pose
 
 State2D raw_velocity
 
-float32 kick_power
+float64 kick_power
 bool chip_kick
-float32 dribble_power
+float64 dribble_power

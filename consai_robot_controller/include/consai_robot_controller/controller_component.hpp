@@ -18,6 +18,7 @@
 #include <chrono>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -51,6 +52,11 @@ using MotionCommand = consai_msgs::msg::MotionCommand;
 using MotionCommandArray = consai_msgs::msg::MotionCommandArray;
 using MotionCommandMap = std::map<unsigned int, MotionCommand>;
 
+struct NaviData {
+  MotionCommand motion_command;
+  State destination;
+};
+
 class Controller : public rclcpp::Node
 {
 public:
@@ -63,6 +69,7 @@ protected:
 
 private:
   void gen_pubs_and_subs(const unsigned int num);
+  std::optional<NaviData> calc_navi_data_from_control_msg(const TrackedRobot & my_robot) const;
 
   std::vector<ControllerUnit> controller_unit_;
 

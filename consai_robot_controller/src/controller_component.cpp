@@ -131,50 +131,19 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
-  if (robot_control_map_[robot_id]->stop) {
-    controller_unit_[robot_id].publish_stop_command();
-    return;
-  }
-
-  if (!parser_->is_parsable(robot_control_map_[robot_id])) {
-    controller_unit_[robot_id].publish_stop_command();
-    return;
-  }
-
-  // 制御するロボットの情報を得る
-  // ロボットの情報が存在しなければ制御を終える
   TrackedRobot my_robot;
   if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
-    std::string error_msg = "Failed to extract ID:" + std::to_string(robot_id) +
-      " robot from detection_tracked msg.";
-    RCLCPP_WARN(this->get_logger(), error_msg.c_str());
-
-    controller_unit_[robot_id].publish_stop_command();
-    robot_control_map_[robot_id]->stop = true;
-    return;
-  }
-
-  // 目標値を取得する
-  // 目標値を取得できなければ速度0を目標値とする
-  State goal_pose;
-  State destination;
-  double kick_power = 0.0;
-  double dribble_power = 0.0;
-
-  const auto current_time = steady_clock_.now();
-  if (!parser_->parse_goal(
-      robot_control_map_[robot_id], my_robot, goal_pose, destination, kick_power,
-      dribble_power))
-  {
-    RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
     controller_unit_[robot_id].publish_stop_command();
     return;
   }
 
-  // field_info_parserの衝突回避を無効化する場合は、下記の行をコメントアウトすること
-  goal_pose = parser_->modify_goal_pose_to_avoid_obstacles(
-    robot_control_map_[robot_id], my_robot, goal_pose, destination);
+  const auto navi = calc_navi_data_from_control_msg(my_robot);
 
+  if (!navi) {
+    controller_unit_[robot_id].publish_stop_command();
+    // robot_control_map_[robot_id]->stop = true;
+    return;
+  }
 
   // 最大速度が上書きされていたらそちらの値を使う
   std::optional<double> limit_vel_xy = std::nullopt;
@@ -183,22 +152,23 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   controller_unit_[robot_id].move_to_desired_pose(
-    Pose2D(goal_pose), my_robot, kick_power, dribble_power, limit_vel_xy);
+    Pose2D(navi->motion_command.desired_pose),
+    my_robot,
+    navi->motion_command.kick_power,
+    navi->motion_command.dribble_power,
+    limit_vel_xy);
 
   controller_unit_[robot_id].publish_debug_data(my_robot);
 
   // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
-  GoalPose goal_pose_msg;
-  goal_pose_msg.robot_id = robot_id;
-  goal_pose_msg.team_is_yellow = team_is_yellow_;
-  goal_pose_msg.pose = goal_pose;
-  goal_poses_map_[robot_id] = goal_pose_msg;
+  GoalPose msg;
+  msg.robot_id = robot_id;
+  msg.team_is_yellow = team_is_yellow_;
+  msg.pose = navi->motion_command.desired_pose;
+  goal_poses_map_[robot_id] = msg;
 
-  GoalPose destination_msg;
-  destination_msg.robot_id = robot_id;
-  destination_msg.team_is_yellow = team_is_yellow_;
-  destination_msg.pose = destination;
-  destinations_map_[robot_id] = destination_msg;
+  msg.pose = navi->destination;
+  destinations_map_[robot_id] = msg;
 }
 
 void Controller::on_timer_pub_goal_poses()
@@ -259,6 +229,46 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
       )
     );
   }
+}
+
+std::optional<NaviData> Controller::calc_navi_data_from_control_msg(const TrackedRobot & my_robot) const
+{
+  const auto robot_id = my_robot.robot_id.id;
+
+  if (robot_control_map_.count(robot_id) == 0) {
+    return std::nullopt;
+  }
+
+  if (robot_control_map_.at(robot_id)->stop) {
+    return std::nullopt;
+  }
+
+  if (!parser_->is_parsable(robot_control_map_.at(robot_id))) {
+    return std::nullopt;
+  }
+
+  NaviData navi;
+  navi.motion_command.robot_id = robot_id;
+
+  if (!parser_->parse_goal(
+      robot_control_map_.at(robot_id),
+      my_robot,
+      navi.motion_command.desired_pose,
+      navi.destination,
+      navi.motion_command.kick_power,
+      navi.motion_command.dribble_power))
+  {
+    RCLCPP_WARN(this->get_logger(), "Failed to parse goal of robot_id:%d", robot_id);
+    return std::nullopt;
+  }
+
+  navi.motion_command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
+    robot_control_map_.at(robot_id),
+    my_robot,
+    navi.motion_command.desired_pose,
+    navi.destination);
+
+  return navi;
 }
 
 }  // namespace consai_robot_controller
