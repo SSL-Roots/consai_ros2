@@ -133,6 +133,10 @@ Controller::Controller(const rclcpp::NodeOptions & options)
 
 void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 {
+  if (controller_unit_.size() <= robot_id) {
+    return;
+  }
+
   TrackedRobot my_robot;
   if (!detection_extractor_->extract_robot(robot_id, team_is_yellow_, my_robot)) {
     controller_unit_[robot_id].publish_stop_command();

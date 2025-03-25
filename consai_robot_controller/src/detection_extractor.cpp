@@ -58,9 +58,9 @@ bool DetectionExtractor::extract_robot(
     }
 
     my_robot = robot;
-    break;
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
