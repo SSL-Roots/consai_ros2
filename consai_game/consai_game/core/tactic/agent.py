@@ -46,8 +46,15 @@ class Agent():
         command = MotionCommand()
         command.robot_id = self.role.robot_id
         command.mode = MotionCommand.MODE_NAVI
-        command.desired_pose.x = self.role.robot_id * 0.2
-        command.desired_pose.y = self.role.robot_id * 0.2
+        command.desired_pose.x = self.role.robot_id * 0.3
+        command.desired_pose.y = self.role.robot_id * 0.3
         command.desired_pose.theta = self.role.robot_id * 0.2
+
+        command.navi_options.avoid_our_robots = True
+        command.navi_options.avoid_their_robots = True
+        command.navi_options.avoid_pushing = True
+
+        command.navi_options.avoid_ball = True
+        command.navi_options.ball_avoid_radius = 0.5
 
         return command

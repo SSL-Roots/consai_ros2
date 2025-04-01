@@ -50,14 +50,14 @@ void ControllerUnit::move_to_desired_pose(
   const Pose2D & goal_pose,
   const TrackedRobot & my_robot,
   const double kick_power, const double dribble_power,
-  std::optional<double> limit_vel_xy
+  const std::optional<double> & limit_vel_xy
 )
 {
   auto control_params = desired_control_params_;
 
   // 最低速度が指定されている場合は、リミットを更新する
   if (limit_vel_xy) {
-    if (*limit_vel_xy < control_params.soft_limit_velocity_xy) {
+    if (limit_vel_xy < control_params.soft_limit_velocity_xy) {
       control_params.soft_limit_velocity_xy = *limit_vel_xy;
     }
   }

@@ -172,6 +172,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
     command = motion_command;
     destination = command.desired_pose;
+
+    if (command.mode == MotionCommand::MODE_NAVI){
+      command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
+        my_robot, command.desired_pose, command.navi_options);
+    }
   } else {
     controller_unit_[robot_id].publish_stop_command();
     return;

@@ -46,7 +46,7 @@ public:
     const Pose2D & goal_pose,
     const TrackedRobot & my_robot,
     const double kick_power, const double dribble_power,
-    std::optional<double> limit_vel_xy = std::nullopt);
+    const std::optional<double> & limit_vel_xy = std::nullopt);
   void publish_stop_command(void);
   void set_control_params(const ControlParams & control_params);
   void publish_debug_data(const TrackedRobot & my_robot);

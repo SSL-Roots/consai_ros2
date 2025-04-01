@@ -184,6 +184,33 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   return avoidance_pose;
 }
 
+State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
+    const TrackedRobot & my_robot,
+    const State & goal_pose,
+    const NaviOptions & navi_options) const {
+
+  const auto ball = detection_extractor_->extract_ball();
+
+  State new_pose = tactic_obstacle_avoidance_->avoid_obstacles(
+    my_robot,
+    goal_pose,
+    ball,
+    navi_options.avoid_our_robots,
+    navi_options.avoid_their_robots,
+    navi_options.avoid_ball);
+
+  if (navi_options.avoid_pushing) {
+    new_pose = tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, new_pose);
+  }
+
+  if (navi_options.avoid_ball) {
+    new_pose = tactic_obstacle_avoidance_->avoid_ball_around(
+      my_robot, new_pose, ball, navi_options.ball_avoid_radius);
+  }
+
+  return new_pose;
+}
+
 bool FieldInfoParser::parse_constraints(
   const RobotControlMsg::SharedPtr goal, State & parsed_pose) const
 {

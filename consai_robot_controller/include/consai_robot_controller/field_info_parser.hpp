@@ -19,6 +19,7 @@
 #include <string>
 
 #include "consai_msgs/msg/named_targets.hpp"
+#include "consai_msgs/msg/navi_options.hpp"
 #include "consai_msgs/msg/robot_control_msg.hpp"
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_robot_controller/constraint_parser.hpp"
@@ -40,11 +41,13 @@ namespace consai_robot_controller
 {
 
 using RobotControlMsg = consai_msgs::msg::RobotControlMsg;
+using NaviOptions = consai_msgs::msg::NaviOptions;
 using NamedTargets = consai_msgs::msg::NamedTargets;
 using State = consai_msgs::msg::State2D;
 using TrackedBall = robocup_ssl_msgs::msg::TrackedBall;
 using TrackedFrame = robocup_ssl_msgs::msg::TrackedFrame;
 using TrackedRobot = robocup_ssl_msgs::msg::TrackedRobot;
+
 
 class FieldInfoParser
 {
@@ -65,6 +68,10 @@ public:
     const RobotControlMsg::SharedPtr goal,
     const TrackedRobot & my_robot,
     const State & goal_pose, const State & final_goal_pose) const;
+  State modify_goal_pose_to_avoid_obstacles(
+    const TrackedRobot & my_robot,
+    const State & goal_pose,
+    const NaviOptions & navi_options) const;
 
 private:
   bool parse_constraints(

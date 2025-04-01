@@ -1,16 +1,16 @@
 
 uint8 MODE_NAVI = 0  # desired_poseまでNavigation経由で移動する
-uint8 MODE_DIRECT = 1  # desired_poseまで直接移動する
-uint8 MODE_RAW_VELOCITY = 2  # raw_velocityをロボットに直接指示する
+uint8 MODE_DIRECT_POSE = 1  # desired_poseまで直接移動する
+uint8 MODE_DIRECT_VELOCITY = 2  # desired_velocityをロボットに直接指示する
 
 std_msgs/Header header  # MotionCommandArrayのheaderと同じであること
-uint8 mode 0
-
 uint32 robot_id
 
-State2D desired_pose
+uint8 mode 0
 
-State2D raw_velocity
+State2D desired_pose
+State2D desired_velocity
+NaviOptions navi_options
 
 float64 kick_power
 bool chip_kick

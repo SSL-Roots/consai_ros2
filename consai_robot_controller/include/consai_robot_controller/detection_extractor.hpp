@@ -16,6 +16,7 @@
 #define CONSAI_ROBOT_CONTROLLER__DETECTION_EXTRACTOR_HPP_
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "robocup_ssl_msgs/msg/tracked_ball.hpp"
@@ -43,6 +44,7 @@ public:
     const unsigned int robot_id, const bool team_is_yellow,
     TrackedRobot & my_robot) const;
   bool extract_ball(TrackedBall & my_ball) const;
+  std::optional<TrackedBall> extract_ball() const;
   std::vector<TrackedRobot> extract_robots() const;
   std::vector<unsigned int> active_robot_id_list(const bool team_is_yellow) const;
 
