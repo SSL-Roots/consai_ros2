@@ -16,8 +16,13 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from consai_game.world_model.referee_model import RefereeModel
 
 
 @dataclass
 class WorldModel:
     ball_is_on_field: bool = False
+    referee: RefereeModel = RefereeModel()
+
+    def set_our_team_is_yellow(self, our_team_is_yellow: bool):
+        self.referee.our_team_is_yellow = our_team_is_yellow

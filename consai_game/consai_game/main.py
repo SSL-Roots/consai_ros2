@@ -42,9 +42,13 @@ if __name__ == '__main__':
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
-    world_model_provider_node = WorldModelProviderNode(update_hz=10)
+    # TODOL: team_is_yellowを引数から取得したい
+    team_is_yellow = False
+    world_model_provider_node = WorldModelProviderNode(
+        update_hz=10, team_is_yellow=team_is_yellow)
     # TODO: agent_numをplay_nodeから取得したい
-    agent_scheduler_node = AgentSchedulerNode(update_hz=10, team_is_yellow=False, agent_num=11)
+    agent_scheduler_node = AgentSchedulerNode(
+        update_hz=10, team_is_yellow=team_is_yellow, agent_num=11)
     play_node.set_update_role_callback(agent_scheduler_node.set_roles)
 
     executor = MultiThreadedExecutor()
