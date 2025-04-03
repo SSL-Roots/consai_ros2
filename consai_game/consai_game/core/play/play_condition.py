@@ -30,3 +30,7 @@ class PlayCondition:
     def is_met(self, game_state: WorldModel) -> bool:
         """ゲームの状態を渡して条件を満たしているかチェック."""
         return self.check_func(game_state)
+
+    def invert(self) -> 'PlayCondition':
+        """条件を反転させた PlayCondition を返す."""
+        return PlayCondition(lambda game_state: not self.check_func(game_state))

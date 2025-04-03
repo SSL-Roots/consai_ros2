@@ -27,7 +27,9 @@ def halt() -> Play:
         applicable=[
             RefereeConditions.halt,
         ],
-        aborted=['!applicable'],
+        aborted=[
+            RefereeConditions.halt.invert(),
+        ],
         timeout_ms=0,
         roles=[
             ['goalie'],
@@ -52,7 +54,9 @@ def stop() -> Play:
         applicable=[
             RefereeConditions.stop,
         ],
-        aborted=['!applicable'],
+        aborted=[
+            RefereeConditions.stop.invert(),
+        ],
         timeout_ms=0,
         roles=[
             ['goalie'],

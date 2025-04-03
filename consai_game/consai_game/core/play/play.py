@@ -26,7 +26,7 @@ class Play:
     name: str
     description: str
     applicable: List[PlayCondition]
-    aborted: List[str]
+    aborted: List[PlayCondition]
     timeout_ms: int
     roles: List[List[str]] = field(default_factory=lambda: [[] for _ in range(11)])
 
@@ -34,3 +34,8 @@ class Play:
         """Playが適用可能か判定."""
         print(f'play: {self.name} is_applicable called')
         return all(cond.is_met(world_model) for cond in self.applicable)
+
+    def should_abort(self, world_model: WorldModel) -> bool:
+        """Playが中断されるべきか判定."""
+        print(f'play: {self.name} should_abort called')
+        return any(cond.is_met(world_model) for cond in self.aborted)

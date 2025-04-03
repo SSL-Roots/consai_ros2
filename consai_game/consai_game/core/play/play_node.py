@@ -72,13 +72,14 @@ class PlayNode(Node):
     def update(self):
         self.get_logger().debug(f"Play update, {process_info()}")
 
-        self.evaluate_play()
-
         if self.current_play is None:
             self.current_play = self.select_play()
             self.update_role()
             self.get_logger().info(f"Selected play: {self.current_play.name}")
-            self.evaluate_play()
+
+        self.execute_play()
+
+        self.evaluate_play()
 
     def select_play(self) -> Play:
         applicable_plays = [
@@ -98,8 +99,10 @@ class PlayNode(Node):
         pass
 
     def evaluate_play(self):
-        # TODO: current_playを継続して実行できるか評価する
-        pass
+        # current_playを継続して実行できるか評価する
+        if self.current_play.should_abort(self.world_model):
+            self.get_logger().info(f"Play aborted: {self.current_play.name}")
+            self.current_play = None
 
     def update_role(self):
         # Role(tacticとrobot_id)を更新し、callback関数にセットする
