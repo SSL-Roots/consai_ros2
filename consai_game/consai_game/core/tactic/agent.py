@@ -16,45 +16,43 @@
 # limitations under the License.
 
 from consai_game.core.tactic.role import Role
+from consai_game.core.tactic.tactic_base import TacticState
 from consai_msgs.msg import MotionCommand
 from typing import Optional
-import rclpy
-import rclpy.logging
 
 
 class Agent():
     def __init__(self):
 
         self.role = Role()
-        self.present_tactic = 0
+        self.present_tactic = None
+        self.present_tactic_index = 0
 
     def update(self) -> Optional[MotionCommand]:
-        if self.role.robot_id < 0 or len(self.role.tactics) == 0:
+        if self.present_tactic is None:
             return None
 
-        command = self.execute_tactic()
+        # Tacticの処理が終了していたら、次のTacticに移る
+        if self.present_tactic.state == TacticState.FINISHED:
+            self.present_tactic_index += 1
 
-        if self.present_tactic >= len(self.role.tactics):
-            self.present_tactic = 0
+            # すべてのTacticを実行したら、最初のTacticに戻る
+            if self.present_tactic_index >= len(self.role.tactics):
+                self.present_tactic_index = 0
+            self.present_tactic = self.role.tactics[self.present_tactic_index]
 
-        return command
+        if self.present_tactic.state == TacticState.BEFORE_INIT:
+            self.present_tactic.reset(self.role.robot_id)
+
+        return self.present_tactic.run()
 
     def set_role(self, role: Role) -> None:
         self.role = role
+        if len(self.role.tactics) == 0:
+            raise ValueError("Tactics is empty")
 
-    def execute_tactic(self) -> MotionCommand:
-        command = MotionCommand()
-        command.robot_id = self.role.robot_id
-        command.mode = MotionCommand.MODE_NAVI
-        command.desired_pose.x = self.role.robot_id * 0.3
-        command.desired_pose.y = self.role.robot_id * 0.3
-        command.desired_pose.theta = self.role.robot_id * 0.2
+        if self.role.robot_id < 0:
+            raise ValueError("Robot ID is not set")
 
-        command.navi_options.avoid_our_robots = True
-        command.navi_options.avoid_their_robots = True
-        command.navi_options.avoid_pushing = True
-
-        command.navi_options.avoid_ball = True
-        command.navi_options.ball_avoid_radius = 0.5
-
-        return command
+        self.present_tactic_index = 0
+        self.present_tactic = self.role.tactics[self.present_tactic_index]()

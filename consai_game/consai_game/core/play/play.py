@@ -32,10 +32,8 @@ class Play:
 
     def is_applicable(self, world_model: WorldModel) -> bool:
         """Playが適用可能か判定."""
-        print(f'play: {self.name} is_applicable called')
         return all(cond.is_met(world_model) for cond in self.applicable)
 
     def should_abort(self, world_model: WorldModel) -> bool:
         """Playが中断されるべきか判定."""
-        print(f'play: {self.name} should_abort called')
         return any(cond.is_met(world_model) for cond in self.aborted)

@@ -12,28 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from abc import ABC, abstractmethod
 from consai_msgs.msg import MotionCommand
+from enum import Enum, auto
 
 
-class Goalie(TacticBase):
-    """
-    ロボットを停止させるTactic
-    """
+class TacticState(Enum):
+    BEFORE_INIT = 0
+    RUNNING = auto()
+    FINISHED = auto()
+
+
+class TacticBase(ABC):
     def __init__(self):
-        super().__init__()
+        self._robot_id = -1
+        self._state = TacticState.BEFORE_INIT
 
+    @abstractmethod
     def reset(self, robot_id: int) -> None:
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        raise NotImplementedError()
 
+    @abstractmethod
     def run(self) -> MotionCommand:
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_DIRECT_VELOCITY
-        command.desired_velocity.x = 0.0
-        command.desired_velocity.y = 0.0
-        command.desired_velocity.theta = 1.0
+        raise NotImplementedError()
 
-        return command
+    @property
+    def robot_id(self) -> int:
+        return self._robot_id
+
+    @robot_id.setter
+    def robot_id(self, value: int) -> None:
+        self._robot_id = value
+
+    @property
+    def state(self) -> TacticState:
+        return self._state
+
+    @state.setter
+    def state(self, value: TacticState) -> None:
+        self._state = value

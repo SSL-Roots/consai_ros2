@@ -18,6 +18,8 @@
 
 from consai_game.core.play.play import Play
 from consai_game.play.conditions.referee_conditions import RefereeConditions
+from consai_game.tactic.stop import Stop
+from consai_game.tactic.goalie import Goalie
 
 
 def halt() -> Play:
@@ -32,17 +34,17 @@ def halt() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            ['goalie'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop']
+            [Goalie],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop]
         ]
     )
 
@@ -59,16 +61,16 @@ def stop() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            ['goalie'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop'],
-            ['stop']
+            [Goalie],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop],
+            [Stop]
         ]
     )

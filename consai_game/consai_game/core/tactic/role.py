@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_game.core.tactic.tactic_base import TacticBase
 from dataclasses import dataclass, field
 from typing import List
 
 
 @dataclass
 class Role:
-    tactics: List[str] = field(default_factory=list)
+    tactics: List[TacticBase] = field(default_factory=list)
     robot_id: int = -1
