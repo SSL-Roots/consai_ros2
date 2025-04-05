@@ -18,8 +18,9 @@
 
 from consai_game.core.play.play import Play
 from consai_game.play.conditions.referee_conditions import RefereeConditions
-from consai_game.tactic.stop import Stop
 from consai_game.tactic.goalie import Goalie
+from consai_game.tactic.position import Position
+from consai_game.tactic.stop import Stop
 
 
 def halt() -> Play:
@@ -61,16 +62,16 @@ def stop() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Goalie()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()]
+            [Position(-4.0, 0.0)],
+            [Position(-3.0, 3.0)],
+            [Position(-3.0, 2.0)],
+            [Position(-3.0, 1.0)],
+            [Position(-3.0, 0.0)],
+            [Position(-3.0, -1.0)],
+            [Position(-3.0, -2.0)],
+            [Position(-3.0, -3.0)],
+            [Position(-2.0, 1.0)],
+            [Position(-2.0, 0.0)],
+            [Position(-2.0, -1.0)],
         ]
     )

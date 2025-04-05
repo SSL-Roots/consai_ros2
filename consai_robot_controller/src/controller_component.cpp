@@ -182,6 +182,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     command = motion_command;
 
     if (command.mode == MotionCommand::MODE_NAVI){
+      destinations_map_[robot_id].pose = command.desired_pose;  // デバッグ用
+
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
         my_robot, command.desired_pose, command.navi_options);
 
@@ -196,7 +198,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         command.dribble_power,
         limit_vel_xy);
 
-      destinations_map_[robot_id].pose = navi->destination;  // デバッグ用
       goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
     } else if (command.mode == MotionCommand::MODE_DIRECT_VELOCITY) {
       controller_unit_[robot_id].publish_velocity_command(
