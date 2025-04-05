@@ -185,6 +185,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
         my_robot, command.desired_pose, command.navi_options);
 
+      if (command.desired_velocity.x > 0) {
+        limit_vel_xy = command.desired_velocity.x;
+      }
+
       controller_unit_[robot_id].move_to_desired_pose(
         Pose2D(command.desired_pose),
         my_robot,
