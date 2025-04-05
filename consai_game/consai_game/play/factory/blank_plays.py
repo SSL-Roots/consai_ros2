@@ -34,17 +34,17 @@ def halt() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop]
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()]
         ]
     )
 
@@ -61,16 +61,16 @@ def stop() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Goalie],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop],
-            [Stop]
+            [Goalie()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()]
         ]
     )

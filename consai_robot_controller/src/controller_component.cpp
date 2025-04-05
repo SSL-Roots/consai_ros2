@@ -145,10 +145,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
   // 古い動作コマンド（control_msg）と新しいコマンド（motion_command）の両方に対応する
   MotionCommand command;
-  State destination;
-  destination.x = my_robot.pos.x;
-  destination.y = my_robot.pos.y;
-  destination.theta = my_robot.orientation;
 
   std::optional<double> limit_vel_xy = std::nullopt;
   if (auto navi = calc_navi_data_from_control_msg(my_robot)) {
@@ -160,7 +156,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
 
     command = navi->motion_command;
-    destination = navi->destination;
     // 最大速度が上書きされていたらそちらの値を使う
     if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
       limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
@@ -173,6 +168,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       command.dribble_power,
       limit_vel_xy);
 
+    destinations_map_[robot_id].pose = navi->destination;  // デバッグ用
+    goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
   } else if (auto it = motion_command_map_.find(robot_id); it != motion_command_map_.end()) {
     const auto & motion_command = it->second;
 
@@ -185,7 +182,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     command = motion_command;
 
     if (command.mode == MotionCommand::MODE_NAVI){
-      destination = command.desired_pose;
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
         my_robot, command.desired_pose, command.navi_options);
 
@@ -195,11 +191,22 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         command.kick_power,
         command.dribble_power,
         limit_vel_xy);
+
+      destinations_map_[robot_id].pose = navi->destination;  // デバッグ用
+      goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
     } else if (command.mode == MotionCommand::MODE_DIRECT_VELOCITY) {
       controller_unit_[robot_id].publish_velocity_command(
         command.desired_velocity,
         command.kick_power,
         command.dribble_power);
+
+      // 描画が分かりにくくならないように、ロボットの位置で上書きする
+      State robot_pos;
+      robot_pos.x = my_robot.pos.x;
+      robot_pos.y = my_robot.pos.y;
+      robot_pos.theta = my_robot.orientation;
+      destinations_map_[robot_id].pose = robot_pos;  // デバッグ用
+      goal_poses_map_[robot_id].pose = robot_pos;  // デバッグ用
     } else {
       RCLCPP_WARN(get_logger(), "Unknown motion command mode: %d", command.mode);
       controller_unit_[robot_id].publish_stop_command();
@@ -211,16 +218,6 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   }
 
   controller_unit_[robot_id].publish_debug_data(my_robot);
-
-  // ビジュアライズ用に、目標姿勢と最終目標姿勢を出力する
-  GoalPose msg;
-  msg.robot_id = robot_id;
-  msg.team_is_yellow = team_is_yellow_;
-  msg.pose = command.desired_pose;
-  goal_poses_map_[robot_id] = msg;
-
-  msg.pose = destination;
-  destinations_map_[robot_id] = msg;
 }
 
 void Controller::on_timer_pub_goal_poses()
@@ -280,6 +277,12 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
         control_loop_cycle_, [this, robot_id = i]() {this->on_timer_pub_control_command(robot_id);}
       )
     );
+
+    GoalPose msg;
+    msg.robot_id = i;
+    msg.team_is_yellow = team_is_yellow_;
+    goal_poses_map_[i] = msg;
+    destinations_map_[i] = msg;
   }
 }
 

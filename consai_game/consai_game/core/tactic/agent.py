@@ -55,4 +55,4 @@ class Agent():
             raise ValueError("Robot ID is not set")
 
         self.present_tactic_index = 0
-        self.present_tactic = self.role.tactics[self.present_tactic_index]()
+        self.present_tactic = self.role.tactics[self.present_tactic_index]
