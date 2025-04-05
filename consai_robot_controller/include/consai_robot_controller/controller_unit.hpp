@@ -47,6 +47,9 @@ public:
     const TrackedRobot & my_robot,
     const double kick_power, const double dribble_power,
     const std::optional<double> & limit_vel_xy = std::nullopt);
+  void publish_velocity_command(
+    const State & desired_velocity,
+    const double kick_power, const double dribble_power);
   void publish_stop_command(void);
   void set_control_params(const ControlParams & control_params);
   void publish_debug_data(const TrackedRobot & my_robot);

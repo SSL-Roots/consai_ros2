@@ -108,6 +108,24 @@ void ControllerUnit::move_to_desired_pose(
   pub_command_->publish(std::move(command_msg));
 }
 
+void ControllerUnit::publish_velocity_command(
+    const State & desired_velocity,
+    const double kick_power, const double dribble_power)
+{
+  auto command_msg = std::make_unique<RobotCommand>();
+  command_msg->robot_id = robot_id_;
+  command_msg->team_is_yellow = team_is_yellow_;
+
+  command_msg->velocity_x = desired_velocity.x;
+  command_msg->velocity_y = desired_velocity.y;
+  command_msg->velocity_theta = desired_velocity.theta;
+
+  command_msg->kick_power = kick_power;
+  command_msg->dribble_power = dribble_power;
+
+  pub_command_->publish(std::move(command_msg));
+}
+
 void ControllerUnit::publish_stop_command(void)
 {
   auto stop_command_msg = std::make_unique<RobotCommand>();

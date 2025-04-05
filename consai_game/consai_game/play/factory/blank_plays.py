@@ -34,7 +34,7 @@ def halt() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Goalie],
+            [Stop],
             [Stop],
             [Stop],
             [Stop],

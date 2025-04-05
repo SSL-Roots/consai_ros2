@@ -146,6 +146,10 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
   // 古い動作コマンド（control_msg）と新しいコマンド（motion_command）の両方に対応する
   MotionCommand command;
   State destination;
+  destination.x = my_robot.pos.x;
+  destination.y = my_robot.pos.y;
+  destination.theta = my_robot.orientation;
+
   std::optional<double> limit_vel_xy = std::nullopt;
   if (auto navi = calc_navi_data_from_control_msg(my_robot)) {
     navi->motion_command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
@@ -161,6 +165,14 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     if (robot_control_map_[robot_id]->max_velocity_xy.size() > 0) {
       limit_vel_xy = robot_control_map_[robot_id]->max_velocity_xy[0];
     }
+
+    controller_unit_[robot_id].move_to_desired_pose(
+      Pose2D(command.desired_pose),
+      my_robot,
+      command.kick_power,
+      command.dribble_power,
+      limit_vel_xy);
+
   } else if (auto it = motion_command_map_.find(robot_id); it != motion_command_map_.end()) {
     const auto & motion_command = it->second;
 
@@ -171,23 +183,32 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     }
 
     command = motion_command;
-    destination = command.desired_pose;
 
     if (command.mode == MotionCommand::MODE_NAVI){
+      destination = command.desired_pose;
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
         my_robot, command.desired_pose, command.navi_options);
+
+      controller_unit_[robot_id].move_to_desired_pose(
+        Pose2D(command.desired_pose),
+        my_robot,
+        command.kick_power,
+        command.dribble_power,
+        limit_vel_xy);
+    } else if (command.mode == MotionCommand::MODE_DIRECT_VELOCITY) {
+      controller_unit_[robot_id].publish_velocity_command(
+        command.desired_velocity,
+        command.kick_power,
+        command.dribble_power);
+    } else {
+      RCLCPP_WARN(get_logger(), "Unknown motion command mode: %d", command.mode);
+      controller_unit_[robot_id].publish_stop_command();
+      return;
     }
   } else {
     controller_unit_[robot_id].publish_stop_command();
     return;
   }
-
-  controller_unit_[robot_id].move_to_desired_pose(
-    Pose2D(command.desired_pose),
-    my_robot,
-    command.kick_power,
-    command.dribble_power,
-    limit_vel_xy);
 
   controller_unit_[robot_id].publish_debug_data(my_robot);
 
