@@ -28,9 +28,10 @@ import time
 
 def main():
     while rclpy.ok():
-        # print(f'Main update, {process_info()}')
-        play_node.set_world_model(world_model_provider_node.world_model)
-        agent_scheduler_node.set_world_model(world_model_provider_node.world_model)
+        world_model = world_model_provider_node.world_model
+        play_node.set_world_model(world_model)
+        agent_scheduler_node.set_world_model(world_model)
+
         time.sleep(1)
 
 
@@ -50,6 +51,8 @@ if __name__ == '__main__':
     agent_scheduler_node = AgentSchedulerNode(
         update_hz=10, team_is_yellow=team_is_yellow, agent_num=11)
     play_node.set_update_role_callback(agent_scheduler_node.set_roles)
+
+    logger = rclpy.logging.get_logger('consai_game')
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)

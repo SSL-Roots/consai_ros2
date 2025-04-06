@@ -18,13 +18,16 @@
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
 from rclpy.node import Node
-
 from robocup_ssl_msgs.msg import Referee
+from robocup_ssl_msgs.msg import TrackedFrame
+import threading
 
 
 class WorldModelProviderNode(Node):
     def __init__(self, update_hz: float = 10, team_is_yellow: bool = False):
         super().__init__('world_model_provider_node')
+        self.lock = threading.Lock()
+
         self.timer = self.create_timer(1.0/update_hz, self.update)
 
         self.world_model = WorldModel()
@@ -32,5 +35,14 @@ class WorldModelProviderNode(Node):
         self.world_model.referee.sub_referee = self.create_subscription(
             Referee, 'referee', self.world_model.referee.callback, 10)
 
-    def update(self):
-        self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
+        self.sub_detection_traced = self.create_subscription(
+            TrackedFrame, 'detection_tracked', self.callback_detection_traced, 10)
+
+    def update(self) -> None:
+        with self.lock:
+            self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
+
+    def callback_detection_traced(self, msg: TrackedFrame) -> None:
+        with self.lock:
+            self.world_model.robots.parse_frame(msg)
+            self.world_model.ball.parse_frame(msg)
