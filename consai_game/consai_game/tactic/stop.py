@@ -19,9 +19,8 @@ from consai_msgs.msg import MotionCommand
 
 
 class Stop(TacticBase):
-    """
-    ロボットを停止させるTactic
-    """
+    """ロボットを停止させるTactic."""
+
     def __init__(self):
         super().__init__()
 

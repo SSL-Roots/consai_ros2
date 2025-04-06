@@ -18,7 +18,6 @@
 
 from consai_game.core.play.play import Play
 from consai_game.play.conditions.referee_conditions import RefereeConditions
-from consai_game.tactic.goalie import Goalie
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
 

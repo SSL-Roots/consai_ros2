@@ -52,7 +52,8 @@ using MotionCommand = consai_msgs::msg::MotionCommand;
 using MotionCommandArray = consai_msgs::msg::MotionCommandArray;
 using MotionCommandMap = std::map<unsigned int, MotionCommand>;
 
-struct NaviData {
+struct NaviData
+{
   MotionCommand motion_command;
   State destination;
 };

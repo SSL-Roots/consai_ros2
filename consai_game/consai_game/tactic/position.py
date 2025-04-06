@@ -19,9 +19,8 @@ from consai_msgs.msg import MotionCommand
 
 
 class Position(TacticBase):
-    """
-    指定した位置に移動するTactic
-    """
+    """指定した位置に移動するTactic."""
+
     def __init__(self, x=0.0, y=0.0, theta=0.0):
         super().__init__()
         self.x = x

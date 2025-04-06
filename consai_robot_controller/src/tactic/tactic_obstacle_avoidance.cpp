@@ -160,7 +160,8 @@ State ObstacleAvoidance::avoid_obstacles(
 {
   State new_pose = goal_pose;
 
-  avoid_obstacles(my_robot, new_pose, ball, avoid_our_robots, avoid_their_robots, avoid_ball, new_pose);
+  avoid_obstacles(
+    my_robot, new_pose, ball, avoid_our_robots, avoid_their_robots, avoid_ball, new_pose);
 
   return new_pose;
 }
@@ -271,7 +272,7 @@ bool ObstacleAvoidance::avoid_pushing_robots(
 }
 
 State ObstacleAvoidance::avoid_pushing_robots(
-    const TrackedRobot & my_robot, const State & goal_pose) const
+  const TrackedRobot & my_robot, const State & goal_pose) const
 {
   State new_pose = goal_pose;
 
@@ -417,11 +418,11 @@ bool ObstacleAvoidance::avoid_defense_area(
 }
 
 bool ObstacleAvoidance::avoid_ball_around_impl(
-    const TrackedRobot & my_robot,
-    const State & final_goal_pose,
-    const State & goal_pose, const TrackedBall & ball,
-    const double & radius_threshold,
-    State & avoidance_pose) const
+  const TrackedRobot & my_robot,
+  const State & final_goal_pose,
+  const State & goal_pose, const TrackedBall & ball,
+  const double & radius_threshold,
+  State & avoidance_pose) const
 {
   // ボールからradius_threshold以上離れるために、回避処理を実行する
   // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す

@@ -55,7 +55,7 @@ public:
   FieldInfoParser(
     const bool team_is_yellow, const bool invert,
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
-  void set_subscriptions(rclcpp::Node* node);
+  void set_subscriptions(rclcpp::Node * node);
   void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_named_targets(const NamedTargets::SharedPtr msg);

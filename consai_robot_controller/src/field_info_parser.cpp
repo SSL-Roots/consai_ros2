@@ -32,7 +32,7 @@ FieldInfoParser::FieldInfoParser(
   tactic_obstacle_avoidance_ = std::make_shared<tactic::ObstacleAvoidance>(detection_extractor);
 }
 
-void FieldInfoParser::set_subscriptions(rclcpp::Node* node)
+void FieldInfoParser::set_subscriptions(rclcpp::Node * node)
 {
   // 別クラスのコンストラクタから呼び出されるため、Node::SharedPtrが使えない
   // 変わりにNode*を使用する。生ポインタを使用するため、所有権を持たないように実装すること
@@ -185,10 +185,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
 }
 
 State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
-    const TrackedRobot & my_robot,
-    const State & goal_pose,
-    const NaviOptions & navi_options) const {
-
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const NaviOptions & navi_options) const
+{
   const auto ball = detection_extractor_->extract_ball();
 
   State new_pose = tactic_obstacle_avoidance_->avoid_obstacles(

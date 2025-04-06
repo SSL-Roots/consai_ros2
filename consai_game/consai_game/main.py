@@ -19,7 +19,6 @@ import argparse
 from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
 from consai_game.core.play.play_node import PlayNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
-from consai_game.utils.process_info import process_info
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 

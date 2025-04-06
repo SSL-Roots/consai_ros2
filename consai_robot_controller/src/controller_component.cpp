@@ -181,7 +181,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
 
     command = motion_command;
 
-    if (command.mode == MotionCommand::MODE_NAVI){
+    if (command.mode == MotionCommand::MODE_NAVI) {
       destinations_map_[robot_id].pose = command.desired_pose;  // デバッグ用
 
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
@@ -291,7 +291,8 @@ void Controller::gen_pubs_and_subs(const unsigned int num)
   }
 }
 
-std::optional<NaviData> Controller::calc_navi_data_from_control_msg(const TrackedRobot & my_robot) const
+std::optional<NaviData> Controller::calc_navi_data_from_control_msg(
+  const TrackedRobot & my_robot) const
 {
   const auto robot_id = my_robot.robot_id.id;
 

@@ -109,8 +109,8 @@ void ControllerUnit::move_to_desired_pose(
 }
 
 void ControllerUnit::publish_velocity_command(
-    const State & desired_velocity,
-    const double kick_power, const double dribble_power)
+  const State & desired_velocity,
+  const double kick_power, const double dribble_power)
 {
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id_;
