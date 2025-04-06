@@ -45,3 +45,4 @@ class WorldModelProviderNode(Node):
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
         with self.lock:
             self.world_model.robots.parse_frame(msg)
+            self.world_model.ball.parse_frame(msg)
