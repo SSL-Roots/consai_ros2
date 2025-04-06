@@ -15,9 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.utils.process_info import process_info
 from consai_game.core.tactic.agent import Agent
 from consai_game.core.tactic.role import Role
+from consai_game.utils.process_info import process_info
+from consai_game.world_model.world_model import WorldModel
 from consai_msgs.msg import MotionCommandArray
 from rclpy.node import Node
 
@@ -31,7 +32,12 @@ class AgentSchedulerNode(Node):
         self.agents = [Agent() for _ in range(agent_num)]
         self.team_is_yellow = team_is_yellow
 
+        self.world_model = WorldModel()
+
         self.pub_motion_commands = self.create_publisher(MotionCommandArray, "motion_commands", 1)
+
+    def set_world_model(self, world_model: WorldModel):
+        self.world_model = world_model
 
     def update(self):
         self.get_logger().debug(f"Agent Scheduler update, {process_info()}")
@@ -39,7 +45,7 @@ class AgentSchedulerNode(Node):
         motion_commands = MotionCommandArray()
 
         for agent in self.agents:
-            if command := agent.update():
+            if command := agent.update(world_model=self.world_model):
                 motion_commands.commands.append(command)
 
         if len(motion_commands.commands) <= 0:

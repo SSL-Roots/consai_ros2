@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from consai_game.world_model.world_model import WorldModel
 from consai_msgs.msg import MotionCommand
 from enum import Enum, auto
 
@@ -33,7 +34,7 @@ class TacticBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self) -> MotionCommand:
+    def run(self, world_model: WorldModel) -> MotionCommand:
         raise NotImplementedError()
 
     @property

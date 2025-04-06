@@ -17,6 +17,7 @@
 
 from consai_game.core.tactic.role import Role
 from consai_game.core.tactic.tactic_base import TacticState
+from consai_game.world_model.world_model import WorldModel
 from consai_msgs.msg import MotionCommand
 from typing import Optional
 
@@ -28,7 +29,7 @@ class Agent():
         self.present_tactic = None
         self.present_tactic_index = 0
 
-    def update(self) -> Optional[MotionCommand]:
+    def update(self, world_model: WorldModel) -> Optional[MotionCommand]:
         if self.present_tactic is None:
             return None
 
@@ -44,7 +45,7 @@ class Agent():
         if self.present_tactic.state == TacticState.BEFORE_INIT:
             self.present_tactic.reset(self.role.robot_id)
 
-        return self.present_tactic.run()
+        return self.present_tactic.run(world_model=world_model)
 
     def set_role(self, role: Role) -> None:
         self.role = role

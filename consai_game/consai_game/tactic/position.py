@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 from consai_msgs.msg import MotionCommand
 
@@ -31,7 +32,7 @@ class Position(TacticBase):
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
-    def run(self) -> MotionCommand:
+    def run(self, world_model: WorldModel) -> MotionCommand:
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI

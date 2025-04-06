@@ -31,6 +31,7 @@ def main():
     while rclpy.ok():
         # print(f'Main update, {process_info()}')
         play_node.set_world_model(world_model_provider_node.world_model)
+        agent_scheduler_node.set_world_model(world_model_provider_node.world_model)
         time.sleep(1)
 
 
