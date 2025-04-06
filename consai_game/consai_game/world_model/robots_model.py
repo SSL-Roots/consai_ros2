@@ -33,7 +33,7 @@ class Robot:
 
 
 class RobotsModel:
-    """ 未加工のロボットデータを保持するクラス. """
+    """ロボットデータを保持するクラス."""
 
     def __init__(self, our_team_is_yellow: bool = False):
         self.our_team_is_yellow = our_team_is_yellow

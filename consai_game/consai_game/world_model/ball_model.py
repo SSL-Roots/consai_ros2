@@ -21,7 +21,7 @@ from robocup_ssl_msgs.msg import TrackedFrame
 
 
 class BallModel:
-    """ 未加工のボールデータを保持するクラス. """
+    """ボールデータを保持するクラス."""
 
     def __init__(self):
         self.pos = State2D()
