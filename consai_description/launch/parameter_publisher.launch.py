@@ -22,6 +22,7 @@ def generate_launch_description():
 
     config_rule = os.path.join(get_package_share_directory('consai_description'), 'config', 'rule', 'division_a.yaml')
     config_strategy = os.path.join(get_package_share_directory('consai_description'), 'config', 'strategy', 'normal.yaml')
+    config_control = os.path.join(get_package_share_directory('consai_description'), 'config', 'robot', 'control.yaml')
 
     publisher_node = Node(
         package='consai_description',
@@ -30,6 +31,7 @@ def generate_launch_description():
         arguments=[
             '--config_rule', config_rule,
             '--config_strategy', config_strategy,
+            '--config_control', config_control
             ],
         )
 

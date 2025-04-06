@@ -97,7 +97,14 @@ Pose2D::Pose2D(double x, double y, double theta)
   this->theta = theta;
 }
 
-consai_msgs::msg::State2D Pose2D::toState2DMsg()
+Pose2D::Pose2D(const consai_msgs::msg::State2D & state2d)
+{
+  this->x = state2d.x;
+  this->y = state2d.y;
+  this->theta = state2d.theta;
+}
+
+consai_msgs::msg::State2D Pose2D::toState2DMsg() const
 {
   consai_msgs::msg::State2D state;
   state.x = this->x;
@@ -123,7 +130,7 @@ Velocity2D::Velocity2D(double x, double y, double theta)
 }
 
 
-consai_msgs::msg::State2D Velocity2D::toState2DMsg()
+consai_msgs::msg::State2D Velocity2D::toState2DMsg() const
 {
   consai_msgs::msg::State2D state;
   state.x = this->x;

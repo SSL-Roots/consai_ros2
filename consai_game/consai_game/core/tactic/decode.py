@@ -14,19 +14,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from consai_game.world_model.world_model import WorldModel
-from consai_game.core.play.play_condition import PlayCondition
-
-
-def halt_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.halt
-
-
-def stop_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.stop
-
-
-class RefereeConditions:
-    halt = PlayCondition(halt_condition)
-    stop = PlayCondition(stop_condition)

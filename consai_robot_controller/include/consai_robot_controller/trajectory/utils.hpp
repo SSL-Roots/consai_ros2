@@ -65,8 +65,18 @@ public:
 
   Pose2D();
   Pose2D(double x, double y, double theta);
+  explicit Pose2D(const consai_msgs::msg::State2D & state2d);
 
-  consai_msgs::msg::State2D toState2DMsg();
+  consai_msgs::msg::State2D toState2DMsg() const;
+
+  bool operator==(const Pose2D & other) const
+  {
+    return x == other.x && y == other.y && theta == other.theta;
+  }
+  bool operator!=(const Pose2D & other) const
+  {
+    return !(*this == other);
+  }
 };
 
 class Velocity2D
@@ -79,7 +89,7 @@ public:
   Velocity2D();
   Velocity2D(double x, double y, double theta);
 
-  consai_msgs::msg::State2D toState2DMsg();
+  consai_msgs::msg::State2D toState2DMsg() const;
 };
 
 class State2D

@@ -26,21 +26,14 @@ class Play:
     name: str
     description: str
     applicable: List[PlayCondition]
-    aborted: List[str]
+    aborted: List[PlayCondition]
     timeout_ms: int
-    role0: List[str] = field(default_factory=list)
-    role1: List[str] = field(default_factory=list)
-    role2: List[str] = field(default_factory=list)
-    role3: List[str] = field(default_factory=list)
-    role4: List[str] = field(default_factory=list)
-    role5: List[str] = field(default_factory=list)
-    role6: List[str] = field(default_factory=list)
-    role7: List[str] = field(default_factory=list)
-    role8: List[str] = field(default_factory=list)
-    role9: List[str] = field(default_factory=list)
-    role10: List[str] = field(default_factory=list)
+    roles: List[List[str]] = field(default_factory=lambda: [[] for _ in range(11)])
 
     def is_applicable(self, world_model: WorldModel) -> bool:
         """Playが適用可能か判定."""
-        print(f'play: {self.name} is_applicable called')
         return all(cond.is_met(world_model) for cond in self.applicable)
+
+    def should_abort(self, world_model: WorldModel) -> bool:
+        """Playが中断されるべきか判定."""
+        return any(cond.is_met(world_model) for cond in self.aborted)

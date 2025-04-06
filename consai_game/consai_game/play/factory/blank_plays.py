@@ -18,6 +18,8 @@
 
 from consai_game.core.play.play import Play
 from consai_game.play.conditions.referee_conditions import RefereeConditions
+from consai_game.tactic.position import Position
+from consai_game.tactic.stop import Stop
 
 
 def halt() -> Play:
@@ -27,19 +29,23 @@ def halt() -> Play:
         applicable=[
             RefereeConditions.halt,
         ],
-        aborted=['!applicable'],
+        aborted=[
+            RefereeConditions.halt.invert(),
+        ],
         timeout_ms=0,
-        role0=['blank'],
-        role1=['blank'],
-        role2=['blank'],
-        role3=['blank'],
-        role4=['blank'],
-        role5=['blank'],
-        role6=['blank'],
-        role7=['blank'],
-        role8=['blank'],
-        role9=['blank'],
-        role10=['blank']
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()]
+        ]
     )
 
 
@@ -50,17 +56,21 @@ def stop() -> Play:
         applicable=[
             RefereeConditions.stop,
         ],
-        aborted=['!applicable'],
+        aborted=[
+            RefereeConditions.stop.invert(),
+        ],
         timeout_ms=0,
-        role0=['blank'],
-        role1=['blank'],
-        role2=['blank'],
-        role3=['blank'],
-        role4=['blank'],
-        role5=['blank'],
-        role6=['blank'],
-        role7=['blank'],
-        role8=['blank'],
-        role9=['blank'],
-        role10=['blank']
+        roles=[
+            [Position(-4.0, 0.0)],
+            [Position(-3.0, 3.0)],
+            [Position(-3.0, 2.0)],
+            [Position(-3.0, 1.0)],
+            [Position(-3.0, 0.0)],
+            [Position(-3.0, -1.0)],
+            [Position(-3.0, -2.0)],
+            [Position(-3.0, -3.0)],
+            [Position(-2.0, 1.0)],
+            [Position(-2.0, 0.0)],
+            [Position(-2.0, -1.0)],
+        ]
     )

@@ -36,6 +36,8 @@ include_directories(include)
 # Controller Component
 add_library(controller_component SHARED
   src/controller_component.cpp
+  src/controller_unit.cpp
+  src/control_params.cpp
   src/field_info_parser.cpp
   src/visualization_data_handler.cpp
   src/detection_extractor.cpp

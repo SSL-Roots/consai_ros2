@@ -19,13 +19,18 @@ from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
 from rclpy.node import Node
 
+from robocup_ssl_msgs.msg import Referee
+
 
 class WorldModelProviderNode(Node):
-    def __init__(self, update_hz: float = 10):
+    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False):
         super().__init__('world_model_provider_node')
         self.timer = self.create_timer(1.0/update_hz, self.update)
 
         self.world_model = WorldModel()
+        self.world_model.set_our_team_is_yellow(team_is_yellow)
+        self.world_model.referee.sub_referee = self.create_subscription(
+            Referee, 'referee', self.world_model.referee.callback, 10)
 
     def update(self):
-        self.get_logger().info(f'WorldModelProvider update, {process_info()}')
+        self.get_logger().debug(f'WorldModelProvider update, {process_info()}')

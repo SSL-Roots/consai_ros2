@@ -17,6 +17,7 @@
 #include <memory>
 #include <utility>
 #include "rclcpp/rclcpp.hpp"
+#include "consai_robot_controller/control_params.hpp"
 #include "consai_robot_controller/trajectory_follow_control.hpp"
 #include "consai_robot_controller/trajectory_generator.hpp"
 
@@ -34,40 +35,26 @@ public:
     FAILED,
   };
 
-  LocomotionController();
-
-  LocomotionController(int robot_id_for_debug, double dt);
-
   LocomotionController(
-    int robot_id_for_debug, _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double delayfactor_sec, double dt,
-    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
-    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
-    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
-    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
+    int robot_id_for_debug,
+    double dt,
+    double delayfactor_sec = 0.0);
 
   ControllerState moveConstantVelocity(const Velocity2D & velocity);
   ControllerState moveToPose(const Pose2D & goal_pose);
-  ControllerState halt();
   std::pair<Velocity2D, ControllerState> run(const State2D & current_state);
-  ControllerState getState();
-  State2D getCurrentTargetState();
-  Pose2D getGoal();
-  void setParameters(
-    _Float64 kp_xy, _Float64 kd_xy, _Float64 kp_theta, _Float64 kd_theta,
-    double hard_limit_linear_velocity, double soft_limit_linear_velocity,
-    double hard_limit_angular_velocity, double soft_limit_angular_velocity,
-    double hard_limit_linear_acceleration, double soft_limit_linear_acceleration,
-    double hard_limit_angular_acceleration, double soft_limit_angular_acceleration);
+  ControllerState getState() const;
+  State2D getCurrentTargetState() const;
+  Pose2D getGoal() const;
 
-  double getHardLimitLinearVelocity();
-  double getSoftLimitLinearVelocity();
-  double getHardLimitAngularVelocity();
-  double getSoftLimitAngluarVelocity();
-  double getHardLimitLinearAcceleration();
-  double getSoftLimitLinearAcceleration();
-  double getHardLimitAngularAcceleration();
-  double getSoftLimitAngularAcceleration();
+  consai_robot_controller::ControlParams getControlParams() const
+  {
+    return control_params_;
+  }
+  void setControlParams(const consai_robot_controller::ControlParams & control_params)
+  {
+    control_params_ = control_params;
+  }
 
 private:
   TrajectoryFollowController trajectory_follow_controller_;
@@ -76,23 +63,10 @@ private:
   Pose2D goal_pose_;
   ControllerState state_;
 
-  int robot_id_for_debug_;
-  _Float64 kp_xy_;
-  _Float64 ki_xy_;
-  _Float64 kd_xy_;
-  _Float64 kp_theta_;  // [rad]
-  _Float64 ki_theta_;
-  _Float64 kd_theta_;
-  double delayfactor_sec_;
-  double dt_;           // 制御周期
-  double hard_limit_linear_velocity_;        // [m/s]
-  double soft_limit_linear_velocity_;        // [m/s]
-  double hard_limit_angular_velocity_;       // [rad/s]
-  double soft_limit_angular_velocity_;       // [rad/s]
-  double hard_limit_linear_acceleration_;    // [m/s^2]
-  double soft_limit_linear_acceleration_;    // [m/s^2]
-  double hard_limit_angular_acceleration_;   // [rad/s^2]
-  double soft_limit_angular_acceleration_;   // [rad/s^2]
+  const int robot_id_for_debug_;
+  const double dt_;  // 制御周期
+  const double delayfactor_sec_;
+  consai_robot_controller::ControlParams control_params_;
 
   void initializeTrajectoryFollowController(std::shared_ptr<BangBangTrajectory3D> trajectory);
   void generateTrajectory(const Pose2D & goal_pose, const State2D & current_state);

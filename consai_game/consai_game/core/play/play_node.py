@@ -17,11 +17,16 @@
 
 import argparse
 from consai_game.core.play.play import Play
+from consai_game.core.tactic.role import Role
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
 import importlib.util
 from pathlib import Path
 from rclpy.node import Node
+from typing import Callable
+
+
+UpdateRoleCallback = Callable[[list[Role]], None]
 
 
 class PlayNode(Node):
@@ -33,6 +38,8 @@ class PlayNode(Node):
         self.current_play = None
 
         self.world_model = WorldModel()
+
+        self.update_role_callback: UpdateRoleCallback = None
 
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
@@ -59,15 +66,20 @@ class PlayNode(Node):
     def set_world_model(self, world_model: WorldModel):
         self.world_model = world_model
 
-    def update(self):
-        self.get_logger().info(f"Play update, {process_info()}")
+    def set_update_role_callback(self, callback: UpdateRoleCallback):
+        self.update_role_callback = callback
 
-        self.evaluate_play()
+    def update(self):
+        self.get_logger().debug(f"Play update, {process_info()}")
 
         if self.current_play is None:
             self.current_play = self.select_play()
+            self.update_role()
             self.get_logger().info(f"Selected play: {self.current_play.name}")
-            self.evaluate_play()
+
+        self.execute_play()
+
+        self.evaluate_play()
 
     def select_play(self) -> Play:
         applicable_plays = [
@@ -87,5 +99,18 @@ class PlayNode(Node):
         pass
 
     def evaluate_play(self):
-        # TODO: current_playを継続して実行できるか評価する
-        pass
+        # current_playを継続して実行できるか評価する
+        if self.current_play.should_abort(self.world_model):
+            self.get_logger().info(f"Play aborted: {self.current_play.name}")
+            self.current_play = None
+
+    def update_role(self):
+        # Role(tacticとrobot_id)を更新し、callback関数にセットする
+        roles = []
+
+        for i in range(len(self.current_play.roles)):
+            # TODO: robot_idの取得方法を実装する
+            robot_id = i
+            roles.append(Role(tactics=self.current_play.roles[i], robot_id=robot_id))
+
+        self.update_role_callback(roles)

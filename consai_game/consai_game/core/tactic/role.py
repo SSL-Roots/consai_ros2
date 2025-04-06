@@ -15,18 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.world_model.world_model import WorldModel
-from consai_game.core.play.play_condition import PlayCondition
+from consai_game.core.tactic.tactic_base import TacticBase
+from dataclasses import dataclass, field
+from typing import List
 
 
-def halt_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.halt
-
-
-def stop_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.stop
-
-
-class RefereeConditions:
-    halt = PlayCondition(halt_condition)
-    stop = PlayCondition(stop_condition)
+@dataclass
+class Role:
+    tactics: List[TacticBase] = field(default_factory=list)
+    robot_id: int = -1

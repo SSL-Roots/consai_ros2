@@ -15,18 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.world_model.world_model import WorldModel
-from consai_game.core.play.play_condition import PlayCondition
+from robocup_ssl_msgs.msg import Referee
 
 
-def halt_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.halt
+class RefereeModel:
+    def __init__(self, our_team_is_yellow: bool = False):
+        self.our_team_is_yellow = our_team_is_yellow
+        self.sub_referee = None
+        self.current_command = Referee.COMMAND_HALT
 
+    def callback(self, msg: Referee):
+        self.current_command = msg.command
 
-def stop_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.stop
+    @property
+    def halt(self):
+        return self.current_command == Referee.COMMAND_HALT
 
-
-class RefereeConditions:
-    halt = PlayCondition(halt_condition)
-    stop = PlayCondition(stop_condition)
+    @property
+    def stop(self):
+        return self.current_command == Referee.COMMAND_STOP

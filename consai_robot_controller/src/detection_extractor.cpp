@@ -58,9 +58,9 @@ bool DetectionExtractor::extract_robot(
     }
 
     my_robot = robot;
-    break;
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
@@ -82,6 +82,15 @@ bool DetectionExtractor::extract_ball(TrackedBall & my_ball) const
     break;
   }
   return true;
+}
+
+std::optional<TrackedBall> DetectionExtractor::extract_ball() const
+{
+  TrackedBall my_ball;
+  if (extract_ball(my_ball)) {
+    return my_ball;
+  }
+  return std::nullopt;
 }
 
 std::vector<TrackedRobot> DetectionExtractor::extract_robots() const

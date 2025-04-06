@@ -126,7 +126,11 @@ def generate_launch_description():
                      on_exit=Shutdown(),
                      )
 
+    set_colorized_output = launch.actions.SetEnvironmentVariable(
+        name='RCUTILS_COLORIZED_OUTPUT', value='1')
+
     return launch.LaunchDescription([
+        set_colorized_output,
         declare_arg_invert,
         declare_arg_yellow,
         declare_arg_game,

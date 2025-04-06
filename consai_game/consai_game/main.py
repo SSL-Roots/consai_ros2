@@ -16,9 +16,9 @@
 # limitations under the License.
 
 import argparse
+from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
 from consai_game.core.play.play_node import PlayNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
-from consai_game.utils.process_info import process_info
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 
@@ -28,8 +28,9 @@ import time
 
 def main():
     while rclpy.ok():
-        print(f'Main update, {process_info()}')
+        # print(f'Main update, {process_info()}')
         play_node.set_world_model(world_model_provider_node.world_model)
+        agent_scheduler_node.set_world_model(world_model_provider_node.world_model)
         time.sleep(1)
 
 
@@ -41,11 +42,19 @@ if __name__ == '__main__':
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
-    world_model_provider_node = WorldModelProviderNode(update_hz=10)
+    # TODOL: team_is_yellowを引数から取得したい
+    team_is_yellow = False
+    world_model_provider_node = WorldModelProviderNode(
+        update_hz=10, team_is_yellow=team_is_yellow)
+    # TODO: agent_numをplay_nodeから取得したい
+    agent_scheduler_node = AgentSchedulerNode(
+        update_hz=10, team_is_yellow=team_is_yellow, agent_num=11)
+    play_node.set_update_role_callback(agent_scheduler_node.set_roles)
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)
     executor.add_node(world_model_provider_node)
+    executor.add_node(agent_scheduler_node)
 
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
