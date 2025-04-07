@@ -17,6 +17,7 @@
 
 
 from consai_game.core.play.play import Play
+from consai_game.play.conditions.ball_conditions import BallConditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
@@ -55,6 +56,7 @@ def stop() -> Play:
         description='STOP信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
             RefereeConditions.stop,
+            BallConditions.velocity_is_lower_than(0.1),  # 引数付きのconditionの例
         ],
         aborted=[
             RefereeConditions.stop.invert(),
