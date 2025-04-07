@@ -76,3 +76,367 @@ def stop() -> Play:
             [Position(-2.0, -1.0)],
         ]
     )
+
+def force_start() -> Play:
+    return Play(
+        name='force_start',
+        description='FORCE_START信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.force_start,
+        ],
+        aborted=[
+            RefereeConditions.force_start.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def normal_start() -> Play:
+    return Play(
+        name='normal_start',
+        description='START信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.normal_start,
+        ],
+        aborted=[
+            RefereeConditions.normal_start.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def free_kick_blue() -> Play:
+    return Play(
+        name='free_kick_blue',
+        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.free_kick_blue,
+        ],
+        aborted=[
+            RefereeConditions.free_kick_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def free_kick_yellow() -> Play:
+    return Play(
+        name='free_kick_yellow',
+        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.free_kick_yellow,
+        ],
+        aborted=[
+            RefereeConditions.free_kick_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def kick_off_blue() -> Play:
+    return Play(
+        name='kick_off_blue',
+        description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.kick_off_blue,
+        ],
+        aborted=[
+            RefereeConditions.kick_off_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def kick_off_yellow() -> Play:
+    return Play(
+        name='kick_off_yellow',
+        description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.kick_off_yellow,
+        ],
+        aborted=[
+            RefereeConditions.kick_off_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def penalty_kick_blue() -> Play:
+    return Play(
+        name='penalty_kick_blue',
+        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.penalty_kick_blue,
+        ],
+        aborted=[
+            RefereeConditions.penalty_kick_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def penalty_kick_yellow() -> Play:
+    return Play(
+        name='penalty_kick_yellow',
+        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.penalty_kick_yellow,
+        ],
+        aborted=[
+            RefereeConditions.penalty_kick_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def goal_blue() -> Play:
+    return Play(
+        name='goal_blue',
+        description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.goal_blue,
+        ],
+        aborted=[
+            RefereeConditions.goal_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def goal_yellow() -> Play:
+    return Play(
+        name='goal_yellow',
+        description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.goal_yellow,
+        ],
+        aborted=[
+            RefereeConditions.goal_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def timeout_blue() -> Play:
+    return Play(
+        name='timeout_blue',
+        description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.timeout_blue,
+        ],
+        aborted=[
+            RefereeConditions.timeout_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def timeout_yellow() -> Play:
+    return Play(
+        name='timeout_yellow',
+        description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.timeout_yellow,
+        ],
+        aborted=[
+            RefereeConditions.timeout_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def ball_placement_blue() -> Play:
+    return Play(
+        name='ball_placement_blue',
+        description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.ball_placement_blue,
+        ],
+        aborted=[
+            RefereeConditions.ball_placement_blue.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )
+
+def ball_placement_yellow() -> Play:
+    return Play(
+        name='ball_placement_yellow',
+        description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
+        applicable=[
+            RefereeConditions.ball_placement_yellow,
+        ],
+        aborted=[
+            RefereeConditions.ball_placement_yellow.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ]
+    )

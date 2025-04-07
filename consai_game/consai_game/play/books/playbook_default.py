@@ -20,4 +20,18 @@ from consai_game.play.factory import blank_plays
 plays = [
     blank_plays.halt(),
     blank_plays.stop(),
+    blank_plays.force_start(),
+    blank_plays.normal_start(),
+    blank_plays.free_kick_blue(),
+    blank_plays.free_kick_yellow(),
+    blank_plays.kick_off_blue(),
+    blank_plays.kick_off_yellow(),
+    blank_plays.penalty_kick_blue(),
+    blank_plays.penalty_kick_yellow(),
+    blank_plays.goal_blue(),
+    blank_plays.goal_yellow(),
+    blank_plays.timeout_blue(),
+    blank_plays.timeout_yellow(),
+    blank_plays.ball_placement_blue(),
+    blank_plays.ball_placement_yellow(),
 ]
