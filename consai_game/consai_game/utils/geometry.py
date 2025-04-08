@@ -14,7 +14,26 @@
 
 
 from consai_msgs.msg import State2D
+from dataclasses import dataclass
 import math
+
+
+@dataclass
+class Point:
+    """2D point class."""
+
+    x: float
+    y: float
+
+
+@dataclass
+class Rectangle:
+    """2D rectangle class."""
+
+    top_left: Point
+    top_right: Point
+    bottom_left: Point
+    bottom_right: Point
 
 
 def state2d_norm(state: State2D) -> float:
