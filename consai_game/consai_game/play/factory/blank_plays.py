@@ -77,6 +77,7 @@ def stop() -> Play:
         ]
     )
 
+
 def force_start() -> Play:
     return Play(
         name='force_start',
@@ -102,6 +103,7 @@ def force_start() -> Play:
             [Stop()],
         ]
     )
+
 
 def normal_start() -> Play:
     return Play(
@@ -129,6 +131,7 @@ def normal_start() -> Play:
         ]
     )
 
+
 def free_kick_blue() -> Play:
     return Play(
         name='free_kick_blue',
@@ -154,6 +157,7 @@ def free_kick_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def free_kick_yellow() -> Play:
     return Play(
@@ -181,6 +185,7 @@ def free_kick_yellow() -> Play:
         ]
     )
 
+
 def kick_off_blue() -> Play:
     return Play(
         name='kick_off_blue',
@@ -206,6 +211,7 @@ def kick_off_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def kick_off_yellow() -> Play:
     return Play(
@@ -233,6 +239,7 @@ def kick_off_yellow() -> Play:
         ]
     )
 
+
 def penalty_kick_blue() -> Play:
     return Play(
         name='penalty_kick_blue',
@@ -258,6 +265,7 @@ def penalty_kick_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def penalty_kick_yellow() -> Play:
     return Play(
@@ -285,6 +293,7 @@ def penalty_kick_yellow() -> Play:
         ]
     )
 
+
 def goal_blue() -> Play:
     return Play(
         name='goal_blue',
@@ -310,6 +319,7 @@ def goal_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def goal_yellow() -> Play:
     return Play(
@@ -337,6 +347,7 @@ def goal_yellow() -> Play:
         ]
     )
 
+
 def timeout_blue() -> Play:
     return Play(
         name='timeout_blue',
@@ -362,6 +373,7 @@ def timeout_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def timeout_yellow() -> Play:
     return Play(
@@ -389,6 +401,7 @@ def timeout_yellow() -> Play:
         ]
     )
 
+
 def ball_placement_blue() -> Play:
     return Play(
         name='ball_placement_blue',
@@ -414,6 +427,7 @@ def ball_placement_blue() -> Play:
             [Stop()],
         ]
     )
+
 
 def ball_placement_yellow() -> Play:
     return Play(

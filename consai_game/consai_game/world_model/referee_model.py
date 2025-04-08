@@ -34,11 +34,11 @@ class RefereeModel:
     @property
     def stop(self):
         return self.current_command == Referee.COMMAND_STOP
-    
+
     @property
     def force_start(self):
         return self.current_command == Referee.COMMAND_FORCE_START
-    
+
     @property
     def normal_start(self):
         return self.current_command == Referee.COMMAND_NORMAL_START
@@ -46,47 +46,47 @@ class RefereeModel:
     @property
     def free_kick_blue(self):
         return self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
-    
+
     @property
     def free_kick_yellow(self):
         return self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
-    
+
     @property
     def kick_off_blue(self):
         return self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
-    
+
     @property
     def kick_off_yellow(self):
         return self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
-    
+
     @property
     def penalty_kick_blue(self):
         return self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
-    
+
     @property
     def penalty_kick_yellow(self):
         return self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
-    
+
     @property
     def goal_blue(self):
         return self.current_command == Referee.COMMAND_GOAL_BLUE
-    
+
     @property
     def goal_yellow(self):
         return self.current_command == Referee.COMMAND_GOAL_YELLOW
-    
+
     @property
     def timeout_blue(self):
         return self.current_command == Referee.COMMAND_TIMEOUT_BLUE
-    
+
     @property
     def timeout_yellow(self):
         return self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
-    
+
     @property
     def ball_placement_blue(self):
         return self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
-    
+
     @property
     def ball_placement_yellow(self):
         return self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW

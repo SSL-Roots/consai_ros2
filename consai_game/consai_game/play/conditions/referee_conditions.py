@@ -22,47 +22,62 @@ from consai_game.core.play.play_condition import PlayCondition
 def halt_condition(world_model: WorldModel) -> bool:
     return world_model.referee.halt
 
+
 def stop_condition(world_model: WorldModel) -> bool:
     return world_model.referee.stop
+
 
 def force_start_condition(world_model: WorldModel) -> bool:
     return world_model.referee.force_start
 
+
 def normal_start_condition(world_model: WorldModel) -> bool:
     return world_model.referee.normal_start
+
 
 def kick_off_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.kick_off_blue
 
+
 def kick_off_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.kick_off_yellow
+
 
 def free_kick_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.free_kick_blue
 
+
 def free_kick_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.free_kick_yellow
+
 
 def penalty_kick_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.penalty_kick_blue
 
+
 def penalty_kick_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.penalty_kick_yellow
+
 
 def goal_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.goal_blue
 
+
 def goal_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.goal_yellow
+
 
 def timeout_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.timeout_blue
 
+
 def timeout_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.timeout_yellow
 
+
 def ball_placement_blue_condition(world_model: WorldModel) -> bool:
     return world_model.referee.ball_placement_blue
+
 
 def ball_placement_yellow_condition(world_model: WorldModel) -> bool:
     return world_model.referee.ball_placement_yellow
