@@ -17,9 +17,12 @@
 
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
+import json
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from robocup_ssl_msgs.msg import Referee
 from robocup_ssl_msgs.msg import TrackedFrame
+from std_msgs.msg import String
 import threading
 
 
@@ -38,6 +41,15 @@ class WorldModelProviderNode(Node):
         self.sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self.callback_detection_traced, 10)
 
+        qos_profile = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=ReliabilityPolicy.RELIABLE
+        )
+
+        self._sub_param_rule = self.create_subscription(
+            String, 'consai_param/rule', self.callback_param_rule, qos_profile)
+
     def update(self) -> None:
         with self.lock:
             self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
@@ -46,3 +58,15 @@ class WorldModelProviderNode(Node):
         with self.lock:
             self.world_model.robots.parse_frame(msg)
             self.world_model.ball.parse_frame(msg)
+
+    def callback_param_rule(self, msg: String) -> None:
+        with self.lock:
+            param_dict = json.loads(msg.data)
+            self.world_model.field.length = param_dict['field']['length']
+            self.world_model.field.width = param_dict['field']['width']
+            self.world_model.field.goal_width = param_dict['field']['goal_width']
+            self.world_model.field.penalty_depth = param_dict['field']['penalty_depth']
+            self.world_model.field.penalty_width = param_dict['field']['penalty_width']
+            self.world_model.field_points = self.world_model.field_points.create_field_points(
+                self.world_model.field
+            )
