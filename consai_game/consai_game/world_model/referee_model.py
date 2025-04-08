@@ -44,49 +44,85 @@ class RefereeModel:
         return self.current_command == Referee.COMMAND_NORMAL_START
 
     @property
-    def free_kick_blue(self):
-        return self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
+    def our_free_kick(self):
+        return (self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def free_kick_yellow(self):
-        return self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
+    def their_free_kick(self):
+        return (self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
+                and self.our_team_is_yellow is True)
 
     @property
-    def kick_off_blue(self):
-        return self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
+    def our_kick_off(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def kick_off_yellow(self):
-        return self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+    def their_kick_off(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
+                and self.our_team_is_yellow is True)
 
     @property
-    def penalty_kick_blue(self):
-        return self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
+    def our_penalty_kick(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def penalty_kick_yellow(self):
-        return self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
+    def their_penalty_kick(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
+                and self.our_team_is_yellow is True)
 
     @property
-    def goal_blue(self):
-        return self.current_command == Referee.COMMAND_GOAL_BLUE
+    def our_goal(self):
+        return (self.current_command == Referee.COMMAND_GOAL_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_GOAL_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def goal_yellow(self):
-        return self.current_command == Referee.COMMAND_GOAL_YELLOW
+    def their_goal(self):
+        return (self.current_command == Referee.COMMAND_GOAL_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_GOAL_BLUE
+                and self.our_team_is_yellow is True)
 
     @property
-    def timeout_blue(self):
-        return self.current_command == Referee.COMMAND_TIMEOUT_BLUE
+    def our_timeout(self):
+        return (self.current_command == Referee.COMMAND_TIMEOUT_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def timeout_yellow(self):
-        return self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
+    def their_timeout(self):
+        return (self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_TIMEOUT_BLUE
+                and self.our_team_is_yellow is True)
 
     @property
-    def ball_placement_blue(self):
-        return self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+    def our_ball_placement(self):
+        return (self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+                and self.our_team_is_yellow is True)
 
     @property
-    def ball_placement_yellow(self):
-        return self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+    def their_ball_placement(self):
+        return (self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+                and self.our_team_is_yellow is True)

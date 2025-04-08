@@ -132,15 +132,15 @@ def normal_start() -> Play:
     )
 
 
-def free_kick_blue() -> Play:
+def our_free_kick() -> Play:
     return Play(
-        name='free_kick_blue',
+        name='our_free_kick',
         description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.free_kick_blue,
+            RefereeConditions.our_free_kick,
         ],
         aborted=[
-            RefereeConditions.free_kick_blue.invert(),
+            RefereeConditions.our_free_kick.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -159,15 +159,15 @@ def free_kick_blue() -> Play:
     )
 
 
-def free_kick_yellow() -> Play:
+def their_free_kick() -> Play:
     return Play(
-        name='free_kick_yellow',
+        name='their_free_kick',
         description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.free_kick_yellow,
+            RefereeConditions.their_free_kick,
         ],
         aborted=[
-            RefereeConditions.free_kick_yellow.invert(),
+            RefereeConditions.their_free_kick.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -186,15 +186,15 @@ def free_kick_yellow() -> Play:
     )
 
 
-def kick_off_blue() -> Play:
+def our_kick_off() -> Play:
     return Play(
-        name='kick_off_blue',
+        name='our_kick_off',
         description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.kick_off_blue,
+            RefereeConditions.our_kick_off,
         ],
         aborted=[
-            RefereeConditions.kick_off_blue.invert(),
+            RefereeConditions.our_kick_off.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -213,15 +213,15 @@ def kick_off_blue() -> Play:
     )
 
 
-def kick_off_yellow() -> Play:
+def their_kick_off() -> Play:
     return Play(
-        name='kick_off_yellow',
+        name='their_kick_off',
         description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.kick_off_yellow,
+            RefereeConditions.their_kick_off,
         ],
         aborted=[
-            RefereeConditions.kick_off_yellow.invert(),
+            RefereeConditions.their_kick_off.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -240,15 +240,15 @@ def kick_off_yellow() -> Play:
     )
 
 
-def penalty_kick_blue() -> Play:
+def our_penalty_kick() -> Play:
     return Play(
-        name='penalty_kick_blue',
+        name='our_penalty_kick',
         description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.penalty_kick_blue,
+            RefereeConditions.our_penalty_kick,
         ],
         aborted=[
-            RefereeConditions.penalty_kick_blue.invert(),
+            RefereeConditions.our_penalty_kick.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -267,15 +267,15 @@ def penalty_kick_blue() -> Play:
     )
 
 
-def penalty_kick_yellow() -> Play:
+def their_penalty_kick() -> Play:
     return Play(
-        name='penalty_kick_yellow',
+        name='their_penalty_kick',
         description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.penalty_kick_yellow,
+            RefereeConditions.their_penalty_kick,
         ],
         aborted=[
-            RefereeConditions.penalty_kick_yellow.invert(),
+            RefereeConditions.their_penalty_kick.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -294,15 +294,15 @@ def penalty_kick_yellow() -> Play:
     )
 
 
-def goal_blue() -> Play:
+def our_goal() -> Play:
     return Play(
-        name='goal_blue',
+        name='our_goal',
         description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.goal_blue,
+            RefereeConditions.our_goal,
         ],
         aborted=[
-            RefereeConditions.goal_blue.invert(),
+            RefereeConditions.our_goal.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -321,15 +321,15 @@ def goal_blue() -> Play:
     )
 
 
-def goal_yellow() -> Play:
+def their_goal() -> Play:
     return Play(
-        name='goal_yellow',
+        name='their_goal',
         description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.goal_yellow,
+            RefereeConditions.their_goal,
         ],
         aborted=[
-            RefereeConditions.goal_yellow.invert(),
+            RefereeConditions.their_goal.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -348,15 +348,15 @@ def goal_yellow() -> Play:
     )
 
 
-def timeout_blue() -> Play:
+def our_timeout() -> Play:
     return Play(
-        name='timeout_blue',
+        name='our_timeout',
         description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.timeout_blue,
+            RefereeConditions.our_timeout,
         ],
         aborted=[
-            RefereeConditions.timeout_blue.invert(),
+            RefereeConditions.our_timeout.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -375,15 +375,15 @@ def timeout_blue() -> Play:
     )
 
 
-def timeout_yellow() -> Play:
+def their_timeout() -> Play:
     return Play(
-        name='timeout_yellow',
+        name='their_timeout',
         description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.timeout_yellow,
+            RefereeConditions.their_timeout,
         ],
         aborted=[
-            RefereeConditions.timeout_yellow.invert(),
+            RefereeConditions.their_timeout.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -402,15 +402,15 @@ def timeout_yellow() -> Play:
     )
 
 
-def ball_placement_blue() -> Play:
+def our_ball_placement() -> Play:
     return Play(
-        name='ball_placement_blue',
+        name='our_ball_placement',
         description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.ball_placement_blue,
+            RefereeConditions.our_ball_placement,
         ],
         aborted=[
-            RefereeConditions.ball_placement_blue.invert(),
+            RefereeConditions.our_ball_placement.invert(),
         ],
         timeout_ms=0,
         roles=[
@@ -429,15 +429,15 @@ def ball_placement_blue() -> Play:
     )
 
 
-def ball_placement_yellow() -> Play:
+def their_ball_placement() -> Play:
     return Play(
-        name='ball_placement_yellow',
+        name='their_ball_placement',
         description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
         applicable=[
-            RefereeConditions.ball_placement_yellow,
+            RefereeConditions.their_ball_placement,
         ],
         aborted=[
-            RefereeConditions.ball_placement_yellow.invert(),
+            RefereeConditions.their_ball_placement.invert(),
         ],
         timeout_ms=0,
         roles=[

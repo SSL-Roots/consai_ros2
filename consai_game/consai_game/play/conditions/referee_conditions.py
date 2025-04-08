@@ -35,52 +35,52 @@ def normal_start_condition(world_model: WorldModel) -> bool:
     return world_model.referee.normal_start
 
 
-def kick_off_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.kick_off_blue
+def our_kick_off_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_kick_off
 
 
-def kick_off_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.kick_off_yellow
+def their_kick_off_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_kick_off
 
 
-def free_kick_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.free_kick_blue
+def our_free_kick_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_free_kick
 
 
-def free_kick_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.free_kick_yellow
+def their_free_kick_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_free_kick
 
 
-def penalty_kick_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.penalty_kick_blue
+def our_penalty_kick_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_penalty_kick
 
 
-def penalty_kick_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.penalty_kick_yellow
+def their_penalty_kick_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_penalty_kick
 
 
-def goal_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.goal_blue
+def our_goal_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_goal
 
 
-def goal_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.goal_yellow
+def their_goal_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_goal
 
 
-def timeout_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.timeout_blue
+def our_timeout_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_timeout
 
 
-def timeout_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.timeout_yellow
+def their_timeout_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_timeout
 
 
-def ball_placement_blue_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.ball_placement_blue
+def our_ball_placement_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_ball_placement
 
 
-def ball_placement_yellow_condition(world_model: WorldModel) -> bool:
-    return world_model.referee.ball_placement_yellow
+def their_ball_placement_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_ball_placement
 
 
 class RefereeConditions:
@@ -88,15 +88,15 @@ class RefereeConditions:
     stop = PlayCondition(stop_condition)
     force_start = PlayCondition(force_start_condition)
     normal_start = PlayCondition(normal_start_condition)
-    kick_off_blue = PlayCondition(kick_off_blue_condition)
-    kick_off_yellow = PlayCondition(kick_off_yellow_condition)
-    free_kick_blue = PlayCondition(free_kick_blue_condition)
-    free_kick_yellow = PlayCondition(free_kick_yellow_condition)
-    penalty_kick_blue = PlayCondition(penalty_kick_blue_condition)
-    penalty_kick_yellow = PlayCondition(penalty_kick_yellow_condition)
-    goal_blue = PlayCondition(goal_blue_condition)
-    goal_yellow = PlayCondition(goal_yellow_condition)
-    timeout_blue = PlayCondition(timeout_blue_condition)
-    timeout_yellow = PlayCondition(timeout_yellow_condition)
-    ball_placement_blue = PlayCondition(ball_placement_blue_condition)
-    ball_placement_yellow = PlayCondition(ball_placement_yellow_condition)
+    our_kick_off = PlayCondition(our_kick_off_condition)
+    their_kick_off = PlayCondition(their_kick_off_condition)
+    our_free_kick = PlayCondition(our_free_kick_condition)
+    their_free_kick = PlayCondition(their_free_kick_condition)
+    our_penalty_kick = PlayCondition(our_penalty_kick_condition)
+    their_penalty_kick = PlayCondition(their_penalty_kick_condition)
+    our_goal = PlayCondition(our_goal_condition)
+    their_goal = PlayCondition(their_goal_condition)
+    our_timeout = PlayCondition(our_timeout_condition)
+    their_timeout = PlayCondition(their_timeout_condition)
+    our_ball_placement = PlayCondition(our_ball_placement_condition)
+    their_ball_placement = PlayCondition(their_ball_placement_condition)
