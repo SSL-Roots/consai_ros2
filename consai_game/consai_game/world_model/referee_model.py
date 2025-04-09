@@ -34,3 +34,95 @@ class RefereeModel:
     @property
     def stop(self):
         return self.current_command == Referee.COMMAND_STOP
+
+    @property
+    def force_start(self):
+        return self.current_command == Referee.COMMAND_FORCE_START
+
+    @property
+    def normal_start(self):
+        return self.current_command == Referee.COMMAND_NORMAL_START
+
+    @property
+    def our_free_kick(self):
+        return (self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_free_kick(self):
+        return (self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
+                and self.our_team_is_yellow is True)
+
+    @property
+    def our_kick_off(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_kick_off(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
+                and self.our_team_is_yellow is True)
+
+    @property
+    def our_penalty_kick(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_penalty_kick(self):
+        return (self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
+                and self.our_team_is_yellow is True)
+
+    @property
+    def our_goal(self):
+        return (self.current_command == Referee.COMMAND_GOAL_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_GOAL_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_goal(self):
+        return (self.current_command == Referee.COMMAND_GOAL_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_GOAL_BLUE
+                and self.our_team_is_yellow is True)
+
+    @property
+    def our_timeout(self):
+        return (self.current_command == Referee.COMMAND_TIMEOUT_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_timeout(self):
+        return (self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_TIMEOUT_BLUE
+                and self.our_team_is_yellow is True)
+
+    @property
+    def our_ball_placement(self):
+        return (self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+                and self.our_team_is_yellow is True)
+
+    @property
+    def their_ball_placement(self):
+        return (self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+                and self.our_team_is_yellow is False) or \
+               (self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+                and self.our_team_is_yellow is True)
