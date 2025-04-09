@@ -24,7 +24,7 @@ class RefereeModel:
         self.sub_referee = None
         self.current_command = Referee.COMMAND_HALT
 
-    def callback(self, msg: Referee):
+    def parse_msg(self, msg: Referee):
         self.current_command = msg.command
 
     @property
