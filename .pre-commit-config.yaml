@@ -1,5 +1,5 @@
 repos:
-  # --- Python formatters ---
+  # Python formatters
   - repo: https://github.com/psf/black
     rev: 24.3.0
     hooks:
@@ -7,7 +7,16 @@ repos:
         language_version: python3
         types: [python]
 
-  # --- ROS2 Lint Checkers ---
+  # C++ formatters
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v14.0.6
+    hooks:
+      - id: clang-format
+        name: clang-format (Google Style)
+        files: \.(cpp|hpp|c|h)$
+        args: [--style=file]
+
+  # ROS2 Lint Checkers
   - repo: local
     hooks:
       - id: ament_flake8
@@ -21,4 +30,10 @@ repos:
         entry: hooks/run_ament_pep257.sh
         language: system
         types: [python]
+
+      - id: ament_cpplint
+        name: ament_cpplint
+        entry: hooks/run_ament_cpplint.sh
+        language: system
+        files: \.(cpp|hpp|c|h)$
 
