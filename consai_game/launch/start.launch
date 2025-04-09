@@ -36,5 +36,5 @@
   <node pkg="consai_game"
         exec="main.py"
         output="screen"
-        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py" />
+        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py --yellow $(var yellow)" />
 </launch>

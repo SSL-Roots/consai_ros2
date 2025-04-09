@@ -39,12 +39,14 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     PlayNode.add_arguments(arg_parser)
 
+    arg_parser.add_argument('--yellow', type=bool, default=False)
+
     args, other_args = arg_parser.parse_known_args()
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
-    # TODOL: team_is_yellowを引数から取得したい
-    team_is_yellow = False
+
+    team_is_yellow = args.yellow
     world_model_provider_node = WorldModelProviderNode(
         update_hz=10, team_is_yellow=team_is_yellow)
     # TODO: agent_numをplay_nodeから取得したい
