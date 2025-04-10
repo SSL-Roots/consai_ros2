@@ -39,7 +39,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     PlayNode.add_arguments(arg_parser)
 
-    arg_parser.add_argument('--yellow', type=bool, default=False)
+    arg_parser.add_argument('--yellow', type=lambda x: x.lower() == 'true', default=False)
 
     args, other_args = arg_parser.parse_known_args()
     rclpy.init(args=other_args)
