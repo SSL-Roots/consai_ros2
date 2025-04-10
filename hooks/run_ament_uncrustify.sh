@@ -14,8 +14,8 @@ echo "$FILES"
 
 # ファイルごとに ament_uncrustify のチェックを実行
 for file in $FILES; do
-    echo "[ament_uncrustify] チェック中: $file"
+    # echo "[ament_uncrustify] チェック中: $file"
     # --check オプションでフォーマット違反を検出
     # ament_uncrustify --check "$file"
-    ament_uncrustify "$file"
+    ament_uncrustify --reformat "$file"
 done

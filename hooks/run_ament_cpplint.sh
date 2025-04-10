@@ -12,4 +12,3 @@ echo "[ament_cpplint] Running on files:"
 echo "$FILES"
 
 ament_cpplint $FILES
-

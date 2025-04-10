@@ -20,9 +20,9 @@ repos:
         language: system
         files: \.(cpp|hpp|c|h)$
 
-      # - id: ament_uncrustify
-      #   name: ament_uncrustify (ROS2 C/C++ Formatting Check)
-      #   entry: hooks/run_ament_uncrustify.sh
-      #   language: system
-      #   files: \.(cpp|hpp|c|h)$
+      - id: ament_uncrustify
+        name: ament_uncrustify (ROS2 C/C++ Formatting Check)
+        entry: hooks/run_ament_uncrustify.sh
+        language: system
+        files: \.(cpp|hpp|c|h)$
 
