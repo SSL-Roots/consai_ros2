@@ -16,5 +16,6 @@ echo "$FILES"
 for file in $FILES; do
     echo "[ament_uncrustify] チェック中: $file"
     # --check オプションでフォーマット違反を検出
-    ament_uncrustify --check "$file"
+    # ament_uncrustify --check "$file"
+    ament_uncrustify "$file"
 done

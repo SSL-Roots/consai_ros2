@@ -13,7 +13,5 @@
 // limitations under the License.
 
 #include <iostream>
-int main() {
-  std::cout << "bad spacing!" << std::endl;
-  return 0;
+int main() {std::cout << "bad spacing!" << std::endl;return 0;
 }
