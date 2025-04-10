@@ -45,3 +45,5 @@ class BallModel:
 
         if ball_frame.visibility:
             self.is_visible = (ball_frame.visibility[0] > self.visibility_threshold)
+        else:
+            self.is_visible = False
