@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# ROS 2 環境が読み込まれていることが前提！
 FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(cpp|hpp|c|h)$' || true)
 
 if [ -z "$FILES" ]; then

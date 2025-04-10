@@ -7,16 +7,7 @@ repos:
         language_version: python3
         types: [python]
 
-  # C++ formatters
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v14.0.6
-    hooks:
-      - id: clang-format
-        name: clang-format (Google Style)
-        files: \.(cpp|hpp|c|h)$
-        args: [--style=file]
-
-  # ROS2 Lint Checkers
+  # ROS2 Linters and Formatters
   - repo: local
     hooks:
       - id: ament_flake8
@@ -34,6 +25,12 @@ repos:
       - id: ament_cpplint
         name: ament_cpplint
         entry: hooks/run_ament_cpplint.sh
+        language: system
+        files: \.(cpp|hpp|c|h)$
+
+      - id: ament_uncrustify
+        name: ament_uncrustify (ROS2 C/C++ Formatting Check)
+        entry: hooks/run_ament_uncrustify.sh
         language: system
         files: \.(cpp|hpp|c|h)$
 
