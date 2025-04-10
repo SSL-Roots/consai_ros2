@@ -35,9 +35,9 @@ class WorldModelProviderNode(Node):
 
         self.world_model = WorldModel()
         self.world_model.set_our_team_is_yellow(team_is_yellow)
-        self.world_model.referee.sub_referee = self.create_subscription(
-            Referee, 'referee', self.world_model.referee.callback, 10)
 
+        self.sub_referee = self.create_subscription(
+            Referee, 'referee', self.callback_referee, 10)
         self.sub_detection_traced = self.create_subscription(
             TrackedFrame, 'detection_tracked', self.callback_detection_traced, 10)
 
@@ -53,6 +53,10 @@ class WorldModelProviderNode(Node):
     def update(self) -> None:
         with self.lock:
             self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
+
+    def callback_referee(self, msg: Referee) -> None:
+        with self.lock:
+            self.world_model.referee.parse_msg(msg)
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
         with self.lock:
