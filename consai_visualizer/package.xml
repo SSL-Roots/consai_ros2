@@ -21,6 +21,8 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_uncrustify</test_depend>
+  <test_depend>ament_cpplint</test_depend>
 
   <export>
     <rqt_gui plugin="${prefix}/plugin.xml"/>
