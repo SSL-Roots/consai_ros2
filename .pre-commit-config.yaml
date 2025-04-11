@@ -14,6 +14,13 @@ repos:
         language: system
         types: [python]
 
+      - id: ament-black
+        name: ament_black
+        entry: ament_black
+        language: system
+        types: [python]
+        args: [--reformat]
+
       - id: ament_cpplint
         name: ament_cpplint
         entry: hooks/run_ament_cpplint.sh
