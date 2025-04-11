@@ -63,6 +63,11 @@ class WorldModelProviderNode(Node):
         with self.lock:
             self.world_model.robots.parse_frame(msg)
             self.world_model.ball.parse_frame(msg)
+            # ボールの位置情報を更新
+            self.world_model.ball_position.update_position(self.world_model.ball.pos)
+            # ボールがフィールド内にあるかどうかを更新
+            self.world_model.ball_is_on_field = not self.world_model.ball_position.is_outside()
+
 
     def callback_param_rule(self, msg: String) -> None:
         with self.lock:
