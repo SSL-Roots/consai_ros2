@@ -18,7 +18,8 @@
 import argparse
 from consai_game.core.play.play import Play
 from consai_game.core.role_assignment.assignor import RoleAssignor
-from consai_game.core.role_assignment import factory as role_assignment_factory
+from consai_game.core.role_assignment.factory import create_method as create_role_assignment_method
+from consai_game.core.role_assignment.factory import RoleAssignmentMethods
 from consai_game.core.tactic.role import Role
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
@@ -52,6 +53,11 @@ class PlayNode(Node):
             "--playbook", default="", type=str,
             help="Set playbook file path (e.g.: path/to/playbook.py)"
         )
+        parser.add_argument(
+            "--assign",
+            choices=[m.value for m in RoleAssignmentMethods],
+            required=True,
+        )
 
     def load_playbook(self, file_path: str) -> list[Play]:
         file_path = Path(file_path).resolve()
@@ -79,7 +85,7 @@ class PlayNode(Node):
     def select_role_assignment_method(self, name: str):
         with self.lock:
             self.role_assignor = RoleAssignor(
-                role_assignment_factory.create_method(name))
+                create_role_assignment_method(name))
 
             if self.role_assignor is None:
                 text = "Role assignment method is not set"

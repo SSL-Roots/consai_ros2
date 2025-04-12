@@ -31,10 +31,13 @@
     </composable_node>
   </node_container>
 
-  <arg name="playbook" default="playbook_default" />
+  <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
+  <arg name="assign" default="by_id" description='Select a role_assignment method'/>
 
   <node pkg="consai_game"
         exec="main.py"
         output="screen"
-        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py --yellow $(var yellow)" />
+        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py
+              --yellow $(var yellow)
+              --assign $(var assign)" />
 </launch>

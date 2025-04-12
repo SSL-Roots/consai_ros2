@@ -45,7 +45,7 @@ if __name__ == '__main__':
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
-    play_node.select_role_assignment_method("by_id")
+    play_node.select_role_assignment_method(name=args.assign)
 
     team_is_yellow = args.yellow
     world_model_provider_node = WorldModelProviderNode(
