@@ -30,9 +30,9 @@ class WorldModel:
     referee: RefereeModel = RefereeModel()
     robots: RobotsModel = RobotsModel()
     ball: BallModel = BallModel()
-    ball_position: BallPositionModel = BallPositionModel()
     field: Field = Field()
     field_points: FieldPoints = FieldPoints.create_field_points(field)
+    ball_position: BallPositionModel = BallPositionModel(field, field_points)
     robot_activity: RobotActivityModel = RobotActivityModel()
 
     def set_our_team_is_yellow(self, our_team_is_yellow: bool):

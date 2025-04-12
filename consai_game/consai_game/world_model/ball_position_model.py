@@ -24,10 +24,10 @@ import math
 class BallPositionModel:
     """ボールの位置情報を管理するクラス."""
 
-    def __init__(self):
+    def __init__(self, field: Field, field_points: FieldPoints):
         self._pos = State2D()
-        self._field = Field()
-        self._field_points = FieldPoints.create_field_points(self._field)
+        self._field = field
+        self._field_points = field_points
         self._outside_margin = 0.05  # フィールド外判定のマージン
 
     def update_position(self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
