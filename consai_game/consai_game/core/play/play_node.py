@@ -47,6 +47,9 @@ class PlayNode(Node):
 
         self.update_role_callback: UpdateRoleCallback = None
 
+        # Playをリセットするためにロボット数を保存する
+        self.our_robots_num = 0
+
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
@@ -126,6 +129,13 @@ class PlayNode(Node):
         # current_playを継続して実行できるか評価する
         if self.current_play.should_abort(self.world_model):
             self.get_logger().info(f"Play aborted: {self.current_play.name}")
+            self.current_play = None
+
+        # ロボットの台数が変わったらPlayをリセットする
+        visible_robots_num = len(self.world_model.robot_activity.our_visible_robots)
+        if self.our_robots_num != visible_robots_num:
+            self.our_robots_num = visible_robots_num
+            self.get_logger().info(f"Robots num changed. Play aborted: {self.current_play.name}")
             self.current_play = None
 
     def update_role(self):
