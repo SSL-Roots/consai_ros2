@@ -27,7 +27,7 @@ class BallPositionModel:
     def __init__(self):
         self._pos = State2D()
         self._field = Field()
-        self._field_points = FieldPoints()
+        self._field_points = FieldPoints.create_field_points(self._field)
         self._outside_margin = 0.05  # フィールド外判定のマージン
 
     def update_position(self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
