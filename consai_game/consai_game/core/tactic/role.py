@@ -17,10 +17,14 @@
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Final
+
+
+class RoleConst:
+    INVALID_ROLE_ID: Final[int] = -1
 
 
 @dataclass
 class Role:
     tactics: List[TacticBase] = field(default_factory=list)
-    robot_id: int = -1
+    robot_id: int = RoleConst.INVALID_ROLE_ID
