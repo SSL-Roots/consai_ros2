@@ -54,6 +54,8 @@ class WorldModelProviderNode(Node):
         with self.lock:
             self.get_logger().debug(f'WorldModelProvider update, {process_info()}')
             self.world_model.robot_activity.update(self.world_model.robots)
+            # ボールの位置情報を更新
+            self.world_model.ball_position.update_position(self.world_model.ball.pos)
 
     def callback_referee(self, msg: Referee) -> None:
         with self.lock:
