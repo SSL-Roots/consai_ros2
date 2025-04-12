@@ -17,6 +17,7 @@
 
 from consai_msgs.msg import State2D
 from consai_game.world_model.field_model import Field, FieldPoints
+from consai_game.world_model.ball_model import BallModel
 import math
 
 
@@ -26,12 +27,14 @@ class BallPositionModel:
     def __init__(self):
         self._pos = State2D()
         self._field = Field()
-        self._field_points = FieldPoints.create_field_points(self._field)
+        self._field_points = FieldPoints()
         self._outside_margin = 0.05  # フィールド外判定のマージン
 
-    def update_position(self, pos: State2D) -> None:
+    def update_position(self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
         """ボールの位置を更新する."""
-        self._pos = pos
+        self._pos = ball_model.pos
+        self._field = field_model
+        self._field_points = field_points
 
     def is_outside_of_left(self) -> bool:
         """ボールが左側のフィールド外にあるか判定する."""
