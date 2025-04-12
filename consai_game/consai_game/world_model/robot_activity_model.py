@@ -22,20 +22,22 @@ class RobotActivityModel:
     def __init__(self):
         self.ordered_our_visible_robots: list[int] = []
         self.ordered_their_visible_robots: list[int] = []
+        self.our_visible_robots: list[int] = []
+        self.their_visible_robots: list[int] = []
 
     def update(self, robots_model: RobotsModel):
-        our_visible_robots = [
+        self.our_visible_robots = [
             robot.robot_id for robot in robots_model.our_robots.values() if robot.is_visible]
-        their_visible_robots = [
+        self.their_visible_robots = [
             robot.robot_id for robot in robots_model.their_robots.values() if robot.is_visible]
 
         self.ordered_our_visible_robots = self.ordered_merge(
             self.ordered_our_visible_robots,
-            our_visible_robots,
+            self.our_visible_robots,
         )
         self.ordered_their_visible_robots = self.ordered_merge(
             self.ordered_their_visible_robots,
-            their_visible_robots,
+            self.their_visible_robots,
         )
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:

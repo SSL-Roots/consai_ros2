@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# coding: UTF-8
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 from consai_game.core.tactic.tactic_base import TacticBase
-from dataclasses import dataclass, field
-from typing import List, Final
+from consai_game.world_model.world_model import WorldModel
+from typing import List
 
 
-class RoleConst:
-    INVALID_ROLE_ID: Final[int] = -1
-    MIN_VALID_ROLE_ID: Final[int] = 0
-    MAX_VALID_ROLE_ID: Final[int] = 15
+class RoleAssignmentBase(ABC):
+    """役割割り当ての基底クラス."""
 
-
-@dataclass
-class Role:
-    tactics: List[TacticBase] = field(default_factory=list)
-    robot_id: int = RoleConst.INVALID_ROLE_ID
+    @abstractmethod
+    def assign(self, play_roles: List[List[TacticBase]], world_model: WorldModel) -> List[int]:
+        """Playファイルのrolesをもとに、ロボットのIDリストを返す."""
+        raise NotImplementedError()
