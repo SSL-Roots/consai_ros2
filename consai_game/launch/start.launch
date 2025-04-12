@@ -34,6 +34,8 @@
   <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
   <arg name="assign" default="by_id" description='Select a role_assignment method'/>
 
+  <set_env name="PYTHONUNBUFFERED" value="1" />
+
   <node pkg="consai_game"
         exec="main.py"
         output="screen"
