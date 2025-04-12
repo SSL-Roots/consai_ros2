@@ -65,5 +65,7 @@ class RobotsModel:
 
         if robot_frame.visibility:
             robot.is_visible = (robot_frame.visibility[0] > self.visibility_threshold)
+        else:
+            robot.is_visible = False
 
         return robot

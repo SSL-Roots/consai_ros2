@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from consai_game.core.play.play_condition import PlayCondition
+from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
 from dataclasses import dataclass, field
 from typing import List
@@ -28,7 +29,7 @@ class Play:
     applicable: List[PlayCondition]
     aborted: List[PlayCondition]
     timeout_ms: int
-    roles: List[List[str]] = field(default_factory=lambda: [[] for _ in range(11)])
+    roles: List[List[TacticBase]] = field(default_factory=lambda: [[] for _ in range(11)])
 
     def is_applicable(self, world_model: WorldModel) -> bool:
         """Playが適用可能か判定."""

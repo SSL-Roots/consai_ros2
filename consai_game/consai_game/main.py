@@ -39,12 +39,13 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser()
     PlayNode.add_arguments(arg_parser)
 
-    arg_parser.add_argument('--yellow', type=bool, default=False)
+    arg_parser.add_argument('--yellow', type=lambda x: x.lower() == 'true', default=False)
 
     args, other_args = arg_parser.parse_known_args()
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
+    play_node.select_role_assignment_method(name=args.assign)
 
     team_is_yellow = args.yellow
     world_model_provider_node = WorldModelProviderNode(
