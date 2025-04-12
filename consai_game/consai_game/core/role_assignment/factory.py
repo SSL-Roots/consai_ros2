@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# coding: UTF-8
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.core.tactic.tactic_base import TacticBase
-from dataclasses import dataclass, field
-from typing import List, Final
+from consai_game.core.role_assignment.methods.by_id import ByIDMethod
+from enum import Enum
 
 
-class RoleConst:
-    INVALID_ROLE_ID: Final[int] = -1
-    MIN_VALID_ROLE_ID: Final[int] = 0
-    MAX_VALID_ROLE_ID: Final[int] = 15
+class RoleAssignmentMethods(Enum):
+    """役割割り当ての方法を列挙する."""
+
+    BY_ID = "by_id"
 
 
-@dataclass
-class Role:
-    tactics: List[TacticBase] = field(default_factory=list)
-    robot_id: int = RoleConst.INVALID_ROLE_ID
+def create_method(name: str):
+    """役割割り当ての方法を生成する."""
+    if name == RoleAssignmentMethods.BY_ID.value:
+        return ByIDMethod()
+    raise ValueError(f"Unknown role assignment method: {name}")
