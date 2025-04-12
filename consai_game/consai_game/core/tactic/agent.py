@@ -48,14 +48,20 @@ class Agent():
         return self.present_tactic.run(world_model=world_model)
 
     def set_role(self, role: Role) -> None:
-        self.role = role
-        if len(self.role.tactics) == 0:
+        if len(role.tactics) == 0:
             raise ValueError("Tactics is empty")
 
-        if not (RoleConst.MIN_VALID_ROLE_ID <= self.role.robot_id <= RoleConst.MAX_VALID_ROLE_ID):
-            if self.role.robot_id != RoleConst.INVALID_ROLE_ID:
-                raise ValueError(f"Invalid robot_id: {self.role.robot_id}")
+        if not (RoleConst.MIN_VALID_ROLE_ID <= role.robot_id <= RoleConst.MAX_VALID_ROLE_ID):
+            if role.robot_id != RoleConst.INVALID_ROLE_ID:
+                raise ValueError(f"Invalid robot_id: {role.robot_id}")
 
+        self.role.tactics = role.tactics
+
+        # 実行中のTacticをリセットしないための処理
+        if self.role.robot_id == role.robot_id and self.present_tactic is role.tactics[0]:
+            return
+
+        self.role.robot_id = role.robot_id
         self.present_tactic_index = 0
         self.reset_tactic()
 
