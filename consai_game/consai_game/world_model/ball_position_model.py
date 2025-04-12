@@ -96,8 +96,3 @@ class BallPositionModel:
     def is_in_their_side(self) -> bool:
         """ボールが相手チームのサイドにあるか判定する."""
         return self._pos.x > 0
-
-    @property
-    def position(self) -> State2D:
-        """ボールの位置を取得する."""
-        return self._pos
