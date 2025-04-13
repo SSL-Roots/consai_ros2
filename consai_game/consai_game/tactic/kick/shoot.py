@@ -36,15 +36,16 @@ class ShootStateMachine(Machine):
 
         # 遷移定義
         transitions = [
-            { 'trigger': 'ball_near',  'source': 'chasing',  'dest': 'aiming' },
-            { 'trigger': 'ball_far',   'source': 'aiming',   'dest': 'chasing' },
-            { 'trigger': 'shoot',      'source': 'aiming',   'dest': 'shooting' },
-            { 'trigger': 'done_shooting', 'source': 'shooting', 'dest': 'chasing' },
-            { 'trigger': 'reset',      'source': '*',        'dest': 'chasing' }
+            {'trigger': 'ball_near',  'source': 'chasing',  'dest': 'aiming'},
+            {'trigger': 'ball_far',   'source': 'aiming',   'dest': 'chasing'},
+            {'trigger': 'shoot',      'source': 'aiming',   'dest': 'shooting'},
+            {'trigger': 'done_shooting', 'source': 'shooting', 'dest': 'chasing'},
+            {'trigger': 'reset',      'source': '*',        'dest': 'chasing'}
         ]
 
         # ステートマシン構築
-        self.machine = Machine(model=self, states=states, transitions=transitions, initial='chasing')
+        self.machine = Machine(model=self, states=states, 
+                               transitions=transitions, initial='chasing')
 
 
     def on_enter_chasing(self):
