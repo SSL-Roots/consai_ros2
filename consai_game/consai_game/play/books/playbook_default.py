@@ -15,23 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.play.factory import blank_plays
+from consai_game.play.factory import simple_plays
 
 plays = [
-    blank_plays.halt(),
-    blank_plays.stop(),
-    blank_plays.force_start(),
-    blank_plays.normal_start(),
-    blank_plays.our_free_kick(),
-    blank_plays.their_free_kick(),
-    blank_plays.our_kick_off(),
-    blank_plays.their_kick_off(),
-    blank_plays.our_penalty_kick(),
-    blank_plays.their_penalty_kick(),
-    blank_plays.our_goal(),
-    blank_plays.their_goal(),
-    blank_plays.our_timeout(),
-    blank_plays.their_timeout(),
-    blank_plays.our_ball_placement(),
-    blank_plays.their_ball_placement(),
+    simple_plays.halt(),
+    simple_plays.stop(),
+    simple_plays.force_start(),
+    simple_plays.normal_start(),
+    simple_plays.our_free_kick(),
+    simple_plays.their_free_kick(),
+    simple_plays.our_kick_off(),
+    simple_plays.their_kick_off(),
+    simple_plays.our_penalty_kick(),
+    simple_plays.their_penalty_kick(),
+    simple_plays.our_goal(),
+    simple_plays.their_goal(),
+    simple_plays.our_timeout(),
+    simple_plays.their_timeout(),
+    simple_plays.our_ball_placement(),
+    simple_plays.their_ball_placement(),
 ]
