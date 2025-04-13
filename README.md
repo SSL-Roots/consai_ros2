@@ -106,11 +106,21 @@ CON-SAIを開発する際にこの項目を読んでください。
 - 本ソフトウェアはオープンソースですが、開発はオープンではありません
 - チームの開発方針を優先するため、外部からのIssue、Pull Requestには対応できない場合があります
 
-### Lint
+### pre-commit for code formatting
 
-コードの見た目を整えるためにlintでチェックしています。
+コミット時に自動でコード整形するために`pre-commit`のインストールを推奨します
 
-下記コマンドを実行して、チェックを実行してください。
+```sh
+# pre-commitのインストール
+$ pip install pre-commit
+# pre-commitの設定
+$ cd /path/to/consai_ros2
+$ pre-commit install
+```
+
+### colcon test for lint
+
+手動でlintを実行する場合は下記コマンドを入力してください
 
 ```sh
 $ cd ~/ros2_ws

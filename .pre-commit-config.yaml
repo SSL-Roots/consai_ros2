@@ -1,0 +1,35 @@
+repos:
+  # ROS2 Linters and Formatters
+  - repo: local
+    hooks:
+      - id: ament_flake8
+        name: ament_flake8
+        entry: hooks/run_ament_flake8.sh
+        language: system
+        types: [python]
+
+      - id: ament_pep257
+        name: ament_pep257
+        entry: hooks/run_ament_pep257.sh
+        language: system
+        types: [python]
+
+      - id: ament-black
+        name: ament_black
+        entry: ament_black
+        language: system
+        types: [python]
+        args: [--reformat]
+
+      - id: ament_cpplint
+        name: ament_cpplint
+        entry: hooks/run_ament_cpplint.sh
+        language: system
+        files: \.(cpp|hpp|c|h)$
+
+      - id: ament_uncrustify
+        name: ament_uncrustify (ROS2 C/C++ Formatting Check)
+        entry: hooks/run_ament_uncrustify.sh
+        language: system
+        files: \.(cpp|hpp|c|h)$
+
