@@ -27,7 +27,12 @@ class RefereeModel:
 
     def parse_msg(self, msg: Referee):
         self.current_command = msg.command
-        if msg.current_action_time_remaining:
+
+        # current_action_time_remainingは
+        # NORMAL STARTやFREE KICKなどのセットプレーで値が初期化され、カウントダウンが始まる
+        if self.halt or self.stop:
+            self.current_action_time_remaining = 0
+        elif msg.current_action_time_remaining:
             self.current_action_time_remaining = msg.current_action_time_remaining[0]
 
     @property
@@ -168,6 +173,4 @@ class RefereeModel:
 
     @property
     def running(self):
-        # FREE_KICK, NORMAL_STARTなどで時間が減少する
-        # それ以外の信号では値が変化しない
         return self.current_action_time_remaining < 0

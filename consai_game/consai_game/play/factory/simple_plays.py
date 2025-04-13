@@ -106,15 +106,44 @@ def force_start() -> Play:
     )
 
 
+def running() -> Play:
+    return Play(
+        name="running",
+        description="RUNNING状態をトリガーにした、デバッグ用の空のPlay",
+        applicable=[
+            RefereeConditions.running,
+        ],
+        aborted=[
+            RefereeConditions.running.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
+            [Shoot()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
+    )
+
+
 def normal_start() -> Play:
     return Play(
         name="normal_start",
         description="START信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.normal_start,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.normal_start.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
@@ -139,9 +168,11 @@ def our_free_kick() -> Play:
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_free_kick,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.our_free_kick.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
@@ -166,9 +197,11 @@ def their_free_kick() -> Play:
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_free_kick,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.their_free_kick.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
