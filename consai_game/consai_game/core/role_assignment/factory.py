@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from consai_game.core.role_assignment.methods.by_id import ByIDMethod
+from consai_game.core.role_assignment.methods.by_visible import ByVisible
 from enum import Enum
 
 
@@ -20,10 +21,14 @@ class RoleAssignmentMethods(Enum):
     """役割割り当ての方法を列挙する."""
 
     BY_ID = "by_id"
+    BY_VISIBLE = "by_visible"
 
 
 def create_method(name: str):
     """役割割り当ての方法を生成する."""
     if name == RoleAssignmentMethods.BY_ID.value:
         return ByIDMethod()
+    elif name == RoleAssignmentMethods.BY_VISIBLE.value:
+        return ByVisible()
+
     raise ValueError(f"Unknown role assignment method: {name}")

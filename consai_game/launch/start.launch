@@ -32,7 +32,8 @@
   </node_container>
 
   <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
-  <arg name="assign" default="by_id" description='Select a role_assignment method'/>
+  <arg name="assign" default="by_visible"
+    description='Select a role_assignment method from {by_id, by_visible}'/>
 
   <set_env name="PYTHONUNBUFFERED" value="1" />
 
