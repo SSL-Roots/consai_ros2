@@ -21,6 +21,7 @@ plays = [
     simple_plays.halt(),
     simple_plays.stop(),
     simple_plays.force_start(),
+    simple_plays.running(),
     simple_plays.normal_start(),
     simple_plays.our_free_kick(),
     simple_plays.their_free_kick(),
