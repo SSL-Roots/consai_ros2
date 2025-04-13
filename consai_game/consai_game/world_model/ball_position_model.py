@@ -29,7 +29,7 @@ class BallPositionModel:
         self._field = field
         self._field_points = field_points
         self._outside_margin = 0.05  # フィールド外判定のマージン(m)
-        self._hysteresis = 0.1  # ヒステリシスの閾値(m)
+        self._hysteresis = 0.02  # ヒステリシスの閾値(m)
         self._last_left_state = False  # 前回の左側判定状態
         self._last_right_state = False  # 前回の右側判定状態
         self._last_top_state = False  # 前回の上側判定状態
