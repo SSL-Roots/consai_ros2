@@ -31,7 +31,10 @@ class ByVisible(RoleAssignmentBase):
         self.prev_id_list: List[int] = []
 
     def assign(
-        self, play_roles: List[List[TacticBase]], world_model: WorldModel
+        self,
+        play_roles: List[List[TacticBase]],
+        world_model: WorldModel,
+        goalie_id: int,
     ) -> List[int]:
         role_num = len(play_roles)
 
@@ -41,6 +44,10 @@ class ByVisible(RoleAssignmentBase):
         else:
             # 数が異なれば初期化する
             id_list = [RoleConst.INVALID_ROLE_ID] * role_num
+
+        # goalie_idが存在すれば先頭にセットする
+        if goalie_id in world_model.robot_activity.ordered_our_visible_robots:
+            id_list[0] = goalie_id
 
         # ロボットが消えた役割を初期化する
         for i, robot_id in enumerate(id_list):
@@ -56,8 +63,8 @@ class ByVisible(RoleAssignmentBase):
 
         # 新しく現れたロボットを、空いている役割に割り当てる
         for new_robot_id in new_robots:
-            for i, robot_id in enumerate(id_list):
-                if robot_id == RoleConst.INVALID_ROLE_ID:
+            for i in range(1, role_num):
+                if id_list[i] == RoleConst.INVALID_ROLE_ID:
                     id_list[i] = new_robot_id
                     break
 
