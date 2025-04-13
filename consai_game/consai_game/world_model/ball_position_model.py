@@ -34,6 +34,8 @@ class BallPositionModel:
         self._last_right_state = False  # 前回の右側判定状態
         self._last_top_state = False  # 前回の上側判定状態
         self._last_bottom_state = False  # 前回の下側判定状態
+        self._last_our_defense_state = False  # 前回の自チームディフェンスエリア判定状態
+        self._last_their_defense_state = False  # 前回の相手チームディフェンスエリア判定状態
 
     def update_position(
         self, ball_model: BallModel, field_model: Field, field_points: FieldPoints
@@ -214,16 +216,66 @@ class BallPositionModel:
         )
 
     def is_in_our_defense_area(self) -> bool:
-        """ボールが自チームのディフェンスエリア内にあるか判定する."""
-        in_y = math.fabs(self._pos.y) < self._field.penalty_width / 2
-        in_x = self._pos.x < -self._field.length / 2 + self._field.penalty_depth
-        return in_y and in_x
+        """ボールが自チームのディフェンスエリア内にあるか判定する.ヒステリシス付き."""
+        current_pos_state = (
+            math.fabs(self._pos.y) < self._field.penalty_width / 2
+            and self._pos.x < -self._field.length / 2 + self._field.penalty_depth
+        )
+        if current_pos_state != self._last_our_defense_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 内に入った
+                current_pos_state = (
+                    math.fabs(self._pos.y)
+                    < self._field.penalty_width / 2 - self._hysteresis
+                    and self._pos.x
+                    < -self._field.length / 2
+                    + self._field.penalty_depth
+                    - self._hysteresis
+                )
+            else:
+                # 外に出た
+                current_pos_state = (
+                    math.fabs(self._pos.y)
+                    < self._field.penalty_width / 2 + self._hysteresis
+                    and self._pos.x
+                    < -self._field.length / 2
+                    + self._field.penalty_depth
+                    + self._hysteresis
+                )
+        self._last_our_defense_state = current_pos_state
+        return current_pos_state
 
     def is_in_their_defense_area(self) -> bool:
-        """ボールが相手チームのディフェンスエリア内にあるか判定する."""
-        in_y = math.fabs(self._pos.y) < self._field.penalty_width / 2
-        in_x = self._pos.x > self._field.length / 2 - self._field.penalty_depth
-        return in_y and in_x
+        """ボールが相手チームのディフェンスエリア内にあるか判定する.ヒステリシス付き."""
+        current_pos_state = (
+            math.fabs(self._pos.y) < self._field.penalty_width / 2
+            and self._pos.x > self._field.length / 2 - self._field.penalty_depth
+        )
+        if current_pos_state != self._last_their_defense_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 内に入った
+                current_pos_state = (
+                    math.fabs(self._pos.y)
+                    < self._field.penalty_width / 2 - self._hysteresis
+                    and self._pos.x
+                    > self._field.length / 2
+                    - self._field.penalty_depth
+                    + self._hysteresis
+                )
+            else:
+                # 外に出た
+                current_pos_state = (
+                    math.fabs(self._pos.y)
+                    < self._field.penalty_width / 2 + self._hysteresis
+                    and self._pos.x
+                    > self._field.length / 2
+                    - self._field.penalty_depth
+                    - self._hysteresis
+                )
+        self._last_their_defense_state = current_pos_state
+        return current_pos_state
 
     def is_in_our_side(self) -> bool:
         """ボールが自チームのサイドにあるか判定する."""
