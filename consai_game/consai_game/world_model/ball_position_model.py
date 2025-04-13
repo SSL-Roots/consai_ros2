@@ -28,58 +28,190 @@ class BallPositionModel:
         self._pos = State2D()
         self._field = field
         self._field_points = field_points
-        self._outside_margin = 0.05  # フィールド外判定のマージン
+        self._outside_margin = 0.05  # フィールド外判定のマージン(m)
+        self._hysteresis = 0.1  # ヒステリシスの閾値(m)
+        self._last_left_state = False  # 前回の左側判定状態
+        self._last_right_state = False  # 前回の右側判定状態
+        self._last_top_state = False  # 前回の上側判定状態
+        self._last_bottom_state = False  # 前回の下側判定状態
 
     def update_position(
-            self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
+        self, ball_model: BallModel, field_model: Field, field_points: FieldPoints
+    ) -> None:
         """ボールの位置を更新する."""
         self._pos = ball_model.pos
         self._field = field_model
         self._field_points = field_points
 
     def is_outside_of_left(self) -> bool:
-        """ボールが左側のフィールド外にあるか判定する."""
-        return self._pos.x < -self._field.length / 2
+        """ボールが左側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x < -self._field.length / 2
+        if current_pos_state != self._last_left_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.x < -self._field.length / 2 - self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.x < -self._field.length / 2 + self._hysteresis
+                )
+        self._last_left_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_right(self) -> bool:
-        """ボールが右側のフィールド外にあるか判定する."""
-        return self._pos.x > self._field.length / 2
+        """ボールが右側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x > self._field.length / 2
+        if current_pos_state != self._last_right_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.x > self._field.length / 2 + self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.x > self._field.length / 2 - self._hysteresis
+                )
+        self._last_right_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_top(self) -> bool:
-        """ボールが上側のフィールド外にあるか判定する."""
-        return self._pos.y > self._field.width / 2
+        """ボールが上側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.y > self._field.width / 2
+        if current_pos_state != self._last_top_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.y > self._field.width / 2 + self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.y > self._field.width / 2 - self._hysteresis
+                )
+        self._last_top_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_bottom(self) -> bool:
-        """ボールが下側のフィールド外にあるか判定する."""
-        return self._pos.y < -self._field.width / 2
+        """ボールが下側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.y < -self._field.width / 2
+        if current_pos_state != self._last_bottom_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.y < -self._field.width / 2 - self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.y < -self._field.width / 2 + self._hysteresis
+                )
+        self._last_bottom_state = current_pos_state
+        return current_pos_state
 
     def is_outside(self) -> bool:
         """ボールがフィールド外にあるか判定する."""
-        return (self.is_outside_of_left() or self.is_outside_of_right() or
-                self.is_outside_of_top() or self.is_outside_of_bottom())
+        return (
+            self.is_outside_of_left()
+            or self.is_outside_of_right()
+            or self.is_outside_of_top()
+            or self.is_outside_of_bottom()
+        )
 
     def is_outside_of_left_with_margin(self) -> bool:
-        """マージンを考慮して、ボールが左側のフィールド外にあるか判定する."""
-        return self._pos.x < -self._field.length / 2 - self._outside_margin
+        """マージンを考慮して、ボールが左側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x < -self._field.length / 2 - self._outside_margin
+        if current_pos_state != self._last_left_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.x
+                    < -self._field.length / 2 - self._outside_margin - self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.x
+                    < -self._field.length / 2 - self._outside_margin + self._hysteresis
+                )
+        self._last_left_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_right_with_margin(self) -> bool:
-        """マージンを考慮して、ボールが右側のフィールド外にあるか判定する."""
-        return self._pos.x > self._field.length / 2 + self._outside_margin
+        """マージンを考慮して、ボールが右側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x > self._field.length / 2 + self._outside_margin
+        if current_pos_state != self._last_right_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.x
+                    > self._field.length / 2 + self._outside_margin + self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.x
+                    > self._field.length / 2 + self._outside_margin - self._hysteresis
+                )
+        self._last_right_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_top_with_margin(self) -> bool:
-        """マージンを考慮して、ボールが上側のフィールド外にあるか判定する."""
-        return self._pos.y > self._field.width / 2 + self._outside_margin
+        """マージンを考慮して、ボールが上側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.y > self._field.width / 2 + self._outside_margin
+        if current_pos_state != self._last_top_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.y
+                    > self._field.width / 2 + self._outside_margin + self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.y
+                    > self._field.width / 2 + self._outside_margin - self._hysteresis
+                )
+        self._last_top_state = current_pos_state
+        return current_pos_state
 
     def is_outside_of_bottom_with_margin(self) -> bool:
-        """マージンを考慮して、ボールが下側のフィールド外にあるか判定する."""
-        return self._pos.y < -self._field.width / 2 - self._outside_margin
+        """マージンを考慮して、ボールが下側のフィールド外にあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.y < -self._field.width / 2 - self._outside_margin
+        if current_pos_state != self._last_bottom_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 外に出た
+                current_pos_state = (
+                    self._pos.y
+                    < -self._field.width / 2 - self._outside_margin - self._hysteresis
+                )
+            else:
+                # 内に入った
+                current_pos_state = (
+                    self._pos.y
+                    < -self._field.width / 2 - self._outside_margin + self._hysteresis
+                )
+        self._last_bottom_state = current_pos_state
+        return current_pos_state
 
     def is_outside_with_margin(self) -> bool:
         """マージンを考慮して、ボールがフィールド外にあるか判定する."""
-        return (self.is_outside_of_left_with_margin() or
-                self.is_outside_of_right_with_margin() or
-                self.is_outside_of_top_with_margin() or
-                self.is_outside_of_bottom_with_margin())
+        return (
+            self.is_outside_of_left_with_margin()
+            or self.is_outside_of_right_with_margin()
+            or self.is_outside_of_top_with_margin()
+            or self.is_outside_of_bottom_with_margin()
+        )
 
     def is_in_our_defense_area(self) -> bool:
         """ボールが自チームのディフェンスエリア内にあるか判定する."""
