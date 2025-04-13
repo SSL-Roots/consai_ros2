@@ -21,6 +21,7 @@ from consai_game.play.conditions.ball_conditions import BallConditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
+from consai_game.tactic.kick.shoot import Shoot
 
 
 def halt() -> Play:
@@ -90,7 +91,7 @@ def force_start() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [Shoot()],
             [Stop()],
             [Stop()],
             [Stop()],

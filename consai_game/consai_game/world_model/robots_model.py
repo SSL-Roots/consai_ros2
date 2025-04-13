@@ -17,7 +17,7 @@
 
 
 from consai_msgs.msg import State2D
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import TrackedRobot
@@ -27,8 +27,8 @@ from robocup_ssl_msgs.msg import TrackedRobot
 class Robot:
     robot_id: int = 0
     is_yellow: bool = False
-    pos: State2D = State2D()
-    vel: State2D = State2D()
+    pos: State2D = field(default_factory=State2D)
+    vel: State2D = field(default_factory=State2D)
     is_visible: bool = False
 
 
