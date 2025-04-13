@@ -17,6 +17,7 @@ from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tool
+import numpy as np
 
 from transitions import Machine
 
@@ -95,9 +96,9 @@ class Shoot(TacticBase):
         if self.robot.state == 'chasing' and dist_to_ball <= BALL_NEAR_THRESHOLD:
             # ボールが近く、状態がchasingの場合、シュートの準備をする
             self.robot.ball_near()
-            self.move_pos.x = ball_pos.x - 0.1
-            self.move_pos.y = ball_pos.y
-            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
+            self.move_pos.x = ball_pos.x - 0.1 * np.cos(shoot_angle)
+            self.move_pos.y = ball_pos.y - 0.1 * np.sin(shoot_angle)
+            self.move_pos.theta = shoot_angle
         
         elif self.robot.state == 'chasing' and dist_to_ball > BALL_NEAR_THRESHOLD:
             # ボールが遠く、状態がchasingの場合、ボールを追いかける
@@ -118,7 +119,7 @@ class Shoot(TacticBase):
             self.move_pos.theta = shoot_angle
             command.kick_power = 10.0
             
-        elif self.robot.state == 'shooting' and dist_to_ball > BALL_NEAR_THRESHOLD:
+        elif self.robot.state == 'shooting':
             # シュートが完了した場合、aiming状態に戻る
             self.robot.done_shooting()
             command.kick_power = 0.0
