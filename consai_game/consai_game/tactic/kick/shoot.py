@@ -21,16 +21,15 @@ import numpy as np
 
 from transitions import Machine
 
-BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-SHOOT_ANGLE_THRESHOLD = 10  # シュート角度の閾値[degree]
-
 
 class ShootStateMachine(Machine):
     """シュート状態遷移マシン."""
 
+    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
+    SHOOT_ANGLE_THRESHOLD = 10  # シュート角度の閾値[degree]
+
     def __init__(self, name):
         self.name = name
-        self.move_pos = State2D()
 
         # 状態定義
         states = ["chasing", "aiming", "shooting"]
@@ -40,41 +39,54 @@ class ShootStateMachine(Machine):
             {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
             {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
             {"trigger": "shoot", "source": "aiming", "dest": "shooting"},
+            {"trigger": "reaiming", "source": "shooting", "dest": "aiming"},
             {"trigger": "done_shooting", "source": "shooting", "dest": "chasing"},
             {"trigger": "reset", "source": "*", "dest": "chasing"},
         ]
 
         # ステートマシン構築
-        self.machine = Machine(
+        super().__init__(
             model=self, states=states, transitions=transitions, initial="chasing"
         )
 
-    def on_enter_chasing(self):
-        print(f"{self.name} is now chasing the ball.")
+    def update(self, dist_to_ball: float, shoot_angle: float):
+        if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
+            self.ball_near()
 
-    def on_enter_aiming(self):
-        print(f"{self.name} is now aiming at the ball.")
+        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
+            self.ball_far()
 
-    def on_enter_shooting(self):
-        print(f"{self.name} is shooting!")
+        elif self.state == "aiming" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+            self.shoot()
+
+        elif self.state == "shooting" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+            self.reaiming()
+
+        elif self.state == "shooting" and shoot_angle >= self.SHOOT_ANGLE_THRESHOLD:
+            self.done_shooting()
 
 
 class Shoot(TacticBase):
     """指定した位置にシュートするTactic."""
 
+    KICK_POWER_OFF = 0.0
+    KICK_POWER_ON = 10.0
+    CHASING_BALL_APPROACH_X = 0.5
+
     def __init__(self, target_x=6.0, target_y=0.0):
         super().__init__()
+
         self.target_pos = State2D()
         self.target_pos.x = target_x
         self.target_pos.y = target_y
         self.move_pos = State2D()
 
-        self.robot = ShootStateMachine("robot")
+        self.machine = ShootStateMachine("robot")
 
     def reset(self, robot_id: int) -> None:
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
-        self.robot.reset()
+        self.machine.reset()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         command = MotionCommand()
@@ -91,39 +103,25 @@ class Shoot(TacticBase):
         # シュートの角度を計算
         shoot_angle = tool.get_angle(ball_pos, self.target_pos)
 
-        if self.robot.state == "chasing" and dist_to_ball <= BALL_NEAR_THRESHOLD:
-            # ボールが近く、状態がchasingの場合、シュートの準備をする
-            self.robot.ball_near()
+        self.machine.update(dist_to_ball, shoot_angle)
+
+        if self.machine.state == "chasing":
+            command.kick_power = self.KICK_POWER_OFF
+            self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_X
+            self.move_pos.y = ball_pos.y
+            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
+
+        elif self.machine.state == "aiming":
+            # 蹴る方向に向けて移動
             self.move_pos.x = ball_pos.x - 0.1 * np.cos(shoot_angle)
             self.move_pos.y = ball_pos.y - 0.1 * np.sin(shoot_angle)
             self.move_pos.theta = shoot_angle
 
-        elif self.robot.state == "chasing" and dist_to_ball > BALL_NEAR_THRESHOLD:
-            # ボールが遠く、状態がchasingの場合、ボールを追いかける
-            self.move_pos.x = ball_pos.x - 0.5
-            self.move_pos.y = ball_pos.y
-            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
-
-        elif self.robot.state == "aiming" and dist_to_ball > BALL_NEAR_THRESHOLD:
-            # ボールが遠い場合、シュートの準備を解除
-            self.robot.ball_far()
-
-        elif self.robot.state == "aiming" and shoot_angle < SHOOT_ANGLE_THRESHOLD:
-            # シュートの角度が適切な場合、shooting状態に遷移
-            self.robot.shoot()
-
-        elif self.robot.state == "shooting" and dist_to_ball <= BALL_NEAR_THRESHOLD:
+        elif self.machine.state == "shooting":
             # シュートの角度が適切な場合、シュートを実行
             self.move_pos.theta = shoot_angle
-            command.kick_power = 10.0
+            command.kick_power = self.KICK_POWER_ON
 
-        elif self.robot.state == "shooting":
-            # シュートが完了した場合、aiming状態に戻る
-            self.robot.done_shooting()
-            command.kick_power = 0.0
-
-        command.desired_pose.x = self.move_pos.x
-        command.desired_pose.y = self.move_pos.y
-        command.desired_pose.theta = self.move_pos.theta
+        command.desired_pose = self.move_pos
 
         return command
