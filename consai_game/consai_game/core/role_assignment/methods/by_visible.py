@@ -20,16 +20,48 @@ from typing import List
 
 
 class ByVisible(RoleAssignmentBase):
-    """フィールドに現れた順にRoleを割り当てる."""
+    """
+    できるだけ割当を維持しつつ、フィールドに現れた順にRoleを割り当てる.
+
+    前回の割当を記憶し、ロボットが消えたRoleには、最後に登場したロボットを割り当てる.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.prev_id_list: List[int] = []
 
     def assign(
         self, play_roles: List[List[TacticBase]], world_model: WorldModel
     ) -> List[int]:
-        # ロールの数だけ、ロボットIDを取得する
-        id_list = world_model.robot_activity.ordered_our_visible_robots[
-            : len(play_roles)
+        role_num = len(play_roles)
+
+        if len(self.prev_id_list) == role_num:
+            # 前回の割当と今回のロール数が同じであれば、前回の割当をベースにする
+            id_list = self.prev_id_list
+        else:
+            # 数が異なれば初期化する
+            id_list = [RoleConst.INVALID_ROLE_ID] * role_num
+
+        # ロボットが消えた役割を初期化する
+        for i, robot_id in enumerate(id_list):
+            if robot_id not in world_model.robot_activity.ordered_our_visible_robots:
+                id_list[i] = RoleConst.INVALID_ROLE_ID
+
+        # 新しく現れたロボットを抽出する
+        new_robots = [
+            robot_id
+            for robot_id in world_model.robot_activity.ordered_our_visible_robots
+            if robot_id not in id_list
         ]
 
-        # ロボットの数がロールより少ない場合、INVALID_ROLE_IDで埋める
-        id_list += [RoleConst.INVALID_ROLE_ID] * (len(play_roles) - len(id_list))
+        # 新しく現れたロボットを、空いている役割に割り当てる
+        for new_robot_id in new_robots:
+            for i, robot_id in enumerate(id_list):
+                if robot_id == RoleConst.INVALID_ROLE_ID:
+                    id_list[i] = new_robot_id
+                    break
+
+        # 割当を記憶する
+        self.prev_id_list = id_list.copy()
+
         return id_list
