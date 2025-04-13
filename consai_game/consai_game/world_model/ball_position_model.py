@@ -36,6 +36,8 @@ class BallPositionModel:
         self._last_bottom_state = False  # 前回の下側判定状態
         self._last_our_defense_state = False  # 前回の自チームディフェンスエリア判定状態
         self._last_their_defense_state = False  # 前回の相手チームディフェンスエリア判定状態
+        self._last_our_side_state = False  # 前回の自チームサイド判定状態
+        self._last_their_side_state = False  # 前回の相手チームサイド判定状態
 
     def update_position(
         self, ball_model: BallModel, field_model: Field, field_points: FieldPoints
@@ -278,9 +280,37 @@ class BallPositionModel:
         return current_pos_state
 
     def is_in_our_side(self) -> bool:
-        """ボールが自チームのサイドにあるか判定する."""
-        return self._pos.x < 0
+        """ボールが自チームのサイドにあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x < 0
+        if current_pos_state != self._last_our_side_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 自チームサイドに入った
+                current_pos_state = self._pos.x < -self._hysteresis
+            else:
+                # 自チームサイドから出た
+                current_pos_state = self._pos.x < self._hysteresis
+        self._last_our_side_state = current_pos_state
+
+        # 相手チームサイドの判定と競合する場合は、相手チームサイドを優先
+        if self._last_their_side_state:
+            return False
+        return current_pos_state
 
     def is_in_their_side(self) -> bool:
-        """ボールが相手チームのサイドにあるか判定する."""
-        return self._pos.x > 0
+        """ボールが相手チームのサイドにあるか判定する.ヒステリシス付き."""
+        current_pos_state = self._pos.x > 0
+        if current_pos_state != self._last_their_side_state:
+            # 状態が変化する場合、ヒステリシスを考慮
+            if current_pos_state:
+                # 相手チームサイドに入った
+                current_pos_state = self._pos.x > self._hysteresis
+            else:
+                # 相手チームサイドから出た
+                current_pos_state = self._pos.x > -self._hysteresis
+        self._last_their_side_state = current_pos_state
+
+        # 自チームサイドの判定と競合する場合は、相手チームサイドを優先
+        if self._last_our_side_state:
+            return False
+        return current_pos_state
