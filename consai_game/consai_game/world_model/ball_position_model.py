@@ -30,7 +30,8 @@ class BallPositionModel:
         self._field_points = field_points
         self._outside_margin = 0.05  # フィールド外判定のマージン
 
-    def update_position(self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
+    def update_position(
+            self, ball_model: BallModel, field_model: Field, field_points: FieldPoints) -> None:
         """ボールの位置を更新する."""
         self._pos = ball_model.pos
         self._field = field_model
