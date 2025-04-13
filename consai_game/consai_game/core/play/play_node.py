@@ -18,7 +18,9 @@
 import argparse
 from consai_game.core.play.play import Play
 from consai_game.core.role_assignment.assignor import RoleAssignor
-from consai_game.core.role_assignment.factory import create_method as create_role_assignment_method
+from consai_game.core.role_assignment.factory import (
+    create_method as create_role_assignment_method,
+)
 from consai_game.core.role_assignment.factory import RoleAssignmentMethods
 from consai_game.core.tactic.role import Role
 from consai_game.utils.process_info import process_info
@@ -28,6 +30,7 @@ from pathlib import Path
 from rclpy.node import Node
 import threading
 from typing import Callable
+from typing import Optional
 
 
 UpdateRoleCallback = Callable[[list[Role]], None]
@@ -53,13 +56,21 @@ class PlayNode(Node):
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
-            "--playbook", default="", type=str,
-            help="Set playbook file path (e.g.: path/to/playbook.py)"
+            "--playbook",
+            default="",
+            type=str,
+            help="Set playbook file path (e.g.: path/to/playbook.py)",
         )
         parser.add_argument(
             "--assign",
             choices=[m.value for m in RoleAssignmentMethods],
             required=True,
+        )
+        parser.add_argument(
+            "--goalie",
+            default=0,
+            type=int,
+            help="Set goalie id",
         )
 
     def load_playbook(self, file_path: str) -> list[Play]:
@@ -85,10 +96,11 @@ class PlayNode(Node):
         with self.lock:
             self.update_role_callback = callback
 
-    def select_role_assignment_method(self, name: str):
+    def select_role_assignment_method(self, name: str, goalie_id: int):
         with self.lock:
             self.role_assignor = RoleAssignor(
-                create_role_assignment_method(name))
+                create_role_assignment_method(name), goalie_id
+            )
 
             if self.role_assignor is None:
                 text = "Role assignment method is not set"
@@ -101,6 +113,9 @@ class PlayNode(Node):
 
             if self.current_play is None:
                 self.current_play = self.select_play()
+                if self.current_play is None:
+                    return
+
                 self.update_role()
                 self.get_logger().info(f"Selected play: {self.current_play.name}")
 
@@ -108,15 +123,14 @@ class PlayNode(Node):
 
             self.evaluate_play()
 
-    def select_play(self) -> Play:
+    def select_play(self) -> Optional[Play]:
         applicable_plays = [
-            play
-            for play in self.playbook
-            if play.is_applicable(self.world_model)
+            play for play in self.playbook if play.is_applicable(self.world_model)
         ]
 
         if not applicable_plays:
-            raise ValueError("No applicable plays found")
+            self.get_logger().warn("No applicable plays found")
+            return None
 
         # TODO: 評価関数を実装して選択する
         return applicable_plays[0]
@@ -135,18 +149,21 @@ class PlayNode(Node):
         visible_robots_num = len(self.world_model.robot_activity.our_visible_robots)
         if self.our_robots_num != visible_robots_num:
             self.our_robots_num = visible_robots_num
-            self.get_logger().info(f"Robots num changed. Play aborted: {self.current_play.name}")
+            self.get_logger().info(
+                f"Robots num changed. Play aborted: {self.current_play.name}"
+            )
             self.current_play = None
 
     def update_role(self):
         # Role(tacticとrobot_id)を更新し、callback関数にセットする
         assigned_ids = self.role_assignor.assign(
-            self.current_play.roles, self.world_model)
+            self.current_play.roles, self.world_model
+        )
 
         roles = []
         for i in range(len(self.current_play.roles)):
-            roles.append(Role(
-                tactics=self.current_play.roles[i],
-                robot_id=assigned_ids[i]))
+            roles.append(
+                Role(tactics=self.current_play.roles[i], robot_id=assigned_ids[i])
+            )
 
         self.update_role_callback(roles)
