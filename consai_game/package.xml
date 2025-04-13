@@ -13,6 +13,7 @@
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_uncrustify</test_depend>
   <test_depend>ament_cpplint</test_depend>
+  <test_depend>ament_black</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
