@@ -66,6 +66,12 @@ class PlayNode(Node):
             choices=[m.value for m in RoleAssignmentMethods],
             required=True,
         )
+        parser.add_argument(
+            "--goalie",
+            default=0,
+            type=int,
+            help="Set goalie id",
+        )
 
     def load_playbook(self, file_path: str) -> list[Play]:
         file_path = Path(file_path).resolve()
@@ -90,9 +96,11 @@ class PlayNode(Node):
         with self.lock:
             self.update_role_callback = callback
 
-    def select_role_assignment_method(self, name: str):
+    def select_role_assignment_method(self, name: str, goalie_id: int):
         with self.lock:
-            self.role_assignor = RoleAssignor(create_role_assignment_method(name))
+            self.role_assignor = RoleAssignor(
+                create_role_assignment_method(name), goalie_id
+            )
 
             if self.role_assignor is None:
                 text = "Role assignment method is not set"

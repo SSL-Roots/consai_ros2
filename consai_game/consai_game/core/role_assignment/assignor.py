@@ -19,8 +19,13 @@ from typing import List
 
 
 class RoleAssignor:
-    def __init__(self, method: RoleAssignmentBase):
+    def __init__(self, method: RoleAssignmentBase, goalie_id: int):
         self.method = method
+        self.goalie_id = goalie_id
 
-    def assign(self, play_roles: List[List[TacticBase]], world_model: WorldModel) -> List[int]:
-        return self.method.assign(play_roles, world_model)
+    def assign(
+        self, play_roles: List[List[TacticBase]], world_model: WorldModel
+    ) -> List[int]:
+        return self.method.assign(
+            play_roles=play_roles, world_model=world_model, goalie_id=self.goalie_id
+        )

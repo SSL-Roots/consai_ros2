@@ -35,27 +35,31 @@ def main():
         time.sleep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     PlayNode.add_arguments(arg_parser)
 
-    arg_parser.add_argument('--yellow', type=lambda x: x.lower() == 'true', default=False)
+    arg_parser.add_argument(
+        "--yellow", type=lambda x: x.lower() == "true", default=False
+    )
 
     args, other_args = arg_parser.parse_known_args()
     rclpy.init(args=other_args)
 
     play_node = PlayNode(update_hz=10, book_name=args.playbook)
-    play_node.select_role_assignment_method(name=args.assign)
+    play_node.select_role_assignment_method(name=args.assign, goalie_id=args.goalie)
 
     team_is_yellow = args.yellow
     world_model_provider_node = WorldModelProviderNode(
-        update_hz=10, team_is_yellow=team_is_yellow)
+        update_hz=10, team_is_yellow=team_is_yellow
+    )
     # TODO: agent_numをplay_nodeから取得したい
     agent_scheduler_node = AgentSchedulerNode(
-        update_hz=10, team_is_yellow=team_is_yellow, agent_num=11)
+        update_hz=10, team_is_yellow=team_is_yellow, agent_num=11
+    )
     play_node.set_update_role_callback(agent_scheduler_node.set_roles)
 
-    logger = rclpy.logging.get_logger('consai_game')
+    logger = rclpy.logging.get_logger("consai_game")
 
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)

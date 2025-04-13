@@ -22,6 +22,11 @@ class RoleAssignmentBase(ABC):
     """役割割り当ての基底クラス."""
 
     @abstractmethod
-    def assign(self, play_roles: List[List[TacticBase]], world_model: WorldModel) -> List[int]:
+    def assign(
+        self,
+        play_roles: List[List[TacticBase]],
+        world_model: WorldModel,
+        goalie_id: int,
+    ) -> List[int]:
         """Playファイルのrolesをもとに、ロボットのIDリストを返す."""
         raise NotImplementedError()

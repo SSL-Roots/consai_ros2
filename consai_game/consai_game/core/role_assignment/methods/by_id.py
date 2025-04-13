@@ -22,10 +22,32 @@ from typing import List
 class ByIDMethod(RoleAssignmentBase):
     """ID昇順にRoleを割り当てる."""
 
-    def assign(self, play_roles: List[List[TacticBase]], world_model: WorldModel) -> List[int]:
-        # ロールの数だけ、ロボットIDを取得する
-        id_list = world_model.robot_activity.our_visible_robots[:len(play_roles)]
+    def assign(
+        self,
+        play_roles: List[List[TacticBase]],
+        world_model: WorldModel,
+        goalie_id: int,
+    ) -> List[int]:
 
-        # ロボットの数がロールより少ない場合、INVALID_ROLE_IDで埋める
-        id_list += [RoleConst.INVALID_ROLE_ID] * (len(play_roles) - len(id_list))
+        role_num = len(play_roles)
+
+        id_list = [RoleConst.INVALID_ROLE_ID] * role_num
+
+        # goalie_idが存在すれば先頭にセットする
+        if goalie_id in world_model.robot_activity.our_visible_robots:
+            id_list[0] = goalie_id
+
+        # goalie_id以外のロボットIDを抽出する
+        visible_robots = [
+            robot_id
+            for robot_id in world_model.robot_activity.our_visible_robots
+            if robot_id != goalie_id
+        ]
+
+        # id_listにロボットIDをセットする
+        for i in range(1, role_num):
+            if len(visible_robots) == 0:
+                break
+            id_list[i] = visible_robots.pop(0)
+
         return id_list
