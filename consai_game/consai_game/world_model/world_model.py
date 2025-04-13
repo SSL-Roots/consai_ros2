@@ -17,6 +17,7 @@
 
 from dataclasses import dataclass
 from consai_game.world_model.ball_model import BallModel
+from consai_game.world_model.ball_position_model import BallPositionModel
 from consai_game.world_model.field_model import Field, FieldPoints
 from consai_game.world_model.referee_model import RefereeModel
 from consai_game.world_model.robot_activity_model import RobotActivityModel
@@ -25,12 +26,12 @@ from consai_game.world_model.robots_model import RobotsModel
 
 @dataclass
 class WorldModel:
-    ball_is_on_field: bool = False
     referee: RefereeModel = RefereeModel()
     robots: RobotsModel = RobotsModel()
     ball: BallModel = BallModel()
     field: Field = Field()
     field_points: FieldPoints = FieldPoints.create_field_points(field)
+    ball_position: BallPositionModel = BallPositionModel(field, field_points)
     robot_activity: RobotActivityModel = RobotActivityModel()
 
     def set_our_team_is_yellow(self, our_team_is_yellow: bool):
