@@ -26,7 +26,6 @@ from consai_game.world_model.robots_model import RobotsModel
 
 @dataclass
 class WorldModel:
-    ball_is_on_field: bool = False
     referee: RefereeModel = RefereeModel()
     robots: RobotsModel = RobotsModel()
     ball: BallModel = BallModel()
