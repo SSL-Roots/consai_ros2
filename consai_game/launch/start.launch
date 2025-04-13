@@ -42,5 +42,7 @@
         output="screen"
         args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py
               --yellow $(var yellow)
-              --assign $(var assign)" />
+              --assign $(var assign)
+              --goalie $(var goalie)
+              " />
 </launch>
