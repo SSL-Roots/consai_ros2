@@ -55,10 +55,7 @@ class KickTargetModel:
         return self._present_clear_pos_list
 
     def update(
-        self,
-        ball_model: BallModel,
-        robots_model: RobotsModel,
-        robot_activity_model: RobotActivityModel,
+        self, ball_model: BallModel, robots_model: RobotsModel, robot_activity_model: RobotActivityModel
     ) -> None:
         """キックターゲットを更新する."""
         self._ball = ball_model
@@ -71,12 +68,7 @@ class KickTargetModel:
         self._present_clear_pos_list = self._search_clear_pos_list()
 
     def _search_forward_robots(
-        self,
-        pos: State2D,
-        search_offsset=0.0,
-        search_our_robots=True,
-        exclude_id=-1,
-        our_goalie_id=-1,
+        self, pos: State2D, search_offsset=0.0, search_our_robots=True, exclude_id=-1, our_goalie_id=-1
     ) -> list[int]:
         # 指定した座標より前にいるロボットIDのリストを返す関数
 
@@ -97,9 +89,7 @@ class KickTargetModel:
             return forward_robots_id
 
         if search_our_robots:
-            return search(
-                pos, self._our_robots, self._our_visible_robots, search_offsset
-            )
+            return search(pos, self._our_robots, self._our_visible_robots, search_offsset)
         else:
             return search(pos, self._their_robots, self._their_visible_robots)
 
@@ -126,17 +116,12 @@ class KickTargetModel:
         if self._last_shoot_pos is not None:
             still_valid = not obstacle_exists(self._last_shoot_pos, self._their_robots)
             if still_valid:
-                shoot_pos_list.sort(
-                    key=lambda p: tool.get_distance(p, self._last_shoot_pos)
-                )
+                shoot_pos_list.sort(key=lambda p: tool.get_distance(p, self._last_shoot_pos))
                 if (
                     shoot_pos_list
-                    and tool.get_distance(shoot_pos_list[0], self._last_shoot_pos)
-                    < self.hysteresis_distance
+                    and tool.get_distance(shoot_pos_list[0], self._last_shoot_pos) < self.hysteresis_distance
                 ):
-                    shoot_pos_list = [self._last_shoot_pos] + [
-                        p for p in shoot_pos_list if p != self._last_shoot_pos
-                    ]
+                    shoot_pos_list = [self._last_shoot_pos] + [p for p in shoot_pos_list if p != self._last_shoot_pos]
 
         self._last_shoot_pos = shoot_pos_list[0] if shoot_pos_list else None
         return shoot_pos_list
@@ -165,17 +150,12 @@ class KickTargetModel:
         if self._last_clear_pos is not None:
             still_valid = not obstacle_exists(self._last_clear_pos, self._their_robots)
             if still_valid:
-                clear_pos_list.sort(
-                    key=lambda p: tool.get_distance(p, self._last_clear_pos)
-                )
+                clear_pos_list.sort(key=lambda p: tool.get_distance(p, self._last_clear_pos))
                 if (
                     clear_pos_list
-                    and tool.get_distance(clear_pos_list[0], self._last_clear_pos)
-                    < self.hysteresis_distance
+                    and tool.get_distance(clear_pos_list[0], self._last_clear_pos) < self.hysteresis_distance
                 ):
-                    clear_pos_list = [self._last_clear_pos] + [
-                        p for p in clear_pos_list if p != self._last_clear_pos
-                    ]
+                    clear_pos_list = [self._last_clear_pos] + [p for p in clear_pos_list if p != self._last_clear_pos]
 
         self._last_clear_pos = clear_pos_list[0] if clear_pos_list else None
         return clear_pos_list
