@@ -16,12 +16,16 @@
 # limitations under the License.
 
 from consai_game.play.factory import simple_plays
+from consai_game.play.factory import running_plays
 
 plays = [
     simple_plays.halt(),
     simple_plays.stop(),
     simple_plays.force_start(),
-    simple_plays.running(),
+    # simple_plays.running(),
+    running_plays.outside_defense_area(),
+    running_plays.in_our_defense_area(),
+    running_plays.in_their_defense_area(),
     simple_plays.normal_start(),
     simple_plays.our_free_kick(),
     simple_plays.their_free_kick(),
