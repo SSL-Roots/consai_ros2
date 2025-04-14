@@ -64,7 +64,7 @@ def stop() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Position(-4.0, 0.0)],
+            [Position(-6.0, 0.0)],
             [Position(-3.0, 3.0)],
             [Position(-3.0, 2.0)],
             [Position(-3.0, 1.0)],
@@ -91,8 +91,8 @@ def force_start() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Shoot()],
             [Stop()],
+            [Shoot()],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -118,8 +118,8 @@ def running() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Shoot()],
             [Stop()],
+            [Shoot()],
             [Stop()],
             [Stop()],
             [Stop()],

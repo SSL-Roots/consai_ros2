@@ -26,4 +26,9 @@ class BallConditions:
         def condition(world_model: WorldModel) -> bool:
             velocity = state2d_norm(world_model.ball.vel)
             return velocity < threshold
+
         return PlayCondition(condition)
+
+    is_in_our_defense_area = PlayCondition(lambda world_model: world_model.ball_position.is_in_our_defense_area())
+
+    is_in_their_defense_area = PlayCondition(lambda world_model: world_model.ball_position.is_in_their_defense_area())
