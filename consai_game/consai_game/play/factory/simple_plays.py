@@ -26,8 +26,8 @@ from consai_game.tactic.kick.shoot import Shoot
 
 def halt() -> Play:
     return Play(
-        name='halt',
-        description='HALT信号をトリガーにした、デバッグ用の空のPlay',
+        name="halt",
+        description="HALT信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.halt,
         ],
@@ -46,15 +46,15 @@ def halt() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-            [Stop()]
-        ]
+            [Stop()],
+        ],
     )
 
 
 def stop() -> Play:
     return Play(
-        name='stop',
-        description='STOP信号をトリガーにした、デバッグ用の空のPlay',
+        name="stop",
+        description="STOP信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.stop,
             BallConditions.velocity_is_lower_than(0.1),  # 引数付きのconditionの例
@@ -64,7 +64,7 @@ def stop() -> Play:
         ],
         timeout_ms=0,
         roles=[
-            [Position(-4.0, 0.0)],
+            [Position(-6.0, 0.0)],
             [Position(-3.0, 3.0)],
             [Position(-3.0, 2.0)],
             [Position(-3.0, 1.0)],
@@ -75,14 +75,14 @@ def stop() -> Play:
             [Position(-2.0, 1.0)],
             [Position(-2.0, 0.0)],
             [Position(-2.0, -1.0)],
-        ]
+        ],
     )
 
 
 def force_start() -> Play:
     return Play(
-        name='force_start',
-        description='FORCE_START信号をトリガーにした、デバッグ用の空のPlay',
+        name="force_start",
+        description="FORCE_START信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.force_start,
         ],
@@ -91,6 +91,7 @@ def force_start() -> Play:
         ],
         timeout_ms=0,
         roles=[
+            [Stop()],
             [Shoot()],
             [Stop()],
             [Stop()],
@@ -101,20 +102,48 @@ def force_start() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
+        ],
+    )
+
+
+def running() -> Play:
+    return Play(
+        name="running",
+        description="RUNNING状態をトリガーにした、デバッグ用の空のPlay",
+        applicable=[
+            RefereeConditions.running,
+        ],
+        aborted=[
+            RefereeConditions.running.invert(),
+        ],
+        timeout_ms=0,
+        roles=[
             [Stop()],
-        ]
+            [Shoot()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
     )
 
 
 def normal_start() -> Play:
     return Play(
-        name='normal_start',
-        description='START信号をトリガーにした、デバッグ用の空のPlay',
+        name="normal_start",
+        description="START信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.normal_start,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.normal_start.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
@@ -129,19 +158,21 @@ def normal_start() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_free_kick() -> Play:
     return Play(
-        name='our_free_kick',
-        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_free_kick",
+        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_free_kick,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.our_free_kick.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
@@ -156,19 +187,21 @@ def our_free_kick() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_free_kick() -> Play:
     return Play(
-        name='their_free_kick',
-        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_free_kick",
+        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_free_kick,
+            RefereeConditions.running.invert(),
         ],
         aborted=[
             RefereeConditions.their_free_kick.invert(),
+            RefereeConditions.running,
         ],
         timeout_ms=0,
         roles=[
@@ -183,14 +216,14 @@ def their_free_kick() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_kick_off() -> Play:
     return Play(
-        name='our_kick_off',
-        description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_kick_off",
+        description="キックオフ信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_kick_off,
         ],
@@ -210,14 +243,14 @@ def our_kick_off() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_kick_off() -> Play:
     return Play(
-        name='their_kick_off',
-        description='キックオフ信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_kick_off",
+        description="キックオフ信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_kick_off,
         ],
@@ -237,14 +270,14 @@ def their_kick_off() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_penalty_kick() -> Play:
     return Play(
-        name='our_penalty_kick',
-        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_penalty_kick",
+        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_penalty_kick,
         ],
@@ -264,14 +297,14 @@ def our_penalty_kick() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_penalty_kick() -> Play:
     return Play(
-        name='their_penalty_kick',
-        description='フリーキック信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_penalty_kick",
+        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_penalty_kick,
         ],
@@ -291,14 +324,14 @@ def their_penalty_kick() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_goal() -> Play:
     return Play(
-        name='our_goal',
-        description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_goal",
+        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_goal,
         ],
@@ -318,14 +351,14 @@ def our_goal() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_goal() -> Play:
     return Play(
-        name='their_goal',
-        description='ゴール信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_goal",
+        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_goal,
         ],
@@ -345,14 +378,14 @@ def their_goal() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_timeout() -> Play:
     return Play(
-        name='our_timeout',
-        description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_timeout",
+        description="タイムアウト信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_timeout,
         ],
@@ -372,14 +405,14 @@ def our_timeout() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_timeout() -> Play:
     return Play(
-        name='their_timeout',
-        description='タイムアウト信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_timeout",
+        description="タイムアウト信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_timeout,
         ],
@@ -399,14 +432,14 @@ def their_timeout() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def our_ball_placement() -> Play:
     return Play(
-        name='our_ball_placement',
-        description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
+        name="our_ball_placement",
+        description="ボール配置信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.our_ball_placement,
         ],
@@ -426,14 +459,14 @@ def our_ball_placement() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )
 
 
 def their_ball_placement() -> Play:
     return Play(
-        name='their_ball_placement',
-        description='ボール配置信号をトリガーにした、デバッグ用の空のPlay',
+        name="their_ball_placement",
+        description="ボール配置信号をトリガーにした、デバッグ用の空のPlay",
         applicable=[
             RefereeConditions.their_ball_placement,
         ],
@@ -453,5 +486,5 @@ def their_ball_placement() -> Play:
             [Stop()],
             [Stop()],
             [Stop()],
-        ]
+        ],
     )

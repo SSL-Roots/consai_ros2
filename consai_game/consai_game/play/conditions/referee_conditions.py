@@ -31,6 +31,10 @@ def force_start_condition(world_model: WorldModel) -> bool:
     return world_model.referee.force_start
 
 
+def running_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.running
+
+
 def normal_start_condition(world_model: WorldModel) -> bool:
     return world_model.referee.normal_start
 
@@ -87,6 +91,7 @@ class RefereeConditions:
     halt = PlayCondition(halt_condition)
     stop = PlayCondition(stop_condition)
     force_start = PlayCondition(force_start_condition)
+    running = PlayCondition(running_condition)
     normal_start = PlayCondition(normal_start_condition)
     our_kick_off = PlayCondition(our_kick_off_condition)
     their_kick_off = PlayCondition(their_kick_off_condition)
