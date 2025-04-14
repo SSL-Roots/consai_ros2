@@ -26,6 +26,7 @@ jobs:
       matrix:
         env:
           - { ROS_DISTRO: humble, ROS_REPO: ros }
+          - { ROS_DISTRO: jazzy, ROS_REPO: ros }
     env:
       UPSTREAM_WORKSPACE: .ci.rosinstall
       # テストがworkspace内のパッケージに依存しているため、setup.bashを読み込む
