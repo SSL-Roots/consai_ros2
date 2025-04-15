@@ -34,14 +34,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup colcon workspace
-        run: |
-          mkdir -p ~/ros2_ws/src
-          cp -r . ~/ros2_ws/src/
-          cd ~/ros2_ws
-          source /opt/ros/humble/setup.bash
-          rosdep update
-          rosdep install --from-paths src --ignore-src -r -y
+      # - name: Setup colcon workspace
+      #   run: |
+      #     mkdir -p ~/ros2_ws/src
+      #     cp -r . ~/ros2_ws/src/
+      #     cd ~/ros2_ws
+      #     source /opt/ros/humble/setup.bash
+      #     rosdep update
+      #     rosdep install --from-paths src --ignore-src -r -y
 
       - name: Build with colcon
         run: |
