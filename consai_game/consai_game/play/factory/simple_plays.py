@@ -16,8 +16,7 @@
 # limitations under the License.
 
 
-from consai_game.core.play.play import Play
-from consai_game.play.conditions.ball_conditions import BallConditions
+from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
@@ -25,15 +24,14 @@ from consai_game.tactic.kick.shoot import Shoot
 
 
 def halt() -> Play:
+    applicable = [
+        RefereeConditions.halt,
+    ]
     return Play(
         name="halt",
         description="HALT信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.halt,
-        ],
-        aborted=[
-            RefereeConditions.halt.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -52,16 +50,14 @@ def halt() -> Play:
 
 
 def stop() -> Play:
+    applicable = [
+        RefereeConditions.stop,
+    ]
     return Play(
         name="stop",
         description="STOP信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.stop,
-            BallConditions.velocity_is_lower_than(0.1),  # 引数付きのconditionの例
-        ],
-        aborted=[
-            RefereeConditions.stop.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Position(-6.0, 0.0)],
@@ -80,15 +76,14 @@ def stop() -> Play:
 
 
 def force_start() -> Play:
+    applicable = [
+        RefereeConditions.force_start,
+    ]
     return Play(
         name="force_start",
         description="FORCE_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.force_start,
-        ],
-        aborted=[
-            RefereeConditions.force_start.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -107,15 +102,14 @@ def force_start() -> Play:
 
 
 def running() -> Play:
+    applicable = [
+        RefereeConditions.running,
+    ]
     return Play(
         name="running",
         description="RUNNING状態をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.running,
-        ],
-        aborted=[
-            RefereeConditions.running.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -134,17 +128,15 @@ def running() -> Play:
 
 
 def normal_start() -> Play:
+    applicable = [
+        RefereeConditions.normal_start,
+        RefereeConditions.running.invert(),
+    ]
     return Play(
         name="normal_start",
         description="START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.normal_start,
-            RefereeConditions.running.invert(),
-        ],
-        aborted=[
-            RefereeConditions.normal_start.invert(),
-            RefereeConditions.running,
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -163,17 +155,15 @@ def normal_start() -> Play:
 
 
 def our_free_kick() -> Play:
+    applicable = [
+        RefereeConditions.our_free_kick,
+        RefereeConditions.running.invert(),
+    ]
     return Play(
         name="our_free_kick",
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_free_kick,
-            RefereeConditions.running.invert(),
-        ],
-        aborted=[
-            RefereeConditions.our_free_kick.invert(),
-            RefereeConditions.running,
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -192,17 +182,15 @@ def our_free_kick() -> Play:
 
 
 def their_free_kick() -> Play:
+    applicable = [
+        RefereeConditions.their_free_kick,
+        RefereeConditions.running.invert(),
+    ]
     return Play(
         name="their_free_kick",
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_free_kick,
-            RefereeConditions.running.invert(),
-        ],
-        aborted=[
-            RefereeConditions.their_free_kick.invert(),
-            RefereeConditions.running,
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -221,15 +209,14 @@ def their_free_kick() -> Play:
 
 
 def our_kick_off() -> Play:
+    applicable = [
+        RefereeConditions.our_kick_off,
+    ]
     return Play(
         name="our_kick_off",
         description="キックオフ信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_kick_off,
-        ],
-        aborted=[
-            RefereeConditions.our_kick_off.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -248,15 +235,14 @@ def our_kick_off() -> Play:
 
 
 def their_kick_off() -> Play:
+    applicable = [
+        RefereeConditions.their_kick_off,
+    ]
     return Play(
         name="their_kick_off",
         description="キックオフ信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_kick_off,
-        ],
-        aborted=[
-            RefereeConditions.their_kick_off.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -275,15 +261,14 @@ def their_kick_off() -> Play:
 
 
 def our_penalty_kick() -> Play:
+    applicable = [
+        RefereeConditions.our_penalty_kick,
+    ]
     return Play(
         name="our_penalty_kick",
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_penalty_kick,
-        ],
-        aborted=[
-            RefereeConditions.our_penalty_kick.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -302,15 +287,14 @@ def our_penalty_kick() -> Play:
 
 
 def their_penalty_kick() -> Play:
+    applicable = [
+        RefereeConditions.their_penalty_kick,
+    ]
     return Play(
         name="their_penalty_kick",
         description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_penalty_kick,
-        ],
-        aborted=[
-            RefereeConditions.their_penalty_kick.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -329,15 +313,14 @@ def their_penalty_kick() -> Play:
 
 
 def our_goal() -> Play:
+    applicable = [
+        RefereeConditions.our_goal,
+    ]
     return Play(
         name="our_goal",
         description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_goal,
-        ],
-        aborted=[
-            RefereeConditions.our_goal.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -356,15 +339,14 @@ def our_goal() -> Play:
 
 
 def their_goal() -> Play:
+    applicable = [
+        RefereeConditions.their_goal,
+    ]
     return Play(
         name="their_goal",
         description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_goal,
-        ],
-        aborted=[
-            RefereeConditions.their_goal.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -383,15 +365,14 @@ def their_goal() -> Play:
 
 
 def our_timeout() -> Play:
+    applicable = [
+        RefereeConditions.our_timeout,
+    ]
     return Play(
         name="our_timeout",
         description="タイムアウト信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_timeout,
-        ],
-        aborted=[
-            RefereeConditions.our_timeout.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -410,15 +391,14 @@ def our_timeout() -> Play:
 
 
 def their_timeout() -> Play:
+    applicable = [
+        RefereeConditions.their_timeout,
+    ]
     return Play(
         name="their_timeout",
         description="タイムアウト信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_timeout,
-        ],
-        aborted=[
-            RefereeConditions.their_timeout.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -437,15 +417,14 @@ def their_timeout() -> Play:
 
 
 def our_ball_placement() -> Play:
+    applicable = [
+        RefereeConditions.our_ball_placement,
+    ]
     return Play(
         name="our_ball_placement",
         description="ボール配置信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.our_ball_placement,
-        ],
-        aborted=[
-            RefereeConditions.our_ball_placement.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
@@ -464,15 +443,14 @@ def our_ball_placement() -> Play:
 
 
 def their_ball_placement() -> Play:
+    applicable = [
+        RefereeConditions.their_ball_placement,
+    ]
     return Play(
         name="their_ball_placement",
         description="ボール配置信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=[
-            RefereeConditions.their_ball_placement,
-        ],
-        aborted=[
-            RefereeConditions.their_ball_placement.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],
