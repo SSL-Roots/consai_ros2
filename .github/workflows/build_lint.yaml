@@ -41,5 +41,5 @@ jobs:
 
       - name: Lint (ament_lint)
         run: |
-          cd /rott/ros2_ws
+          cd /root/ros2_ws
           colcon test-result --verbose
