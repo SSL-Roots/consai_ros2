@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from consai_game.core.play.play import Play
+from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.ball_conditions import BallConditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
@@ -22,19 +22,16 @@ from consai_game.tactic.kick.shoot import Shoot
 
 
 def outside_defense_area() -> Play:
+    applicable = [
+        RefereeConditions.running,
+        BallConditions.is_in_our_defense_area.invert(),
+        BallConditions.is_in_their_defense_area.invert(),
+    ]
     return Play(
         name="Running. Ball is outside defense area",
         description="ボールがディフェンスエリアの外にあるときのPlay",
-        applicable=[
-            RefereeConditions.running,
-            BallConditions.is_in_our_defense_area.invert(),
-            BallConditions.is_in_their_defense_area.invert(),
-        ],
-        aborted=[
-            RefereeConditions.running.invert(),
-            BallConditions.is_in_our_defense_area,
-            BallConditions.is_in_their_defense_area,
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Position(-6.0, 0.0)],
@@ -53,17 +50,15 @@ def outside_defense_area() -> Play:
 
 
 def in_our_defense_area() -> Play:
+    applicable = [
+        RefereeConditions.running,
+        BallConditions.is_in_our_defense_area,
+    ]
     return Play(
         name="Running. Ball is in our defense area",
         description="ボールが自チームのディフェンスエリアにあるときのPlay",
-        applicable=[
-            RefereeConditions.running,
-            BallConditions.is_in_our_defense_area,
-        ],
-        aborted=[
-            RefereeConditions.running.invert(),
-            BallConditions.is_in_our_defense_area.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Shoot()],
@@ -82,17 +77,15 @@ def in_our_defense_area() -> Play:
 
 
 def in_their_defense_area() -> Play:
+    applicable = [
+        RefereeConditions.running,
+        BallConditions.is_in_their_defense_area,
+    ]
     return Play(
         name="Running. Ball is in their defense area",
         description="ボールが相手チームのディフェンスエリアにあるときのPlay",
-        applicable=[
-            RefereeConditions.running,
-            BallConditions.is_in_their_defense_area,
-        ],
-        aborted=[
-            RefereeConditions.running.invert(),
-            BallConditions.is_in_their_defense_area.invert(),
-        ],
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
             [Stop()],

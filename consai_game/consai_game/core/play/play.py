@@ -38,3 +38,8 @@ class Play:
     def should_abort(self, world_model: WorldModel) -> bool:
         """Playが中断されるべきか判定."""
         return any(cond.is_met(world_model) for cond in self.aborted)
+
+
+def invert_conditions(conditions: List[PlayCondition]) -> List[PlayCondition]:
+    """条件を反転させる."""
+    return [cond.invert() for cond in conditions]
