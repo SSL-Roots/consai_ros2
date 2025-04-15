@@ -417,6 +417,16 @@ bool ObstacleAvoidance::avoid_defense_area(
   return true;
 }
 
+State ObstacleAvoidance::avoid_defense_area(
+  const TrackedRobot & my_robot, const State & goal_pose) const
+{
+  State new_pose = goal_pose;
+
+  avoid_defense_area(my_robot, new_pose, new_pose);
+
+  return new_pose;
+}
+
 bool ObstacleAvoidance::avoid_ball_around_impl(
   const TrackedRobot & my_robot,
   const State & final_goal_pose,
