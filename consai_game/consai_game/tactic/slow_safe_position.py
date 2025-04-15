@@ -18,7 +18,7 @@ from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 from consai_msgs.msg import MotionCommand
 
 
-class AvoidBall(TacticBase):
+class SlowSafePosition(TacticBase):
     """ボールを避けながら指定した位置に移動するTactic."""
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
