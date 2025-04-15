@@ -73,6 +73,8 @@ public:
   bool avoid_defense_area(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
+  State avoid_defense_area(
+    const TrackedRobot & my_robot, const State & goal_pose) const;
 
 private:
   bool avoid_ball_around_impl(

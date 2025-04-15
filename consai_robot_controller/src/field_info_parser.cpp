@@ -208,6 +208,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
       my_robot, new_pose, ball, navi_options.ball_avoid_radius);
   }
 
+  if (navi_options.avoid_defense_area) {
+    new_pose = tactic_obstacle_avoidance_->avoid_defense_area(my_robot, new_pose);
+  }
+
   return new_pose;
 }
 
