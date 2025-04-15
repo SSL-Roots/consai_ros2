@@ -37,11 +37,9 @@ jobs:
       - name: Build with colcon
         run: |
           cd /root/ros2_ws
-          source /opt/ros/humble/setup.bash
-          colcon build --event-handlers console_direct+
+          colcon build --symlink-install
 
       - name: Lint (ament_lint)
         run: |
           cd /rott/ros2_ws
-          source install/setup.bash
           colcon test-result --verbose
