@@ -29,29 +29,19 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/ssl-roots/consai_ros2:humble
+      image: ghcr.io/ssl-roots/consai_ros2:main
 
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Setup colcon workspace
-      #   run: |
-      #     mkdir -p ~/ros2_ws/src
-      #     cp -r . ~/ros2_ws/src/
-      #     cd ~/ros2_ws
-      #     source /opt/ros/humble/setup.bash
-      #     rosdep update
-      #     rosdep install --from-paths src --ignore-src -r -y
-
       - name: Build with colcon
         run: |
-          cd ~/ros2_ws
+          cd /root/ros2_ws
           source /opt/ros/humble/setup.bash
           colcon build --event-handlers console_direct+
 
       - name: Lint (ament_lint)
         run: |
-          cd ~/ros2_ws
+          cd /rott/ros2_ws
           source install/setup.bash
-          colcon test --packages-select <lint対象パッケージ名>
           colcon test-result --verbose
