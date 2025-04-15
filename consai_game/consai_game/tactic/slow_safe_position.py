@@ -21,6 +21,9 @@ from consai_msgs.msg import MotionCommand
 class SlowSafePosition(TacticBase):
     """ボールを避けながら指定した位置に移動するTactic."""
 
+    # 最大速度の制限値 [m/s]
+    MAX_VELOCITY = 1.0
+
     def __init__(self, x=0.0, y=0.0, theta=0.0):
         super().__init__()
         self.x = x
@@ -40,6 +43,10 @@ class SlowSafePosition(TacticBase):
         command.desired_pose.x = self.x
         command.desired_pose.y = self.y
         command.desired_pose.theta = self.theta
+
+        # 最大速度を制限
+        command.desired_velocity.x = self.MAX_VELOCITY
+        command.desired_velocity.y = self.MAX_VELOCITY
 
         # NaviOptionsを設定してボールを避ける
         command.navi_options.avoid_ball = True
