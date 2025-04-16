@@ -39,6 +39,7 @@ jobs:
       - name: Build with colcon
         run: |
           cd /root/ros2_ws
+          source /opt/ros/humble/setup.bash
           colcon build --symlink-install
 
       - name: Lint (ament_lint)
