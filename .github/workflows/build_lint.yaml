@@ -44,6 +44,7 @@ jobs:
       - name: Lint (ament_lint)
         run: |
           cd /root/ros2_ws
+          source /opt/ros/humble/setup.bash
           source install/setup.bash
           colcon test --event-handlers console_direct+ --ctest-args -V
           colcon test-result --verbose
