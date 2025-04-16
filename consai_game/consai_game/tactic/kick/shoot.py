@@ -45,9 +45,7 @@ class ShootStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(
-            model=self, states=states, transitions=transitions, initial="chasing"
-        )
+        super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
 
     def update(self, dist_to_ball: float, shoot_angle: float):
         if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
@@ -70,15 +68,12 @@ class Shoot(TacticBase):
     """指定した位置にシュートするTactic."""
 
     KICK_POWER_OFF = 0.0
-    KICK_POWER_ON = 10.0
+    KICK_POWER_ON = 5.0
     CHASING_BALL_APPROACH_X = 0.5
 
-    def __init__(self, target_x=6.0, target_y=0.0):
+    def __init__(self):
         super().__init__()
 
-        self.target_pos = State2D()
-        self.target_pos.x = target_x
-        self.target_pos.y = target_y
         self.move_pos = State2D()
 
         self.machine = ShootStateMachine("robot")
@@ -93,6 +88,20 @@ class Shoot(TacticBase):
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
 
+        # キックターゲットを取得
+        kick_target_model = world_model.kick_target
+        kick_target_model.update(self.robot_id, world_model.ball, world_model.robots, world_model.robot_activity)
+        print(kick_target_model.get_shoot_pos_list())
+        print(kick_target_model.get_clear_pos_list())
+        if len(kick_target_model.get_shoot_pos_list()) > 0:
+            target_pos = kick_target_model.get_shoot_pos_list()[0]
+        elif len(kick_target_model.get_receiver_id_list()) > 0:
+            target_pos = world_model.robots.our_robots.get(kick_target_model.get_receiver_id_list()[0]).pos
+        else:
+            target_pos = State2D()
+            target_pos.x = 6.0
+            target_pos.y = 0.0
+
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
@@ -101,7 +110,7 @@ class Shoot(TacticBase):
         dist_to_ball = tool.get_distance(ball_pos, robot_pos)
 
         # シュートの角度を計算
-        shoot_angle = tool.get_angle(ball_pos, self.target_pos)
+        shoot_angle = tool.get_angle(ball_pos, target_pos)
 
         self.machine.update(dist_to_ball, shoot_angle)
 
@@ -121,6 +130,7 @@ class Shoot(TacticBase):
             # シュートの角度が適切な場合、シュートを実行
             self.move_pos.theta = shoot_angle
             command.kick_power = self.KICK_POWER_ON
+            print(target_pos)
 
         command.desired_pose = self.move_pos
 
