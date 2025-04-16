@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/ssl-roots/consai_ros2:main
+      image: ghcr.io/ssl-roots/consai_ros2:humble-light
 
     steps:
       - uses: actions/checkout@v4
