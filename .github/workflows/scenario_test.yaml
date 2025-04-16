@@ -7,6 +7,10 @@ on:
       - '.github/workflows/build_docker_image.yaml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write  # For uploading PR comments
   # For uploading docker image
