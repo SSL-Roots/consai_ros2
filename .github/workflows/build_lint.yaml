@@ -33,6 +33,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: src/consai_ros2
 
       - name: Build with colcon
         run: |
@@ -42,4 +44,5 @@ jobs:
       - name: Lint (ament_lint)
         run: |
           cd /root/ros2_ws
+          colcon test
           colcon test-result --verbose
