@@ -44,5 +44,5 @@ jobs:
       - name: Lint (ament_lint)
         run: |
           cd /root/ros2_ws
-          colcon test
+          colcon test --event-handlers console_direct+ --ctest-args -V
           colcon test-result --verbose
