@@ -47,3 +47,4 @@ jobs:
           source install/setup.bash
           colcon test --event-handlers console_direct+ --ctest-args -V
           colcon test-result --verbose
+        shell: bash
