@@ -18,7 +18,7 @@
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
-from consai_game.tactic.position import Position
+from consai_game.tactic.slow_safe_position import SlowSafePosition
 from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
 
@@ -60,17 +60,17 @@ def stop() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Position(-6.0, 0.0)],
-            [Position(-3.0, 3.0)],
-            [Position(-3.0, 2.0)],
-            [Position(-3.0, 1.0)],
-            [Position(-3.0, 0.0)],
-            [Position(-3.0, -1.0)],
-            [Position(-3.0, -2.0)],
-            [Position(-3.0, -3.0)],
-            [Position(-2.0, 1.0)],
-            [Position(-2.0, 0.0)],
-            [Position(-2.0, -1.0)],
+            [SlowSafePosition(-6.0, 0.0)],
+            [SlowSafePosition(-3.0, 3.0)],
+            [SlowSafePosition(-3.0, 2.0)],
+            [SlowSafePosition(-3.0, 1.0)],
+            [SlowSafePosition(-3.0, 0.0)],
+            [SlowSafePosition(-3.0, -1.0)],
+            [SlowSafePosition(-3.0, -2.0)],
+            [SlowSafePosition(-3.0, -3.0)],
+            [SlowSafePosition(-2.0, 1.0)],
+            [SlowSafePosition(-2.0, 0.0)],
+            [SlowSafePosition(-2.0, -1.0)],
         ],
     )
 
