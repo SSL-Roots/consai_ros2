@@ -3,7 +3,7 @@ name: build_and_lint
 on:
   push:
     branches:
-      - main 
+      - main
       - '**-devel'
     paths-ignore:
       - '**.md'
@@ -25,25 +25,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  industrial_ci:
-    strategy:
-      matrix:
-        env:
-          - { ROS_DISTRO: humble, ROS_REPO: ros }
-    env:
-      UPSTREAM_WORKSPACE: .ci.rosinstall
-      # テストがworkspace内のパッケージに依存しているため、setup.bashを読み込む
-      BEFORE_RUN_TARGET_TEST_EMBED: "ici_with_unset_variables source /root/target_ws/install/setup.bash"
-      CCACHE_DIR: "${{ github.workspace }}/.ccache"
+  build_and_lint:
     runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ssl-roots/consai_ros2:humble-light
+
     steps:
       - uses: actions/checkout@v4
-      - name: Cache ROS dependencies
-        uses: actions/cache@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-ros-${{ matrix.env.ROS_DISTRO }}-${{ hashFiles('**/package.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-ros-${{ matrix.env.ROS_DISTRO }}-
-      - uses: "ros-industrial/industrial_ci@master"
-        env: ${{ matrix.env }}
+          path: src/consai_ros2
+
+      - name: Build with colcon
+        run: |
+          cd /root/ros2_ws
+          source /opt/ros/humble/setup.bash
+          colcon build --symlink-install
+        shell: bash
+
+      - name: Lint (ament_lint)
+        run: |
+          cd /root/ros2_ws
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --event-handlers console_direct+ --ctest-args -V
+          colcon test-result --verbose
+        shell: bash
