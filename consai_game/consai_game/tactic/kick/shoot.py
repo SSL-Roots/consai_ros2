@@ -90,13 +90,8 @@ class Shoot(TacticBase):
 
         # キックターゲットを取得
         kick_target_model = world_model.kick_target
-        kick_target_model.update(self.robot_id, world_model.ball, world_model.robots, world_model.robot_activity)
-        print(kick_target_model.get_shoot_pos_list())
-        print(kick_target_model.get_clear_pos_list())
-        if len(kick_target_model.get_shoot_pos_list()) > 0:
-            target_pos = kick_target_model.get_shoot_pos_list()[0]
-        elif len(kick_target_model.get_receiver_id_list()) > 0:
-            target_pos = world_model.robots.our_robots.get(kick_target_model.get_receiver_id_list()[0]).pos
+        if kick_target_model.best_shoot_target.success_rate > 50:
+            target_pos = kick_target_model.best_shoot_target.pos
         else:
             target_pos = State2D()
             target_pos.x = 6.0
