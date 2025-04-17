@@ -28,16 +28,12 @@ class KickTargetModel:
     def __init__(self, field: Field, field_points: FieldPoints):
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
-        # 自チームのゴーリーIDどっかでわからんかったっけ？
         self._goalie_id = 0
 
         self._field = field
         self._field_points = field_points
 
-        self.half_length = self._field.length / 2
-        self.half_width = self._field.width / 2
-        self.goal_width = self._field.goal_width
-        self.target_goal = self.goal_width / 4
+        self.target_point = self._field.half_goal_width / 2
 
         self._set_goal_pos_list()
         self._set_clear_pos_list()
@@ -51,15 +47,15 @@ class KickTargetModel:
 
     def _set_goal_pos_list(self) -> None:
         self._goal_pos_list = [
-            Point(self.half_length, 0.0),
-            Point(self.half_length, self.target_goal),
-            Point(self.half_length, -self.target_goal),
+            Point(self._field.half_length, 0.0),
+            Point(self._field.half_length, self.target_point),
+            Point(self._field.half_length, -self.target_point),
         ]
 
     def _set_clear_pos_list(self) -> None:
         self._clear_pos_list = [
-            Point(self.half_length, self.half_width),
-            Point(self.half_length, -self.half_width),
+            Point(self._field.half_length, self._field.half_width),
+            Point(self._field.half_length, -self._field.half_width),
         ]
 
     def get_shoot_pos_list(self) -> list[State2D]:
@@ -254,14 +250,20 @@ class KickTargetModel:
                     break
 
         # ヒステリシス処理
-        if self._last_pass_id_list is not None:
-            still_valid = len(receiver_id_list) > 0
-            if still_valid:
-                receiver_id_list.sort(key=lambda id: self._last_pass_id_list.index(id))
-                if receiver_id_list and receiver_id_list[0] == self._last_pass_id_list[0]:
-                    receiver_id_list = [self._last_pass_id_list[0]] + [
-                        id for id in receiver_id_list if id != self._last_pass_id_list[0]
-                    ]
+        if self._last_pass_id_list is not None and receiver_id_list:
+            # 前回と重なっているIDは優先、そうでないIDは末尾へ
+            receiver_id_list.sort(
+                key=lambda id: self._last_pass_id_list.index(id)
+                if id in self._last_pass_id_list
+                else len(self._last_pass_id_list)
+            )
+
+            # 前回の最上位IDが今回も使えるなら、先頭に固定
+            if self._last_pass_id_list and receiver_id_list:
+                top_last_id = self._last_pass_id_list[0]
+                if top_last_id in receiver_id_list:
+                    receiver_id_list = [top_last_id] + [id for id in receiver_id_list if id != top_last_id]
+
         # 受け手ロボットのIDを更新
         self._last_pass_id_list = receiver_id_list.copy()
 
