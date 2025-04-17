@@ -108,18 +108,18 @@ jobs:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
-    - name: Wait for game.py to start
+    - name: Wait for main.py to start
       timeout-minutes: 5
       run: |
         CHECK_INTERVAL=5
 
-        until docker top consai 2>/dev/null | grep -q game.py
+        until docker top consai 2>/dev/null | grep -q main.py
         do
-          echo "Waiting for game.py to start..."
+          echo "Waiting for main.py to start..."
           sleep $CHECK_INTERVAL
         done
 
-        echo "game.py started!"
+        echo "main.py started!"
 
     - name: Download logger
       run: |
