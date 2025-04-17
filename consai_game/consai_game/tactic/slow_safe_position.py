@@ -50,7 +50,7 @@ class SlowSafePosition(TacticBase):
 
         # NaviOptionsを設定してボールを避ける
         command.navi_options.avoid_ball = True
-        command.navi_options.ball_avoid_radius = 0.5  # 500mm
+        command.navi_options.ball_avoid_radius = 0.6
         command.navi_options.avoid_our_robots = True
         command.navi_options.avoid_their_robots = True
         command.navi_options.avoid_pushing = True
