@@ -14,10 +14,8 @@
 
 
 from consai_examples.observer.pos_vel import PosVel
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-from robocup_ssl_msgs.msg import TrackedBall
+
+from robocup_ssl_msgs.msg import RobotId, TrackedBall, TrackedFrame, TrackedRobot
 
 
 class DetectionWrapper:

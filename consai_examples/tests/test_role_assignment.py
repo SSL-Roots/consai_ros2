@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples.role_assignment import RoleAssignment
-from consai_examples.role_assignment import RoleName
+
+from consai_examples.role_assignment import RoleAssignment, RoleName
+
 import pytest
+
 import rclpy
+
 from tracked_frame_publisher import TrackedFramePublisher
 
 

@@ -17,8 +17,8 @@
 
 from consai_examples.decisions.decision_base import DecisionBase
 from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
+from consai_examples.operation import TargetXY
 
 
 class SubstituteDecision(DecisionBase):

@@ -13,16 +13,14 @@
 # limitations under the License.
 
 from ament_index_python.packages import get_package_share_directory
+
 import launch
-from launch.actions import DeclareLaunchArgument
-from launch.actions import IncludeLaunchDescription
-from launch.actions.shutdown_action import Shutdown
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Shutdown
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
-from launch.substitutions import PythonExpression
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration, PythonExpression
+
+from launch_ros.actions import ComposableNodeContainer, Node
 from launch_ros.descriptions import ComposableNode
 
 

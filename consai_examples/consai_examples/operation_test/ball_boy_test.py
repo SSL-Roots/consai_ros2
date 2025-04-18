@@ -16,13 +16,13 @@
 # limitations under the License.
 
 import argparse
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_examples.robot_operator import RobotOperator
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import Operation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
+
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
-import threading
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):

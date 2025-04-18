@@ -17,17 +17,16 @@
 
 import math
 
+import consai_examples.referee_visualize_parser as ref_vis_parser
+
+from consai_msgs.msg import ParsedReferee, State2D
+
+from consai_visualizer_msgs.msg import Objects
+
 from rclpy import qos
 from rclpy.node import Node
-from consai_msgs.msg import ParsedReferee
-from consai_msgs.msg import State2D
-from consai_visualizer_msgs.msg import Objects
-import consai_examples.referee_visualize_parser as ref_vis_parser
-from robocup_ssl_msgs.msg import Referee
-from robocup_ssl_msgs.msg import TrackedBall
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import Vector3
+
+from robocup_ssl_msgs.msg import Referee, RobotId, TrackedBall, TrackedFrame, Vector3
 
 
 # refereeトピックを解読するノード

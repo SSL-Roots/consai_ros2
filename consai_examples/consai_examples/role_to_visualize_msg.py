@@ -16,8 +16,8 @@
 
 
 from consai_examples.observer.pos_vel import PosVel
-from consai_visualizer_msgs.msg import Objects
-from consai_visualizer_msgs.msg import ShapeText
+
+from consai_visualizer_msgs.msg import Objects, ShapeText
 
 
 def to_visualize_msg(role_dict: dict[int, str], our_robots: dict[int, PosVel]) -> Objects:

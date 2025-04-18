@@ -16,16 +16,14 @@
 # limitations under the License.
 
 import argparse
-import threading
+import math
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import OneShotOperation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
 
 import rclpy
-import math
-from rclpy.executors import MultiThreadedExecutor
-from consai_examples.robot_operator import RobotOperator
-
-from consai_examples.operation import OneShotOperation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def test_move_to(target_x: float, target_y: float):

@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from consai_examples.robot_operator import RobotOperator
+
 from consai_msgs.msg import NamedTargets
+
 import pytest
+
 import rclpy
 from rclpy.node import Node
 
-# NamedTargetsトピックをsubscribeするためのクラス
-
 
 class NamedTargetsSubscriber(Node):
+    """NamedTargetsトピックをsubscribeするためのクラス."""
     def __init__(self):
         super().__init__('subscriber')
 

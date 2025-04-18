@@ -13,16 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import ConstraintLine
-from consai_msgs.msg import ConstraintObject
-from consai_msgs.msg import ConstraintPose
-from consai_msgs.msg import ConstraintTheta
-from consai_msgs.msg import ConstraintXY
-from consai_msgs.msg import State2D
-from consai_msgs.msg import RobotControlMsg
-from consai_tools.hasher import robot_control_hasher
 from copy import deepcopy
 from typing import NamedTuple
+
+from consai_msgs.msg import ConstraintLine, ConstraintObject, ConstraintPose, ConstraintTheta, ConstraintXY, RobotControlMsg, State2D
+
+from consai_tools.hasher import robot_control_hasher
 
 
 class TargetXY(NamedTuple):

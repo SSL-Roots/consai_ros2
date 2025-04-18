@@ -16,14 +16,15 @@
 # limitations under the License.
 
 import copy
+import math
 from enum import Enum
 
 from consai_examples.observer.pos_vel import PosVel
 from consai_examples.role_to_visualize_msg import to_visualize_msg
-from consai_tools.geometry import geometry_tools as tool
-from consai_visualizer_msgs.msg import Objects
 
-import math
+from consai_tools.geometry import geometry_tools as tool
+
+from consai_visualizer_msgs.msg import Objects
 
 from rclpy import qos
 from rclpy.node import Node

@@ -15,13 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+
 from consai_examples.decisions.decision_base import DecisionBase
 from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
+from consai_examples.operation import TargetXY
+
 from consai_msgs.msg import State2D
+
 from consai_tools.geometry import geometry_tools
-import math
 
 
 class GoaleDecision(DecisionBase):

@@ -16,6 +16,9 @@
 # limitations under the License.
 
 import argparse
+import threading
+import time
+
 from consai_examples.decisions.attacker import AttackerDecision
 from consai_examples.decisions.center_back import CenterBackDecision, CenterBackID
 from consai_examples.decisions.goalie import GoaleDecision
@@ -28,10 +31,9 @@ from consai_examples.field_observer import FieldObserver
 from consai_examples.referee_parser import RefereeParser
 from consai_examples.robot_operator import RobotOperator
 from consai_examples.role_assignment import RoleAssignment, RoleName
+
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
-import threading
-import time
 
 
 def num_of_active_center_back_roles(active_roles):

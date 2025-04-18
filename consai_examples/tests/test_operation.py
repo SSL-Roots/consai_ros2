@@ -13,15 +13,18 @@
 # limitations under the License.
 
 
-from consai_examples.operation import Operation
-from consai_examples.operation import OneShotOperation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_msgs.msg import ConstraintObject
-from consai_msgs.msg import ConstraintTheta
+from consai_examples.operation import OneShotOperation, Operation, TargetTheta, TargetXY
+
+from consai_msgs.msg import ConstraintObject, ConstraintTheta
 
 
 def test_get_hash():
+    """
+    Operationオブジェクトのget_hashメソッドが正しく動作するかをテストする関数.
+
+    同じOperationオブジェクトであればハッシュ値が一致することを確認する.
+    異なるOperationオブジェクトであればハッシュ値が異なることを確認する.
+    """
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     hash1 = operation.get_hash()
     hash2 = operation.get_hash()

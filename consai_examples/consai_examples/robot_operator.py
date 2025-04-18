@@ -16,9 +16,11 @@
 # limitations under the License.
 
 from consai_examples.operation import Operation
+
 from consai_msgs.msg import NamedTargets
 from consai_msgs.msg import RobotControlMsg
 from consai_msgs.msg import State2D
+
 from rclpy.node import Node
 
 

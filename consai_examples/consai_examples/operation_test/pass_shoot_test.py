@@ -16,15 +16,13 @@
 # limitations under the License.
 
 import argparse
-import threading
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import Operation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
 
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
-from consai_examples.robot_operator import RobotOperator
-
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def pass_shoot(robot_id0: int, x0: float, y0: float, robot_id1: int, x1: float, y1: float):
