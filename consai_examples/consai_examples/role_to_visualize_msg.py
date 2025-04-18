@@ -21,6 +21,16 @@ from consai_visualizer_msgs.msg import Objects, ShapeText
 
 
 def to_visualize_msg(role_dict: dict[int, str], our_robots: dict[int, PosVel]) -> Objects:
+    """
+    ロボットの役割情報を可視化メッセージ（Objects型）に変換する関数.
+
+    Parameters:
+        role_dict (dict[int, str]): ロボットIDをキーとし, そのロボットの役割（例: 'ATTACKER'）を値とする辞書.
+        our_robots (dict[int, PosVel]): ロボットIDをキーとし, そのロボットの位置・速度情報を持つPosVelオブジェクトを値とする辞書.
+
+    Returns:
+        Objects: 可視化用のテキスト情報を含むObjectsメッセージ. 各ロボットの役割をテキストで表示する.
+    """
     vis_objects = Objects()
 
     vis_objects.layer = 'game'

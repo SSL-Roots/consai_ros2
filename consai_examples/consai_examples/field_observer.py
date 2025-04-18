@@ -45,8 +45,18 @@ from std_msgs.msg import String
 
 
 class FieldObserver(Node):
+    """
+    フィールドの状態を監視するクラス.
+    フィールドのサイズやロボットの位置, ボールの動きなどを監視し, 必要な情報を更新・公開する.
+    """
 
     def __init__(self, goalie_id, our_team_is_yellow=False):
+        """
+        初期化処理を行う関数.
+        
+        :param goalie_id: ゴールキーパーのID
+        :param our_team_is_yellow: 自チームが黄色かどうか
+        """
         super().__init__('field_observer')
 
         self._logger = self.get_logger()
@@ -91,6 +101,11 @@ class FieldObserver(Node):
         self._num_of_zone_roles = 0
 
     def _param_rule_callback(self, msg):
+        """
+        フィールドサイズやロボット・ボールの直径に関するパラメータを更新するコールバック関数.
+        
+        :param msg: パラメータを含むメッセージ
+        """
         param_dict = json.loads(msg.data)
         self._field_normalizer.set_field_size(
             param_dict['field']['length'],
@@ -123,6 +138,11 @@ class FieldObserver(Node):
         self._logger.info('Field size is updated')
 
     def _param_strategy_callback(self, msg):
+        """
+        Div Aフィールドのパラメータを更新するコールバック関数.
+        
+        :param msg: Div Aフィールドに関するパラメータを含むメッセージ
+        """
         param_dict = json.loads(msg.data)
         self._field_normalizer.set_div_a_size(
             param_dict['div_a_field']['length'],
@@ -134,72 +154,144 @@ class FieldObserver(Node):
         self._logger.info('Div A size is updated')
 
     def detection(self) -> DetectionWrapper:
+        """
+        Ballの検出ラッパーを返す関数.
+        """
         return self._detection_wrapper
 
     def ball_position(self) -> BallPositionObserver:
+        """
+        ボールの位置を観測するクラスを返す関数.
+        """
         return self._ball_position_state_observer
 
     def ball_placement(self) -> BallPlacementObserver:
+        """
+        ボールの配置を観測するクラスを返す関数.
+        """
         return self._ball_placement_observer
 
     def zone(self) -> ZoneBallObserver:
+        """
+        ゾーンボール観測クラスを返す関数.
+        """
         return self._zone_ball_observer
 
     def zone_target(self) -> ZoneTargetObserver:
+        """
+        ゾーンターゲット観測クラスを返す関数.
+        """
         return self._zone_target_observer
 
     def side_back_target(self) -> SideBackTargetObserver:
+        """
+        サイドバックターゲット観測クラスを返す関数.
+        """
         return self._side_back_target_observer
 
     def zone_man_mark_target(self) -> ZoneManMarkTargetObserver:
+        """
+        ゾーンマンマークターゲット観測クラスを返す関数.
+        """
         return self._zone_man_mark_target_observer
 
     def ball_motion(self) -> BallMotionObserver:
+        """
+        ボールの動きを観測するクラスを返す関数.
+        """
         return self._ball_motion_observer
 
     def pass_shoot(self) -> PassShootObserver:
+        """
+        パス・シュート観測クラスを返す関数.
+        """
         return self._pass_shoot_observer
 
     def distance(self) -> DistanceObserver:
+        """
+        距離観測クラスを返す関数.
+        """
         return self._distance_observer
 
     def man_mark(self) -> ManMarkObserver:
+        """
+        マンマーク観測クラスを返す関数.
+        """
         return self._man_mark_observer
 
     def destination_pose(self, robot_id: int) -> tuple[bool, State2D]:
+        """
+        指定されたロボットの目的地の姿勢を返す関数.
+        
+        :param robot_id: ロボットID
+        """
         for goal_pose in self._destinations.poses:
             if goal_pose.robot_id == robot_id:
                 return True, goal_pose.pose
         return False, GoalPose().pose
 
     def set_num_of_zone_roles(self, num_of_zone_roles: int) -> None:
+        """
+        ゾーン役割の数を設定する関数.
+        
+        :param num_of_zone_roles: ゾーン役割の数
+        """
         self._num_of_zone_roles = num_of_zone_roles
 
     def field_pos(self) -> FieldPositions:
+        """
+        フィールド位置情報を返す関数.
+        """
         return self._field_positions
 
     def field_half_length(self) -> float:
+        """
+        フィールドの半分の長さを返す関数.
+        """
         return self._field_normalizer.half_length()
 
     def field_half_width(self) -> float:
+        """
+        フィールドの半分の幅を返す関数.
+        """
         return self._field_normalizer.half_width()
 
     def field_margin_to_wall(self) -> float:
+        """
+        フィールドの壁までのマージンを返す関数.
+        """
         return 0.3
 
     def on_div_a_x(self, x: float) -> float:
-        # X座標を正規化する
+        """
+        X座標を正規化する関数.
+        
+        :param x: 正規化するX座標
+        """
         return self._field_normalizer.on_div_a_x(x)
 
     def on_div_a_y(self, y: float) -> float:
-        # Y座標を正規化する
+        """
+        Y座標を正規化する関数.
+        
+        :param y: 正規化するY座標
+        """
         return self._field_normalizer.on_div_a_y(y)
 
     def on_div_a_robot_diameter(self, size: float) -> float:
-        # ロボットの直径を正規化する
+        """
+        ロボットの直径を正規化する関数.
+        
+        :param size: ロボットの直径
+        """
         return self._field_normalizer.on_div_a_robot_diameter(size)
 
     def _detection_tracked_callback(self, msg):
+        """
+        トラッキング情報を更新するコールバック関数.
+        
+        :param msg: トラッキングデータを含むメッセージ
+        """
         self._detection_wrapper.update(msg)
 
         self._ball_position_state_observer.update(
