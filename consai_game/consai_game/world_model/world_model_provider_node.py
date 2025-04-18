@@ -91,7 +91,6 @@ class WorldModelProviderNode(Node):
             self.world_model.kick_target.update(
                 self.world_model.ball,
                 self.world_model.robots,
-                self.world_model.robot_activity,
             )
 
     def callback_referee(self, msg: Referee) -> None:
