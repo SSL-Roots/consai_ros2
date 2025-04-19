@@ -88,6 +88,11 @@ class WorldModelProviderNode(Node):
             self.world_model.ball_position.update_position(
                 self.world_model.ball, self.world_model.field, self.world_model.field_points
             )
+            self.world_model.ball_activity.update(
+                ball=self.world_model.ball,
+                robots=self.world_model.robots,
+                robot_activity=self.world_model.robot_activity,
+            )
 
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""

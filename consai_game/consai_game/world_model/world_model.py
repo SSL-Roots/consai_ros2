@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_position_model import BallPositionModel
 from consai_game.world_model.field_model import Field, FieldPoints
@@ -33,6 +34,7 @@ class WorldModel:
     field_points: FieldPoints = FieldPoints.create_field_points(field)
     ball_position: BallPositionModel = BallPositionModel(field, field_points)
     robot_activity: RobotActivityModel = RobotActivityModel()
+    ball_activity: BallActivityModel = BallActivityModel()
 
     # TODO: 何かしらのmodelに格納したい
     our_team_is_yellow: bool = False
