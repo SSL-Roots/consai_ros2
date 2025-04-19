@@ -114,7 +114,7 @@ def our_free_kick() -> Play:
         timeout_ms=0,
         roles=[
             [Stop()],
-            [Stop()],
+            [Shoot()],
             [Stop()],
             [Stop()],
             [Stop()],
