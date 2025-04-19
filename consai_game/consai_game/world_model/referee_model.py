@@ -30,8 +30,12 @@ class RefereeModel:
     their_free_kick: bool = False
     our_kick_off: bool = False
     their_kick_off: bool = False
+    our_kick_off_start: bool = False
+    their_kick_off_start: bool = False
     our_penalty_kick: bool = False
     their_penalty_kick: bool = False
+    our_penalty_kick_start: bool = False
+    their_penalty_kick_start: bool = False
     our_goal: bool = False
     their_goal: bool = False
     our_timeout: bool = False
@@ -80,5 +84,25 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
     if not data.halt and not data.stop:
         if msg.current_action_time_remaining:
             data.running = msg.current_action_time_remaining[0] < 0
+
+    # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
+    if prev_data.our_kick_off:
+        data.our_kick_off_start = data.normal_start
+    if prev_data.their_kick_off:
+        data.their_kick_off_start = data.normal_start
+    if prev_data.our_penalty_kick:
+        data.our_penalty_kick_start = data.normal_start
+    if prev_data.their_penalty_kick:
+        data.their_penalty_kick_start = data.normal_start
+
+    # normal_startの継続処理
+    if prev_data.our_kick_off_start:
+        data.our_kick_off_start = data.normal_start
+    if prev_data.their_kick_off_start:
+        data.their_kick_off_start = data.normal_start
+    if prev_data.our_penalty_kick_start:
+        data.our_penalty_kick_start = data.normal_start
+    if prev_data.their_penalty_kick_start:
+        data.their_penalty_kick_start = data.normal_start
 
     return data
