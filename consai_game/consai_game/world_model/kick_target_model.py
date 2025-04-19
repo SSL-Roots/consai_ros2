@@ -20,6 +20,7 @@ from consai_game.world_model.ball_model import BallModel
 from consai_tools.geometry import geometry_tools as tool
 from consai_msgs.msg import State2D
 from consai_game.utils.geometry import Point
+import numpy as np
 
 
 @dataclass
@@ -38,7 +39,8 @@ class KickTargetModel:
         self._field = field
         self._field_points = field_points
 
-        self.target_point = self._field.half_goal_width / 2
+        self.half_half_goal_width = self._field.half_goal_width / 2
+        self.quater_half_goal_width = self._field.half_goal_width / 4
 
         self._best_target_index = 0
 
@@ -46,8 +48,12 @@ class KickTargetModel:
         self._field_points = field_points
         self._goal_pos_list = [
             KickTarget(pos=Point(self._field.half_length, 0.0)),
-            KickTarget(pos=Point(self._field.half_length, self.target_point)),
-            KickTarget(pos=Point(self._field.half_length, -self.target_point)),
+            KickTarget(pos=Point(self._field.half_length, self.quater_half_goal_width)),
+            KickTarget(pos=Point(self._field.half_length, -self.quater_half_goal_width)),
+            KickTarget(pos=Point(self._field.half_length, self.half_half_goal_width)),
+            KickTarget(pos=Point(self._field.half_length, -self.half_half_goal_width)),
+            KickTarget(pos=Point(self._field.half_length, self.half_half_goal_width + self.quater_half_goal_width)),
+            KickTarget(pos=Point(self._field.half_length, -(self.half_half_goal_width + self.quater_half_goal_width))),
         ]
 
     def update(
@@ -64,7 +70,7 @@ class KickTargetModel:
 
     def _update_scores(self, search_ours) -> list[KickTarget]:
         score = 0
-        TOLERANCE = self.robot_radius * 2  # ロボット直径
+        TOLERANCE = self.robot_radius  # ロボット半径
 
         def obstacle_exists(target: State2D, robots: dict[int, Robot]) -> bool:
             for robot in robots.values():
@@ -80,7 +86,7 @@ class KickTargetModel:
             else:
                 # ボールからの角度（目標方向がゴール方向と合っているか）
                 angle = abs(tool.get_angle(self._ball.pos, target.pos))
-                score += max(0, 60 - angle * 2)  # 小さい角度（正面）ほど高得点
+                score += max(0, 60 - np.rad2deg(angle) * 2)  # 小さい角度（正面）ほど高得点
 
                 # 距離（近いほうが成功率が高そう）
                 distance = tool.get_distance(self._ball.pos, target.pos)

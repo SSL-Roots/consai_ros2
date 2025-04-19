@@ -26,7 +26,7 @@ class ShootStateMachine(Machine):
     """シュート状態遷移マシン."""
 
     BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-    SHOOT_ANGLE_THRESHOLD = 10  # シュート角度の閾値[degree]
+    SHOOT_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
 
     def __init__(self, name):
         self.name = name
@@ -47,20 +47,20 @@ class ShootStateMachine(Machine):
         # ステートマシン構築
         super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
 
-    def update(self, dist_to_ball: float, shoot_angle: float):
+    def update(self, dist_to_ball: float, shoot_diff_angle: float):
         if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
             self.ball_far()
 
-        elif self.state == "aiming" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "aiming" and shoot_diff_angle < self.SHOOT_ANGLE_THRESHOLD:
             self.shoot()
 
-        elif self.state == "shooting" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "shooting" and shoot_diff_angle < self.SHOOT_ANGLE_THRESHOLD:
             self.reaiming()
 
-        elif self.state == "shooting" and shoot_angle >= self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "shooting" and shoot_diff_angle >= self.SHOOT_ANGLE_THRESHOLD:
             self.done_shooting()
 
 
@@ -106,8 +106,9 @@ class Shoot(TacticBase):
 
         # シュートの角度を計算
         shoot_angle = tool.get_angle(ball_pos, target_pos)
+        shoot_diff_angle = abs(robot_pos.theta - shoot_angle)
 
-        self.machine.update(dist_to_ball, shoot_angle)
+        self.machine.update(dist_to_ball, np.rad2deg(shoot_diff_angle))
 
         if self.machine.state == "chasing":
             command.kick_power = self.KICK_POWER_OFF
