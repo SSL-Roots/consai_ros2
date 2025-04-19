@@ -101,59 +101,6 @@ def force_start() -> Play:
     )
 
 
-def running() -> Play:
-    applicable = [
-        RefereeConditions.running,
-    ]
-    return Play(
-        name="running",
-        description="RUNNING状態をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Shoot()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-        ],
-    )
-
-
-def normal_start() -> Play:
-    applicable = [
-        RefereeConditions.normal_start,
-        RefereeConditions.running.invert(),
-    ]
-    return Play(
-        name="normal_start",
-        description="START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-        ],
-    )
-
-
 def our_free_kick() -> Play:
     applicable = [
         RefereeConditions.our_free_kick,
