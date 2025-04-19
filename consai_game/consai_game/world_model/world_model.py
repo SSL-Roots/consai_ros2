@@ -39,6 +39,9 @@ class WorldModel:
     # TODO: 何かしらのmodelに格納したい
     our_team_is_yellow: bool = False
 
+    # TODO: 何かしらのmodelに格納したい
+    our_team_is_yellow: bool = False
+
     def set_our_team_is_yellow(self, our_team_is_yellow: bool):
         self.our_team_is_yellow = our_team_is_yellow
         # self.referee.our_team_is_yellow = our_team_is_yellow
