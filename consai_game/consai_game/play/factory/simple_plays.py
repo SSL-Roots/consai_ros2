@@ -260,13 +260,67 @@ def their_kick_off() -> Play:
     )
 
 
+def our_kick_off_start() -> Play:
+    applicable = [
+        RefereeConditions.our_kick_off_start,
+        RefereeConditions.running.invert(),
+    ]
+    return Play(
+        name="our_kick_off_start",
+        description="キックオフ スタート信号をトリガーにした、デバッグ用の空のPlay",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Shoot()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
+    )
+
+
+def their_kick_off_start() -> Play:
+    applicable = [
+        RefereeConditions.their_kick_off_start,
+        RefereeConditions.running.invert(),
+    ]
+    return Play(
+        name="their_kick_off_start",
+        description="キックオフ スタート信号をトリガーにした、デバッグ用の空のPlay",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
+    )
+
+
 def our_penalty_kick() -> Play:
     applicable = [
         RefereeConditions.our_penalty_kick,
     ]
     return Play(
         name="our_penalty_kick",
-        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
+        description="ペナルティキック信号をトリガーにした、デバッグ用の空のPlay",
         applicable=applicable,
         aborted=invert_conditions(applicable),
         timeout_ms=0,
@@ -292,7 +346,59 @@ def their_penalty_kick() -> Play:
     ]
     return Play(
         name="their_penalty_kick",
-        description="フリーキック信号をトリガーにした、デバッグ用の空のPlay",
+        description="ペナルティキック信号をトリガーにした、デバッグ用の空のPlay",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
+    )
+
+
+def our_penalty_kick_start() -> Play:
+    applicable = [
+        RefereeConditions.our_penalty_kick_start,
+    ]
+    return Play(
+        name="our_penalty_kick_start",
+        description="ペナルティキック スタート信号をトリガーにした、デバッグ用の空のPlay",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [Stop()],
+            [Shoot()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+            [Stop()],
+        ],
+    )
+
+
+def their_penalty_kick_start() -> Play:
+    applicable = [
+        RefereeConditions.their_penalty_kick_start,
+    ]
+    return Play(
+        name="their_penalty_kick_start",
+        description="ペナルティキック スタート信号をトリガーにした、デバッグ用の空のPlay",
         applicable=applicable,
         aborted=invert_conditions(applicable),
         timeout_ms=0,

@@ -43,8 +43,16 @@ def our_kick_off_condition(world_model: WorldModel) -> bool:
     return world_model.referee.our_kick_off
 
 
+def our_kick_off_start_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_kick_off_start
+
+
 def their_kick_off_condition(world_model: WorldModel) -> bool:
     return world_model.referee.their_kick_off
+
+
+def their_kick_off_start_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_kick_off_start
 
 
 def our_free_kick_condition(world_model: WorldModel) -> bool:
@@ -59,8 +67,16 @@ def our_penalty_kick_condition(world_model: WorldModel) -> bool:
     return world_model.referee.our_penalty_kick
 
 
+def our_penalty_kick_start_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.our_penalty_kick_start
+
+
 def their_penalty_kick_condition(world_model: WorldModel) -> bool:
     return world_model.referee.their_penalty_kick
+
+
+def their_penalty_kick_start_condition(world_model: WorldModel) -> bool:
+    return world_model.referee.their_penalty_kick_start
 
 
 def our_goal_condition(world_model: WorldModel) -> bool:
@@ -95,10 +111,14 @@ class RefereeConditions:
     normal_start = PlayCondition(normal_start_condition)
     our_kick_off = PlayCondition(our_kick_off_condition)
     their_kick_off = PlayCondition(their_kick_off_condition)
+    our_kick_off_start = PlayCondition(our_kick_off_start_condition)
+    their_kick_off_start = PlayCondition(their_kick_off_start_condition)
     our_free_kick = PlayCondition(our_free_kick_condition)
     their_free_kick = PlayCondition(their_free_kick_condition)
     our_penalty_kick = PlayCondition(our_penalty_kick_condition)
     their_penalty_kick = PlayCondition(their_penalty_kick_condition)
+    our_penalty_kick_start = PlayCondition(our_penalty_kick_start_condition)
+    their_penalty_kick_start = PlayCondition(their_penalty_kick_start_condition)
     our_goal = PlayCondition(our_goal_condition)
     their_goal = PlayCondition(their_goal_condition)
     our_timeout = PlayCondition(our_timeout_condition)

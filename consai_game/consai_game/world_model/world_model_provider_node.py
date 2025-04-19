@@ -26,6 +26,7 @@ import json
 import threading
 
 from consai_game.utils.process_info import process_info
+from consai_game.world_model.referee_model import parse_referee_msg
 from consai_game.world_model.world_model import WorldModel
 
 from rclpy.node import Node
@@ -91,7 +92,12 @@ class WorldModelProviderNode(Node):
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""
         with self.lock:
-            self.world_model.referee.parse_msg(msg)
+            self.world_model.referee = parse_referee_msg(
+                msg=msg,
+                prev_data=self.world_model.referee,
+                our_team_is_yellow=self.world_model.our_team_is_yellow,
+            )
+            # self.world_model.referee.parse_msg(msg)
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
         """メッセージ TrackedFrame を受信してロボットとボールの状態を更新する."""
