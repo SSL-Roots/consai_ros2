@@ -125,7 +125,6 @@ class Shoot(TacticBase):
             # シュートの角度が適切な場合、シュートを実行
             self.move_pos.theta = shoot_angle
             command.kick_power = self.KICK_POWER_ON
-            print(target_pos)
 
         command.desired_pose = self.move_pos
 
