@@ -16,15 +16,15 @@
 # limitations under the License.
 
 import argparse
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_examples.referee_parser import RefereeParser
-from consai_examples.robot_operator import RobotOperator
-import rclpy
-from rclpy.executors import MultiThreadedExecutor
 import threading
 import time
+
+from consai_examples.operation import Operation, TargetTheta, TargetXY
+from consai_examples.referee_parser import RefereeParser
+from consai_examples.robot_operator import RobotOperator
+
+import rclpy
+from rclpy.executors import MultiThreadedExecutor
 
 
 def print_command():

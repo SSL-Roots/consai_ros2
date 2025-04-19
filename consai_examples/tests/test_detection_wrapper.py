@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from consai_examples.observer.detection_wrapper import DetectionWrapper
+
 import pytest
 
 from tracked_frame_wrapper import TrackedFrameWrapper

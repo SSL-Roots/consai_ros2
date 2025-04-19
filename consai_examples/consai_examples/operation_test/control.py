@@ -16,18 +16,17 @@
 # limitations under the License.
 
 import argparse
-from consai_examples.field_observer import FieldObserver
-from consai_examples.operation import OneShotOperation
-# from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_examples.referee_parser import RefereeParser
-from consai_examples.robot_operator import RobotOperator
 import math
-import rclpy
-from rclpy.executors import MultiThreadedExecutor
 import threading
 import time
+
+from consai_examples.field_observer import FieldObserver
+from consai_examples.operation import OneShotOperation, TargetTheta, TargetXY
+from consai_examples.referee_parser import RefereeParser
+from consai_examples.robot_operator import RobotOperator
+
+import rclpy
+from rclpy.executors import MultiThreadedExecutor
 
 
 def move_to(args: argparse.Namespace) -> None:
@@ -58,8 +57,8 @@ def motion_check_for_all_robots(args: argparse.Namespace) -> None:
             x, y, theta, offset_x=0.0, offset_y=0.0, sleep_time=0.0,
             robot_ids=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
         for i in robot_ids:
-            pos_x = x + offset_x*i
-            pos_y = y + offset_y*i
+            pos_x = x + offset_x * i
+            pos_y = y + offset_y * i
             operation = OneShotOperation().move_to_pose(
                 TargetXY.value(pos_x, pos_y), TargetTheta.value(theta)
             )

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import State2D
 from consai_examples.observer.pos_vel import PosVel
+
+from consai_msgs.msg import State2D
+
 from consai_tools.geometry import geometry_tools
 
 

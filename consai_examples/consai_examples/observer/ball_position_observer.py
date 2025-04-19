@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import State2D
-from consai_examples.observer.field_normalizer import FieldNormalizer
 import math
+
+from consai_examples.observer.field_normalizer import FieldNormalizer
+
+from consai_msgs.msg import State2D
 
 
 class BallPositionObserver:

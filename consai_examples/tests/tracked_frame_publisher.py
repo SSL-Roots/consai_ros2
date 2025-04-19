@@ -13,11 +13,9 @@
 # limitations under the License.
 
 from rclpy.node import Node
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedBall
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-from robocup_ssl_msgs.msg import Vector2
+
+from robocup_ssl_msgs.msg import RobotId, TrackedBall, TrackedFrame, TrackedRobot, Vector2
+
 
 # TrackedFrameトピックをpublishするためのクラス
 

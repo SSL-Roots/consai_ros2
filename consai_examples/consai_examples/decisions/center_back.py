@@ -15,12 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 
 from consai_examples.decisions.decision_base import DecisionBase
 from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
-from enum import Enum
+from consai_examples.operation import TargetXY
+
 from consai_tools.geometry import geometry_tools as tool
 
 
