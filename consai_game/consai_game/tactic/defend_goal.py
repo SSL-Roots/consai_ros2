@@ -51,7 +51,7 @@ class DefendGoal(TacticBase):
         # ボールが自チームエリアにあるか判定結果を取得
         is_in_our_side = world_model.ball_position.is_in_our_side()
         # ボールが自チームディフェンスエリアにあるか判定結果を取得
-        # is_in_our_defense_area = world_model.ball_position.is_in_our_defense_area()
+        is_in_our_defense_area = world_model.ball_position.is_in_our_defense_area()
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
@@ -69,6 +69,11 @@ class DefendGoal(TacticBase):
             # ゴール前のボール進行方向上の位置を計算
             x = -world_model.field.half_length + 0.1
             y = slope * x + intercept
+        elif is_in_our_defense_area:
+            x = -world_model.field.half_length + 0.1
+            # y座標をボールと同じ位置にする
+            y = ball_pos.y
+            self.state = TacticState.FINISHED
         else:
             # ボールがゴールへ向かって来ない場合
 
