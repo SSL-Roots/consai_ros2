@@ -182,8 +182,11 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
     command = motion_command;
 
     if (command.mode == MotionCommand::MODE_NAVI) {
+      // desired_poseまでNavigation経由で移動する場合の処理
+
       destinations_map_[robot_id].pose = command.desired_pose;  // デバッグ用
 
+      // 衝突回避
       command.desired_pose = parser_->modify_goal_pose_to_avoid_obstacles(
         my_robot, command.desired_pose, command.navi_options);
 
@@ -199,6 +202,26 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         limit_vel_xy);
 
       goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
+
+    } else if (command.mode == MotionCommand::MODE_DIRECT_POSE) {
+      // desired_poseまでNavigation経由で移動する場合の処理
+
+      destinations_map_[robot_id].pose = command.desired_pose;  // デバッグ用
+
+      if (command.desired_velocity.x > 0) {
+        limit_vel_xy = command.desired_velocity.x;
+      }
+
+      // 目標位置まで移動
+      controller_unit_[robot_id].move_to_desired_pose(
+        Pose2D(command.desired_pose),
+        my_robot,
+        command.kick_power,
+        command.dribble_power,
+        limit_vel_xy);
+
+      goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
+
     } else if (command.mode == MotionCommand::MODE_DIRECT_VELOCITY) {
       controller_unit_[robot_id].publish_velocity_command(
         command.desired_velocity,
