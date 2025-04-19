@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from consai_game.core.role_assignment.methods.by_cost import ByCost
 from consai_game.core.role_assignment.methods.by_id import ByIDMethod
 from consai_game.core.role_assignment.methods.by_visible import ByVisible
 from enum import Enum
@@ -22,6 +23,7 @@ class RoleAssignmentMethods(Enum):
 
     BY_ID = "by_id"
     BY_VISIBLE = "by_visible"
+    BY_COST = "by_cost"
 
 
 def create_method(name: str):
@@ -30,5 +32,7 @@ def create_method(name: str):
         return ByIDMethod()
     elif name == RoleAssignmentMethods.BY_VISIBLE.value:
         return ByVisible()
+    elif name == RoleAssignmentMethods.BY_COST.value:
+        return ByCost()
 
     raise ValueError(f"Unknown role assignment method: {name}")

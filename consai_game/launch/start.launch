@@ -33,7 +33,7 @@
 
   <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
   <arg name="assign" default="by_visible"
-    description='Select a role_assignment method from {by_id, by_visible}'/>
+    description='Select a role_assignment method from {by_id, by_visible, by_cost}'/>
 
   <set_env name="PYTHONUNBUFFERED" value="1" />
 
