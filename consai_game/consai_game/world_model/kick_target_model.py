@@ -40,16 +40,14 @@ class KickTargetModel:
 
         self.target_point = self._field.half_goal_width / 2
 
-        self._set_goal_pos_list()
+        self._best_target_index = 0
 
-        self._last_best_shoot_pos = State2D()
-        self._last_best_shoot_rate = 0
-
-    def _set_goal_pos_list(self) -> None:
+    def update_goal_pos_list(self, field_points: FieldPoints) -> None:
+        self._field_points = field_points
         self._goal_pos_list = [
-            Point(self._field.half_length, 0.0),
-            Point(self._field.half_length, self.target_point),
-            Point(self._field.half_length, -self.target_point),
+            KickTarget(pos=Point(self._field.half_length, 0.0)),
+            KickTarget(pos=Point(self._field.half_length, self.target_point)),
+            KickTarget(pos=Point(self._field.half_length, -self.target_point)),
         ]
 
     def update(
@@ -64,24 +62,9 @@ class KickTargetModel:
 
         self.best_shoot_target = self._search_shoot_pos()
 
-    def _evaluate_shoot_target(self, target: State2D) -> int:
+    def _update_scores(self, search_ours) -> list[KickTarget]:
         score = 0
-
-        # ボールからの角度（目標方向がゴール方向と合っているか）
-        angle = abs(tool.get_angle(self._ball.pos, target))
-        score += max(0, 60 - angle * 2)  # 小さい角度（正面）ほど高得点
-
-        # 距離（近いほうが成功率が高そう）
-        distance = tool.get_distance(self._ball.pos, target)
-        score += max(0, 40 - distance * 20)  # 距離2m以内ならOK
-
-        return int(score)
-
-    def _search_shoot_pos(self, search_ours=False) -> KickTarget:
-        # ボールからの直線上にロボットがいないシュート位置リストを返す
         TOLERANCE = self.robot_radius * 2  # ロボット直径
-
-        shoot_point_list = []
 
         def obstacle_exists(target: State2D, robots: dict[int, Robot]) -> bool:
             for robot in robots.values():
@@ -90,33 +73,45 @@ class KickTargetModel:
             return False
 
         for target in self._goal_pos_list:
-            if obstacle_exists(target, self._our_robots) and search_ours:
-                continue
-            if obstacle_exists(target, self._their_robots):
-                continue
-            shoot_point_list.append(target)
+            if obstacle_exists(target.pos, self._our_robots) and search_ours:
+                target.success_rate = 0
+            elif obstacle_exists(target.pos, self._their_robots):
+                target.success_rate = 0
+            else:
+                # ボールからの角度（目標方向がゴール方向と合っているか）
+                angle = abs(tool.get_angle(self._ball.pos, target.pos))
+                score += max(0, 60 - angle * 2)  # 小さい角度（正面）ほど高得点
 
-        shoot_target = State2D()
-        success_rate = 0
-        best_shoot_target = State2D()
-        best_success_rate = 0
+                # 距離（近いほうが成功率が高そう）
+                distance = tool.get_distance(self._ball.pos, target.pos)
+                score += max(0, 40 - distance * 20)  # 距離2m以内ならOK
+                target.success_rate = score
 
-        if shoot_point_list:
-            for shoot_point in shoot_point_list:
-                shoot_target.x = shoot_point.x
-                shoot_target.y = shoot_point.y
-                success_rate = self._evaluate_shoot_target(shoot_target)
-                if success_rate > best_success_rate:
-                    best_shoot_target = shoot_target
-                    best_success_rate = success_rate
+        return self._goal_pos_list
 
-            # ヒステリシス処理
-            if best_shoot_target != self._last_best_shoot_pos:
-                for shoot_point in shoot_point_list:
-                    if best_shoot_target == shoot_point:
-                        best_shoot_target = shoot_point
+    def _high_score_target_index(self, kick_target_list: KickTarget) -> int:
+        # 最もスコアの高いターゲットのインデックスを返す
+        high_score = 0
+        high_score_index = 0
+        for target in kick_target_list:
+            if target.success_rate > high_score:
+                high_score_index = kick_target_list.index(target)
+        return high_score_index
 
-            self._last_best_shoot_pos = best_shoot_target
-            self._last_best_shoot_rate = best_success_rate
+    def _search_shoot_pos(self, search_ours=True) -> KickTarget:
+        # ボールからの直線上にロボットがいないシュート位置リストを返す
+        self.kick_target_list = self._update_scores(search_ours)
 
-        return KickTarget(pos=best_shoot_target, success_rate=best_success_rate)
+        high_score_target_index = self._high_score_target_index(self.kick_target_list)
+
+        if high_score_target_index == self._best_target_index:
+            return self.kick_target_list[high_score_target_index]
+
+        # ヒステリシス処理
+        if (
+            self.kick_target_list[high_score_target_index].success_rate
+            > self.kick_target_list[self._best_target_index].success_rate + 20
+        ):
+            self._best_target_index = high_score_target_index
+
+        return self.kick_target_list[self._best_target_index]
