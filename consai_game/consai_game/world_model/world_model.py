@@ -24,6 +24,7 @@ from consai_game.world_model.referee_model import RefereeModel
 from consai_game.world_model.robot_activity_model import RobotActivityModel
 from consai_game.world_model.robots_model import RobotsModel
 from consai_game.world_model.kick_target_model import KickTargetModel
+from consai_game.world_model.game_config_model import GameConfigModel
 
 
 @dataclass
@@ -37,11 +38,4 @@ class WorldModel:
     robot_activity: RobotActivityModel = RobotActivityModel()
     ball_activity: BallActivityModel = BallActivityModel()
     kick_target: KickTargetModel = KickTargetModel()
-
-    # TODO: 何かしらのmodelに格納したい
-    our_team_is_yellow: bool = False
-
-    def set_our_team_is_yellow(self, our_team_is_yellow: bool):
-        self.our_team_is_yellow = our_team_is_yellow
-        # self.referee.our_team_is_yellow = our_team_is_yellow
-        self.robots.our_team_is_yellow = our_team_is_yellow
+    game_config: GameConfigModel = GameConfigModel()
