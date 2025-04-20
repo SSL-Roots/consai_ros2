@@ -35,6 +35,11 @@ class DefendGoal(TacticBase):
         """Initialize the DefendGoal tactic."""
         super().__init__()
 
+        # ディフェンス位置(x座標)を調整する変数
+        self.margin_defend_x = 0.1
+        # ボールが動いているか判定する閾値
+        self.ball_move_threshold = 0.1
+
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
         self.robot_id = robot_id
@@ -45,8 +50,10 @@ class DefendGoal(TacticBase):
         command = MotionCommand()
         command.robot_id = self.robot_id
 
-        # 障害物回避をしない
-        command.mode = MotionCommand.MODE_DIRECT_POSE
+        # ボールを回避をしない
+        command.navi_options.avoid_ball = False
+        # ディフェンスエリアを回避をしない
+        command.navi_options.avoid_defense_area = False
 
         # ボールが自チームエリアにあるか判定結果を取得
         is_in_our_side = world_model.ball_position.is_in_our_side()
@@ -60,25 +67,29 @@ class DefendGoal(TacticBase):
         # ボールの未来の予測位置を取得
         ball_next_pos = world_model.ball.next_pos
 
-        if is_in_our_side and ball_vel.x < -0.1:
+        if is_in_our_side and ball_vel.x < -self.ball_move_threshold:
             # ボールが自チームエリアにあり, ゴールへ向かってくる場合
 
             # ボールの進行方向の直線に関する傾きと切片を計算
             slope, intercept, flag = tool.get_line_parameter(ball_pos, ball_next_pos)
 
             # ゴール前のボール進行方向上の位置を計算
-            x = -world_model.field.half_length + 0.1
+            x = -world_model.field.half_length + self.margin_defend_x
             y = slope * x + intercept
         elif is_in_our_defense_area:
-            x = -world_model.field.half_length + 0.1
+            # ボールが自ディフェンスエリアにある場合
+
             # y座標をボールと同じ位置にする
+            x = -world_model.field.half_length + self.margin_defend_x
             y = ball_pos.y
+
+            # Stateの終了
             self.state = TacticState.FINISHED
         else:
             # ボールがゴールへ向かって来ない場合
 
-            x = -world_model.field.half_length + 0.1
             # y座標をボールと同じ位置にする
+            x = -world_model.field.half_length + self.margin_defend_x
             y = ball_pos.y
 
         if world_model.field.half_goal_width < abs(y):
