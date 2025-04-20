@@ -33,17 +33,16 @@ class RobotOperator(Node):
 
     def __init__(self, target_is_yellow=False):
         """ノードを初期化し, 各種パブリッシャや内部状態を設定する関数."""
-        super().__init__('operator')
+        super().__init__("operator")
 
         ROBOT_NUM = 16
         self._action_clients = []
         self._pub_robot_control = []
-        team_color = 'blue'
+        team_color = "blue"
         if target_is_yellow:
-            team_color = 'yellow'
+            team_color = "yellow"
         for i in range(ROBOT_NUM):
-            self._pub_robot_control.append(
-                self.create_publisher(RobotControlMsg, team_color + str(i) + '/control', 1))
+            self._pub_robot_control.append(self.create_publisher(RobotControlMsg, team_color + str(i) + "/control", 1))
 
         self._robot_is_free = [True] * ROBOT_NUM
         self._target_is_yellow = target_is_yellow
@@ -53,12 +52,12 @@ class RobotOperator(Node):
         # 名前付きターゲット格納用の辞書
         # データを扱いやすくするため、NamedTargets型ではなく辞書型を使用する
         self._named_targets = {}
-        self._pub_named_targets = self.create_publisher(NamedTargets, 'named_targets', 1)
+        self._pub_named_targets = self.create_publisher(NamedTargets, "named_targets", 1)
 
         if self._target_is_yellow:
-            self.get_logger().info('yellowロボットを動かします')
+            self.get_logger().info("yellowロボットを動かします")
         else:
-            self.get_logger().info('blueロボットを動かします')
+            self.get_logger().info("blueロボットを動かします")
 
     def enable_stop_game_velocity(self, robot_id):
         """指定したロボットに停止ゲーム速度制限を有効にする関数."""
@@ -123,8 +122,7 @@ class RobotOperator(Node):
         hash_goal = operation.get_hash()
         if self._prev_operation_hash[robot_id] == hash_goal:
             return
-        self.get_logger().debug(
-            'New operation for Robot {}'.format(robot_id))
+        self.get_logger().debug("New operation for Robot {}".format(robot_id))
 
         if self._stop_game_velocity_has_enabled[robot_id]:
             operation = operation.restrict_velocity_xy(self.STOP_GAME_VELOCITY)

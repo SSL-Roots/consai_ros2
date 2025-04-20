@@ -24,9 +24,9 @@ class TrackedFramePublisher(Node):
 
     def __init__(self):
         """ノードの初期化を行う関数."""
-        super().__init__('publisher')
+        super().__init__("publisher")
 
-        self._publisher = self.create_publisher(TrackedFrame, 'detection_tracked', 1)
+        self._publisher = self.create_publisher(TrackedFrame, "detection_tracked", 1)
         self._preset_frame = TrackedFrame()
 
     def _publish(self, frame):
@@ -70,8 +70,7 @@ class TrackedFramePublisher(Node):
         robot.visibility.append(1.0)
         self._preset_frame.robots.append(robot)
 
-    def set_robot(self, is_yellow, robot_id, pos_x, pos_y, orientation,
-                  vel_x=0.0, vel_y=0.0, vel_angular=0.0):
+    def set_robot(self, is_yellow, robot_id, pos_x, pos_y, orientation, vel_x=0.0, vel_y=0.0, vel_angular=0.0):
         """ロボットの位置, 向き, 速度を設定する関数."""
         robot = TrackedRobot()
         robot.robot_id.id = robot_id

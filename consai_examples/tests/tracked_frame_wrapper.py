@@ -20,7 +20,7 @@ from robocup_ssl_msgs.msg import TrackedFrame
 from robocup_ssl_msgs.msg import TrackedRobot
 
 
-class TrackedFrameWrapper():
+class TrackedFrameWrapper:
     """TrackedFrameをラップするクラス."""
 
     def __init__(self):

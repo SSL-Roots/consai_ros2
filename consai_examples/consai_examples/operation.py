@@ -1,4 +1,3 @@
-
 # Copyright 2021 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +18,13 @@ from copy import deepcopy
 from typing import NamedTuple
 
 from consai_msgs.msg import (
-    ConstraintLine, ConstraintObject, ConstraintPose,
-    ConstraintTheta, ConstraintXY, RobotControlMsg, State2D
+    ConstraintLine,
+    ConstraintObject,
+    ConstraintPose,
+    ConstraintTheta,
+    ConstraintXY,
+    RobotControlMsg,
+    State2D,
 )
 
 from consai_tools.hasher import robot_control_hasher
@@ -32,7 +36,7 @@ class TargetXY(NamedTuple):
     constraint: ConstraintXY
 
     @classmethod
-    def value(cls, x: float, y: float) -> 'TargetXY':
+    def value(cls, x: float, y: float) -> "TargetXY":
         """指定された座標値を目標とするTargetXYを生成する関数."""
         constraint = ConstraintXY()
         constraint.value_x.append(x)
@@ -40,7 +44,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def ball(cls) -> 'TargetXY':
+    def ball(cls) -> "TargetXY":
         """ボールの位置を目標とするTargetXYを生成する関数."""
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
@@ -49,7 +53,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def our_goal(cls) -> 'TargetXY':
+    def our_goal(cls) -> "TargetXY":
         """自チームのゴール位置を目標とするTargetXYを生成する関数."""
         obj_goal = ConstraintObject()
         obj_goal.type = ConstraintObject.OUR_GOAL
@@ -58,7 +62,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def their_goal(cls) -> 'TargetXY':
+    def their_goal(cls) -> "TargetXY":
         """相手チームのゴール位置を目標とするTargetXYを生成する関数."""
         obj_goal = ConstraintObject()
         obj_goal.type = ConstraintObject.THEIR_GOAL
@@ -67,7 +71,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def named_target(cls, name: str) -> 'TargetXY':
+    def named_target(cls, name: str) -> "TargetXY":
         """名前で指定された目標位置を持つTargetXYを生成する関数."""
         obj = ConstraintObject()
         obj.type = ConstraintObject.NAMED_TARGET
@@ -78,7 +82,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def our_robot(cls, robot_id: int) -> 'TargetXY':
+    def our_robot(cls, robot_id: int) -> "TargetXY":
         """自チームの指定されたロボットの位置を目標とするTargetXYを生成する関数."""
         obj = ConstraintObject()
         obj.type = ConstraintObject.OUR_ROBOT
@@ -89,7 +93,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def their_robot(cls, robot_id: int) -> 'TargetXY':
+    def their_robot(cls, robot_id: int) -> "TargetXY":
         """相手チームの指定されたロボットの位置を目標とするTargetXYを生成する関数."""
         obj = ConstraintObject()
         obj.type = ConstraintObject.THEIR_ROBOT
@@ -100,7 +104,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def their_top_corner(cls) -> 'TargetXY':
+    def their_top_corner(cls) -> "TargetXY":
         """相手ゴールの上隅（正規化座標）を目標とするTargetXYを生成する関数."""
         constraint = ConstraintXY()
         constraint.normalized = True
@@ -109,7 +113,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def their_bottom_corner(cls) -> 'TargetXY':
+    def their_bottom_corner(cls) -> "TargetXY":
         """相手ゴールの下隅（正規化座標）を目標とするTargetXYを生成する関数."""
         constraint = ConstraintXY()
         constraint.normalized = True
@@ -118,7 +122,7 @@ class TargetXY(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def our_side_center(cls) -> 'TargetXY':
+    def our_side_center(cls) -> "TargetXY":
         """自チーム側のフィールド中央（正規化座標）を目標とするTargetXYを生成する関数."""
         constraint = ConstraintXY()
         constraint.normalized = True
@@ -133,14 +137,14 @@ class TargetTheta(NamedTuple):
     constraint: ConstraintTheta
 
     @classmethod
-    def value(cls, theta: float) -> 'TargetTheta':
+    def value(cls, theta: float) -> "TargetTheta":
         """指定した角度に向くTargetThetaを生成する関数."""
         constraint = ConstraintTheta()
         constraint.value_theta.append(theta)
         return cls(constraint)
 
     @classmethod
-    def look_ball(cls) -> 'TargetTheta':
+    def look_ball(cls) -> "TargetTheta":
         """指定された角度を向くTargetThetaを生成する関数."""
         obj_ball = ConstraintObject()
         obj_ball.type = ConstraintObject.BALL
@@ -150,7 +154,7 @@ class TargetTheta(NamedTuple):
         return cls(constraint)
 
     @classmethod
-    def look_their_goal(cls) -> 'TargetTheta':
+    def look_their_goal(cls) -> "TargetTheta":
         """相手ゴールの方向を向くTargetThetaを生成する."""
         obj_goal = ConstraintObject()
         obj_goal.type = ConstraintObject.THEIR_GOAL
@@ -160,7 +164,7 @@ class TargetTheta(NamedTuple):
         return cls(constraint)
 
 
-class Operation():
+class Operation:
     """ロボットの操作目標を定義する操作クラス."""
 
     def __init__(self, goal: RobotControlMsg = None) -> None:
@@ -179,57 +183,58 @@ class Operation():
         """操作目標のハッシュ値を取得する関数."""
         return robot_control_hasher.hash_robot_control(self._goal)
 
-    def halt(self) -> 'Operation':
+    def halt(self) -> "Operation":
         """ロボットを停止する操作を返す関数."""
         goal = deepcopy(self._goal)
         goal.stop = True
         return Operation(goal)
 
-    def enable_avoid_placement_area(self, placement_pos: State2D) -> 'Operation':
+    def enable_avoid_placement_area(self, placement_pos: State2D) -> "Operation":
         """配置エリアの回避を有効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_placement_area = True
         goal.placement_pos = placement_pos
         return Operation(goal)
 
-    def enable_avoid_ball(self) -> 'Operation':
+    def enable_avoid_ball(self) -> "Operation":
         """ボールの回避を有効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_ball = True
         return Operation(goal)
 
-    def enable_avoid_pushing_robots(self) -> 'Operation':
+    def enable_avoid_pushing_robots(self) -> "Operation":
         """押し合いを避ける回避動作を有効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_pushing_robots = True
         return Operation(goal)
 
-    def disable_avoid_defense_area(self) -> 'Operation':
+    def disable_avoid_defense_area(self) -> "Operation":
         """ディフェンスエリアの回避を無効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_defense_area = False
         return Operation(goal)
 
-    def disable_avoid_our_robots(self) -> 'Operation':
+    def disable_avoid_our_robots(self) -> "Operation":
         """味方ロボットの回避を無効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_our_robots = False
         return Operation(goal)
 
-    def disable_avoid_their_robots(self) -> 'Operation':
+    def disable_avoid_their_robots(self) -> "Operation":
         """相手ロボットの回避を無効にする関数."""
         goal = deepcopy(self._goal)
         goal.avoid_their_robots = False
         return Operation(goal)
 
-    def restrict_velocity_xy(self, velocity: float) -> 'Operation':
+    def restrict_velocity_xy(self, velocity: float) -> "Operation":
         """最大XY速度を制限する関数."""
         goal = deepcopy(self._goal)
         goal.max_velocity_xy.insert(0, velocity)
         return Operation(goal)
 
-    def move_on_line(self, p1: TargetXY, p2: TargetXY, distance_from_p1: float,
-                     target_theta: TargetTheta) -> 'Operation':
+    def move_on_line(
+        self, p1: TargetXY, p2: TargetXY, distance_from_p1: float, target_theta: TargetTheta
+    ) -> "Operation":
         """指定された直線上の距離と角度に基づいて移動する操作を生成する関数."""
         line = ConstraintLine()
         line.p1 = p1.constraint
@@ -240,8 +245,9 @@ class Operation():
         goal.line.insert(0, line)
         return Operation(goal)
 
-    def move_to_intersection(self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY,
-                             target_theta: TargetTheta, offset: float = 0.0) -> 'Operation':
+    def move_to_intersection(
+        self, p1: TargetXY, p2: TargetXY, p3: TargetXY, p4: TargetXY, target_theta: TargetTheta, offset: float = 0.0
+    ) -> "Operation":
         """2本の直線の交点へ移動する操作を生成する関数."""
         line = ConstraintLine()
         line.p1 = p1.constraint
@@ -254,7 +260,7 @@ class Operation():
         goal.line.insert(0, line)
         return Operation(goal)
 
-    def offset_intersection_to_p2(self, offset: float) -> 'Operation':
+    def offset_intersection_to_p2(self, offset: float) -> "Operation":
         """交点からp2へのオフセットを設定する関数."""
         goal = deepcopy(self._goal)
         if goal.line:
@@ -262,7 +268,7 @@ class Operation():
                 goal.line[0].offset_intersection_to_p2[0] = offset
         return Operation(goal)
 
-    def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta) -> 'Operation':
+    def move_to_pose(self, target_xy: TargetXY, target_theta: TargetTheta) -> "Operation":
         """指定された姿勢へ移動する操作を生成する関数."""
         pose = ConstraintPose()
         pose.xy = target_xy.constraint
@@ -271,62 +277,62 @@ class Operation():
         goal.pose.insert(0, pose)
         return Operation(goal)
 
-    def overwrite_pose_x(self, value: float) -> 'Operation':
+    def overwrite_pose_x(self, value: float) -> "Operation":
         """現在の目標姿勢のX座標を上書きする関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_x.insert(0, value)
         return Operation(goal)
 
-    def overwrite_pose_y(self, value: float) -> 'Operation':
+    def overwrite_pose_y(self, value: float) -> "Operation":
         """現在の目標姿勢のY座標を上書きする関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].xy.value_y.insert(0, value)
         return Operation(goal)
 
-    def overwrite_pose_theta(self, value: float) -> 'Operation':
+    def overwrite_pose_theta(self, value: float) -> "Operation":
         """現在の目標姿勢の角度を上書きする関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].theta.value_theta.insert(0, value)
         return Operation(goal)
 
-    def offset_pose_x(self, offset: float) -> 'Operation':
+    def offset_pose_x(self, offset: float) -> "Operation":
         """現在の目標姿勢のX方向にオフセットを追加する関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.x = offset
         return Operation(goal)
 
-    def offset_pose_y(self, offset: float) -> 'Operation':
+    def offset_pose_y(self, offset: float) -> "Operation":
         """現在の目標姿勢のY方向にオフセットを追加する関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.y = offset
         return Operation(goal)
 
-    def offset_pose_theta(self, offset: float) -> 'Operation':
+    def offset_pose_theta(self, offset: float) -> "Operation":
         """現在の目標姿勢の角度にオフセットを追加する関数."""
         goal = deepcopy(self._goal)
         if goal.pose:
             goal.pose[0].offset.theta = offset
         return Operation(goal)
 
-    def with_ball_receiving(self) -> 'Operation':
+    def with_ball_receiving(self) -> "Operation":
         """ボールを受け取る動作を有効にする関数."""
         goal = deepcopy(self._goal)
         goal.receive_ball = True
         return Operation(goal)
 
-    def with_shooting_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_shooting_to(self, target_xy: TargetXY) -> "Operation":
         """指定位置に向けてシュートする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.kick_enable = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_shooting_for_setplay_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_shooting_for_setplay_to(self, target_xy: TargetXY) -> "Operation":
         """セットプレーとして指定位置にシュートする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.kick_enable = True
@@ -334,7 +340,7 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_passing_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_passing_to(self, target_xy: TargetXY) -> "Operation":
         """指定位置にパスする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.kick_enable = True
@@ -342,7 +348,7 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_passing_for_setplay_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_passing_for_setplay_to(self, target_xy: TargetXY) -> "Operation":
         """セットプレーとして指定位置にパスする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.kick_enable = True
@@ -351,28 +357,28 @@ class Operation():
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_dribbling_to(self, target_xy: TargetXY) -> "Operation":
         """指定位置へドリブルする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.dribble_enable = True
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
-    def with_back_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_back_dribbling_to(self, target_xy: TargetXY) -> "Operation":
         """指定位置へバックドリブルする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.back_dribble_enable = True
         goal.dribble_target = target_xy.constraint
         return Operation(goal)
 
-    def with_reflecting_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_reflecting_to(self, target_xy: TargetXY) -> "Operation":
         """指定位置に向けて反射シュートする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.reflect_shoot = True
         goal.kick_target = target_xy.constraint
         return Operation(goal)
 
-    def with_ball_boy_dribbling_to(self, target_xy: TargetXY) -> 'Operation':
+    def with_ball_boy_dribbling_to(self, target_xy: TargetXY) -> "Operation":
         """ボールボーイ動作として指定位置へドリブルする操作を設定する関数."""
         goal = deepcopy(self._goal)
         goal.ball_boy_dribble_enable = True

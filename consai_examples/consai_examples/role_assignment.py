@@ -95,7 +95,7 @@ class RoleAssignment(Node):
         Args:
             goalie_id (int): ゴールキーパーとして割り当てるロボットのID.
         """
-        super().__init__('assignor')
+        super().__init__("assignor")
         # 実際に運用するroleのリスト
         # イエローカードや交代指示などで役割が変更されます
         self._present_role_list = copy.deepcopy(self.ACTIVE_ROLE_LIST)
@@ -109,14 +109,11 @@ class RoleAssignment(Node):
         self._id_list_ordered_by_role_priority = [None] * self._ROLE_NUM
 
         self._goalie_id = goalie_id
-        self.get_logger().info('goalie IDは{}です'.format(self._goalie_id))
+        self.get_logger().info("goalie IDは{}です".format(self._goalie_id))
 
-        self._pub_visualizer_objects = self.create_publisher(
-            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+        self._pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
 
-    def update_role(
-
-            self, ball: PosVel, our_robots: dict[int, PosVel], allowed_robot_num=11):
+    def update_role(self, ball: PosVel, our_robots: dict[int, PosVel], allowed_robot_num=11):
         # roleへのロボットの割り当てを更新する
         """
         ボールとロボットの情報に基づき, ロール割り当てを更新する関数.
@@ -130,8 +127,7 @@ class RoleAssignment(Node):
             list[int]: 担当が変更されたロボットIDのリスト.
         """
         # 優先度が高い順にロボットIDを並べる
-        prev_id_list_ordered_by_role_priority = copy.deepcopy(
-            self._id_list_ordered_by_role_priority)
+        prev_id_list_ordered_by_role_priority = copy.deepcopy(self._id_list_ordered_by_role_priority)
         self._update_role_list(ball, our_robots)
 
         # 役割リストを更新する
@@ -231,7 +227,7 @@ class RoleAssignment(Node):
         """
         updated = False
 
-        our_active_ids = [robot_id for robot_id in our_robots.keys()]
+        our_active_ids = list(our_robots.keys())
 
         # イベント：フィールド上のロボット台数が変わる
         if our_active_ids != self._present_active_ids:
@@ -251,10 +247,8 @@ class RoleAssignment(Node):
                 # ボールが動いている場合は、ボールの軌道をもとにアタッカーを更新する
                 next_attacker_id = self._determine_attacker_via_ball_motion(our_robots, ball)
 
-            if next_attacker_id is not None \
-               and next_attacker_id in self._id_list_ordered_by_role_priority:
-                next_attacker_priority = self._id_list_ordered_by_role_priority.index(
-                    next_attacker_id)
+            if next_attacker_id is not None and next_attacker_id in self._id_list_ordered_by_role_priority:
+                next_attacker_priority = self._id_list_ordered_by_role_priority.index(next_attacker_id)
                 attacker_role_priority = self._get_priority_of_role(RoleName.ATTACKER)
                 self._swap_robot_id_of_priority(next_attacker_priority, attacker_role_priority)
                 updated = True
@@ -385,10 +379,10 @@ class RoleAssignment(Node):
             priority1 (int): 一方の優先度.
             priority2 (int): もう一方の優先度.
         """
-        self._id_list_ordered_by_role_priority[priority1], \
-            self._id_list_ordered_by_role_priority[priority2] \
-            = self._id_list_ordered_by_role_priority[priority2], \
-            self._id_list_ordered_by_role_priority[priority1]
+        self._id_list_ordered_by_role_priority[priority1], self._id_list_ordered_by_role_priority[priority2] = (
+            self._id_list_ordered_by_role_priority[priority2],
+            self._id_list_ordered_by_role_priority[priority1],
+        )
 
     def _determine_attacker_via_ball_pos(self, our_robots: dict[int, PosVel], ball: PosVel):
         """
@@ -446,12 +440,13 @@ class RoleAssignment(Node):
                     next_id = robot_id
             return next_id
 
-        return nearest_robot_id_by_ball_motion()
+        return nearest_robot_id_by_ball_position()
 
     def _overwrite_substite_to_present_role_list(self, num_of_substitute):
         """指定した数だけ, presetn_role_listの後ろからSUBSTITUEロールを上書きする関数."""
         if num_of_substitute <= 0:
             return
 
-        self._present_role_list[-num_of_substitute:] = \
-            [RoleName.SUBSTITUTE] * min(num_of_substitute, len(self._present_role_list))
+        self._present_role_list[-num_of_substitute:] = [RoleName.SUBSTITUTE] * min(
+            num_of_substitute, len(self._present_role_list)
+        )

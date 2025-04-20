@@ -34,8 +34,8 @@ def to_visualize_msg(role_dict: dict[int, str], our_robots: dict[int, PosVel]) -
     """
     vis_objects = Objects()
 
-    vis_objects.layer = 'game'
-    vis_objects.sub_layer = 'role'
+    vis_objects.layer = "game"
+    vis_objects.sub_layer = "role"
     vis_objects.z_order = 5
 
     for robot_id, role in role_dict.items():
@@ -47,12 +47,12 @@ def to_visualize_msg(role_dict: dict[int, str], our_robots: dict[int, PosVel]) -
         shape.x = robot_pos.x + 0.1
         shape.y = robot_pos.y + 0.1
         shape.text = role
-        if role == 'ATTACKER':
-            shape.color.name = 'tomato'
+        if role == "ATTACKER":
+            shape.color.name = "tomato"
             shape.size = 20
         else:
             shape.size = 8
-            shape.color.name = 'white'
+            shape.color.name = "white"
         vis_objects.texts.append(shape)
 
     return vis_objects

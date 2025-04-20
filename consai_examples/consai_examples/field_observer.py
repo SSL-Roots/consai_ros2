@@ -65,7 +65,7 @@ class FieldObserver(Node):
         :param goalie_id: ゴールキーパーのID
         :param our_team_is_yellow: 自チームが黄色かどうか
         """
-        super().__init__('field_observer')
+        super().__init__("field_observer")
 
         self._logger = self.get_logger()
 
@@ -73,24 +73,23 @@ class FieldObserver(Node):
         self._field_positions = FieldPositions()
 
         self._sub_detection_traced = self.create_subscription(
-            TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
+            TrackedFrame, "detection_tracked", self._detection_tracked_callback, 10
+        )
 
-        self._pub_visualizer_objects = self.create_publisher(
-            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+        self._pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
 
-        self._sub_destinations = self.create_subscription(
-            GoalPoses, 'destinations', self._destinations_callback, 10)
+        self._sub_destinations = self.create_subscription(GoalPoses, "destinations", self._destinations_callback, 10)
 
         qos_profile = QoSProfile(
-            depth=1,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL,
-            reliability=ReliabilityPolicy.RELIABLE
+            depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, reliability=ReliabilityPolicy.RELIABLE
         )
 
         self._sub_param_rule = self.create_subscription(
-            String, 'consai_param/rule', self._param_rule_callback, qos_profile)
+            String, "consai_param/rule", self._param_rule_callback, qos_profile
+        )
         self._sub_param_strategy = self.create_subscription(
-            String, 'consai_param/strategy', self._param_strategy_callback, qos_profile)
+            String, "consai_param/strategy", self._param_strategy_callback, qos_profile
+        )
 
         self._detection_wrapper = DetectionWrapper(our_team_is_yellow)
         self._ball_position_state_observer = BallPositionObserver()
@@ -116,24 +115,20 @@ class FieldObserver(Node):
         """
         param_dict = json.loads(msg.data)
         self._field_normalizer.set_field_size(
-            param_dict['field']['length'],
-            param_dict['field']['width'],
-            param_dict['field']['goal_width'],
-            param_dict['field']['penalty_depth'],
-            param_dict['field']['penalty_width']
+            param_dict["field"]["length"],
+            param_dict["field"]["width"],
+            param_dict["field"]["goal_width"],
+            param_dict["field"]["penalty_depth"],
+            param_dict["field"]["penalty_width"],
         )
-        self._field_normalizer.set_robot_diameter(
-            param_dict['robots']['max_diameter']
-        )
-        self._field_normalizer.set_ball_diameter(
-            param_dict['ball']['diameter']
-        )
+        self._field_normalizer.set_robot_diameter(param_dict["robots"]["max_diameter"])
+        self._field_normalizer.set_ball_diameter(param_dict["ball"]["diameter"])
 
         self._field_positions.set_field_size(
-            param_dict['field']['length'],
-            param_dict['field']['goal_width'],
-            param_dict['field']['penalty_depth'],
-            param_dict['field']['penalty_width']
+            param_dict["field"]["length"],
+            param_dict["field"]["goal_width"],
+            param_dict["field"]["penalty_depth"],
+            param_dict["field"]["penalty_width"],
         )
 
         self._pass_shoot_observer.set_field_normalizer(self._field_normalizer)
@@ -143,7 +138,7 @@ class FieldObserver(Node):
         self._side_back_target_observer.set_field_positions(self._field_positions)
         self._zone_man_mark_target_observer.set_field_positions(self._field_positions)
 
-        self._logger.info('Field size is updated')
+        self._logger.info("Field size is updated")
 
     def _param_strategy_callback(self, msg):
         """
@@ -153,13 +148,13 @@ class FieldObserver(Node):
         """
         param_dict = json.loads(msg.data)
         self._field_normalizer.set_div_a_size(
-            param_dict['div_a_field']['length'],
-            param_dict['div_a_field']['width'],
-            param_dict['div_a_field']['robot_diameter'],
-            param_dict['div_a_field']['ball_diameter']
+            param_dict["div_a_field"]["length"],
+            param_dict["div_a_field"]["width"],
+            param_dict["div_a_field"]["robot_diameter"],
+            param_dict["div_a_field"]["ball_diameter"],
         )
 
-        self._logger.info('Div A size is updated')
+        self._logger.info("Div A size is updated")
 
     def detection(self) -> DetectionWrapper:
         """Ballの検出ラッパーを返す関数."""
@@ -272,29 +267,24 @@ class FieldObserver(Node):
         """
         self._detection_wrapper.update(msg)
 
-        self._ball_position_state_observer.update(
-            self._detection_wrapper.ball().pos())
+        self._ball_position_state_observer.update(self._detection_wrapper.ball().pos())
         self._ball_placement_observer.update(self._detection_wrapper.ball())
-        self._zone_ball_observer.update(
-            self._detection_wrapper.ball().pos(),
-            self.ball_position().is_in_our_side())
-        self._zone_target_observer.update(
-            self._detection_wrapper.their_robots(), self._num_of_zone_roles)
+        self._zone_ball_observer.update(self._detection_wrapper.ball().pos(), self.ball_position().is_in_our_side())
+        self._zone_target_observer.update(self._detection_wrapper.their_robots(), self._num_of_zone_roles)
         self._side_back_target_observer.update(self._detection_wrapper.their_robots())
         self._zone_man_mark_target_observer.update(self._detection_wrapper.their_robots())
         self._ball_motion_observer.update(self._detection_wrapper.ball())
         self._pass_shoot_observer.update(
-            self._detection_wrapper.ball(),
-            self._detection_wrapper.our_robots(),
-            self._detection_wrapper.their_robots())
+            self._detection_wrapper.ball(), self._detection_wrapper.our_robots(), self._detection_wrapper.their_robots()
+        )
         self._distance_observer.update(
             self._detection_wrapper.ball().pos(),
             self._detection_wrapper.our_robots(),
-            self._detection_wrapper.their_robots())
+            self._detection_wrapper.their_robots(),
+        )
         self._man_mark_observer.update(
-            self._detection_wrapper.ball(),
-            self._detection_wrapper.our_robots(),
-            self._detection_wrapper.their_robots())
+            self._detection_wrapper.ball(), self._detection_wrapper.our_robots(), self._detection_wrapper.their_robots()
+        )
 
         self._publish_visualizer_msgs()
 
@@ -304,5 +294,6 @@ class FieldObserver(Node):
     def _publish_visualizer_msgs(self):
         self._pub_visualizer_objects.publish(
             self._man_mark_observer.to_visualize_msg(
-                self._detection_wrapper.our_robots(),
-                self._detection_wrapper.their_robots()))
+                self._detection_wrapper.our_robots(), self._detection_wrapper.their_robots()
+            )
+        )

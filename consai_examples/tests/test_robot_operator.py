@@ -29,10 +29,11 @@ class NamedTargetsSubscriber(Node):
 
     def __init__(self):
         """NamedTargetsSubscriberの初期化処理を行うコンストラクタ."""
-        super().__init__('subscriber')
+        super().__init__("subscriber")
 
         self._sub_named_targets = self.create_subscription(
-            NamedTargets, 'named_targets', self._named_targets_callback, 1)
+            NamedTargets, "named_targets", self._named_targets_callback, 1
+        )
         self.named_targets = NamedTargets()
 
     def _named_targets_callback(self, msg):

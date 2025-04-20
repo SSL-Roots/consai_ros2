@@ -49,9 +49,7 @@ def test_引数のgoalie_idが正しく設定されること(rclpy_init_shutdown
 @pytest.mark.parametrize("goalie_id, is_yellow", [(1, False), (3, True)])
 def test_引数のour_team_is_yellowが正しく設定されること(rclpy_init_shutdown, goalie_id, is_yellow):
     """RoleAssignmentのour_team_is_yellowが正しく設定されることをテストする関数."""
-    assignor = RoleAssignment(
-        goalie_id=goalie_id,
-        our_team_is_yellow=is_yellow)
+    assignor = RoleAssignment(goalie_id=goalie_id, our_team_is_yellow=is_yellow)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=[1], yellow_ids=[3])
 
@@ -134,7 +132,8 @@ def test_ロボットが消えても優先度の高いロールは空けない�
         (RoleName.GOALIE, 0),
         (RoleName.ATTACKER, 3),
         (RoleName.SUB_ATTACKER, 7),
-        (RoleName.CENTER_BACK1, 6)]
+        (RoleName.CENTER_BACK1, 6),
+    ]
 
 
 def test_ボールに一番近いロボットがAttackerになること(rclpy_init_shutdown):
@@ -154,7 +153,8 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.ATTACKER, 9),
         (RoleName.SUB_ATTACKER, 8),
-        (RoleName.CENTER_BACK1, 7)]
+        (RoleName.CENTER_BACK1, 7),
+    ]
 
 
 def test_goalieが一番ボールに近いときは二番目に近いロボットがAttackerになること(rclpy_init_shutdown):
@@ -174,7 +174,8 @@ def test_goalieが一番ボールに近いときは二番目に近いロボッ�
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.GOALIE, 9),
         (RoleName.ATTACKER, 8),
-        (RoleName.SUB_ATTACKER, 7)]
+        (RoleName.SUB_ATTACKER, 7),
+    ]
 
 
 def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
@@ -194,13 +195,12 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
     assert assignor.get_assigned_roles_and_ids() == [
         (RoleName.ATTACKER, 7),
         (RoleName.SUB_ATTACKER, 8),
-        (RoleName.CENTER_BACK1, 9)]
+        (RoleName.CENTER_BACK1, 9),
+    ]
 
 
-@pytest.mark.parametrize("robot_num, expected_indexes",
-                         [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
-def test_ロボットの出場可能台数が減ったら優先度の低い順にSUBSTITUEロールを割り当てること(
-        rclpy_init_shutdown, robot_num, expected_indexes):
+@pytest.mark.parametrize("robot_num, expected_indexes", [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
+def test_ロボットの出場可能台数が減ったら優先度の低い順にSUBSTITUEロールを割り当てること(rclpy_init_shutdown, robot_num, expected_indexes):
     """ロボットの出場可能台数が減った場合に, 優先度の低い順にSUBSTITUTEロールを割り当てることをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()

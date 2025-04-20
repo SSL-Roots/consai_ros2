@@ -59,8 +59,7 @@ def test_immutability():
 
 def test_move_on_line():
     """move_on_lineで生成されたgoalの内容を検証する関数."""
-    goal = Operation().move_on_line(TargetXY.ball(), TargetXY.their_goal(), 0.5,
-                                    TargetTheta.look_ball()).get_goal()
+    goal = Operation().move_on_line(TargetXY.ball(), TargetXY.their_goal(), 0.5, TargetTheta.look_ball()).get_goal()
     assert len(goal.line) >= 1
     assert goal.line[0].p1.object[0].type == ConstraintObject.BALL
     assert goal.line[0].p2.object[0].type == ConstraintObject.THEIR_GOAL
@@ -70,9 +69,17 @@ def test_move_on_line():
 
 def test_move_to_intersection():
     """move_to_intersectionによるgoalの各点とthetaの設定を検証する関数."""
-    goal = Operation().move_to_intersection(
-        TargetXY.our_goal(), TargetXY.ball(),
-        TargetXY.our_robot(0), TargetXY.their_robot(1), TargetTheta.look_ball()).get_goal()
+    goal = (
+        Operation()
+        .move_to_intersection(
+            TargetXY.our_goal(),
+            TargetXY.ball(),
+            TargetXY.our_robot(0),
+            TargetXY.their_robot(1),
+            TargetTheta.look_ball(),
+        )
+        .get_goal()
+    )
     assert len(goal.line) >= 1
     assert goal.line[0].p1.object[0].type == ConstraintObject.OUR_GOAL
     assert goal.line[0].p2.object[0].type == ConstraintObject.BALL
@@ -88,8 +95,8 @@ def test_move_to_intersection():
 def test_offset_intersection_to_p2():
     """offset_intersection_to_p2で指定した値がgoalに反映されるかを検証する関数."""
     operation = Operation().move_to_intersection(
-        TargetXY.our_goal(), TargetXY.ball(),
-        TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball())
+        TargetXY.our_goal(), TargetXY.ball(), TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball()
+    )
     goal = operation.offset_intersection_to_p2(0.5).get_goal()
     assert len(goal.line[0].offset_intersection_to_p2) >= 1
     assert goal.line[0].offset_intersection_to_p2[0] == 0.5

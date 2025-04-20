@@ -57,20 +57,20 @@ class RefereeParser(Node):
     """
 
     _STAGE_STR_DICT = {
-        Referee.STAGE_NORMAL_FIRST_HALF_PRE: 'NORMAL_FIRST_HALF_PRE',
-        Referee.STAGE_NORMAL_FIRST_HALF: 'NORMAL_FIRST_HALF',
-        Referee.STAGE_NORMAL_HALF_TIME: 'NORMAL_HALF_TIME',
-        Referee.STAGE_NORMAL_SECOND_HALF_PRE: 'NORMAL_SECOND_HALF_PRE',
-        Referee.STAGE_NORMAL_SECOND_HALF: 'NORMAL_SECOND_HALF',
-        Referee.STAGE_EXTRA_TIME_BREAK: 'EXTRA_TIME_BREAK',
-        Referee.STAGE_EXTRA_FIRST_HALF_PRE: 'EXTRA_FIRST_HALF_PRE',
-        Referee.STAGE_EXTRA_FIRST_HALF: 'EXTRA_FIRST_HALF',
-        Referee.STAGE_EXTRA_HALF_TIME: 'EXTRA_HALF_TIME',
-        Referee.STAGE_EXTRA_SECOND_HALF_PRE: 'EXTRA_SECOND_HALF_PRE',
-        Referee.STAGE_EXTRA_SECOND_HALF: 'EXTRA_SECOND_HALF',
-        Referee.STAGE_PENALTY_SHOOTOUT_BREAK: 'PENALTY_SHOOTOUT_BREAK',
-        Referee.STAGE_PENALTY_SHOOTOUT: 'PENALTY_SHOOTOUT',
-        Referee.STAGE_POST_GAME: 'POST_GAME'
+        Referee.STAGE_NORMAL_FIRST_HALF_PRE: "NORMAL_FIRST_HALF_PRE",
+        Referee.STAGE_NORMAL_FIRST_HALF: "NORMAL_FIRST_HALF",
+        Referee.STAGE_NORMAL_HALF_TIME: "NORMAL_HALF_TIME",
+        Referee.STAGE_NORMAL_SECOND_HALF_PRE: "NORMAL_SECOND_HALF_PRE",
+        Referee.STAGE_NORMAL_SECOND_HALF: "NORMAL_SECOND_HALF",
+        Referee.STAGE_EXTRA_TIME_BREAK: "EXTRA_TIME_BREAK",
+        Referee.STAGE_EXTRA_FIRST_HALF_PRE: "EXTRA_FIRST_HALF_PRE",
+        Referee.STAGE_EXTRA_FIRST_HALF: "EXTRA_FIRST_HALF",
+        Referee.STAGE_EXTRA_HALF_TIME: "EXTRA_HALF_TIME",
+        Referee.STAGE_EXTRA_SECOND_HALF_PRE: "EXTRA_SECOND_HALF_PRE",
+        Referee.STAGE_EXTRA_SECOND_HALF: "EXTRA_SECOND_HALF",
+        Referee.STAGE_PENALTY_SHOOTOUT_BREAK: "PENALTY_SHOOTOUT_BREAK",
+        Referee.STAGE_PENALTY_SHOOTOUT: "PENALTY_SHOOTOUT",
+        Referee.STAGE_POST_GAME: "POST_GAME",
     }
 
     _COMMAND_INPLAY = 99
@@ -86,19 +86,19 @@ class RefereeParser(Node):
             invert_placement_pos (bool): ボールの配置座標を反転させるかどうかのフラグ.
             division_a (bool): Division A の試合かどうかのフラグ.
         """
-        super().__init__('referee_parser')
+        super().__init__("referee_parser")
 
         self._our_team_is_yellow = our_team_is_yellow
         self._invert_placement_pos = invert_placement_pos
         self._division_a = division_a
 
         if self._our_team_is_yellow:
-            self.get_logger().info('ourteamはyellowです')
+            self.get_logger().info("ourteamはyellowです")
         else:
-            self.get_logger().info('ourteamはblueです')
+            self.get_logger().info("ourteamはblueです")
 
         if self._invert_placement_pos:
-            self.get_logger().info('ball placementの目標座標を反転します')
+            self.get_logger().info("ball placementの目標座標を反転します")
 
         self._COMMAND_OUR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_BLUE
         self._COMMAND_THEIR_PREPARE_KICKOFF = Referee.COMMAND_PREPARE_KICKOFF_YELLOW
@@ -139,13 +139,12 @@ class RefereeParser(Node):
         self._num_of_yellow_bots: int = 0
         self._command_elapsed_time = 0.0
 
-        self._pub_parsed_referee = self.create_publisher(ParsedReferee, 'parsed_referee', 10)
-        self._pub_visualizer_objects = self.create_publisher(
-            Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
+        self._pub_parsed_referee = self.create_publisher(ParsedReferee, "parsed_referee", 10)
+        self._pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
         self._sub_detection_tracked = self.create_subscription(
-            TrackedFrame, 'detection_tracked', self._detection_tracked_callback, 10)
-        self._sub_referee = self.create_subscription(
-            Referee, 'referee', self._referee_callback, 10)
+            TrackedFrame, "detection_tracked", self._detection_tracked_callback, 10
+        )
+        self._sub_referee = self.create_subscription(Referee, "referee", self._referee_callback, 10)
 
     def _detection_tracked_callback(self, msg: TrackedFrame) -> None:
         """
@@ -214,27 +213,28 @@ class RefereeParser(Node):
         referee.designated_position.x = self._placement_pos.x
         referee.designated_position.y = self._placement_pos.y
         referee.is_placement = self.our_ball_placement() or self.their_ball_placement()
-        referee.is_inplay = self.inplay() \
-            or self.our_penalty_inplay() \
-            or self.their_penalty_inplay()
-        referee.is_our_setplay = self.our_direct() \
-            or self.our_indirect() \
-            or self.our_kickoff() \
-            or self.our_penalty() \
-            or self.our_ball_placement() \
-            or self.our_pre_kickoff() \
+        referee.is_inplay = self.inplay() or self.our_penalty_inplay() or self.their_penalty_inplay()
+        referee.is_our_setplay = (
+            self.our_direct()
+            or self.our_indirect()
+            or self.our_kickoff()
+            or self.our_penalty()
+            or self.our_ball_placement()
+            or self.our_pre_kickoff()
             or self.our_pre_penalty()
-        referee.is_their_setplay = self.their_direct() \
-            or self.their_indirect() \
-            or self.their_kickoff() \
-            or self.their_penalty() \
-            or self.their_ball_placement() \
-            or self.their_pre_kickoff() \
+        )
+        referee.is_their_setplay = (
+            self.their_direct()
+            or self.their_indirect()
+            or self.their_kickoff()
+            or self.their_penalty()
+            or self.their_ball_placement()
+            or self.their_pre_kickoff()
             or self.their_pre_penalty()
+        )
         return referee
 
-    def _publish_visualizer_objects(
-            self, msg: Referee, parsed_ref_msg: ParsedReferee) -> None:
+    def _publish_visualizer_objects(self, msg: Referee, parsed_ref_msg: ParsedReferee) -> None:
         """
         レフェリー情報を可視化するためのメッセージをpublishする.
 
@@ -243,11 +243,9 @@ class RefereeParser(Node):
             parsed_ref_msg (ParsedReferee): 解析後のレフェリー情報.
         """
         self._pub_visualizer_objects.publish(
-            ref_vis_parser.vis_info(
-                msg, self._num_of_blue_bots, self._num_of_yellow_bots, self._placement_pos))
-        self._pub_visualizer_objects.publish(
-            ref_vis_parser.vis_prohibited_area(
-                parsed_ref_msg, self._ball.pos))
+            ref_vis_parser.vis_info(msg, self._num_of_blue_bots, self._num_of_yellow_bots, self._placement_pos)
+        )
+        self._pub_visualizer_objects.publish(ref_vis_parser.vis_prohibited_area(parsed_ref_msg, self._ball.pos))
 
     def _update_num_of_bots(self, msg: TrackedFrame) -> None:
         """
@@ -286,20 +284,26 @@ class RefereeParser(Node):
         # force start has been issued.
 
         if self._current_command == Referee.COMMAND_FORCE_START:
-            self.get_logger().info('force startによりinplayに変わります')
+            self.get_logger().info("force startによりinplayに変わります")
             self._current_command = self._COMMAND_INPLAY
 
         # the ball moved at least 0.05 meters following a kick-off, free kick or penalty kick.
-        if self.our_kickoff() or self.their_kickoff() or \
-                self.our_direct() or self.their_direct() or \
-                self.our_indirect() or self.their_indirect() or \
-                self.our_penalty() or self.their_penalty():
+        if (
+            self.our_kickoff()
+            or self.their_kickoff()
+            or self.our_direct()
+            or self.their_direct()
+            or self.our_indirect()
+            or self.their_indirect()
+            or self.our_penalty()
+            or self.their_penalty()
+        ):
 
             diff_x = self._ball.pos.x - self._ball_pos_at_command_changing.x
             diff_y = self._ball.pos.y - self._ball_pos_at_command_changing.y
 
             if math.hypot(diff_x, diff_y) > 0.05:
-                self.get_logger().info('ボールが0.05 meter動いたためinplayに変わります')
+                self.get_logger().info("ボールが0.05 meter動いたためinplayに変わります")
                 # ペナルティキック時のインプレイではロボットが自由に動けないため、別のコマンドフラグを用意する
                 if self.our_penalty():
                     self._current_command = self._COMMAND_OUR_PENALTY_INPLAY
@@ -309,21 +313,19 @@ class RefereeParser(Node):
                     self._current_command = self._COMMAND_INPLAY
 
         # 10 seconds passed following a kick-off.
-        elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * \
-            1E-6  # microseconds to seconds
+        elapsed_time = (msg.packet_timestamp - msg.command_timestamp) * 1e-6  # microseconds to seconds
         if self.our_kickoff() or self.their_kickoff():
             if elapsed_time > 10.0:
-                self.get_logger().info('kickoffから10秒経過したのでinplayに変わります')
+                self.get_logger().info("kickoffから10秒経過したのでinplayに変わります")
                 self._current_command = self._COMMAND_INPLAY
 
         # 5 seconds (Division A) or 10 seconds (Division B) passed following a free kick.
-        if self.our_direct() or self.our_indirect() or \
-           self.their_direct() or self.their_indirect():
+        if self.our_direct() or self.our_indirect() or self.their_direct() or self.their_indirect():
             if self._division_a and elapsed_time > 5.0:
-                self.get_logger().info('free kickから5秒経過したのでinplayに変わります')
+                self.get_logger().info("free kickから5秒経過したのでinplayに変わります")
                 self._current_command = self._COMMAND_INPLAY
             elif not self._division_a and elapsed_time > 10.0:
-                self.get_logger().info('free kickから10秒経過したのでinplayに変わります')
+                self.get_logger().info("free kickから10秒経過したのでinplayに変わります")
                 self._current_command = self._COMMAND_INPLAY
 
         # コマンドの経過時間を格納
@@ -336,7 +338,7 @@ class RefereeParser(Node):
         Returns:
             str: 現在のステージを表すテキスト.
         """
-        return self._STAGE_STR_DICT.get(self._referee.stage, 'NONE')
+        return self._STAGE_STR_DICT.get(self._referee.stage, "NONE")
 
     def get_command(self):
         """
@@ -419,8 +421,10 @@ class RefereeParser(Node):
         Returns:
             bool: 現在のコマンドが自チームのキックオフの場合はTrue、それ以外はFalse.
         """
-        return self._prev_command == self._COMMAND_OUR_PREPARE_KICKOFF and \
-            self._current_command == Referee.COMMAND_NORMAL_START
+        return (
+            self._prev_command == self._COMMAND_OUR_PREPARE_KICKOFF
+            and self._current_command == Referee.COMMAND_NORMAL_START
+        )
 
     def their_pre_kickoff(self):
         """
@@ -438,8 +442,10 @@ class RefereeParser(Node):
         Returns:
             bool: 現在のコマンドが相手チームのキックオフの場合はTrue、それ以外はFalse.
         """
-        return self._prev_command == self._COMMAND_THEIR_PREPARE_KICKOFF and \
-            self._current_command == Referee.COMMAND_NORMAL_START
+        return (
+            self._prev_command == self._COMMAND_THEIR_PREPARE_KICKOFF
+            and self._current_command == Referee.COMMAND_NORMAL_START
+        )
 
     def our_pre_penalty(self):
         """
@@ -457,8 +463,10 @@ class RefereeParser(Node):
         Returns:
             bool: 現在のコマンドが自チームのペナルティの場合はTrue、それ以外はFalse.
         """
-        return self._prev_command == self._COMMAND_OUR_PREPARE_PENALTY and \
-            self._current_command == Referee.COMMAND_NORMAL_START
+        return (
+            self._prev_command == self._COMMAND_OUR_PREPARE_PENALTY
+            and self._current_command == Referee.COMMAND_NORMAL_START
+        )
 
     def their_pre_penalty(self):
         """
@@ -476,8 +484,10 @@ class RefereeParser(Node):
         Returns:
             bool: 現在のコマンドが相手チームのペナルティの場合はTrue、それ以外はFalse.
         """
-        return self._prev_command == self._COMMAND_THEIR_PREPARE_PENALTY and \
-            self._current_command == Referee.COMMAND_NORMAL_START
+        return (
+            self._prev_command == self._COMMAND_THEIR_PREPARE_PENALTY
+            and self._current_command == Referee.COMMAND_NORMAL_START
+        )
 
     def our_direct(self):
         """
