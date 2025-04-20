@@ -36,7 +36,8 @@ class KickTargetModel:
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
 
-        self._best_target_index = 0
+        self.best_target_index = 0
+        self.kick_target_list: list[KickTarget] = []
         self._goal_pos_list = [KickTarget()]
 
     def update_goal_pos_list(self, field: Field) -> None:
@@ -88,7 +89,7 @@ class KickTargetModel:
                 # 距離（近いほうが成功率が高そう）
                 distance = tool.get_distance(self._ball.pos, target.pos)
                 score += max(0, 40 - distance * 20)  # 距離2m以内ならOK
-                target.success_rate = score
+                target.success_rate = int(score)
 
         return self._goal_pos_list
 
@@ -103,18 +104,19 @@ class KickTargetModel:
 
     def _search_shoot_pos(self, search_ours=True) -> KickTarget:
         # ボールからの直線上にロボットがいないシュート位置リストを返す
+        RATE_MARGIN = 50  # ヒステリシスのためのマージン
         self.kick_target_list = self._update_scores(search_ours)
 
         high_score_target_index = self._high_score_target_index(self.kick_target_list)
 
-        if high_score_target_index == self._best_target_index:
+        if high_score_target_index == self.best_target_index:
             return self.kick_target_list[high_score_target_index]
 
         # ヒステリシス処理
         if (
             self.kick_target_list[high_score_target_index].success_rate
-            > self.kick_target_list[self._best_target_index].success_rate + 20
+            > self.kick_target_list[self.best_target_index].success_rate + RATE_MARGIN
         ):
-            self._best_target_index = high_score_target_index
+            self.best_target_index = high_score_target_index
 
-        return self.kick_target_list[self._best_target_index]
+        return self.kick_target_list[self.best_target_index]
