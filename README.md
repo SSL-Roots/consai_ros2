@@ -159,3 +159,20 @@ $ sudo apt install python3-autopep8
 # -i オプションで自動整形
 $ autopep8 --max-line-length 99 -i consai_examples/consai_examples/control.py
 ```
+
+### Dev Container
+VSCodeのDev Containerを使うと、CON-SAIの開発環境を簡単に構築できます。
+
+Containerの設定は下記の２つを用意しています
+
+- Local Dev Container
+  - ホスト環境のrobocupソフトウェアを使用する場合におすすめ
+- Web Container
+  - ホスト環境にROSやrobocupソフトウェアをインストールしない場合におすすめ
+  - 詳細は[README_dev_container.md](.devcontainer/README_dev_container.md)を参照してください
+
+Local Dev Containerを使う場合、下記のコマンドを実行してください
+
+```bash
+$ xhost +local:docker
+```
