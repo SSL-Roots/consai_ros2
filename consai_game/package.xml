@@ -16,6 +16,7 @@
   <test_depend>ament_black</test_depend>
 
   <depend>python3-transitions</depend>
+  <depend>python3-pre-commit</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
