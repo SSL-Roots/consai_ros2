@@ -93,6 +93,11 @@ class WorldModelProviderNode(Node):
                 robots=self.world_model.robots,
                 robot_activity=self.world_model.robot_activity,
             )
+            # 最適なシュートターゲットを更新
+            self.world_model.kick_target.update(
+                self.world_model.ball,
+                self.world_model.robots,
+            )
 
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""
@@ -127,3 +132,4 @@ class WorldModelProviderNode(Node):
             self.world_model.field.half_penalty_width = self.world_model.field.penalty_width / 2
 
             self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
+            self.world_model.kick_target.update_goal_pos_list(self.world_model.field)

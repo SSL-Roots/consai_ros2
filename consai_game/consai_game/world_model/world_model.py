@@ -23,6 +23,7 @@ from consai_game.world_model.field_model import Field, FieldPoints
 from consai_game.world_model.referee_model import RefereeModel
 from consai_game.world_model.robot_activity_model import RobotActivityModel
 from consai_game.world_model.robots_model import RobotsModel
+from consai_game.world_model.kick_target_model import KickTargetModel
 
 
 @dataclass
@@ -35,6 +36,7 @@ class WorldModel:
     ball_position: BallPositionModel = BallPositionModel(field, field_points)
     robot_activity: RobotActivityModel = RobotActivityModel()
     ball_activity: BallActivityModel = BallActivityModel()
+    kick_target: KickTargetModel = KickTargetModel()
 
     # TODO: 何かしらのmodelに格納したい
     our_team_is_yellow: bool = False

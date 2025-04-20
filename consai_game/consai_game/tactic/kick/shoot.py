@@ -26,7 +26,7 @@ class ShootStateMachine(Machine):
     """シュート状態遷移マシン."""
 
     BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-    SHOOT_ANGLE_THRESHOLD = 10  # シュート角度の閾値[degree]
+    SHOOT_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
 
     def __init__(self, name):
         self.name = name
@@ -45,24 +45,22 @@ class ShootStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(
-            model=self, states=states, transitions=transitions, initial="chasing"
-        )
+        super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
 
-    def update(self, dist_to_ball: float, shoot_angle: float):
+    def update(self, dist_to_ball: float, shoot_diff_angle: float):
         if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
             self.ball_far()
 
-        elif self.state == "aiming" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "aiming" and shoot_diff_angle < self.SHOOT_ANGLE_THRESHOLD:
             self.shoot()
 
-        elif self.state == "shooting" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "shooting" and shoot_diff_angle < self.SHOOT_ANGLE_THRESHOLD:
             self.reaiming()
 
-        elif self.state == "shooting" and shoot_angle >= self.SHOOT_ANGLE_THRESHOLD:
+        elif self.state == "shooting" and shoot_diff_angle >= self.SHOOT_ANGLE_THRESHOLD:
             self.done_shooting()
 
 
@@ -70,15 +68,12 @@ class Shoot(TacticBase):
     """指定した位置にシュートするTactic."""
 
     KICK_POWER_OFF = 0.0
-    KICK_POWER_ON = 10.0
+    KICK_POWER_ON = 5.0
     CHASING_BALL_APPROACH_X = 0.5
 
-    def __init__(self, target_x=6.0, target_y=0.0):
+    def __init__(self):
         super().__init__()
 
-        self.target_pos = State2D()
-        self.target_pos.x = target_x
-        self.target_pos.y = target_y
         self.move_pos = State2D()
 
         self.machine = ShootStateMachine("robot")
@@ -93,6 +88,15 @@ class Shoot(TacticBase):
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
 
+        # キックターゲットを取得
+        kick_target_model = world_model.kick_target
+        if kick_target_model.best_shoot_target.success_rate > 50:
+            target_pos = kick_target_model.best_shoot_target.pos
+        else:
+            target_pos = State2D()
+            target_pos.x = 6.0
+            target_pos.y = 0.0
+
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
@@ -101,9 +105,10 @@ class Shoot(TacticBase):
         dist_to_ball = tool.get_distance(ball_pos, robot_pos)
 
         # シュートの角度を計算
-        shoot_angle = tool.get_angle(ball_pos, self.target_pos)
+        shoot_angle = tool.get_angle(ball_pos, target_pos)
+        shoot_diff_angle = abs(tool.angle_normalize(robot_pos.theta - shoot_angle))
 
-        self.machine.update(dist_to_ball, shoot_angle)
+        self.machine.update(dist_to_ball, np.rad2deg(shoot_diff_angle))
 
         if self.machine.state == "chasing":
             command.kick_power = self.KICK_POWER_OFF
