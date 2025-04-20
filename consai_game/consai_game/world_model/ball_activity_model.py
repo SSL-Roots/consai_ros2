@@ -46,10 +46,13 @@ class BallActivityModel:
 
     HAS_BALL_DISTANCE_THRESHOLD = 0.2  # ボールとロボットの距離の閾値
     HAS_BALL_MARGIN = 0.1  # ヒステリシス処理に使用する
+    MOVING_VELOCITY_THRESHOLD = 0.1  # ボールが動いているとみなす速度の閾値
+    MOVING_VELOCITY_MARGIN = 0.05  # ヒステリシス処理に使用する
 
     def __init__(self):
         self.ball_state = BallState.FREE
         self.ball_holder: Optional[BallHolder] = None
+        self.ball_is_moving = False
 
     def update(self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel):
         """ボールの状態を更新するメソッド."""
@@ -63,6 +66,8 @@ class BallActivityModel:
             robots=robots,
             robot_activity=robot_activity,
         )
+        # ボールの移動状態を更新する
+        self.ball_is_moving = self.is_ball_moving(ball)
 
         if self.ball_holder:
             if self.ball_holder.is_our_team:
@@ -183,3 +188,20 @@ class BallActivityModel:
                 nearest_robot = robot
 
         return nearest_robot, nearest_distance
+
+    def is_ball_moving(self, ball: BallModel) -> bool:
+        """ボールが動いているかを判定するメソッド."""
+        if not ball.is_visible:
+            return False
+
+        vel_norm = tools.get_norm(ball.vel)
+
+        # ヒステリシス性をもたせる
+        if self.ball_is_moving:
+            if vel_norm > self.MOVING_VELOCITY_THRESHOLD - self.MOVING_VELOCITY_MARGIN:
+                return True
+            return False
+
+        if vel_norm > self.MOVING_VELOCITY_THRESHOLD:
+            return True
+        return False
