@@ -55,7 +55,7 @@ class BallActivityModel:
         self.ball_is_moving = False
 
     def update(self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel):
-        """ボールの状態を更新するメソッド."""
+        """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots, robot_activity):
             self.ball_holder = None
@@ -69,13 +69,28 @@ class BallActivityModel:
         # ボールの移動状態を更新する
         self.ball_is_moving = self.is_ball_moving(ball)
 
-        if self.ball_holder:
-            if self.ball_holder.is_our_team:
-                self.ball_state = BallState.OURS
-            else:
-                self.ball_state = BallState.THEIRS
+        # 最終的なボール状態を更新する
+        self.update_ball_state()
+
+    def update_ball_state(self):
+        """ボールの状態を更新するメソッド."""
+        # ボールが動いている場合は、前回の状態をもとに、今の状態を判定する
+        if self.ball_is_moving:
+            if self.ball_state in (BallState.OURS, BallState.OURS_KICKED):
+                self.ball_state = BallState.OURS_KICKED
+            elif self.ball_state in (BallState.THEIRS, BallState.THEIRS_KICKED):
+                self.ball_state = BallState.THEIRS_KICKED
+            elif self.ball_state == BallState.FREE:
+                self.ball_state = BallState.LOOSE
         else:
-            self.ball_state = BallState.FREE
+            # ボールが止まっている場合は、今の状況で判定する
+            if self.ball_holder:
+                if self.ball_holder.is_our_team:
+                    self.ball_state = BallState.OURS
+                else:
+                    self.ball_state = BallState.THEIRS
+            else:
+                self.ball_state = BallState.FREE
 
     def validate_and_update_ball_holder(
         self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel
