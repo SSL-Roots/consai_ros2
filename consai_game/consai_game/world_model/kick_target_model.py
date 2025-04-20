@@ -37,6 +37,7 @@ class KickTargetModel:
         self.robot_radius = 0.09
 
         self._best_target_index = 0
+        self._goal_pos_list = [KickTarget()]
 
     def update_goal_pos_list(self, field: Field) -> None:
         quarter_width = field.half_goal_width / 2
