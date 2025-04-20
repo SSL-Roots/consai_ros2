@@ -106,7 +106,7 @@ class Shoot(TacticBase):
 
         # シュートの角度を計算
         shoot_angle = tool.get_angle(ball_pos, target_pos)
-        shoot_diff_angle = abs(robot_pos.theta - shoot_angle)
+        shoot_diff_angle = abs(tool.angle_normalize(robot_pos.theta - shoot_angle))
 
         self.machine.update(dist_to_ball, np.rad2deg(shoot_diff_angle))
 
