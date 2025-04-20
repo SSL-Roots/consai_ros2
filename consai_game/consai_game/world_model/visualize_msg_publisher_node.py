@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from consai_game.world_model.ball_model import BallModel
+from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
 from consai_game.world_model.kick_target_model import KickTargetModel
 from consai_game.world_model.world_model import WorldModel
-from consai_visualizer_msgs.msg import Objects, ShapeLine
+from consai_visualizer_msgs.msg import Objects, ShapeLine, ShapeText, ShapeCircle
 from rclpy import qos
 from rclpy.node import Node
 
@@ -31,6 +32,10 @@ class VisualizeMsgPublisherNode(Node):
         """WorldModelをGUIに描画するためのトピックをpublishする."""
         self.pub_visualizer_objects.publish(
             self.kick_target_to_vis_msg(kick_target=world_model.kick_target, ball=world_model.ball)
+        )
+
+        self.pub_visualizer_objects.publish(
+            self.ball_activity_to_vis_msg(activity=world_model.ball_activity, ball=world_model.ball)
         )
 
     def kick_target_to_vis_msg(self, kick_target: KickTargetModel, ball: BallModel) -> Objects:
@@ -59,4 +64,41 @@ class VisualizeMsgPublisherNode(Node):
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
+        return vis_obj
+
+    def ball_activity_to_vis_msg(self, activity: BallActivityModel, ball: BallModel) -> Objects:
+        """ball_activityをObjectsメッセージに変換する."""
+        OUR_COLOR = "floralwhite"
+        THEIR_COLOR = "gray"
+
+        vis_obj = Objects()
+        vis_obj.layer = "game"
+        vis_obj.sub_layer = "ball_activity"
+        vis_obj.z_order = 4
+
+        # ボール付近にstate文字列を表示する
+        state_text = ShapeText()
+        state_text.text = activity.ball_state.name
+        state_text.x = ball.pos.x + 0.1
+        state_text.y = ball.pos.y + 0.1
+        state_text.size = 10
+        state_text.color.name = "white"
+        vis_obj.texts.append(state_text)
+
+        # ball_stateに合わせて、ボールの裏に円を描く
+        state_circle = ShapeCircle()
+        state_circle.center.x = ball.pos.x
+        state_circle.center.y = ball.pos.y
+        state_circle.radius = 0.1
+        state_circle.line_size = 1
+
+        if activity.ball_state in [BallState.OURS, BallState.OURS_KICKED]:
+            state_circle.line_color.name = OUR_COLOR
+            state_circle.fill_color.name = OUR_COLOR
+            vis_obj.circles.append(state_circle)
+        elif activity.ball_state in [BallState.THEIRS, BallState.THEIRS_KICKED]:
+            state_circle.line_color.name = THEIR_COLOR
+            state_circle.fill_color.name = THEIR_COLOR
+            vis_obj.circles.append(state_circle)
+
         return vis_obj
