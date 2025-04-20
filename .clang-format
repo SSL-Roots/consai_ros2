@@ -1,4 +1,0 @@
-BasedOnStyle: Google
-IndentWidth: 2         # インデント幅
-ColumnLimit: 100       # 行の長さの上限
-
