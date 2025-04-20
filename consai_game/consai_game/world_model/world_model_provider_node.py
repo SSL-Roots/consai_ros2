@@ -48,7 +48,7 @@ class WorldModelProviderNode(Node):
     consai_param/rule トピックからフィールド設定を受信し, フィールド寸法と関連情報を更新する.
     """
 
-    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False):
+    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False, goalie_id: int = 0):
         """
         初期化.
 
@@ -60,7 +60,9 @@ class WorldModelProviderNode(Node):
         self.timer = self.create_timer(1.0 / update_hz, self.update)
 
         self.world_model = WorldModel()
-        self.world_model.set_our_team_is_yellow(team_is_yellow)
+        self.world_model.game_config.our_team_is_yellow = team_is_yellow
+        self.world_model.robots.our_team_is_yellow = team_is_yellow
+        self.world_model.game_config.goalie_id = goalie_id
 
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
         self.sub_detection_traced = self.create_subscription(
@@ -105,9 +107,8 @@ class WorldModelProviderNode(Node):
             self.world_model.referee = parse_referee_msg(
                 msg=msg,
                 prev_data=self.world_model.referee,
-                our_team_is_yellow=self.world_model.our_team_is_yellow,
+                our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
             )
-            # self.world_model.referee.parse_msg(msg)
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
         """メッセージ TrackedFrame を受信してロボットとボールの状態を更新する."""
