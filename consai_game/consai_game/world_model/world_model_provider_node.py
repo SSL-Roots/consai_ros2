@@ -88,6 +88,11 @@ class WorldModelProviderNode(Node):
             self.world_model.ball_position.update_position(
                 self.world_model.ball, self.world_model.field, self.world_model.field_points
             )
+            self.world_model.ball_activity.update(
+                ball=self.world_model.ball,
+                robots=self.world_model.robots,
+                robot_activity=self.world_model.robot_activity,
+            )
             # 最適なシュートターゲットを更新
             self.world_model.kick_target.update(
                 self.world_model.ball,

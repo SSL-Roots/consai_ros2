@@ -40,6 +40,11 @@ def get_distance(pose1: State2D, pose2: State2D) -> float:
     return math.hypot(diff.x, diff.y)
 
 
+def get_norm(pose: State2D) -> float:
+    # 大きさを取る関数
+    return math.hypot(pose.x, pose.y)
+
+
 def get_line_parameter(pose1, pose2):
     # 2点間を結ぶ直線の傾きと切片を求める関数
     diff = get_diff_xy(pose1, pose2)
@@ -75,16 +80,15 @@ def get_angle(from_pose, to_pose):
 def angle_normalize(angle):
     # 角度をpi  ~ -piの範囲に変換する関数
     while angle > math.pi:
-        angle -= 2*math.pi
+        angle -= 2 * math.pi
 
     while angle < -math.pi:
-        angle += 2*math.pi
+        angle += 2 * math.pi
 
     return angle
 
 
-def is_on_line(pose: State2D, line_pose1: State2D,
-               line_pose2: State2D, tolerance: float) -> bool:
+def is_on_line(pose: State2D, line_pose1: State2D, line_pose2: State2D, tolerance: float) -> bool:
     # poseがline_pose1とline_pose2を結ぶ直線上にあるかを判定する関数
     # toleranceは許容誤差
 
@@ -104,7 +108,7 @@ def is_on_line(pose: State2D, line_pose1: State2D,
     return True
 
 
-class Trans():
+class Trans:
     # 座標系を移動、回転するクラス
     def __init__(self, center, theta):
         normalized_theta = angle_normalize(theta)
