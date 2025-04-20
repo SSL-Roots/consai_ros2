@@ -34,7 +34,7 @@ class WorldModel:
     field_points: FieldPoints = FieldPoints.create_field_points(field)
     ball_position: BallPositionModel = BallPositionModel(field, field_points)
     robot_activity: RobotActivityModel = RobotActivityModel()
-    kick_target: KickTargetModel = KickTargetModel(field, field_points)
+    kick_target: KickTargetModel = KickTargetModel()
 
     # TODO: 何かしらのmodelに格納したい
     our_team_is_yellow: bool = False

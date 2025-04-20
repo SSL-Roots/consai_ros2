@@ -14,7 +14,7 @@
 
 from dataclasses import dataclass, field
 
-from consai_game.world_model.field_model import Field, FieldPoints
+from consai_game.world_model.field_model import Field
 from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.ball_model import BallModel
 from consai_tools.geometry import geometry_tools as tool
@@ -32,28 +32,24 @@ class KickTarget:
 class KickTargetModel:
     """キックターゲットを保持するクラス."""
 
-    def __init__(self, field: Field, field_points: FieldPoints):
+    def __init__(self):
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
 
-        self._field = field
-        self._field_points = field_points
-
-        self.half_half_goal_width = self._field.half_goal_width / 2
-        self.quater_half_goal_width = self._field.half_goal_width / 4
-
         self._best_target_index = 0
 
-    def update_goal_pos_list(self, field_points: FieldPoints) -> None:
-        self._field_points = field_points
+    def update_goal_pos_list(self, field: Field) -> None:
+        quarter_width = field.half_goal_width / 2
+        one_eighth_width = field.half_goal_width / 4
+
         self._goal_pos_list = [
-            KickTarget(pos=Point(self._field.half_length, 0.0)),
-            KickTarget(pos=Point(self._field.half_length, self.quater_half_goal_width)),
-            KickTarget(pos=Point(self._field.half_length, -self.quater_half_goal_width)),
-            KickTarget(pos=Point(self._field.half_length, self.half_half_goal_width)),
-            KickTarget(pos=Point(self._field.half_length, -self.half_half_goal_width)),
-            KickTarget(pos=Point(self._field.half_length, self.half_half_goal_width + self.quater_half_goal_width)),
-            KickTarget(pos=Point(self._field.half_length, -(self.half_half_goal_width + self.quater_half_goal_width))),
+            KickTarget(pos=Point(field.half_length, 0.0)),
+            KickTarget(pos=Point(field.half_length, one_eighth_width)),
+            KickTarget(pos=Point(field.half_length, -one_eighth_width)),
+            KickTarget(pos=Point(field.half_length, quarter_width)),
+            KickTarget(pos=Point(field.half_length, -quarter_width)),
+            KickTarget(pos=Point(field.half_length, quarter_width + one_eighth_width)),
+            KickTarget(pos=Point(field.half_length, -(quarter_width + one_eighth_width))),
         ]
 
     def update(

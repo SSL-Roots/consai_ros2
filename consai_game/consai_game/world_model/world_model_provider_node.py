@@ -127,4 +127,4 @@ class WorldModelProviderNode(Node):
             self.world_model.field.half_penalty_width = self.world_model.field.penalty_width / 2
 
             self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
-            self.world_model.kick_target.update_goal_pos_list(self.world_model.field_points)
+            self.world_model.kick_target.update_goal_pos_list(self.world_model.field)
