@@ -245,7 +245,7 @@ class RoleAssignment(Node):
                 next_attacker_id = self._determine_attacker_via_ball_pos(our_robots, ball)
             elif self._present_ball_state == BallState.MOVE:
                 # ボールが動いている場合は、ボールの軌道をもとにアタッカーを更新する
-                next_attacker_id = self._determine_attacker_via_ball_motion(our_robots, ball)
+                next_attacker_id = self._determine_attacker_via_ball_pos(our_robots, ball)
 
             if next_attacker_id is not None and next_attacker_id in self._id_list_ordered_by_role_priority:
                 next_attacker_priority = self._id_list_ordered_by_role_priority.index(next_attacker_id)
