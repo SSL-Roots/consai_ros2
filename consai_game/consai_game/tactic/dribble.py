@@ -1,0 +1,179 @@
+# Copyright 2025 Roots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Dribble Tactic.
+
+指定位置へボールをドリブルで運ぶ.
+"""
+
+
+from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.tactic_base import TacticState
+from consai_game.world_model.world_model import WorldModel
+
+from consai_msgs.msg import MotionCommand
+from consai_msgs.msg import State2D
+
+from consai_tools.geometry import geometry_tools as tool
+
+import numpy as np
+
+from transitions import Machine
+
+
+class DribbleStateMachine(Machine):
+    """ドリブルの状態遷移マシン."""
+
+    # ボールが近いとみなす距離の閾値[m]
+    BALL_NEAR_THRESHOLD = 0.5
+    # ボールを保持していると判定する距離の閾値[m]
+    BALL_GET_THRESHOLD = 0.2
+    # 目的地が近いとみなす距離の閾値[m]
+    DIST_TARGET_TO_BALL_THRESHOLD = 0.2
+
+    # ドリブル角度の閾値[degree]
+    DRIBBLE_ANGLE_THRESHOLD = 5
+
+    def __init__(self, name):
+        """状態遷移の初期化."""
+        self.name = name
+
+        # 状態定義
+        states = ["chasing", "aiming", "dribbling", "arrived"]
+
+        # 遷移定義
+        transitions = [
+            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
+            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
+            {"trigger": "dribble", "source": "aiming", "dest": "dribbling"},
+            {"trigger": "reaiming", "source": "dribbling", "dest": "aiming"},
+            {"trigger": "arrival", "source": "dribbling", "dest": "arrived"},
+            {"trigger": "done", "source": "arrived", "dest": "chasing"},
+            {"trigger": "reset", "source": "*", "dest": "chasing"},
+        ]
+
+        # ステートマシン構築
+        super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
+
+    def update(self, dist_to_ball: float, dist_ball_to_target: float, dribble_diff_angle: float):
+        """状態遷移."""
+        if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
+            self.ball_near()
+
+        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
+            self.ball_far()
+
+        elif self.state == "aiming" and dribble_diff_angle < self.DRIBBLE_ANGLE_THRESHOLD:
+            self.dribble()
+
+        elif self.state == "dribbling" and self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle:
+            self.reaiming()
+
+        elif self.state == "dribbling" and self.BALL_GET_THRESHOLD < dist_to_ball:
+            self.reaiming()
+
+        elif self.state == "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
+            self.arrival()
+
+        elif self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
+            self.done()
+
+
+class Dribble(TacticBase):
+    """指定した位置にドリブルするTactic."""
+
+    DRIBBLE_POWER_ON = 1.0
+    DRIBBLE_POWER_OFF = 0.0
+    CHASING_BALL_APPROACH_DIST = 0.5
+
+    def __init__(self, x=0.0, y=0.0):
+        """Initialize the DefendGoal tactic."""
+        super().__init__()
+
+        self.move_pos = State2D()
+        self.target_pos = State2D(x=x, y=y)
+        self.machine = DribbleStateMachine("robot")
+
+    def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
+        self.robot_id = robot_id
+        self.state = TacticState.RUNNING
+        self.machine.reset()
+
+    def run(self, world_model: WorldModel) -> MotionCommand:
+        """Run the tactic and return a MotionCommand based on the ball's position and movement."""
+        command = MotionCommand()
+        command.robot_id = self.robot_id
+        command.mode = MotionCommand.MODE_NAVI
+
+        # ボールの位置を取得
+        ball_pos = world_model.ball.pos
+        # ロボットの位置を取得
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+
+        # ロボットとボールの距離を計算
+        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
+        # ボールと目標位置の距離を計算
+        dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
+
+        # ドリブル角度を計算
+        dribble_angle = tool.get_angle(ball_pos, self.target_pos)
+
+        # ドリブル角度との差分を計算
+        dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
+
+        # 状態遷移を更新
+        self.machine.update(dist_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle))
+
+        if self.machine.state == "chasing":
+            # ボールの近くへ移動
+            self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_DIST * np.cos(dribble_angle)
+            self.move_pos.y = ball_pos.y - self.CHASING_BALL_APPROACH_DIST * np.sin(dribble_angle)
+            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
+
+            # ドリブラーOFF
+            command.dribble_power = self.DRIBBLE_POWER_OFF
+
+        elif self.machine.state == "aiming":
+            # 運搬方向に方向に向けて移動
+            self.move_pos.x = ball_pos.x - 0.2 * np.cos(dribble_angle)
+            self.move_pos.y = ball_pos.y - 0.2 * np.sin(dribble_angle)
+            self.move_pos.theta = dribble_angle
+
+            # ドリブラーOFF
+            command.dribble_power = self.DRIBBLE_POWER_OFF
+            # ボールを回避をしない
+            command.navi_options.avoid_ball = False
+
+        elif self.machine.state == "dribbling":
+            # 角度が適切な場合はドリブルを実行
+            self.move_pos.x = self.target_pos.x - 0.15 * np.cos(dribble_angle)
+            self.move_pos.y = self.target_pos.y - 0.15 * np.sin(dribble_angle)
+            self.move_pos.theta = dribble_angle
+            command.dribble_power = self.DRIBBLE_POWER_ON
+
+            # ボールを回避をしない
+            command.navi_options.avoid_ball = False
+
+        else:
+            # 停止処理
+            self.move_pos.x = robot_pos.x
+            self.move_pos.y = robot_pos.y
+            self.move_pos.theta = robot_pos.theta
+            command.dribble_power = self.DRIBBLE_POWER_OFF
+
+        command.desired_pose = self.move_pos
+
+        return command
