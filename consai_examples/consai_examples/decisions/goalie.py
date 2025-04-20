@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットがゴール前で防御を行うための操作を提供するモジュール."""
+
 import math
 
 from consai_examples.decisions.decision_base import DecisionBase
@@ -28,12 +30,15 @@ from consai_tools.geometry import geometry_tools
 
 
 class GoaleDecision(DecisionBase):
+    """ゴール前で防御を行うクラス."""
 
     def __init__(self, robot_operator, field_observer):
+        """GoaleDecisionクラスの初期化関数."""
         super().__init__(robot_operator, field_observer)
         self._in_flag = 0
 
     def _defend_goal_operation(self):
+        """ゴール前を守るための操作を行う関数."""
         # ゴール前を守る位置のマージン[m]
         MARGIN_X = self._div_a_x(0.2)
         MARGIN_Y = self._div_a_y(0.35)
@@ -109,6 +114,7 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def _penalty_defend_operation(self):
+        """ペナルティエリアを守るための操作を行う関数."""
         p1_x = self._div_a_x(-6.0 + 0.05)
         p1_y = self._div_a_y(0.9)
         p2_x = self._div_a_x(-6.0 + 0.05)
@@ -121,6 +127,7 @@ class GoaleDecision(DecisionBase):
         return defend_goal
 
     def stop(self, robot_id):
+        """ロボットがゴール前で防御を行う関数."""
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_ball()
         defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
@@ -128,6 +135,7 @@ class GoaleDecision(DecisionBase):
         self._operator.operate(robot_id, defend_our_goal)
 
     def inplay(self, robot_id):
+        """試合中にボールがディフェンスエリアにある場合の動作を行う関数."""
         # ボールがディフェンスエリアにあるときは、ボールを蹴る
         if self._field_observer.ball_position().is_in_our_defense_area() \
            and not self._field_observer.ball_motion().is_moving():
@@ -169,20 +177,24 @@ class GoaleDecision(DecisionBase):
         self._operator.operate(robot_id, defend_our_goal)
 
     def their_pre_penalty(self, robot_id):
+        """相手のペナルティエリア前で防御を行う関数."""
         penalty_defend = self._penalty_defend_operation()
         self._operator.operate(robot_id, penalty_defend)
 
     def their_penalty(self, robot_id):
+        """相手がペナルティキックを行う際に防御を行う関数."""
         penalty_defend = self._penalty_defend_operation()
         self._operator.operate(robot_id, penalty_defend)
 
     def our_ball_placement(self, robot_id, placement_pos):
+        """味方のボール配置時に防御を行う関数."""
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_placement_area(placement_pos)
         defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, defend_our_goal)
 
     def their_ball_placement(self, robot_id, placement_pos):
+        """相手のボール配置時に防御を行う関数."""
         defend_our_goal = self._defend_goal_operation()
         defend_our_goal = defend_our_goal.enable_avoid_placement_area(placement_pos)
         defend_our_goal = defend_our_goal.enable_avoid_pushing_robots()
@@ -190,7 +202,9 @@ class GoaleDecision(DecisionBase):
 
 
 def generate_defend_function():
+    """ディフェンス用の関数を生成する関数."""
     def function(self, robot_id):
+        """ロボットにディフェンスゴールを操作させる関数."""
         defend_our_goal = self._defend_goal_operation()
         self._operator.operate(robot_id, defend_our_goal)
     return function

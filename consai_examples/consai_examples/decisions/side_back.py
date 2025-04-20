@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""サイドバック戦略を決定するモジュール."""
+
 import math
 from enum import Enum
 
@@ -23,23 +25,30 @@ from consai_examples.operation import Operation, TargetTheta, TargetXY
 
 
 class SideBackID(Enum):
+    """サイドバックIDを示す列挙型."""
+
     SIDE1 = 0
     SIDE2 = 1
 
 
 class SideBackDecision(DecisionBase):
+    """サイドバック戦略を決定するクラス."""
 
     def __init__(self, robot_operator, field_observer, side_id: SideBackID):
+        """サイドバック戦略を決定するクラスを初期化する関数."""
         super().__init__(robot_operator, field_observer)
         self._side_id = side_id
 
     def _wait_target_x(self):
+        """待機するX座標を返す関数."""
         return self._div_a_x(-5.0)
 
     def _wait_target_y(self):
+        """待機するY座標を返す関数."""
         return self._div_a_y(2.5)
 
     def _side_back_operation(self, without_mark=False):
+        """サイドバック戦略に基づいた操作を生成する関数."""
         SIDE_ID = self._side_id.value
         MARK_THRESHOLD_Y = self._div_a_y(3.0)
         DISTANCE_FROM = self._div_a_x(0.25)
@@ -82,7 +91,7 @@ class SideBackDecision(DecisionBase):
         return operation
 
     def _get_side_target_xy(self):
-        # 待機場所をそれぞれの関数で算出する
+        """サイドごとの待機位置を算出する関数."""
         target_x = self._wait_target_x()
         target_y = self._wait_target_y()
         if self._side_id == SideBackID.SIDE1:
@@ -92,64 +101,77 @@ class SideBackDecision(DecisionBase):
         return target_x, target_y
 
     def _get_side1_target_xy(self):
+        """SIDE1の待機位置を計算する関数."""
         target_x = self._wait_target_x()
         target_y = self._wait_target_y()
         return target_x, target_y
 
     def _get_side2_target_xy(self):
+        """SIDE2の待機位置を計算する関数."""
         target_x = self._wait_target_x()
         target_y = -self._wait_target_y()
         return target_x, target_y
 
     def stop(self, robot_id):
+        """ロボットを停止させる関数."""
         operation = self._side_back_operation(without_mark=True)
         operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_pushing_robots()
         self._operator.operate(robot_id, operation)
 
     def inplay(self, robot_id):
+        """ロボットが試合中の動作をする関数."""
         operation = self._side_back_operation()
         self._operator.operate(robot_id, operation)
 
     def our_pre_kickoff(self, robot_id):
+        """ロボットがキックオフ前の動作をする関数."""
         operation = self._side_back_operation(without_mark=True)
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def our_kickoff(self, robot_id):
+        """ロボットがキックオフの動作をする関数."""
         operation = self._side_back_operation(without_mark=True)
         self._operator.operate(robot_id, operation)
 
     def their_pre_kickoff(self, robot_id):
+        """相手チームのキックオフ前の動作をする関数."""
         operation = self._side_back_operation(without_mark=True)
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def their_kickoff(self, robot_id):
+        """相手チームのキックオフの動作をする関数."""
         operation = self._side_back_operation(without_mark=True)
         self._operator.operate(robot_id, operation)
 
     def our_direct(self, robot_id):
+        """直接フリーキックの際の動作をする関数."""
         operation = self._side_back_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def their_direct(self, robot_id):
+        """相手の直接フリーキックの際の動作をする関数."""
         operation = self._side_back_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def our_indirect(self, robot_id):
+        """間接フリーキックの際の動作をする関数."""
         operation = self._side_back_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def their_indirect(self, robot_id):
+        """相手の間接フリーキックの際の動作をする関数."""
         operation = self._side_back_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
 
     def _our_penalty_operation(self):
+        """自陣ペナルティエリアでの待機動作を生成する関数."""
         self._our_penalty_pos_x = -self._penalty_wait_x()
         self._our_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (3.0 + self._side_id.value))
         return Operation().move_to_pose(
@@ -157,6 +179,7 @@ class SideBackDecision(DecisionBase):
             TargetTheta.look_ball())
 
     def _their_penalty_operation(self):
+        """相手陣ペナルティエリアでの待機動作を生成する関数."""
         self._their_penalty_pos_x = self._penalty_wait_x()
         self._their_penalty_pos_y = self._div_a_y(4.5 - 0.3 * (3.0 + self._side_id.value))
         return Operation().move_to_pose(
@@ -164,6 +187,7 @@ class SideBackDecision(DecisionBase):
             TargetTheta.look_ball())
 
     def _ball_placement_operation(self):
+        """ボールを配置するための動作を生成する関数."""
         self._ball_placement_pos_x = self._div_a_x(-6.0 + 2.0)
         self._ball_placement_pos_y = self._div_a_y(1.8 - 0.3 * (8.0 + self._side_id.value))
         return Operation().move_to_pose(
@@ -173,7 +197,9 @@ class SideBackDecision(DecisionBase):
 
 
 def gen_our_penalty_function():
+    """自陣ペナルティエリアでの待機動作を生成する関数を返す関数."""
     def function(self, robot_id):
+        """自陣ペナルティエリアでの待機動作を実行する関数."""
         operation = self._our_penalty_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
@@ -181,7 +207,9 @@ def gen_our_penalty_function():
 
 
 def gen_their_penalty_function():
+    """相手陣ペナルティエリアでの待機動作を生成する関数を返す関数."""
     def function(self, robot_id):
+        """相手陣ペナルティエリアでの待機動作を実行する関数."""
         operation = self._their_penalty_operation()
         operation = operation.enable_avoid_ball()
         self._operator.operate(robot_id, operation)
@@ -189,7 +217,9 @@ def gen_their_penalty_function():
 
 
 def gen_ball_placement_function():
+    """ボール配置動作を生成する関数を返す関数."""
     def function(self, robot_id, placement_pos=None):
+        """ボール配置動作を実行する関数."""
         operation = self._side_back_operation(without_mark=True)
         operation = operation.enable_avoid_ball()
         operation = operation.enable_avoid_placement_area(placement_pos)

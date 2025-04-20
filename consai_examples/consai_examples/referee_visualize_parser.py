@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""レフェリー情報や制約エリアを描画するモジュール."""
+
 import math
 
 from consai_msgs.msg import ParsedReferee, State2D
@@ -25,7 +27,7 @@ from robocup_ssl_msgs.msg import Referee, Vector3
 
 def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
              placement_pos: State2D):
-    # レフェリー情報を描画オブジェクトに変換する
+    """レフェリー情報を描画オブジェクトに変換する関数."""
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
     STAGE_COMMAND_WIDTH = 0.15
@@ -196,6 +198,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
 
 
 def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
+    """禁止エリアを描画する関数."""
     COLOR_LINE = 'black'
     COLOR_FILL = 'crimson'
     FILL_ALPHA = 0.3
@@ -240,7 +243,7 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
 
 
 def parse_stage(ref_stage):
-    # レフェリーステージを文字列に変換する
+    """レフェリーステージを文字列に変換する関数."""
     output = "STAGE"
 
     if ref_stage == Referee.STAGE_NORMAL_FIRST_HALF_PRE:
@@ -277,7 +280,7 @@ def parse_stage(ref_stage):
 
 def parse_command(referee: Referee,
                   blue_color: str = 'blue', yellow_color: str = 'yellow') -> (str, str):
-    # レフェリーコマンドを文字列と文字色に変換する
+    """レフェリーコマンドを文字列と文字色に変換する関数."""
     output = "COMMAND"
     text_color = 'white'
 
@@ -338,17 +341,18 @@ def parse_command(referee: Referee,
 
 
 def _microseconds_to_text(microseconds):
+    """マイクロ秒を分:秒形式の文字列に変換する関数."""
     minutes, seconds = divmod(math.ceil(microseconds * 1e-6), 60)  # ceilで小数点切り上げ
     return '{} : {:0=2}'.format(minutes, seconds)  # 秒はゼロで埋める
 
 
 def parse_stage_time_left(ref_stage_time_left):
-    # レフェリーステージの残り時間(usec)を文字列に変換する
+    """レフェリーステージの残り時間を文字列に変換する関数."""
     return "STAGE: " + _microseconds_to_text(ref_stage_time_left)
 
 
 def parse_action_time_remaining(ref_action_time_remaining):
-    # アクション残り時間(usec)を文字列に変換する
+    """アクション残り時間を文字列に変換する関数."""
     text = "0:00"
     if ref_action_time_remaining > 0:
         text = _microseconds_to_text(ref_action_time_remaining)
@@ -356,6 +360,7 @@ def parse_action_time_remaining(ref_action_time_remaining):
 
 
 def parse_yellow_card_times(yellow_card_times):
+    """イエローカードの時間を文字列に変換する関数."""
     if len(yellow_card_times) == 0:
         return "NO CARDS"
 
@@ -369,5 +374,6 @@ def parse_yellow_card_times(yellow_card_times):
 
 
 def parse_timeouts(timeouts, timeout_time):
+    """タイムアウトの回数と時間を文字列に変換する関数."""
     return 'Timeouts: {}\n {}'.format(
         timeouts, _microseconds_to_text(timeout_time))

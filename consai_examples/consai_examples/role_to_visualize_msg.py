@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの役割情報を可視化メッセージに変換するモジュール."""
 
 from consai_examples.observer.pos_vel import PosVel
 

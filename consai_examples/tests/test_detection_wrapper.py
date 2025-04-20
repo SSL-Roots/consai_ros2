@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""DetectionWrapperのユニットテストモジュール."""
+
 from consai_examples.observer.detection_wrapper import DetectionWrapper
 
 import pytest
@@ -23,6 +25,7 @@ from tracked_frame_wrapper import TrackedFrameWrapper
 
 
 def test_initialize():
+    """DetectionWrapperの初期状態をテストする関数."""
     detection = DetectionWrapper(our_team_is_yellow=False)
 
     assert len(detection.our_robots()) == 0
@@ -32,6 +35,7 @@ def test_initialize():
 
 
 def test_set_our_robots():
+    """味方ロボットの設定処理をテストする関数."""
     detection = DetectionWrapper(our_team_is_yellow=False)
 
     frame = TrackedFrameWrapper()
@@ -49,6 +53,7 @@ def test_set_our_robots():
 
 
 def test_change_team_color():
+    """チームカラーの変更によるロボット識別の変化をテストする関数."""
     detection = DetectionWrapper(our_team_is_yellow=True)
 
     frame = TrackedFrameWrapper()
@@ -60,6 +65,7 @@ def test_change_team_color():
 
 
 def test_set_ball():
+    """ボールの位置設定処理をテストする関数."""
     detection = DetectionWrapper(our_team_is_yellow=False)
 
     frame = TrackedFrameWrapper()
@@ -71,6 +77,7 @@ def test_set_ball():
 
 
 def test_invalid_robots():
+    """無効なロボットが設定された場合の挙動をテストする関数."""
     detection = DetectionWrapper(our_team_is_yellow=False)
 
     frame = TrackedFrameWrapper()

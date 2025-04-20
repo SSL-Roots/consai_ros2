@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""レフェリー情報を解析するモジュール."""
+
 import math
 
 import consai_examples.referee_visualize_parser as ref_vis_parser
@@ -33,9 +35,10 @@ from robocup_ssl_msgs.msg import Referee, RobotId, TrackedBall, TrackedFrame, Ve
 class RefereeParser(Node):
     """
     レフェリー情報を解析するノード.
-    このノードは,'referee'トピックを受信し, ゲームの状態やコマンドに基づいてレフェリー情報を解析し, 
-    解析結果を'parsed_referee'トピックに発行する. また,'visualizer_objects'トピックを通じて, 可視化のための情報を提供する.
-    
+
+    このノードは, 'referee'トピックを受信し, ゲームの状態やコマンドに基づいてレフェリー情報を解析し,
+    解析結果を'parsed_referee'トピックに発行する. また, 'visualizer_objects'トピックを通じて, 可視化のための情報を提供する.
+
     Attributes:
         _our_team_is_yellow (bool): 自チームが黄色かどうか.
         _invert_placement_pos (bool): ボールプレースメントの座標を反転するかどうか.
@@ -52,6 +55,7 @@ class RefereeParser(Node):
         _num_of_yellow_bots (int): 黄色チームのロボット数.
         _command_elapsed_time (float): コマンドの経過時間.
     """
+
     _STAGE_STR_DICT = {
         Referee.STAGE_NORMAL_FIRST_HALF_PRE: 'NORMAL_FIRST_HALF_PRE',
         Referee.STAGE_NORMAL_FIRST_HALF: 'NORMAL_FIRST_HALF',
@@ -146,7 +150,7 @@ class RefereeParser(Node):
     def _detection_tracked_callback(self, msg: TrackedFrame) -> None:
         """
         トラッキングデータを処理し、ボールの位置を更新する.
-        
+
         Args:
             msg (TrackedFrame): トラッキングされたフレームのデータ.
         """
@@ -158,7 +162,7 @@ class RefereeParser(Node):
     def _referee_callback(self, msg):
         """
         レフェリーからのメッセージを受信し、状態を更新する.
-        
+
         Args:
             msg (Referee): レフェリーからのメッセージ.
         """
@@ -202,7 +206,7 @@ class RefereeParser(Node):
     def _bundle_parsed_referee(self) -> ParsedReferee:
         """
         解析したレフェリー情報をまとめる.
-        
+
         Returns:
             ParsedReferee: 解析後のレフェリー情報.
         """
@@ -233,7 +237,7 @@ class RefereeParser(Node):
             self, msg: Referee, parsed_ref_msg: ParsedReferee) -> None:
         """
         レフェリー情報を可視化するためのメッセージをpublishする.
-        
+
         Args:
             msg (Referee): レフェリーからのメッセージ.
             parsed_ref_msg (ParsedReferee): 解析後のレフェリー情報.
@@ -248,7 +252,7 @@ class RefereeParser(Node):
     def _update_num_of_bots(self, msg: TrackedFrame) -> None:
         """
         フィールド上のロボット台数を計上する.
-        
+
         Args:
             msg (TrackedFrame): トラッキングされたフレームのデータ.
         """
@@ -272,15 +276,15 @@ class RefereeParser(Node):
     def _check_inplay(self, msg):
         """
         referee情報とフィールド情報をもとに、インプレイ状態を判定する.
-        
+
         Args:
             msg (Referee): レフェリーからのメッセージ.
         """
-        #インプレイ状態であれば、self._current_commandを上書きする
+        # インプレイ状態であれば、self._current_commandを上書きする
 
-        #Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball_in_and_out_of_play
-        #force start has been issued.
-        
+        # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_ball_in_and_out_of_play
+        # force start has been issued.
+
         if self._current_command == Referee.COMMAND_FORCE_START:
             self.get_logger().info('force startによりinplayに変わります')
             self._current_command = self._COMMAND_INPLAY
@@ -328,7 +332,7 @@ class RefereeParser(Node):
     def present_stage(self):
         """
         ステージのテキストを返す.
-        
+
         Returns:
             str: 現在のステージを表すテキスト.
         """
@@ -337,7 +341,7 @@ class RefereeParser(Node):
     def get_command(self):
         """
         レフェリーコマンドを返す.
-        
+
         Returns:
             int: 現在のレフェリーコマンド.
 
@@ -348,7 +352,7 @@ class RefereeParser(Node):
     def halt(self):
         """
         現在のコマンドがHALTであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドがHALTの場合はTrue、それ以外はFalse.
         """
@@ -357,7 +361,7 @@ class RefereeParser(Node):
     def stop(self):
         """
         現在のコマンドがSTOPであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドがSTOPの場合はTrue、それ以外はFalse.
         """
@@ -366,7 +370,7 @@ class RefereeParser(Node):
     def inplay(self):
         """
         現在のコマンドがINPLAYであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドがINPLAYの場合はTrue、それ以外はFalse.
         """
@@ -375,7 +379,7 @@ class RefereeParser(Node):
     def force_start(self):
         """
         現在のコマンドがFORCE_STARTであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドがFORCE_STARTの場合はTrue、それ以外はFalse.
         """
@@ -384,7 +388,7 @@ class RefereeParser(Node):
     def our_penalty_inplay(self):
         """
         現在のコマンドが自チームのペナルティインプレイであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのペナルティインプレイの場合はTrue、それ以外はFalse.
         """
@@ -393,7 +397,7 @@ class RefereeParser(Node):
     def their_penalty_inplay(self):
         """
         現在のコマンドが相手チームのペナルティインプレイであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのペナルティインプレイの場合はTrue、それ以外はFalse.
         """
@@ -402,7 +406,7 @@ class RefereeParser(Node):
     def our_pre_kickoff(self):
         """
         現在のコマンドが自チームのプレキックオフであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのプレキックオフの場合はTrue、それ以外はFalse.
         """
@@ -411,7 +415,7 @@ class RefereeParser(Node):
     def our_kickoff(self):
         """
         現在のコマンドが自チームのキックオフであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのキックオフの場合はTrue、それ以外はFalse.
         """
@@ -421,7 +425,7 @@ class RefereeParser(Node):
     def their_pre_kickoff(self):
         """
         現在のコマンドが相手チームのプレキックオフであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのプレキックオフの場合はTrue、それ以外はFalse.
         """
@@ -430,7 +434,7 @@ class RefereeParser(Node):
     def their_kickoff(self):
         """
         現在のコマンドが相手チームのキックオフであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのキックオフの場合はTrue、それ以外はFalse.
         """
@@ -440,7 +444,7 @@ class RefereeParser(Node):
     def our_pre_penalty(self):
         """
         現在のコマンドが自チームのプレペナルティであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのプレペナルティの場合はTrue、それ以外はFalse.
         """
@@ -449,7 +453,7 @@ class RefereeParser(Node):
     def our_penalty(self):
         """
         現在のコマンドが自チームのペナルティであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのペナルティの場合はTrue、それ以外はFalse.
         """
@@ -459,7 +463,7 @@ class RefereeParser(Node):
     def their_pre_penalty(self):
         """
         現在のコマンドが相手チームのプレペナルティであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのプレペナルティの場合はTrue、それ以外はFalse.
         """
@@ -468,7 +472,7 @@ class RefereeParser(Node):
     def their_penalty(self):
         """
         現在のコマンドが相手チームのペナルティであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのペナルティの場合はTrue、それ以外はFalse.
         """
@@ -478,7 +482,7 @@ class RefereeParser(Node):
     def our_direct(self):
         """
         現在のコマンドが自チームの直接フリーキックであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームの直接フリーキックの場合はTrue、それ以外はFalse.
         """
@@ -487,7 +491,7 @@ class RefereeParser(Node):
     def their_direct(self):
         """
         現在のコマンドが相手チームの直接フリーキックであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームの直接フリーキックの場合はTrue、それ以外はFalse.
         """
@@ -496,7 +500,7 @@ class RefereeParser(Node):
     def our_indirect(self):
         """
         現在のコマンドが自チームの間接フリーキックであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームの間接フリーキックの場合はTrue、それ以外はFalse.
         """
@@ -505,7 +509,7 @@ class RefereeParser(Node):
     def their_indirect(self):
         """
         現在のコマンドが相手チームの間接フリーキックであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームの間接フリーキックの場合はTrue、それ以外はFalse.
         """
@@ -514,7 +518,7 @@ class RefereeParser(Node):
     def our_timeout(self):
         """
         現在のコマンドが自チームのタイムアウトであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのタイムアウトの場合はTrue、それ以外はFalse.
         """
@@ -523,7 +527,7 @@ class RefereeParser(Node):
     def their_timeout(self):
         """
         現在のコマンドが相手チームのタイムアウトであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのタイムアウトの場合はTrue、それ以外はFalse.
         """
@@ -532,7 +536,7 @@ class RefereeParser(Node):
     def our_ball_placement(self):
         """
         現在のコマンドが自チームのボールプレースメントであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが自チームのボールプレースメントの場合はTrue、それ以外はFalse.
         """
@@ -541,7 +545,7 @@ class RefereeParser(Node):
     def their_ball_placement(self):
         """
         現在のコマンドが相手チームのボールプレースメントであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが相手チームのボールプレースメントの場合はTrue、それ以外はFalse.
         """
@@ -550,7 +554,7 @@ class RefereeParser(Node):
     def goal_blue(self):
         """
         現在のコマンドが青チームのゴールであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが青チームのゴールの場合はTrue、それ以外はFalse.
         """
@@ -559,7 +563,7 @@ class RefereeParser(Node):
     def goal_yellow(self):
         """
         現在のコマンドが黄チームのゴールであるかを判定する.
-        
+
         Returns:
             bool: 現在のコマンドが黄チームのゴールの場合はTrue、それ以外はFalse.
         """
@@ -568,7 +572,7 @@ class RefereeParser(Node):
     def placement_position(self) -> State2D:
         """
         ボールのプレースメント位置を返す.
-        
+
         Returns:
             State2D: ボールのプレースメント位置.
         """
@@ -577,7 +581,7 @@ class RefereeParser(Node):
     def max_allowed_our_bots(self):
         """
         自チームの最大許可ロボット台数を返す.
-        
+
         Returns:
             int: 自チームの最大許可ロボット台数.
         """
@@ -586,9 +590,8 @@ class RefereeParser(Node):
     def command_elapsed_time(self):
         """
         コマンドが発行されてからの経過時間を返す.
-        
+
         Returns:
             float: 経過時間（秒単位）.
         """
         return self._command_elapsed_time
-    

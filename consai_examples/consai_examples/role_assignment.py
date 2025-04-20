@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの役割を割り当て、更新する処理を実装したモジュール."""
+
 import copy
 import math
 from enum import Enum
@@ -34,6 +36,8 @@ from rclpy.node import Node
 
 
 class RoleName(Enum):
+    """ロボットの役割を定義する列挙型."""
+
     GOALIE = 0
     ATTACKER = 1
     CENTER_BACK1 = 2
@@ -51,14 +55,20 @@ class RoleName(Enum):
 
 
 class BallState(Enum):
+    """ボールの状態を定義する列挙型."""
+
     NONE = 0
     STOP = 1
     MOVE = 2
 
 
-# フィールド状況を見て、ロボットの役割を決めるノード
-# ロボットの役割が頻繁に変わらないように調整する
 class RoleAssignment(Node):
+    """
+    フィールド状況を見て, ロボットの役割を決めるノード.
+
+    ロボットの役割が頻繁に変わらないように調整する.
+    """
+
     # フィールド上のロボット役割一覧
     # フィールドに出せるロボットの数は11台
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_number_of_robots
@@ -105,10 +115,9 @@ class RoleAssignment(Node):
             Objects, 'visualizer_objects', qos.qos_profile_sensor_data)
 
     def update_role(
-        
+
             self, ball: PosVel, our_robots: dict[int, PosVel], allowed_robot_num=11):
         # roleへのロボットの割り当てを更新する
-
         """
         ボールとロボットの情報に基づき, ロール割り当てを更新する関数.
 
@@ -198,6 +207,7 @@ class RoleAssignment(Node):
     def _get_priority_of_role(self, role):
         """
         指定したロールの優先度を取得する関数.
+
         重複するroleが設定されている場合、高いほうの優先度を返す.
 
         Args:
@@ -211,7 +221,7 @@ class RoleAssignment(Node):
     def _update_role_list(self, ball: PosVel, our_robots: dict[int, PosVel]):
         """
         イベントが発生したらroleを更新する関数.
-        
+
         Args:
             ball (PosVel): ボールの位置と速度.
             our_robots (dict[int, PosVel]): ロボットの情報.
@@ -292,7 +302,6 @@ class RoleAssignment(Node):
         Args:
             our_active_ids (list[int]): 現在アクティブなロボットIDのリスト.
         """
-
         for active_id in our_active_ids:
             # 空きスペースが無くなれば終了
             if None not in self._id_list_ordered_by_role_priority:
@@ -315,11 +324,7 @@ class RoleAssignment(Node):
                 self._id_list_ordered_by_role_priority[priority] = active_id
 
     def _sort_empty_role(self):
-        """
-        優先度の高いroleに空きが出ないように, 
-        一番優先度の低いroleの担当を優先度の高い空きroleに割り当てる関数.
-        """
-
+        """優先度の高いroleに空きが出ないように, 一番優先度の低いroleの担当を優先度の高い空きroleに割り当てる関数."""
         # 空いているroleがなければ終了
         if None not in self._id_list_ordered_by_role_priority:
             return
@@ -356,6 +361,7 @@ class RoleAssignment(Node):
     def _find_highest_prioiry_from_free_roles(self, ignore_goalie=True):
         """
         割り当てのないロールの中で最も優先度の高いものを探す関数.
+
         ignore_goalieがTrueの場合、goalieのroleを除外する.
 
         Returns:
@@ -372,13 +378,13 @@ class RoleAssignment(Node):
     def _swap_robot_id_of_priority(self, priority1, priority2):
         """
         優先度の位置を指定して, ロボットIDを入れ替える.
+
         robot_id_of_priorityの指定されたpriorityの要素を入れ替える関数.
 
         Args:
             priority1 (int): 一方の優先度.
             priority2 (int): もう一方の優先度.
         """
-        # 
         self._id_list_ordered_by_role_priority[priority1], \
             self._id_list_ordered_by_role_priority[priority2] \
             = self._id_list_ordered_by_role_priority[priority2], \
@@ -395,10 +401,10 @@ class RoleAssignment(Node):
         Returns:
             int or None: 選ばれたアタッカーのロボットID.
         """
-        
+
         def nearest_robot_id_by_ball_position():
             """
-            ボールの動きに最も近いロボットをアタッカーとして決定する.
+            ボールの動きに最も近いロボットをアタッカーとして決定する関数.
 
             Args:
                 our_robots (dict[int, PosVel]): ロボットの情報.
@@ -418,7 +424,7 @@ class RoleAssignment(Node):
 
                 # 最もボールに近いロボットの距離とIDを更新
                 if distance < nearest_distance:
-                    #nearest_distarobot_id_of_priorityの指定されたpriorityの要素を入れ替える
+                    # nearest_distarobot_id_of_priorityの指定されたpriorityの要素を入れ替える
                     nearest_distance = 1000  # 適当な巨大な距離を初期値とする
 
             # ボールを中心にしたボール軌道をX軸とする座標系を生成
@@ -443,7 +449,7 @@ class RoleAssignment(Node):
         return nearest_robot_id_by_ball_motion()
 
     def _overwrite_substite_to_present_role_list(self, num_of_substitute):
-        # 指定した数だけ、presetn_role_listの後ろからSUBSTITUEロールを上書きする
+        """指定した数だけ, presetn_role_listの後ろからSUBSTITUEロールを上書きする関数."""
         if num_of_substitute <= 0:
             return
 

@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットをボールボーイとして動作させるモジュール."""
+
 import argparse
 import threading  # 標準ライブラリ
 
@@ -26,6 +28,7 @@ from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):
+    """ロボットをボールボーイとして動作させる関数."""
     standby_position = TargetXY.value(0.0, -2.0)  # ボールボーイの待機位置
     move_to_ball = Operation().move_to_pose(standby_position, TargetTheta.look_ball())
     dribble_operation = move_to_ball.with_ball_boy_dribbling_to(TargetXY.value(target_x, target_y))

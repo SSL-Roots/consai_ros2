@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットとボールの位置データをフレームに追加するモジュール."""
+
 from robocup_ssl_msgs.msg import RobotId
 from robocup_ssl_msgs.msg import TrackedBall
 from robocup_ssl_msgs.msg import TrackedFrame
@@ -19,16 +21,22 @@ from robocup_ssl_msgs.msg import TrackedRobot
 
 
 class TrackedFrameWrapper():
+    """TrackedFrameをラップするクラス."""
+
     def __init__(self):
+        """TrackedFrameWrapperのインスタンスを初期化する関数."""
         self._frame = TrackedFrame()
 
     def append_valid_robots(self, blue_robots: list[int], yellow_robots: list[int]):
+        """有効なロボットをフレームに追加する関数."""
         self._append_robots(blue_robots, yellow_robots, 1.0)
 
     def append_invalid_robots(self, blue_robots: list[int], yellow_robots: list[int]):
+        """無効なロボットをフレームに追加する関数."""
         self._append_robots(blue_robots, yellow_robots, 0.0)
 
     def _append_robots(self, blue_robots: list[int], yellow_robots: list[int], visibility: float):
+        """ロボットをフレームに追加する補助関数."""
         for blue_id in blue_robots:
             robot = TrackedRobot()
             robot.robot_id.id = blue_id
@@ -44,6 +52,7 @@ class TrackedFrameWrapper():
             self._frame.robots.append(robot)
 
     def append_valid_ball(self, pos_x: float, pos_y: float):
+        """有効なボールをフレームに追加する関数."""
         ball = TrackedBall()
         ball.visibility.append(1.0)
         ball.pos.x = pos_x
@@ -51,4 +60,5 @@ class TrackedFrameWrapper():
         self._frame.balls.append(ball)
 
     def get_frame(self) -> TrackedFrame:
+        """フレームを取得する関数."""
         return self._frame

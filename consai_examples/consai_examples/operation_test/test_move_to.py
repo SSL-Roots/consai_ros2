@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットを指定された位置に往復させるモジュール."""
+
 import argparse
 import math
 import threading  # 標準ライブラリ
@@ -27,7 +29,7 @@ from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def test_move_to(target_x: float, target_y: float):
-    # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
+    """フィールド上の全ロボットが, フィールドを上下(y軸)に往復する関数."""
     ROBOT_NUM = 16
     OFFSET_X = 0.5
     TARGET_THETA = math.pi * 0.5

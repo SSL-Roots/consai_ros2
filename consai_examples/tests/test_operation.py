@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Operationオブジェクトに関するメソッドをテストするモジュール."""
 
 from consai_examples.operation import OneShotOperation, Operation, TargetTheta, TargetXY
 
@@ -36,6 +37,7 @@ def test_get_hash():
 
 
 def test_halt():
+    """haltメソッドによるstopフラグの設定を検証する関数."""
     goal = Operation().get_goal()
     assert goal.stop is False
 
@@ -44,6 +46,7 @@ def test_halt():
 
 
 def test_immutability():
+    """上書き後のgoalに値が設定されないことを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation.overwrite_pose_x(1.0)
     operation.overwrite_pose_y(2.0)
@@ -55,6 +58,7 @@ def test_immutability():
 
 
 def test_move_on_line():
+    """move_on_lineで生成されたgoalの内容を検証する関数."""
     goal = Operation().move_on_line(TargetXY.ball(), TargetXY.their_goal(), 0.5,
                                     TargetTheta.look_ball()).get_goal()
     assert len(goal.line) >= 1
@@ -65,6 +69,7 @@ def test_move_on_line():
 
 
 def test_move_to_intersection():
+    """move_to_intersectionによるgoalの各点とthetaの設定を検証する関数."""
     goal = Operation().move_to_intersection(
         TargetXY.our_goal(), TargetXY.ball(),
         TargetXY.our_robot(0), TargetXY.their_robot(1), TargetTheta.look_ball()).get_goal()
@@ -81,6 +86,7 @@ def test_move_to_intersection():
 
 
 def test_offset_intersection_to_p2():
+    """offset_intersection_to_p2で指定した値がgoalに反映されるかを検証する関数."""
     operation = Operation().move_to_intersection(
         TargetXY.our_goal(), TargetXY.ball(),
         TargetXY.our_robot(0), TargetXY.our_robot(1), TargetTheta.look_ball())
@@ -90,6 +96,7 @@ def test_offset_intersection_to_p2():
 
 
 def test_move_to_ball_pose():
+    """move_to_poseでBALLに向かうgoalが正しく設定されているかを検証する関数."""
     goal = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1
     assert len(goal.pose[0].xy.object) >= 1
@@ -99,6 +106,7 @@ def test_move_to_ball_pose():
 
 
 def test_overwrite_pose_x_y_theta():
+    """poseのx, y, thetaの上書きが反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.value(-1.0, -2.0), TargetTheta.look_ball())
     operation = operation.overwrite_pose_x(1.0)
     operation = operation.overwrite_pose_y(2.0)
@@ -113,6 +121,7 @@ def test_overwrite_pose_x_y_theta():
 
 
 def test_offset_pose_x_y_theta():
+    """poseのoffset設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.offset_pose_x(1.0)
     operation = operation.offset_pose_y(2.0)
@@ -124,6 +133,7 @@ def test_offset_pose_x_y_theta():
 
 
 def test_with_ball_receiving():
+    """ボールの受け取り設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_ball_receiving()
     goal = operation.get_goal()
@@ -131,6 +141,7 @@ def test_with_ball_receiving():
 
 
 def test_with_shooting_to():
+    """シュート設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_shooting_to(TargetXY.their_goal())
     goal = operation.get_goal()
@@ -140,6 +151,7 @@ def test_with_shooting_to():
 
 
 def test_with_shooting_for_setplay_to():
+    """セットプレー用シュート設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_shooting_for_setplay_to(TargetXY.their_goal())
     goal = operation.get_goal()
@@ -150,6 +162,7 @@ def test_with_shooting_for_setplay_to():
 
 
 def test_with_passing_to():
+    """パス設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_passing_to(TargetXY.named_target("target"))
     goal = operation.get_goal()
@@ -160,6 +173,7 @@ def test_with_passing_to():
 
 
 def test_with_dribbling_to():
+    """ドリブル先が正しく設定されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_dribbling_to(TargetXY.our_robot(3))
     goal = operation.get_goal()
@@ -169,6 +183,7 @@ def test_with_dribbling_to():
 
 
 def test_with_reflecting_to():
+    """リフレクトシュート設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_reflecting_to(TargetXY.their_goal())
     goal = operation.get_goal()
@@ -177,6 +192,7 @@ def test_with_reflecting_to():
 
 
 def test_with_ball_boy_dribbling_to():
+    """ボールボーイドリブル設定が反映されるかを検証する関数."""
     operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     operation = operation.with_ball_boy_dribbling_to(TargetXY.our_robot(3))
     goal = operation.get_goal()
@@ -186,6 +202,7 @@ def test_with_ball_boy_dribbling_to():
 
 
 def test_keep_control_operation():
+    """通常のOperationでkeep_controlがTrueになることを確認する関数."""
     goal = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1
     assert len(goal.pose[0].xy.object) >= 1
@@ -195,6 +212,7 @@ def test_keep_control_operation():
 
 
 def test_oneshot_operation():
+    """OneShotOperationでkeep_controlがFalseになることを確認する関数."""
     goal = OneShotOperation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball()).get_goal()
     assert len(goal.pose) >= 1
     assert len(goal.pose[0].xy.object) >= 1

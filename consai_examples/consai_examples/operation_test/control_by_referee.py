@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの動作を制御し, refereeコマンドに基づいて処理を行うモジュール."""
+
 import argparse
 import threading
 import time
@@ -28,7 +30,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 
 def print_command():
-    # refereeのcommandを表示する
+    """refereeのcommandを表示する関数."""
     if referee_parser.halt():
         print('halt')
     elif referee_parser.stop():
@@ -76,7 +78,7 @@ def print_command():
 
 
 def stop_operation(args: argparse.Namespace) -> None:
-    # RefereeコマンドがSTOPのときの動作
+    """RefereeコマンドがSTOPのときの動作を行う関数."""
     # 0番のロボットをボール近くへ動かす
 
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_stop
@@ -94,7 +96,7 @@ def stop_operation(args: argparse.Namespace) -> None:
 
 
 def halt_operation():
-    # RefereeコマンドがHALTのときの動作
+    """RefereeコマンドがHALTのときの動作を行う関数."""
     # 全てのロボットを停止させる
 
     # Ref: https://robocup-ssl.github.io/ssl-rules/sslrules.html#_halt
@@ -108,14 +110,14 @@ def halt_operation():
 
 
 def default_operation():
-    # 全てのロボットを停止させて1秒待機する
-
+    """全てのロボットを停止させて1秒待機する関数."""
     for i in range(16):
         operator_node.stop(i)
     time.sleep(1)
 
 
 def main():
+    """メイン処理を開始する関数."""
     while rclpy.ok():
         print_command()
         if referee_parser.halt():

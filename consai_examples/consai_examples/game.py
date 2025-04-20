@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""レフェリーの指示に基づきロボットの役割を更新し, 各ロボットの動作を決定するプログラム."""
+
 import argparse
 import threading
 import time
@@ -37,7 +39,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 
 def num_of_active_center_back_roles(active_roles):
-    # アクティブなセンターバック担当者の数を返す
+    """アクティブなセンターバック担当者の数を返す関数."""
     role_zone_list = [
         RoleName.CENTER_BACK1,
         RoleName.CENTER_BACK2]
@@ -45,7 +47,7 @@ def num_of_active_center_back_roles(active_roles):
 
 
 def num_of_active_side_back_roles(active_roles):
-    # アクティブなサイドバック担当者の数を返す
+    """アクティブなサイドバック担当者の数を返す関数."""
     role_zone_list = [
         RoleName.SIDE_BACK1,
         RoleName.SIDE_BACK2]
@@ -53,7 +55,7 @@ def num_of_active_side_back_roles(active_roles):
 
 
 def num_of_active_zone_roles(active_roles):
-    # アクティブなゾーンディフェンス担当者の数を返す
+    """アクティブなゾーンディフェンス担当者の数を返す関数."""
     role_zone_list = [
         RoleName.ZONE1,
         RoleName.ZONE2,
@@ -62,7 +64,7 @@ def num_of_active_zone_roles(active_roles):
 
 
 def zone_role_ids(aVctive_roles) -> list[int]:
-    # ゾーンディンフェンスを担当するロボットIDのリストを返す
+    """ゾーンディンフェンスを担当するロボットIDのリストを返す関数."""
     ids = []
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         if role in [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3]:
@@ -71,7 +73,7 @@ def zone_role_ids(aVctive_roles) -> list[int]:
 
 
 def enable_role_update():
-    # ロールの更新を許可する条件
+    """ロールの更新を許可する条件を返す関数."""
     return not referee.our_pre_penalty() and \
         not referee.our_penalty() and \
         not referee.our_penalty_inplay() and \
@@ -84,6 +86,7 @@ def enable_role_update():
 def update_decisions(num_of_center_back_roles: int,
                      num_of_side_back_roles: int,
                      num_of_zone_roles: int):
+    """各役割に対応する決定を更新する関数."""
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # センターバックの担当者数をセットする
         decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
@@ -150,6 +153,7 @@ def update_decisions(num_of_center_back_roles: int,
 
 
 def main():
+    """メイン処理を開始する関数."""
     TARGET_PERIOD = 0.01  # 100Hz
 
     while rclpy.ok():

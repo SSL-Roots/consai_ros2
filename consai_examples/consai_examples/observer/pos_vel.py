@@ -12,23 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""位置と速度を保持するクラスを提供するモジュール."""
 
 from consai_msgs.msg import State2D
 
 
 class PosVel:
+    """位置と速度を保持するクラス."""
+
     def __init__(self, pos=State2D(), vel=State2D()):
+        """位置と速度を設定する初期化関数."""
         self._pos = pos
         self._vel = vel
 
     def set_pos(self, x: float, y: float, theta: float = 0.0):
+        """位置を設定する関数."""
         self._pos = State2D(x=x, y=y, theta=theta)
 
     def set_vel(self, x: float, y: float, theta: float = 0.0):
+        """速度を設定する関数."""
         self._vel = State2D(x=x, y=y, theta=theta)
 
     def pos(self) -> State2D:
+        """位置を返す関数."""
         return self._pos
 
     def vel(self) -> State2D:
+        """速度を返す関数."""
         return self._vel

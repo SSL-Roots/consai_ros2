@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""RoleAssignmentのテストを行うモジュール."""
 
 from consai_examples.role_assignment import RoleAssignment, RoleName
 
@@ -24,6 +25,7 @@ from tracked_frame_publisher import TrackedFramePublisher
 
 @pytest.fixture
 def rclpy_init_shutdown():
+    """rclpyの初期化とシャットダウンを管理する関数."""
     print("rclpy.init()")
     rclpy.init()
     yield
@@ -33,6 +35,7 @@ def rclpy_init_shutdown():
 
 @pytest.mark.parametrize("goalie_id", [0, 1, 9, 10])
 def test_引数のgoalie_idが正しく設定されること(rclpy_init_shutdown, goalie_id):
+    """RoleAssignmentのgoalie_idが正しく設定されることをテストする関数."""
     assignor = RoleAssignment(goalie_id)  # 先頭でインスタンスを作成しないとエラーがでる
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
@@ -45,6 +48,7 @@ def test_引数のgoalie_idが正しく設定されること(rclpy_init_shutdown
 
 @pytest.mark.parametrize("goalie_id, is_yellow", [(1, False), (3, True)])
 def test_引数のour_team_is_yellowが正しく設定されること(rclpy_init_shutdown, goalie_id, is_yellow):
+    """RoleAssignmentのour_team_is_yellowが正しく設定されることをテストする関数."""
     assignor = RoleAssignment(
         goalie_id=goalie_id,
         our_team_is_yellow=is_yellow)
@@ -58,6 +62,7 @@ def test_引数のour_team_is_yellowが正しく設定されること(rclpy_init
 
 
 def test_TrackedFrameを受信するまではロールは更新されないこと(rclpy_init_shutdown):
+    """TrackedFrameを受信するまでロールは更新されないことをテストする関数."""
     assignor = RoleAssignment(0)
     assignor.update_role()
 
@@ -65,6 +70,7 @@ def test_TrackedFrameを受信するまではロールは更新されないこ�
 
 
 def test_update_roleは更新されたロボットのIDを返すこと(rclpy_init_shutdown):
+    """update_roleが更新されたロボットのIDを返すことをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=[])
@@ -98,6 +104,7 @@ def test_update_roleは更新されたロボットのIDを返すこと(rclpy_ini
 
 
 def test_ロールの数よりロボットが多くてもエラーが発生しないこと(rclpy_init_shutdown):
+    """ロールの数よりロボットが多くてもエラーが発生しないことをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     # 12台のロボットを用意する
@@ -110,6 +117,7 @@ def test_ロールの数よりロボットが多くてもエラーが発生し�
 
 
 def test_ロボットが消えても優先度の高いロールは空けないこと(rclpy_init_shutdown):
+    """ロボットが消えても優先度の高いロールは空けないことをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=[0, 3, 4, 5, 6, 7])
@@ -130,6 +138,7 @@ def test_ロボットが消えても優先度の高いロールは空けない�
 
 
 def test_ボールに一番近いロボットがAttackerになること(rclpy_init_shutdown):
+    """ボールに一番近いロボットがAttackerになることをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     # ID9のロボットが一番ボールに近い
@@ -149,6 +158,7 @@ def test_ボールに一番近いロボットがAttackerになること(rclpy_in
 
 
 def test_goalieが一番ボールに近いときは二番目に近いロボットがAttackerになること(rclpy_init_shutdown):
+    """Goalieが一番ボールに近い場合, 二番目に近いロボットがAttackerになることをテストする関数."""
     assignor = RoleAssignment(9)
     frame_publisher = TrackedFramePublisher()
     # ID9のロボットが一番ボールに近い、がGoalieである
@@ -168,6 +178,7 @@ def test_goalieが一番ボールに近いときは二番目に近いロボッ�
 
 
 def test_ボール位置によってAttackerを更新しないフラグが適用されること(rclpy_init_shutdown):
+    """ボール位置によってAttackerを更新しないフラグが適用されることをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     # ボールに一番近いのはID9だが、IDが一番小さい7がAttackerとなる
@@ -190,6 +201,7 @@ def test_ボール位置によってAttackerを更新しないフラグが適用
                          [(11, []), (10, [10]), (9, [10, 9]), (8, [10, 9, 8])])
 def test_ロボットの出場可能台数が減ったら優先度の低い順にSUBSTITUEロールを割り当てること(
         rclpy_init_shutdown, robot_num, expected_indexes):
+    """ロボットの出場可能台数が減った場合に, 優先度の低い順にSUBSTITUTEロールを割り当てることをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
@@ -202,6 +214,7 @@ def test_ロボットの出場可能台数が減ったら優先度の低い順�
 
 
 def test_SUBSTITUTEから復帰した場合もchanged_idとして返すこと(rclpy_init_shutdown):
+    """SUBSTITUTEから復帰した場合もchanged_idとして返すことをテストする関数."""
     assignor = RoleAssignment(0)
     frame_publisher = TrackedFramePublisher()
     frame_publisher.publish_valid_robots(blue_ids=list(range(11)))
