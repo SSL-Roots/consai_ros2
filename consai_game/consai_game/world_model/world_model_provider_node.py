@@ -102,7 +102,8 @@ class WorldModelProviderNode(Node):
             )
             # 敵ロボットの驚異度を更新
             self.world_model.threats.update(
-                self.world_model.robots,
+                ball=self.world_model.ball,
+                robots=self.world_model.robots,
             )
 
     def callback_referee(self, msg: Referee) -> None:
