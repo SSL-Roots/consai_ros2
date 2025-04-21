@@ -38,6 +38,10 @@ class VisualizeMsgPublisherNode(Node):
             self.ball_activity_to_vis_msg(activity=world_model.ball_activity, ball=world_model.ball)
         )
 
+        self.pub_visualizer_objects.publish(
+            self.threats_to_vis_msg(threats=world_model.threats, robots=world_model.robots)
+        )
+
     def kick_target_to_vis_msg(self, kick_target: KickTargetModel, ball: BallModel) -> Objects:
         """kick_targetをObjectsメッセージに変換する."""
         vis_obj = Objects()
@@ -100,5 +104,25 @@ class VisualizeMsgPublisherNode(Node):
             state_circle.line_color.name = THEIR_COLOR
             state_circle.fill_color.name = THEIR_COLOR
             vis_obj.circles.append(state_circle)
+
+        return vis_obj
+
+    def threats_to_vis_msg(self, threats, robots) -> Objects:
+        """threatsをObjectsメッセージに変換する."""
+        vis_obj = Objects()
+        vis_obj.layer = "game"
+        vis_obj.sub_layer = "threats"
+        vis_obj.z_order = 4
+
+        # 各ロボットの上に驚異度を表示
+        for i, threat in enumerate(threats.threats):
+            robot = robots.their_robots[threat.robot_id]
+            text = ShapeText()
+            text.text = f"{i+1}: [{threat.score}]"
+            text.x = robot.pos.x - 0.2
+            text.y = robot.pos.y + 0.2  # ロボットの上に表示
+            text.size = 12
+            text.color.name = "red"
+            vis_obj.texts.append(text)
 
         return vis_obj
