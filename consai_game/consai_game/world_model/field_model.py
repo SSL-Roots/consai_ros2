@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # coding: UTF-8
 
-"""
-フィールドの寸法およびフィールド上の各ポイントを定義するクラスを提供する.
-
-各クラスはフィールドの基本情報（長さ・幅・ゴールの大きさ）やフィールド上の重要な座標を保持・生成する.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+フィールドの寸法およびフィールド上の各ポイントを定義するクラスを提供する.
+
+各クラスはフィールドの基本情報（長さ・幅・ゴールの大きさ）やフィールド上の重要な座標を保持・生成する.
+"""
 
 from dataclasses import dataclass
 
