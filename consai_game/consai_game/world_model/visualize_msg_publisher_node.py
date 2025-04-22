@@ -59,7 +59,7 @@ class VisualizeMsgPublisherNode(Node):
         vis_obj.z_order = 4
 
         # ボールとターゲットを結ぶ直線を引く
-        for i, target in enumerate(kick_target.kick_target_list):
+        for i, target in enumerate(kick_target.shoot_target_list):
             line = ShapeLine()
             line.p1.x = ball.pos.x
             line.p1.y = ball.pos.y
@@ -69,7 +69,7 @@ class VisualizeMsgPublisherNode(Node):
             line.size = 1
             line.color.name = "black"
             # ベストシュートターゲットの色を赤にする
-            if i == kick_target.best_target_index:
+            if i == 0:
                 line.color.name = "red"
 
             # シュート成功率が高いほど色を刻する
