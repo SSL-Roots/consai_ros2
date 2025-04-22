@@ -15,6 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+敵ロボットの驚異度を計算し、驚異度の高い順にソートするモジュール.
+
+驚異度は敵ロボットのゴールへの距離, シュートできるか, ボールとの距離の3つの要素から計算される.
+"""
+
 from dataclasses import dataclass
 from typing import List, Dict
 
@@ -37,7 +43,7 @@ class ThreatsModel:
         self._field = field
         self._field_points = field_points
         self._prev_scores: Dict[int, float] = {}  # ロボットIDごとの前回のスコア
-        self._alpha = 0.05  # ローパスフィルターの係数（0-1、小さいほど変化が遅い）
+        self._alpha = 0.1  # ローパスフィルターの係数（0-1、小さいほど変化が遅い）
 
     def _apply_low_pass_filter(self, robot_id: int, new_score: float) -> float:
         """ローパスフィルターを適用してスコアを平滑化する
