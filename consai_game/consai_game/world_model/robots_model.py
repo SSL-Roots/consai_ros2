@@ -47,17 +47,29 @@ class RobotsModel:
         self.our_team_is_yellow = our_team_is_yellow
         self.our_robots: dict[int, Robot] = {}
         self.their_robots: dict[int, Robot] = {}
+        self.our_visible_robots: dict[int, Robot] = {}
+        self.their_visible_robots: dict[int, Robot] = {}
 
         self.visibility_threshold = 0.2
 
     def parse_frame(self, msg: TrackedFrame):
         """フレームデータを解析し, ロボット情報をour/theirに分類して格納する関数."""
+
+        def update_visible_robots(robots: dict[int, Robot], robot: Robot):
+            if robot.is_visible:
+                robots[robot.robot_id] = robot
+            else:
+                if robot.robot_id in robots:
+                    del robots[robot.robot_id]
+
         for robot_frame in msg.robots:
             robot = self.to_robot_data(robot_frame)
             if robot.is_yellow == self.our_team_is_yellow:
                 self.our_robots[robot.robot_id] = robot
+                update_visible_robots(self.our_visible_robots, robot)
             else:
                 self.their_robots[robot.robot_id] = robot
+                update_visible_robots(self.their_visible_robots, robot)
 
     def to_robot_data(self, robot_frame: TrackedRobot) -> Robot:
         """TrackedRobotメッセージをRobotデータ構造に変換する関数."""
