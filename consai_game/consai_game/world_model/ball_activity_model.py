@@ -29,6 +29,8 @@ from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.robot_activity_model import RobotActivityModel
 
+from consai_msgs.msg import State2D
+
 
 class BallState(Enum):
     """ボールの状態を表す列挙型."""
@@ -63,6 +65,9 @@ class BallActivityModel:
         self.ball_holder: Optional[BallHolder] = None
         self.ball_is_moving = False
 
+        # ボールの将来の予測位置
+        self.next_ball_pos = State2D()
+
     def update(self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
@@ -77,6 +82,9 @@ class BallActivityModel:
         )
         # ボールの移動状態を更新する
         self.ball_is_moving = self.is_ball_moving(ball)
+
+        # ボールの予測位置を更新する
+        self.prediction_next_ball_pos(ball)
 
         # 最終的なボール状態を更新する
         self.update_ball_state()
@@ -212,6 +220,17 @@ class BallActivityModel:
                 nearest_robot = robot
 
         return nearest_robot, nearest_distance
+
+    def prediction_next_ball_pos(self, ball: BallModel):
+        """
+        次のボールの位置を予測するメソッド.
+
+        暫定的に0.1秒後の予測位置としている.
+        TODO: 何秒後か指定するか更新周期を使いたい
+        """
+        dt = 0.1
+        self.next_ball_pos.x = ball.pos.x + ball.vel.x / dt
+        self.next_ball_pos.y = ball.pos.y + ball.vel.y / dt
 
     def is_ball_moving(self, ball: BallModel) -> bool:
         """ボールが動いているかを判定するメソッド."""

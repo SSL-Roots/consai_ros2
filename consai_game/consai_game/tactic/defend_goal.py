@@ -64,13 +64,13 @@ class DefendGoal(TacticBase):
         # ボールの速度を取得
         ball_vel = world_model.ball.vel
         # ボールの未来の予測位置を取得
-        ball_next_pos = world_model.ball.next_pos
+        next_ball_pos = world_model.ball_activity.next_ball_pos
 
         if is_in_our_side and ball_vel.x < -self.ball_move_threshold:
             # ボールが自チームエリアにあり, ゴールへ向かってくる場合
 
             # ボールの進行方向の直線に関する傾きと切片を計算
-            slope, intercept, flag = tool.get_line_parameter(ball_pos, ball_next_pos)
+            slope, intercept, flag = tool.get_line_parameter(ball_pos, next_ball_pos)
 
             # ゴール前のボール進行方向上の位置を計算
             x = -world_model.field.half_length + self.margin_defend_x
