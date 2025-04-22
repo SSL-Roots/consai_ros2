@@ -100,6 +100,11 @@ class WorldModelProviderNode(Node):
                 self.world_model.ball,
                 self.world_model.robots,
             )
+            # 敵ロボットの驚異度を更新
+            self.world_model.threats.update(
+                ball=self.world_model.ball,
+                robots=self.world_model.robots,
+            )
 
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""
