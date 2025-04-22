@@ -19,6 +19,7 @@
 """
 
 import numpy as np
+from operator import attrgetter
 
 from dataclasses import dataclass, field
 
@@ -48,8 +49,7 @@ class KickTargetModel:
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
 
-        self.best_target_index = 0
-        self.kick_target_list: list[KickTarget] = []
+        self.shoot_target_list: list[KickTarget] = []
         self._goal_pos_list = [KickTarget()]
 
     def update_goal_pos_list(self, field: Field) -> None:
@@ -81,7 +81,6 @@ class KickTargetModel:
 
     def _update_scores(self, search_ours) -> list[KickTarget]:
         """各キックターゲットの成功率を計算し, リストを更新する関数."""
-        score = 0
         TOLERANCE = self.robot_radius  # ロボット半径
 
         def obstacle_exists(target: State2D, robots: dict[int, Robot]) -> bool:
@@ -92,6 +91,7 @@ class KickTargetModel:
             return False
 
         for target in self._goal_pos_list:
+            score = 0
             if obstacle_exists(target.pos, self._our_robots) and search_ours:
                 target.success_rate = 0
             elif obstacle_exists(target.pos, self._their_robots):
@@ -108,30 +108,24 @@ class KickTargetModel:
 
         return self._goal_pos_list
 
-    def _high_score_target_index(self, kick_target_list: KickTarget) -> int:
-        """最もスコアの高いターゲットのインデックスを返す関数."""
-        high_score = 0
-        high_score_index = 0
-        for target in kick_target_list:
-            if target.success_rate > high_score:
-                high_score_index = kick_target_list.index(target)
-        return high_score_index
+    def _sort_kick_targets_by_success_rate(self, targets: list[KickTarget]) -> list[KickTarget]:
+        """スコアの高いターゲット順にソートする関数."""
+        return sorted(targets, key=attrgetter("success_rate"), reverse=True)
 
     def _search_shoot_pos(self, search_ours=True) -> KickTarget:
         """ボールからの直線上にロボットがいないシュート位置リストを返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
-        self.kick_target_list = self._update_scores(search_ours)
+        last_shoot_target_list = self.shoot_target_list.copy()
+        shoot_target_list = self._update_scores(search_ours)
+        self.shoot_target_list = self._sort_kick_targets_by_success_rate(shoot_target_list)
 
-        high_score_target_index = self._high_score_target_index(self.kick_target_list)
+        if not last_shoot_target_list:
+            return self.shoot_target_list[0]
 
-        if high_score_target_index == self.best_target_index:
-            return self.kick_target_list[high_score_target_index]
+        if self.shoot_target_list[0].pos == last_shoot_target_list[0].pos:
+            return self.shoot_target_list[0]
 
         # ヒステリシス処理
-        if (
-            self.kick_target_list[high_score_target_index].success_rate
-            > self.kick_target_list[self.best_target_index].success_rate + RATE_MARGIN
-        ):
-            self.best_target_index = high_score_target_index
-
-        return self.kick_target_list[self.best_target_index]
+        if self.shoot_target_list[0].success_rate > last_shoot_target_list[0].success_rate + RATE_MARGIN:
+            return self.shoot_target_list[0]
+        return last_shoot_target_list[0]
