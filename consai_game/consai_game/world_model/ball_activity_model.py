@@ -83,6 +83,9 @@ class BallActivityModel:
         # ボールの移動状態を更新する
         self.ball_is_moving = self.is_ball_moving(ball)
 
+        # ボールの予測位置を更新する
+        self.prediction_next_ball_pos(ball)
+
         # 最終的なボール状態を更新する
         self.update_ball_state()
 
@@ -226,8 +229,8 @@ class BallActivityModel:
         TODO: 何秒後か指定するか更新周期を使いたい
         """
         dt = 0.1
-        self.next_pos.x = ball.pos.x + ball.vel.x / dt
-        self.next_pos.y = ball.pos.y + ball.vel.y / dt
+        self.next_ball_pos.x = ball.pos.x + ball.vel.x / dt
+        self.next_ball_pos.y = ball.pos.y + ball.vel.y / dt
 
     def is_ball_moving(self, ball: BallModel) -> bool:
         """ボールが動いているかを判定するメソッド."""
