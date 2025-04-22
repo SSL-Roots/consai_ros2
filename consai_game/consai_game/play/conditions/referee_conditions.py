@@ -15,95 +15,120 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ゲームの状態に応じた各種条件を管理するモジュール."""
+
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.play.play_condition import PlayCondition
 
 
 def halt_condition(world_model: WorldModel) -> bool:
+    """ゲームが停止したかどうかを判定する関数."""
     return world_model.referee.halt
 
 
 def stop_condition(world_model: WorldModel) -> bool:
+    """ゲームが一時停止したかどうかを判定する関数."""
     return world_model.referee.stop
 
 
 def force_start_condition(world_model: WorldModel) -> bool:
+    """ゲームが強制開始されたかどうかを判定する関数."""
     return world_model.referee.force_start
 
 
 def running_condition(world_model: WorldModel) -> bool:
+    """ゲームが進行中かどうかを判定する関数."""
     return world_model.referee.running
 
 
 def normal_start_condition(world_model: WorldModel) -> bool:
+    """ゲームが通常開始されたかどうかを判定する関数."""
     return world_model.referee.normal_start
 
 
 def our_kick_off_condition(world_model: WorldModel) -> bool:
+    """自チームのキックオフかどうかを判定する関数."""
     return world_model.referee.our_kick_off
 
 
 def our_kick_off_start_condition(world_model: WorldModel) -> bool:
+    """自チームのキックオフ開始かどうかを判定する関数."""
     return world_model.referee.our_kick_off_start
 
 
 def their_kick_off_condition(world_model: WorldModel) -> bool:
+    """相手チームのキックオフかどうかを判定する関数."""
     return world_model.referee.their_kick_off
 
 
 def their_kick_off_start_condition(world_model: WorldModel) -> bool:
+    """相手チームのキックオフ開始かどうかを判定する関数."""
     return world_model.referee.their_kick_off_start
 
 
 def our_free_kick_condition(world_model: WorldModel) -> bool:
+    """自チームのフリーキックかどうかを判定する関数."""
     return world_model.referee.our_free_kick
 
 
 def their_free_kick_condition(world_model: WorldModel) -> bool:
+    """相手チームのフリーキックかどうかを判定する関数."""
     return world_model.referee.their_free_kick
 
 
 def our_penalty_kick_condition(world_model: WorldModel) -> bool:
+    """自チームのペナルティキックかどうかを判定する関数."""
     return world_model.referee.our_penalty_kick
 
 
 def our_penalty_kick_start_condition(world_model: WorldModel) -> bool:
+    """自チームのペナルティキック開始かどうかを判定する関数."""
     return world_model.referee.our_penalty_kick_start
 
 
 def their_penalty_kick_condition(world_model: WorldModel) -> bool:
+    """相手チームのペナルティキックかどうかを判定する関数."""
     return world_model.referee.their_penalty_kick
 
 
 def their_penalty_kick_start_condition(world_model: WorldModel) -> bool:
+    """相手チームのペナルティキック開始かどうかを判定する関数."""
     return world_model.referee.their_penalty_kick_start
 
 
 def our_goal_condition(world_model: WorldModel) -> bool:
+    """自チームのゴールかどうかを判定する関数."""
     return world_model.referee.our_goal
 
 
 def their_goal_condition(world_model: WorldModel) -> bool:
+    """相手チームのゴールかどうかを判定する関数."""
     return world_model.referee.their_goal
 
 
 def our_timeout_condition(world_model: WorldModel) -> bool:
+    """自チームのタイムアウトかどうかを判定する関数."""
     return world_model.referee.our_timeout
 
 
 def their_timeout_condition(world_model: WorldModel) -> bool:
+    """相手チームのタイムアウトかどうかを判定する関数."""
     return world_model.referee.their_timeout
 
 
 def our_ball_placement_condition(world_model: WorldModel) -> bool:
+    """自チームのボール配置かどうかを判定する関数."""
     return world_model.referee.our_ball_placement
 
 
 def their_ball_placement_condition(world_model: WorldModel) -> bool:
+    """相手チームのボール配置かどうかを判定する関数."""
     return world_model.referee.their_ball_placement
 
 
 class RefereeConditions:
+    """審判による各種ゲーム状態条件をまとめたクラス."""
+
     halt = PlayCondition(halt_condition)
     stop = PlayCondition(stop_condition)
     force_start = PlayCondition(force_start_condition)

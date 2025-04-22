@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ゲーム内で使用するプレイのリストを定義するモジュール."""
+
 from consai_game.play.factory import simple_plays
 from consai_game.play.factory import running_plays
 

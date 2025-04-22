@@ -12,11 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+ゲーム設定情報を保持するモデルの定義.
+
+チームカラーとゴールキーパーIDに関する設定の管理.
+"""
 
 from dataclasses import dataclass
 
 
 @dataclass
 class GameConfigModel:
+    """ゲーム設定情報を保持するクラス."""
+
     goalie_id: int = 0
     our_team_is_yellow: bool = True

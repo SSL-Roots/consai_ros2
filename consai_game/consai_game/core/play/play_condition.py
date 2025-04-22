@@ -15,10 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.world_model.world_model import WorldModel
-from dataclasses import dataclass
+"""Playが適用可能かを判定する条件を定義するモジュール."""
 
+from dataclasses import dataclass
 from typing import Callable
+
+from consai_game.world_model.world_model import WorldModel
 
 
 @dataclass
@@ -31,6 +33,6 @@ class PlayCondition:
         """ゲームの状態を渡して条件を満たしているかチェック."""
         return self.check_func(game_state)
 
-    def invert(self) -> 'PlayCondition':
+    def invert(self) -> "PlayCondition":
         """条件を反転させた PlayCondition を返す."""
         return PlayCondition(lambda game_state: not self.check_func(game_state))

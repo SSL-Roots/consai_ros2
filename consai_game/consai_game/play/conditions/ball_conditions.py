@@ -15,15 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ボールに関連する条件をまとめたモジュール."""
+
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.play.play_condition import PlayCondition
 from consai_game.utils.geometry import state2d_norm
 
 
 class BallConditions:
+    """ボールに関連する条件をまとめたクラス."""
+
     @staticmethod
     def velocity_is_lower_than(threshold: float) -> PlayCondition:
+        """ボールの速度が閾値より小さいかどうかを判定する関数."""
+
         def condition(world_model: WorldModel) -> bool:
+            """ボールの速度が閾値より小さいかを判定する条件関数."""
             velocity = state2d_norm(world_model.ball.vel)
             return velocity < threshold
 

@@ -16,6 +16,12 @@
 # limitations under the License.
 
 
+"""
+デバッグ用の空のPlayを定義するモジュール.
+
+各信号に対して, 適切なPlayを作成する関数群.
+"""
+
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.slow_safe_position import SlowSafePosition
@@ -24,6 +30,7 @@ from consai_game.tactic.kick.shoot import Shoot
 
 
 def halt() -> Play:
+    """HALT信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.halt,
     ]
@@ -50,6 +57,7 @@ def halt() -> Play:
 
 
 def stop() -> Play:
+    """STOP信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.stop,
     ]
@@ -76,6 +84,7 @@ def stop() -> Play:
 
 
 def force_start() -> Play:
+    """FORCE_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.force_start,
     ]
@@ -102,6 +111,7 @@ def force_start() -> Play:
 
 
 def our_free_kick() -> Play:
+    """フリーキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.our_free_kick,
         RefereeConditions.running.invert(),
@@ -129,6 +139,7 @@ def our_free_kick() -> Play:
 
 
 def their_free_kick() -> Play:
+    """フリーキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.their_free_kick,
         RefereeConditions.running.invert(),
@@ -156,6 +167,7 @@ def their_free_kick() -> Play:
 
 
 def our_kick_off() -> Play:
+    """キックオフ信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.our_kick_off,
     ]
@@ -182,6 +194,7 @@ def our_kick_off() -> Play:
 
 
 def their_kick_off() -> Play:
+    """キックオフ信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.their_kick_off,
     ]
@@ -208,6 +221,7 @@ def their_kick_off() -> Play:
 
 
 def our_kick_off_start() -> Play:
+    """キックオフ スタート信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.our_kick_off_start,
         RefereeConditions.running.invert(),
@@ -235,6 +249,7 @@ def our_kick_off_start() -> Play:
 
 
 def their_kick_off_start() -> Play:
+    """キックオフ スタート信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.their_kick_off_start,
         RefereeConditions.running.invert(),
@@ -262,6 +277,7 @@ def their_kick_off_start() -> Play:
 
 
 def our_penalty_kick() -> Play:
+    """ペナルティキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.our_penalty_kick,
     ]
@@ -288,6 +304,7 @@ def our_penalty_kick() -> Play:
 
 
 def their_penalty_kick() -> Play:
+    """ペナルティキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.their_penalty_kick,
     ]
@@ -314,6 +331,7 @@ def their_penalty_kick() -> Play:
 
 
 def our_penalty_kick_start() -> Play:
+    """ペナルティキック スタート信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.our_penalty_kick_start,
     ]
@@ -340,6 +358,7 @@ def our_penalty_kick_start() -> Play:
 
 
 def their_penalty_kick_start() -> Play:
+    """ペナルティキック スタート信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.their_penalty_kick_start,
     ]
@@ -366,6 +385,7 @@ def their_penalty_kick_start() -> Play:
 
 
 def our_goal() -> Play:
+    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.our_goal,
     ]
@@ -392,6 +412,7 @@ def our_goal() -> Play:
 
 
 def their_goal() -> Play:
+    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.their_goal,
     ]
@@ -418,6 +439,7 @@ def their_goal() -> Play:
 
 
 def our_timeout() -> Play:
+    """タイムアウト信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.our_timeout,
     ]
@@ -444,6 +466,7 @@ def our_timeout() -> Play:
 
 
 def their_timeout() -> Play:
+    """タイムアウト信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.their_timeout,
     ]
@@ -470,6 +493,7 @@ def their_timeout() -> Play:
 
 
 def our_ball_placement() -> Play:
+    """ボール配置信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.our_ball_placement,
     ]
@@ -496,6 +520,7 @@ def our_ball_placement() -> Play:
 
 
 def their_ball_placement() -> Play:
+    """ボール配置信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
     applicable = [
         RefereeConditions.their_ball_placement,
     ]

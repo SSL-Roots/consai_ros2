@@ -13,13 +13,21 @@
 # limitations under the License.
 
 
-from consai_game.world_model.ball_model import BallModel
-from consai_game.world_model.robots_model import RobotsModel, Robot
-from consai_game.world_model.robot_activity_model import RobotActivityModel
-from consai_tools.geometry import geometry_tools as tools
+"""
+ボールの状態とボール保持者を管理するモジュール.
+
+ボールの状態や移動状況を更新し, ボールを保持しているロボットを追跡する機能を提供する.
+"""
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
+
+from consai_tools.geometry import geometry_tools as tools
+
+from consai_game.world_model.ball_model import BallModel
+from consai_game.world_model.robots_model import Robot, RobotsModel
+from consai_game.world_model.robot_activity_model import RobotActivityModel
 
 
 class BallState(Enum):
@@ -50,6 +58,7 @@ class BallActivityModel:
     MOVING_VELOCITY_MARGIN = 0.05  # ヒステリシス処理に使用する
 
     def __init__(self):
+        """BallActivityModelの初期化処理."""
         self.ball_state = BallState.FREE
         self.ball_holder: Optional[BallHolder] = None
         self.ball_is_moving = False

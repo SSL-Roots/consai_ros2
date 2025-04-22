@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""シュート動作に関するTacticを定義するモジュール."""
+
+import numpy as np
+
+from consai_msgs.msg import MotionCommand, State2D
+
+from consai_tools.geometry import geometry_tools as tool
+
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_msgs.msg import MotionCommand
-from consai_msgs.msg import State2D
-from consai_tools.geometry import geometry_tools as tool
-import numpy as np
 
 from transitions import Machine
 
@@ -29,6 +33,7 @@ class ShootStateMachine(Machine):
     SHOOT_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
 
     def __init__(self, name):
+        """シュート状態遷移マシンのインスタンスを初期化する関数."""
         self.name = name
 
         # 状態定義
@@ -48,6 +53,7 @@ class ShootStateMachine(Machine):
         super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
 
     def update(self, dist_to_ball: float, shoot_diff_angle: float):
+        """状態遷移を更新する関数."""
         if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
             self.ball_near()
 
@@ -72,6 +78,7 @@ class Shoot(TacticBase):
     CHASING_BALL_APPROACH_X = 0.5
 
     def __init__(self):
+        """シュートのTacticインスタンスを初期化する関数."""
         super().__init__()
 
         self.move_pos = State2D()
@@ -79,11 +86,13 @@ class Shoot(TacticBase):
         self.machine = ShootStateMachine("robot")
 
     def reset(self, robot_id: int) -> None:
+        """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
         self.machine.reset()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """シュートを実行するためのMotionCommandを生成する関数."""
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI

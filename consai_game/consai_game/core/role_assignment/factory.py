@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロールの割り当て手法を定義し, 文字列に応じてインスタンスを生成するモジュール."""
+
+from enum import Enum
+
 from consai_game.core.role_assignment.methods.by_cost import ByCost
 from consai_game.core.role_assignment.methods.by_id import ByIDMethod
 from consai_game.core.role_assignment.methods.by_visible import ByVisible
-from enum import Enum
 
 
 class RoleAssignmentMethods(Enum):
