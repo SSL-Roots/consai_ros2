@@ -34,9 +34,7 @@ class BallModel:
         """Initialize the BallModel tactic."""
         self.pos = State2D()
         self.vel = State2D()
-        self.next_pos = State2D()
         self.is_visible = False
-
         self.visibility_threshold = 0.2
 
     def parse_frame(self, msg: TrackedFrame):
@@ -52,9 +50,6 @@ class BallModel:
         if ball_frame.vel:
             self.vel.x = ball_frame.vel[0].x
             self.vel.y = ball_frame.vel[0].y
-
-            self.next_pos.x = self.pos.x + self.vel.x
-            self.next_pos.y = self.pos.y + self.vel.y
         else:
             self.vel = State2D(x=0.0, y=0.0)
             self.next_pos = self.pos
