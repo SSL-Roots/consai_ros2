@@ -1,9 +1,3 @@
-"""
-DefendGoal Tactic.
-
-ボールの位置と動きに基づいて自チームのゴールを守るためのTacticを定義.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +12,11 @@ DefendGoal Tactic.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+DefendGoal Tactic.
+
+ボールの位置と動きに基づいて自チームのゴールを守るためのTacticを定義.
+"""
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState

@@ -1,9 +1,3 @@
-"""
-BallClear Tactic.
-
-自ディフェンスエリアにあるボールをクリアする.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +12,11 @@ BallClear Tactic.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+BallClear Tactic.
+
+自ディフェンスエリアにあるボールをクリアする.
+"""
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState

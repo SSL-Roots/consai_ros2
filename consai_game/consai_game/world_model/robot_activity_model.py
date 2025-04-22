@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""可視ロボットの識別と順序づけを行うモデル."""
 
 from consai_game.world_model.robots_model import RobotsModel
 
@@ -20,16 +21,16 @@ class RobotActivityModel:
     """ロボットの活動状態を保持するクラス."""
 
     def __init__(self):
+        """ロボットの可視状態と順序リストの初期化関数."""
         self.ordered_our_visible_robots: list[int] = []
         self.ordered_their_visible_robots: list[int] = []
         self.our_visible_robots: list[int] = []
         self.their_visible_robots: list[int] = []
 
     def update(self, robots_model: RobotsModel):
-        self.our_visible_robots = [
-            robot.robot_id for robot in robots_model.our_robots.values() if robot.is_visible]
-        self.their_visible_robots = [
-            robot.robot_id for robot in robots_model.their_robots.values() if robot.is_visible]
+        """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
+        self.our_visible_robots = [robot.robot_id for robot in robots_model.our_robots.values() if robot.is_visible]
+        self.their_visible_robots = [robot.robot_id for robot in robots_model.their_robots.values() if robot.is_visible]
 
         self.ordered_our_visible_robots = self.ordered_merge(
             self.ordered_our_visible_robots,
@@ -41,6 +42,7 @@ class RobotActivityModel:
         )
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
+        """過去の順序を保ちながら, 新しいリストでマージする関数."""
         # new_listに存在するものを残す
         output_list = [r for r in prev_list if r in new_list]
 

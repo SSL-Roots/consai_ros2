@@ -15,19 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
-from consai_game.core.play.play_node import PlayNode
-from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
-from consai_game.world_model.visualize_msg_publisher_node import VisualizeMsgPublisherNode
-import rclpy
-from rclpy.executors import MultiThreadedExecutor
+"""
+PlayNodeやAgentSchedulerNodeなどを起動し, 試合の中核処理を実行するモジュール.
 
+ROS2ノードをマルチスレッドで管理しつつ, 一定周期で世界モデルを共有・更新する.
+"""
+
+import argparse
 import threading
 import time
 
+import rclpy
+from rclpy.executors import MultiThreadedExecutor
+
+from consai_game.core.play.play_node import PlayNode
+from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
+from consai_game.world_model.visualize_msg_publisher_node import VisualizeMsgPublisherNode
+from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
+
 
 def main():
+    """世界モデルの情報を各ノードに渡し, 1秒間に指定回数ループ処理を行う関数."""
     while rclpy.ok():
         world_model = world_model_provider_node.world_model
         play_node.set_world_model(world_model)

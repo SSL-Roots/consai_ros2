@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 # coding: UTF-8
 
-"""
-WorldModelProviderNode モジュール.
-
-このモジュールは ROS2 ノードとして動作する.
-Referee メッセージや TrackedFrame を受け取り, ワールドモデルをリアルタイムに更新する.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +14,13 @@ Referee メッセージや TrackedFrame を受け取り, ワールドモデル�
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+WorldModelProviderNode モジュール.
+
+このモジュールは ROS2 ノードとして動作する.
+Referee メッセージや TrackedFrame を受け取り, ワールドモデルをリアルタイムに更新する.
+"""
 
 import json
 import threading
