@@ -15,7 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""試合状況を統合的に表現するWorldModelの定義モジュール."""
+
 from dataclasses import dataclass
+
 from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_position_model import BallPositionModel
@@ -29,6 +32,8 @@ from consai_game.world_model.game_config_model import GameConfigModel
 
 @dataclass
 class WorldModel:
+    """試合全体の状態を統合的に保持するデータクラス."""
+
     referee: RefereeModel = RefereeModel()
     robots: RobotsModel = RobotsModel()
     ball: BallModel = BallModel()

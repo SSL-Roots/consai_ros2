@@ -15,13 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Refereeメッセージを解析し, ゲームの状態を抽象化したモデルに変換するモジュール."""
 
 from dataclasses import dataclass
+
 from robocup_ssl_msgs.msg import Referee
 
 
 @dataclass
 class RefereeModel:
+    """Refereeメッセージを抽象化したゲーム状態を表現するクラス."""
+
     halt: bool = False
     stop: bool = False
     force_start: bool = False
@@ -46,6 +50,7 @@ class RefereeModel:
 
 
 def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool) -> RefereeModel:
+    """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
     data = RefereeModel()
 
     data.halt = msg.command == Referee.COMMAND_HALT
@@ -54,6 +59,7 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
     data.normal_start = msg.command == Referee.COMMAND_NORMAL_START
 
     def parse_team_command(command_blue, command_yellow) -> tuple[bool, bool]:
+        """チームごとのコマンド種別を解析する内部関数."""
         is_our_command = (msg.command == command_blue and not our_team_is_yellow) or (
             msg.command == command_yellow and our_team_is_yellow
         )

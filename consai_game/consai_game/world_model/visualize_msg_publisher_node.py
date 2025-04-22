@@ -12,19 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+WorldModelの情報を可視化トピックとしてpublishするノードの定義.
+
+キックターゲットやボールの状態をObjectsメッセージとしてGUIに送信する.
+"""
+
+from rclpy import qos
+from rclpy.node import Node
+
+from consai_visualizer_msgs.msg import Objects, ShapeCircle, ShapeLine, ShapeText
+
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
 from consai_game.world_model.kick_target_model import KickTargetModel
 from consai_game.world_model.world_model import WorldModel
-from consai_visualizer_msgs.msg import Objects, ShapeLine, ShapeText, ShapeCircle
-from rclpy import qos
-from rclpy.node import Node
 
 
 class VisualizeMsgPublisherNode(Node):
     """WorldModelをGUIに描画するためのトピックをpublishするノード."""
 
     def __init__(self):
+        """ノードの初期化関数."""
         super().__init__("vis_msg_publisher_node")
         self.pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
 

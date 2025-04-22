@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットIDの昇順に基づいて役割を割り当てる手法を定義するモジュール."""
+
+from typing import List
+
 from consai_game.core.role_assignment.methods.base import RoleAssignmentBase
 from consai_game.core.tactic.role import RoleConst
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
-from typing import List
 
 
 class ByIDMethod(RoleAssignmentBase):
-    """ID昇順にRoleを割り当てる."""
+    """ID昇順にRoleを割り当てるクラス."""
 
     def assign(
         self,
@@ -28,7 +31,7 @@ class ByIDMethod(RoleAssignmentBase):
         world_model: WorldModel,
         goalie_id: int,
     ) -> List[int]:
-
+        """ID昇順でロールを割り当てる関数."""
         role_num = len(play_roles)
 
         id_list = [RoleConst.INVALID_ROLE_ID] * role_num
@@ -39,9 +42,7 @@ class ByIDMethod(RoleAssignmentBase):
 
         # goalie_id以外のロボットIDを抽出する
         visible_robots = [
-            robot_id
-            for robot_id in world_model.robot_activity.our_visible_robots
-            if robot_id != goalie_id
+            robot_id for robot_id in world_model.robot_activity.our_visible_robots if robot_id != goalie_id
         ]
 
         # id_listにロボットIDをセットする

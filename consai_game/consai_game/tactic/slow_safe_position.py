@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ボールを避けながら指定した位置に移動するTacticを定義するモジュール."""
+
+from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_msgs.msg import MotionCommand
 
 
 class SlowSafePosition(TacticBase):
@@ -25,16 +27,19 @@ class SlowSafePosition(TacticBase):
     MAX_VELOCITY = 1.0
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
+        """SlowSafePositionのインスタンスを初期化する関数."""
         super().__init__()
         self.x = x
         self.y = y
         self.theta = theta
 
     def reset(self, robot_id: int) -> None:
+        """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """指定した位置に移動し, ボールを避けるためのMotionCommandを生成する関数."""
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI

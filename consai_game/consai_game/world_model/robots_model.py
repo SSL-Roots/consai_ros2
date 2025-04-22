@@ -15,16 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+ロボットの状態を管理するモデルの定義.
+
+SSL-Visionの検出結果からロボットの情報を抽出し, 自チームと相手チームの情報に分類して保持する処理.
+"""
+
+from dataclasses import dataclass, field
 
 from consai_msgs.msg import State2D
-from dataclasses import dataclass, field
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
+
+from robocup_ssl_msgs.msg import RobotId, TrackedFrame, TrackedRobot
 
 
 @dataclass
 class Robot:
+    """単一ロボットの状態情報を保持するデータ構造."""
+
     robot_id: int = 0
     is_yellow: bool = False
     pos: State2D = field(default_factory=State2D)
@@ -36,6 +43,7 @@ class RobotsModel:
     """ロボットデータを保持するクラス."""
 
     def __init__(self, our_team_is_yellow: bool = False):
+        """ロボットモデルの初期化関数."""
         self.our_team_is_yellow = our_team_is_yellow
         self.our_robots: dict[int, Robot] = {}
         self.their_robots: dict[int, Robot] = {}
@@ -43,6 +51,7 @@ class RobotsModel:
         self.visibility_threshold = 0.2
 
     def parse_frame(self, msg: TrackedFrame):
+        """フレームデータを解析し, ロボット情報をour/theirに分類して格納する関数."""
         for robot_frame in msg.robots:
             robot = self.to_robot_data(robot_frame)
             if robot.is_yellow == self.our_team_is_yellow:
@@ -51,9 +60,10 @@ class RobotsModel:
                 self.their_robots[robot.robot_id] = robot
 
     def to_robot_data(self, robot_frame: TrackedRobot) -> Robot:
+        """TrackedRobotメッセージをRobotデータ構造に変換する関数."""
         robot = Robot()
         robot.robot_id = robot_frame.robot_id.id
-        robot.is_yellow = (robot_frame.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW)
+        robot.is_yellow = robot_frame.robot_id.team_color == RobotId.TEAM_COLOR_YELLOW
         robot.pos.x = robot_frame.pos.x
         robot.pos.y = robot_frame.pos.y
         robot.pos.theta = robot_frame.orientation
@@ -64,7 +74,7 @@ class RobotsModel:
             robot.vel.theta = robot_frame.vel_angular[0]
 
         if robot_frame.visibility:
-            robot.is_visible = (robot_frame.visibility[0] > self.visibility_threshold)
+            robot.is_visible = robot_frame.visibility[0] > self.visibility_threshold
         else:
             robot.is_visible = False
 

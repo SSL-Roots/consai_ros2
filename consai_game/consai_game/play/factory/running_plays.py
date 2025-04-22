@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+ボールの位置に応じたPlayを定義するモジュール.
+
+ディフェンスエリア内外でのPlayを設定する.
+"""
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.ball_conditions import BallConditions
@@ -22,6 +27,7 @@ from consai_game.tactic.kick.shoot import Shoot
 
 
 def outside_defense_area() -> Play:
+    """ボールがディフェンスエリアの外にあるときのPlayを生成する関数."""
     applicable = [
         RefereeConditions.running,
         BallConditions.is_in_our_defense_area.invert(),
@@ -50,6 +56,7 @@ def outside_defense_area() -> Play:
 
 
 def in_our_defense_area() -> Play:
+    """ボールが自チームのディフェンスエリアにあるときのPlayを生成する関数."""
     applicable = [
         RefereeConditions.running,
         BallConditions.is_in_our_defense_area,
@@ -77,6 +84,7 @@ def in_our_defense_area() -> Play:
 
 
 def in_their_defense_area() -> Play:
+    """ボールが相手チームのディフェンスエリアにあるときのPlayを生成する関数."""
     applicable = [
         RefereeConditions.running,
         BallConditions.is_in_their_defense_area,

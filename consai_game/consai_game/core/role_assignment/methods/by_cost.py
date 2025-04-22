@@ -12,15 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの現在位置とTacticの目標位置の距離に基づいて役割を割り当てる手法を定義するモジュール."""
+
+import numpy as np
+
+from typing import List
+
+from scipy.optimize import linear_sum_assignment
+
+from consai_msgs.msg import MotionCommand
+
+from consai_tools.geometry.geometry_tools import get_distance
+
 from consai_game.core.role_assignment.methods.base import RoleAssignmentBase
 from consai_game.core.tactic.role import RoleConst
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
-from consai_msgs.msg import MotionCommand
-from consai_tools.geometry.geometry_tools import get_distance
-from scipy.optimize import linear_sum_assignment
-from typing import List
-import numpy as np
 
 
 class ByCost(RoleAssignmentBase):
@@ -31,6 +38,7 @@ class ByCost(RoleAssignmentBase):
     """
 
     def __init__(self):
+        """ByCostの初期化処理."""
         super().__init__()
         self.GAIN_TARGET_POSE = 1.0
 
@@ -40,7 +48,7 @@ class ByCost(RoleAssignmentBase):
         world_model: WorldModel,
         goalie_id: int,
     ) -> List[int]:
-
+        """コストが最小になるようにロールを割り当てる関数."""
         role_num = len(play_roles)
         id_list = [RoleConst.INVALID_ROLE_ID] * role_num
 

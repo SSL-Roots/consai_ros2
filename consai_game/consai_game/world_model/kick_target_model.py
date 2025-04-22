@@ -12,19 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+キックターゲットを管理するモジュール.
+
+シュートを試みるための最適なターゲット位置を計算し, キックターゲットの成功率を更新する.
+"""
+
+import numpy as np
+
 from dataclasses import dataclass, field
 
+from consai_msgs.msg import State2D
+
+from consai_tools.geometry import geometry_tools as tool
+
+from consai_game.utils.geometry import Point
+from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.field_model import Field
 from consai_game.world_model.robots_model import Robot, RobotsModel
-from consai_game.world_model.ball_model import BallModel
-from consai_tools.geometry import geometry_tools as tool
-from consai_msgs.msg import State2D
-from consai_game.utils.geometry import Point
-import numpy as np
 
 
 @dataclass
 class KickTarget:
+    """キックターゲットの位置と成功率を保持するデータクラス."""
+
     pos: State2D = field(default_factory=State2D)
     success_rate: int = 0
 
@@ -33,6 +44,7 @@ class KickTargetModel:
     """キックターゲットを保持するクラス."""
 
     def __init__(self):
+        """KickTargetModelの初期化関数."""
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
 
@@ -41,6 +53,7 @@ class KickTargetModel:
         self._goal_pos_list = [KickTarget()]
 
     def update_goal_pos_list(self, field: Field) -> None:
+        """ゴール位置候補を更新する関数."""
         quarter_width = field.half_goal_width / 2
         one_eighth_width = field.half_goal_width / 4
 
@@ -59,7 +72,7 @@ class KickTargetModel:
         ball_model: BallModel,
         robots_model: RobotsModel,
     ) -> None:
-        """キックターゲットを更新する."""
+        """キックターゲットを更新する関数."""
         self._ball = ball_model
         self._our_robots = robots_model.our_robots
         self._their_robots = robots_model.their_robots
@@ -67,10 +80,12 @@ class KickTargetModel:
         self.best_shoot_target = self._search_shoot_pos()
 
     def _update_scores(self, search_ours) -> list[KickTarget]:
+        """各キックターゲットの成功率を計算し, リストを更新する関数."""
         score = 0
         TOLERANCE = self.robot_radius  # ロボット半径
 
         def obstacle_exists(target: State2D, robots: dict[int, Robot]) -> bool:
+            """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
             for robot in robots.values():
                 if tool.is_on_line(robot.pos, self._ball.pos, target, TOLERANCE) and robot.is_visible:
                     return True
@@ -94,7 +109,7 @@ class KickTargetModel:
         return self._goal_pos_list
 
     def _high_score_target_index(self, kick_target_list: KickTarget) -> int:
-        # 最もスコアの高いターゲットのインデックスを返す
+        """最もスコアの高いターゲットのインデックスを返す関数."""
         high_score = 0
         high_score_index = 0
         for target in kick_target_list:
@@ -103,7 +118,7 @@ class KickTargetModel:
         return high_score_index
 
     def _search_shoot_pos(self, search_ours=True) -> KickTarget:
-        # ボールからの直線上にロボットがいないシュート位置リストを返す
+        """ボールからの直線上にロボットがいないシュート位置リストを返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
         self.kick_target_list = self._update_scores(search_ours)
 

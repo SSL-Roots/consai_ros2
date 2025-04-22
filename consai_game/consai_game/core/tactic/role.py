@@ -15,12 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_game.core.tactic.tactic_base import TacticBase
+"""
+ロールに関する定義を含むモジュール.
+
+ロールに関連する定数や, 戦術とロボットIDを保持するRoleクラスを提供する.
+"""
+
 from dataclasses import dataclass, field
-from typing import List, Final
+from typing import Final, List
+
+from consai_game.core.tactic.tactic_base import TacticBase
 
 
 class RoleConst:
+    """ロールに関する定数を管理するクラス."""
+
     INVALID_ROLE_ID: Final[int] = -1
     MIN_VALID_ROLE_ID: Final[int] = 0
     MAX_VALID_ROLE_ID: Final[int] = 15
@@ -28,5 +37,7 @@ class RoleConst:
 
 @dataclass
 class Role:
+    """ロールを定義するクラス."""
+
     tactics: List[TacticBase] = field(default_factory=list)
     robot_id: int = RoleConst.INVALID_ROLE_ID
