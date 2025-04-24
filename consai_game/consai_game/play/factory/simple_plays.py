@@ -27,6 +27,7 @@ from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.slow_safe_position import SlowSafePosition
 from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
+from consai_game.tactic.composite.chase_or_position import ChaseOrPosition
 
 
 def halt() -> Play:
@@ -69,16 +70,16 @@ def stop() -> Play:
         timeout_ms=0,
         roles=[
             [SlowSafePosition(-6.0, 0.0)],
-            [SlowSafePosition(-3.0, 3.0)],
-            [SlowSafePosition(-3.0, 2.0)],
-            [SlowSafePosition(-3.0, 1.0)],
-            [SlowSafePosition(-3.0, 0.0)],
-            [SlowSafePosition(-3.0, -1.0)],
-            [SlowSafePosition(-3.0, -2.0)],
-            [SlowSafePosition(-3.0, -3.0)],
-            [SlowSafePosition(-2.0, 1.0)],
-            [SlowSafePosition(-2.0, 0.0)],
-            [SlowSafePosition(-2.0, -1.0)],
+            [ChaseOrPosition(-3.0, 3.0)],
+            [ChaseOrPosition(-3.0, 2.0)],
+            [ChaseOrPosition(-3.0, 1.0)],
+            [ChaseOrPosition(-3.0, 0.0)],
+            [ChaseOrPosition(-3.0, -1.0)],
+            [ChaseOrPosition(-3.0, -2.0)],
+            [ChaseOrPosition(-3.0, -3.0)],
+            [ChaseOrPosition(-2.0, 1.0)],
+            [ChaseOrPosition(-2.0, 0.0)],
+            [ChaseOrPosition(-2.0, -1.0)],
         ],
     )
 
