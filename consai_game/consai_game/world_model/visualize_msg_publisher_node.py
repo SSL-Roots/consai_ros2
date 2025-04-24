@@ -58,7 +58,7 @@ class VisualizeMsgPublisherNode(Node):
         vis_obj.sub_layer = "kick_target"
         vis_obj.z_order = 4
 
-        # ボールとターゲットを結ぶ直線を引く
+        # ボールとシュートターゲットを結ぶ直線を引く
         for i, target in enumerate(kick_target.shoot_target_list):
             line = ShapeLine()
             line.p1.x = ball.pos.x
@@ -77,6 +77,28 @@ class VisualizeMsgPublisherNode(Node):
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
+
+        # ボールとパスターゲットを結ぶ直線を引く
+        for i, target in enumerate(kick_target.pass_target_list):
+            line = ShapeLine()
+            line.p1.x = ball.pos.x
+            line.p1.y = ball.pos.y
+            line.p2.x = target.robot_pos.x
+            line.p2.y = target.robot_pos.y
+
+            line.size = 1
+            line.color.name = "blue"
+            # ベストパスターゲットの色を変える
+            if i == 0:
+                line.color.name = "yellow"
+                line.size = 2
+
+            # シュート成功率が高いほど色を刻する
+            line.color.alpha = min(1.0, target.success_rate / 100.0)
+            line.caption = f"rate: {target.success_rate}"
+
+            vis_obj.lines.append(line)
+
         return vis_obj
 
     def ball_activity_to_vis_msg(self, activity: BallActivityModel, ball: BallModel) -> Objects:
