@@ -42,6 +42,8 @@ def main():
         agent_scheduler_node.set_world_model(world_model)
         vis_msg_publisher_node.publish(world_model)
 
+        print(f"our_robots_by_ball_distance: {world_model.robot_activity.our_robots_by_ball_distance}")
+
         time.sleep(1 / UPDATE_HZ)
 
 
