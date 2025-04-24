@@ -66,7 +66,14 @@ class DribbleStateMachine(Machine):
         # ステートマシン構築
         super().__init__(model=self, states=states, transitions=transitions, initial="arrived")
 
-    def update(self, dist_to_ball: float, dist_ball_to_target: float, dribble_diff_angle: float):
+    def update(
+        self,
+        dist_to_ball: float,
+        dist_ball_to_target: float,
+        dribble_diff_angle: float,
+        ball_trans_pos: float,
+        robot_trans_pos: float,
+    ):
         """状態遷移."""
         if self.state != "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
             self.reset()
@@ -74,7 +81,14 @@ class DribbleStateMachine(Machine):
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
             self.start()
 
-        elif self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
+        elif (
+            self.state == "chasing"
+            and dist_to_ball <= self.BALL_NEAR_THRESHOLD
+            and ball_trans_pos.x < robot_trans_pos.x
+        ):
+            # 状態が"chasing"でボールと目標位置間の距離がしきい値以下かつ
+            # ボールの変換後のx座標がロボットの変換後のx座標より大きい場合
+            # 状態を"chasing"から"aiming"に遷移
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
@@ -142,8 +156,17 @@ class Dribble(TacticBase):
         # ドリブル角度との差分を計算
         dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
 
+        # ボールを中心にしターゲットを-x軸とする座標系を生成
+        trans = tool.Trans(ball_pos, tool.get_angle(self.target_pos, ball_pos))
+        # ボールの座標を変換
+        ball_trans_pos = trans.transform(ball_pos)
+        # ロボットの座標を変換
+        robot_trans_pos = trans.transform(robot_pos)
+
         # 状態遷移を更新
-        self.machine.update(dist_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle))
+        self.machine.update(
+            dist_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle), ball_trans_pos, robot_trans_pos
+        )
 
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
