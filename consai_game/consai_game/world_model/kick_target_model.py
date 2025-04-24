@@ -34,7 +34,7 @@ from consai_game.world_model.robots_model import Robot, RobotsModel
 
 
 @dataclass
-class KickTarget:
+class ShootTarget:
     """キックターゲットの位置と成功率を保持するデータクラス."""
 
     pos: State2D = field(default_factory=State2D)
@@ -49,8 +49,8 @@ class KickTargetModel:
         self.hysteresis_distance = 0.3
         self.robot_radius = 0.09
 
-        self.shoot_target_list: list[KickTarget] = []
-        self._goal_pos_list = [KickTarget()]
+        self.shoot_target_list: list[ShootTarget] = []
+        self._goal_pos_list = [ShootTarget()]
 
     def update_goal_pos_list(self, field: Field) -> None:
         """ゴール位置候補を更新する関数."""
@@ -58,13 +58,13 @@ class KickTargetModel:
         one_eighth_width = field.half_goal_width / 4
 
         self._goal_pos_list = [
-            KickTarget(pos=Point(field.half_length, 0.0)),
-            KickTarget(pos=Point(field.half_length, one_eighth_width)),
-            KickTarget(pos=Point(field.half_length, -one_eighth_width)),
-            KickTarget(pos=Point(field.half_length, quarter_width)),
-            KickTarget(pos=Point(field.half_length, -quarter_width)),
-            KickTarget(pos=Point(field.half_length, quarter_width + one_eighth_width)),
-            KickTarget(pos=Point(field.half_length, -(quarter_width + one_eighth_width))),
+            ShootTarget(pos=Point(field.half_length, 0.0)),
+            ShootTarget(pos=Point(field.half_length, one_eighth_width)),
+            ShootTarget(pos=Point(field.half_length, -one_eighth_width)),
+            ShootTarget(pos=Point(field.half_length, quarter_width)),
+            ShootTarget(pos=Point(field.half_length, -quarter_width)),
+            ShootTarget(pos=Point(field.half_length, quarter_width + one_eighth_width)),
+            ShootTarget(pos=Point(field.half_length, -(quarter_width + one_eighth_width))),
         ]
 
     def update(
@@ -77,9 +77,12 @@ class KickTargetModel:
         self._our_robots = robots_model.our_robots
         self._their_robots = robots_model.their_robots
 
+        # 最も成功するshoot_targetの座標を取得
         self.best_shoot_target = self._search_shoot_pos()
 
-    def _update_scores(self, search_ours) -> list[KickTarget]:
+        self.best_pass_target = self._search_pass_robot()
+
+    def _update_scores(self, search_ours) -> list[ShootTarget]:
         """各キックターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = self.robot_radius  # ロボット半径
 
@@ -108,11 +111,11 @@ class KickTargetModel:
 
         return self._goal_pos_list
 
-    def _sort_kick_targets_by_success_rate(self, targets: list[KickTarget]) -> list[KickTarget]:
+    def _sort_kick_targets_by_success_rate(self, targets: list[ShootTarget]) -> list[ShootTarget]:
         """スコアの高いターゲット順にソートする関数."""
         return sorted(targets, key=attrgetter("success_rate"), reverse=True)
 
-    def _search_shoot_pos(self, search_ours=True) -> KickTarget:
+    def _search_shoot_pos(self, search_ours=True) -> ShootTarget:
         """ボールからの直線上にロボットがいないシュート位置リストを返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
         last_shoot_target_list = self.shoot_target_list.copy()
