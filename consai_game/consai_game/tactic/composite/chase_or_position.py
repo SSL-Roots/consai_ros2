@@ -12,18 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import MotionCommand
+"""
+ボールに一番近ければボールを取りに行く、そうでなければ指定した位置に移動するモジュール.
 
-from consai_game.world_model.world_model import WorldModel
+SlowSafePositionとChaseBallのTacticを組み合わせたTactic
+"""
+
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 from consai_game.tactic.slow_safe_position import SlowSafePosition
 from consai_game.tactic.chase_ball import ChaseBall
+from consai_game.world_model.world_model import WorldModel
+
+from consai_msgs.msg import MotionCommand
 
 
 class ChaseOrPosition(TacticBase):
-    """ボールに一番近ければボールを取りに行く、そうでなければ指定した位置に移動する."""
+    """
+    ボールに一番近ければボールを取りに行く、そうでなければ指定した位置に移動する.
+
+    ChaseBallとSlowSafePositionを利用する.
+    """
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
+        """Initialize the DefendGoal tactic."""
         super().__init__()
         self.x = x
         self.y = y
@@ -33,6 +44,7 @@ class ChaseOrPosition(TacticBase):
         self.tactic_position = SlowSafePosition(x, y, theta)
 
     def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
@@ -41,6 +53,7 @@ class ChaseOrPosition(TacticBase):
         self.tactic_position.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         if world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:
             # ボールに近い場合はボールを追いかける
             command = self.tactic_chase.run(world_model)
