@@ -100,8 +100,13 @@ class Shoot(TacticBase):
         # キックターゲットを取得
         kick_target_model = world_model.kick_target
         if kick_target_model.best_shoot_target.success_rate > 50:
+            # シュートターゲットの位置を取得
             target_pos = kick_target_model.best_shoot_target.pos
+        elif kick_target_model.best_pass_target.success_rate > 50 and kick_target_model.best_pass_target.robot_id != -1:
+            # パスターゲットの位置を取得
+            target_pos = kick_target_model.best_pass_target.robot_pos
         else:
+            # デフォルトのシュートターゲットの位置を設定
             target_pos = State2D()
             target_pos.x = 6.0
             target_pos.y = 0.0
