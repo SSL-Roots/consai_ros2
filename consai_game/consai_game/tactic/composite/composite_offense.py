@@ -41,6 +41,7 @@ class CompositeOffense(TacticBase):
         self.tactic_default.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """状況に応じて実行するtacticを切り替えてrunする."""
         if world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:
             # ボールに近い場合はボールを操作する
             return self.control_the_ball(world_model)
