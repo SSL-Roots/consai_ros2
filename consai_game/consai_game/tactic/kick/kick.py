@@ -73,14 +73,14 @@ class KickStateMachine(Machine):
 class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
-    KICK_POWER_OFF = 0.0
-    KICK_POWER_ON = 5.0
+    MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
     CHASING_BALL_APPROACH_X = 0.5
 
     def __init__(self, x=0.0, y=0.0, is_pass=False):
         super().__init__()
 
         self.target_pos = State2D(x=x, y=y)
+        self.is_pass = is_pass
 
         self.machine = KickStateMachine("robot")
 
@@ -110,7 +110,6 @@ class Kick(TacticBase):
         self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
 
         if self.machine.state == "chasing":
-            command.kick_power = self.KICK_POWER_OFF
             command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH_X
             command.desired_pose.y = ball_pos.y
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
@@ -121,7 +120,9 @@ class Kick(TacticBase):
 
         elif self.machine.state == "kicking":
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
-            command.kick_power = self.KICK_POWER_ON
+            command.kick_power = self.MAX_KICK_POWER
+            if self.is_pass:
+                command.kick_power = self.pass_power(ball_pos)
 
         return command
 
@@ -132,3 +133,22 @@ class Kick(TacticBase):
         pose.y = ball_pos.y - 0.1 * np.sin(kick_angle)
         pose.theta = kick_angle
         return pose
+
+    def pass_power(self, ball_pos: State2D) -> float:
+        """ボールからkick_targetまでの距離をもとにキック速度を計算する"""
+
+        MIN_PASS_POWER = 2.0  # ある程度の距離までボールが届き、ロボットがキャッチできる最低速度
+        MIN_PASS_DISTANCE = 0.5  # MIN_PASS_POWERで届く最大距離
+        MAX_PASS_DISTANCE = 5.0  # MAX_KICK_POWERで届く最大距離
+
+        distance_to_target = tool.get_distance(ball_pos, self.target_pos)
+
+        if distance_to_target < MIN_PASS_DISTANCE:
+            return MIN_PASS_POWER
+        elif distance_to_target > MAX_PASS_DISTANCE:
+            return self.MAX_KICK_POWER
+        else:
+            # 線形補間
+            return MIN_PASS_POWER + (self.MAX_KICK_POWER - MIN_PASS_POWER) * (
+                distance_to_target - MIN_PASS_DISTANCE
+            ) / (MAX_PASS_DISTANCE - MIN_PASS_DISTANCE)
