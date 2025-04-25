@@ -77,7 +77,7 @@ class Kick(TacticBase):
     KICK_POWER_ON = 5.0
     CHASING_BALL_APPROACH_X = 0.5
 
-    def __init__(self, x: float, y: float, is_pass: bool):
+    def __init__(self, x=0.0, y=0.0, is_pass=False):
         super().__init__()
 
         self.target_pos = State2D(x=x, y=y)

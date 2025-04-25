@@ -25,9 +25,11 @@
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.slow_safe_position import SlowSafePosition
+from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
 from consai_game.tactic.composite.chase_or_position import ChaseOrPosition
+from consai_game.tactic.composite.composite_offense import CompositeOffense
 
 
 def halt() -> Play:
@@ -97,16 +99,16 @@ def force_start() -> Play:
         timeout_ms=0,
         roles=[
             [Stop()],
-            [Shoot()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [CompositeOffense(tactic_default=Position(-3.0, 2.0))],
+            [CompositeOffense(tactic_default=Position(-3.0, 0.0))],
+            [CompositeOffense(tactic_default=Position(-3.0, -2.0))],
+            [CompositeOffense(tactic_default=Position(0.0, 4.0))],
+            [CompositeOffense(tactic_default=Position(0.0, 2.0))],
+            [CompositeOffense(tactic_default=Position(0.0, -2.0))],
+            [CompositeOffense(tactic_default=Position(0.0, -4.0))],
+            [CompositeOffense(tactic_default=Position(3.0, 3.0))],
+            [CompositeOffense(tactic_default=Position(3.0, -3.0))],
+            [CompositeOffense(tactic_default=Position(4.0, 0.0))],
         ],
     )
 
