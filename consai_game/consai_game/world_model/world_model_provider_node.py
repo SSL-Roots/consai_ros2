@@ -73,8 +73,11 @@ class WorldModelProviderNode(Node):
             depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, reliability=ReliabilityPolicy.RELIABLE
         )
 
-        self._sub_param_rule = self.create_subscription(
+        self.sub_param_rule = self.create_subscription(
             String, "consai_param/rule", self.callback_param_rule, qos_profile
+        )
+        self.sub_param_control = self.create_subscription(
+            String, "consai_param/control", self.callback_param_control, qos_profile
         )
 
     def update(self) -> None:
@@ -139,3 +142,12 @@ class WorldModelProviderNode(Node):
 
             self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
             self.world_model.kick_target.update_goal_pos_list(self.world_model.field)
+
+    def callback_param_control(self, msg: String) -> None:
+        """トピック consai_param/control からのパラメータを受け取り、ロボットの最大速度を更新する."""
+        with self.lock:
+            param_dict = json.loads(msg.data)
+            self.world_model.game_config.robot_max_linear_vel = param_dict["soft_limits"]["velocity_xy"]
+            self.world_model.game_config.robot_max_angular_vel = param_dict["soft_limits"]["velocity_theta"]
+            self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
+            self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]

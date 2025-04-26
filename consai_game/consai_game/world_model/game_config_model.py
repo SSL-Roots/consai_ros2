@@ -14,8 +14,6 @@
 
 """
 ゲーム設定情報を保持するモデルの定義.
-
-チームカラーとゴールキーパーIDに関する設定の管理.
 """
 
 from dataclasses import dataclass
@@ -27,3 +25,7 @@ class GameConfigModel:
 
     goalie_id: int = 0
     our_team_is_yellow: bool = True
+    robot_max_linear_vel: float = 0.0
+    robot_max_angular_vel: float = 0.0
+    robot_max_linear_accel: float = 0.0
+    robot_max_angular_accel: float = 0.0
