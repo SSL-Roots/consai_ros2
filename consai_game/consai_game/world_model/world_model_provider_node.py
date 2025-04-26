@@ -29,6 +29,8 @@ from consai_game.utils.process_info import process_info
 from consai_game.world_model.referee_model import parse_referee_msg
 from consai_game.world_model.world_model import WorldModel
 
+from consai_msgs.msg import MotionCommandArray
+
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy
 from rclpy.qos import QoSProfile
@@ -79,6 +81,10 @@ class WorldModelProviderNode(Node):
         self.sub_param_control = self.create_subscription(
             String, "consai_param/control", self.callback_param_control, qos_profile
         )
+        # motion_commandのsubscriber
+        self._sub_motion_command = self.create_subscription(
+            MotionCommandArray, "motion_commands", self.callback_desired_pose, 10
+        )
 
     def update(self) -> None:
         """
@@ -113,6 +119,7 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
+                desired_poses=self.world_model.robot_activity.desired_poses,
             )
 
     def callback_referee(self, msg: Referee) -> None:
@@ -157,3 +164,8 @@ class WorldModelProviderNode(Node):
             self.world_model.game_config.robot_max_angular_vel = param_dict["soft_limits"]["velocity_theta"]
             self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
+
+    def callback_desired_pose(self, msg: MotionCommandArray) -> None:
+        """トピック motion_commands からのパラメータを受け取り、ロボットの目標位置を更新する."""
+        with self.lock:
+            self.world_model.robot_activity.desired_poses = [msg.commands[i].desired_pose for i in range(11)]
