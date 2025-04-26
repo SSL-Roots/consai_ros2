@@ -30,6 +30,7 @@ from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
 from consai_game.tactic.composite.chase_or_position import ChaseOrPosition
 from consai_game.tactic.composite.composite_offense import CompositeOffense
+from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
 
 
 def halt() -> Play:
@@ -99,16 +100,16 @@ def force_start() -> Play:
         timeout_ms=0,
         roles=[
             [Stop()],
-            [CompositeOffense(tactic_default=Position(-3.0, 2.0))],
-            [CompositeOffense(tactic_default=Position(-3.0, 0.0))],
-            [CompositeOffense(tactic_default=Position(-3.0, -2.0))],
-            [CompositeOffense(tactic_default=Position(0.0, 4.0))],
-            [CompositeOffense(tactic_default=Position(0.0, 2.0))],
-            [CompositeOffense(tactic_default=Position(0.0, -2.0))],
-            [CompositeOffense(tactic_default=Position(0.0, -4.0))],
-            [CompositeOffense(tactic_default=Position(3.0, 3.0))],
-            [CompositeOffense(tactic_default=Position(3.0, -3.0))],
-            [CompositeOffense(tactic_default=Position(4.0, 0.0))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(4.0, 0.0)))],
         ],
     )
 
