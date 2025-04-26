@@ -152,7 +152,7 @@ class RobotActivityModel:
         available_distance = intercept_time * game_config.robot_max_linear_vel
 
         # ボール軌道からロボットまでの距離
-        robot_arrival_distance = tr_robot_pos.y
+        robot_arrival_distance = abs(tr_robot_pos.y)
 
         # ボールが到着するまでにロボットが移動できれば、intercept_timeを返す
         if available_distance >= robot_arrival_distance:
