@@ -186,12 +186,11 @@ class RobotActivityModel:
         if len(our_robots) == 0:
             return False
 
-        # ロボットの位置をリストに格納
-        robot_poses = [our_robots.get(i).pos for i in range(11)]
-        # ロボットの可視状態をリストに格納
-        robot_is_visibles = [our_robots.get(i).is_visible for i in range(11)]
         # 全ロボットが目標位置に到着したか判定するループ
-        for (robot_pos, desired_pose, robot_is_visible) in zip(robot_poses, self.desired_poses, robot_is_visibles):
+        for (key, desired_pose) in zip(our_robots.keys(), self.desired_poses):
+            robot_pos = our_robots.get(key).pos
+            robot_is_visible = our_robots.get(key).is_visible
+
             # 可視状態にあるロボットのみ処理する
             if robot_is_visible is True:
                 # ロボットと目標位置の距離を計算

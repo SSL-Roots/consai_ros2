@@ -168,4 +168,4 @@ class WorldModelProviderNode(Node):
     def callback_desired_pose(self, msg: MotionCommandArray) -> None:
         """トピック motion_commands からのパラメータを受け取り、ロボットの目標位置を更新する."""
         with self.lock:
-            self.world_model.robot_activity.desired_poses = [msg.commands[i].desired_pose for i in range(11)]
+            self.world_model.robot_activity.desired_poses = [command.desired_pose for command in msg.commands]
