@@ -16,7 +16,18 @@
 
 from consai_game.world_model.robots_model import RobotsModel, Robot
 from consai_game.world_model.ball_model import BallModel
+from consai_game.world_model.ball_activity_model import BallActivityModel
+from consai_game.world_model.game_config_model import GameConfigModel
 from consai_tools.geometry import geometry_tools as tools
+from dataclasses import dataclass
+
+
+@dataclass
+class ReceiveScore:
+    """ボールをどれだけ受け取りやすいかを保持するデータクラス."""
+
+    robot_id: int = 0
+    intercept_time: float = float("inf")  # あと何秒後にボールを受け取れるか
 
 
 class RobotActivityModel:
@@ -30,11 +41,14 @@ class RobotActivityModel:
         self.their_visible_robots: list[int] = []
         self.our_robots_by_ball_distance: list[int] = []
         self.their_robots_by_ball_distance: list[int] = []
+        self.our_ball_receive_score: list[ReceiveScore] = []
 
-    def update(self, robots_model: RobotsModel, ball: BallModel):
+    def update(
+        self, robots: RobotsModel, ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
+    ):
         """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
-        self.our_visible_robots = [robot.robot_id for robot in robots_model.our_robots.values() if robot.is_visible]
-        self.their_visible_robots = [robot.robot_id for robot in robots_model.their_robots.values() if robot.is_visible]
+        self.our_visible_robots = [robot.robot_id for robot in robots.our_robots.values() if robot.is_visible]
+        self.their_visible_robots = [robot.robot_id for robot in robots.their_robots.values() if robot.is_visible]
 
         self.ordered_our_visible_robots = self.ordered_merge(
             self.ordered_our_visible_robots,
@@ -49,17 +63,25 @@ class RobotActivityModel:
         self.our_robots_by_ball_distance = [
             robot_id
             for robot_id, _ in self.robot_ball_distances(
-                robots_model.our_visible_robots,
+                robots.our_visible_robots,
                 ball,
             )
         ]
         self.their_robots_by_ball_distance = [
             robot_id
             for robot_id, _ in self.robot_ball_distances(
-                robots_model.their_visible_robots,
+                robots.their_visible_robots,
                 ball,
             )
         ]
+
+        # ボールを受け取れるスコアを計算する
+        self.our_ball_receive_score = self.calc_ball_receive_score_list(
+            robots=robots.our_visible_robots,
+            ball=ball,
+            ball_activity=ball_activity,
+            game_config=game_config,
+        )
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
         """過去の順序を保ちながら, 新しいリストでマージする関数."""
@@ -84,3 +106,56 @@ class RobotActivityModel:
         robot_ball_distances.sort(key=lambda x: x[1])
 
         return robot_ball_distances
+
+    def calc_ball_receive_score_list(
+        self, robots: dict[int, Robot], ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
+    ) -> list[ReceiveScore]:
+        """ロボットごとにボールを受け取れるスコアを計算する"""
+
+        # ボールが動いていない場合は、スコアをデフォルト値にする
+        if not ball_activity.ball_is_moving:
+            return [ReceiveScore(robot_id=robot.robot_id) for robot in robots.values()]
+
+        score_list = []
+        for robot in robots.values():
+            score_list.append(
+                ReceiveScore(
+                    robot_id=robot.robot_id,
+                    intercept_time=self.calc_intercept_time(robot, ball, game_config),
+                )
+            )
+
+        # intercept_timeが小さい順にソート
+        score_list.sort(key=lambda x: x.intercept_time)
+        return score_list
+
+    def calc_intercept_time(self, robot: Robot, ball: BallModel, game_config: GameConfigModel) -> float:
+        """ロボットがボールを受け取るまでの時間を計算する関数."""
+
+        # ボールを中心に、ボールの速度方向を+x軸にした座標系を作る
+        trans = tools.Trans(ball.pos, tools.get_vel_angle(ball.vel))
+
+        # ロボットの位置を変換
+        tr_robot_pos = trans.transform(robot.pos)
+
+        # TODO: ボールを後ろから追いかけて受け取れるようになったら、計算を変更する
+        if tr_robot_pos.x < 0:
+            return float("inf")
+
+        # ロボットからボール軌道まで垂線を引き、
+        # その交点にボールが到達するまでの時間を計算する
+        ball_arrival_distance = tr_robot_pos.x
+        intercept_time = ball_arrival_distance / tools.get_norm(ball.vel)
+
+        # ボールが到達するまでの時間で、ロボットがどれだけ移動できるかを計算する
+        # TODO: ロボットの現在速度、加速度を考慮すべき
+        available_distance = intercept_time * game_config.robot_max_linear_vel
+        print(f"robot_id: {robot.robot_id}, intercept_time: {intercept_time}, available_distance: {available_distance}")
+
+        # ボール軌道からロボットまでの距離
+        robot_arrival_distance = tr_robot_pos.y
+
+        # ボールが到着するまでにロボットが移動できれば、intercept_timeを返す
+        if available_distance >= robot_arrival_distance:
+            return intercept_time
+        return float("inf")
