@@ -77,6 +77,11 @@ def get_angle(from_pose, to_pose):
     return math.atan2(diff_pose.y, diff_pose.x)
 
 
+def get_vel_angle(vel: State2D) -> float:
+    # ワールド座標系での速度ベクトルの角度を得る
+    return math.atan2(vel.y, vel.x)
+
+
 def angle_normalize(angle):
     # 角度をpi  ~ -piの範囲に変換する関数
     while angle > math.pi:
