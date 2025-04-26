@@ -88,15 +88,14 @@ class WorldModelProviderNode(Node):
         """
         with self.lock:
             self.get_logger().debug(f"WorldModelProvider update, {process_info()}")
-            self.world_model.robot_activity.update(self.world_model.robots, ball=self.world_model.ball)
             # ボールの位置情報を更新
             self.world_model.ball_position.update_position(
                 self.world_model.ball, self.world_model.field, self.world_model.field_points
             )
+            # ボールの活動状態を更新
             self.world_model.ball_activity.update(
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
-                robot_activity=self.world_model.robot_activity,
             )
             # 最適なシュートターゲットを更新
             self.world_model.kick_target.update(
@@ -107,6 +106,13 @@ class WorldModelProviderNode(Node):
             self.world_model.threats.update(
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
+            )
+            # ロボットの活動状態を更新
+            self.world_model.robot_activity.update(
+                robots=self.world_model.robots,
+                ball=self.world_model.ball,
+                ball_activity=self.world_model.ball_activity,
+                game_config=self.world_model.game_config,
             )
 
     def callback_referee(self, msg: Referee) -> None:

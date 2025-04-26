@@ -27,7 +27,6 @@ from consai_tools.geometry import geometry_tools as tools
 
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
-from consai_game.world_model.robot_activity_model import RobotActivityModel
 
 from consai_msgs.msg import State2D
 
@@ -68,17 +67,16 @@ class BallActivityModel:
         # ボールの将来の予測位置
         self.next_ball_pos = State2D()
 
-    def update(self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel):
+    def update(self, ball: BallModel, robots: RobotsModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
-        if not self.validate_and_update_ball_holder(ball, robots, robot_activity):
+        if not self.validate_and_update_ball_holder(ball, robots):
             self.ball_holder = None
 
         # ボール保持者を探索する
         self.ball_holder = self.search_new_ball_holder(
             ball=ball,
             robots=robots,
-            robot_activity=robot_activity,
         )
         # ボールの移動状態を更新する
         self.ball_is_moving = self.is_ball_moving(ball)
@@ -109,19 +107,19 @@ class BallActivityModel:
             else:
                 self.ball_state = BallState.FREE
 
-    def validate_and_update_ball_holder(
-        self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel
-    ) -> bool:
+    def validate_and_update_ball_holder(self, ball: BallModel, robots: RobotsModel) -> bool:
         """ボール保持者の状態を検証し、更新するメソッド."""
         if not self.ball_holder:
             return False
 
         # ボール保持者が存在するか
         if self.ball_holder.is_our_team:
-            if self.ball_holder.robot.robot_id not in robot_activity.ordered_our_visible_robots:
+            if self.ball_holder.robot.robot_id not in [robot.robot_id for robot in robots.our_visible_robots.values()]:
                 return False
         else:
-            if self.ball_holder.robot.robot_id not in robot_activity.ordered_their_visible_robots:
+            if self.ball_holder.robot.robot_id not in [
+                robot.robot_id for robot in robots.their_visible_robots.values()
+            ]:
                 return False
 
         # ボール保持者がボールに近いか
@@ -141,9 +139,7 @@ class BallActivityModel:
 
         return True
 
-    def search_new_ball_holder(
-        self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel
-    ) -> Optional[BallHolder]:
+    def search_new_ball_holder(self, ball: BallModel, robots: RobotsModel) -> Optional[BallHolder]:
         """ボールを持っているロボットを探索するメソッド."""
         # 現在のボール保持者の距離を計算
         ball_holder_distance = float("inf")
@@ -151,11 +147,7 @@ class BallActivityModel:
             ball_holder_distance = tools.get_distance(ball.pos, self.ball_holder.robot.pos)
 
         # 新しいボール保持者候補を探索
-        new_ball_holder = self.nearest_robot(
-            ball=ball,
-            robots=robots,
-            robot_activity=robot_activity,
-        )
+        new_ball_holder = self.nearest_robot(ball=ball, robots=robots)
         # 新しい保持者が見つからなければ、現在の保持者を返す
         if not new_ball_holder:
             return self.ball_holder
@@ -172,20 +164,16 @@ class BallActivityModel:
 
         return self.ball_holder
 
-    def nearest_robot(
-        self, ball: BallModel, robots: RobotsModel, robot_activity: RobotActivityModel
-    ) -> Optional[BallHolder]:
+    def nearest_robot(self, ball: BallModel, robots: RobotsModel) -> Optional[BallHolder]:
         """チームの中で、ボールに最も近いロボットを取得するメソッド."""
         nearest_our_robot, our_distance = self.nearest_robot_of_team(
             ball=ball,
-            robots=robots.our_robots,
-            visible_ids=robot_activity.ordered_our_visible_robots,
+            visible_robots=robots.our_visible_robots,
         )
 
         nearest_their_robot, their_distance = self.nearest_robot_of_team(
             ball=ball,
-            robots=robots.their_robots,
-            visible_ids=robot_activity.ordered_their_visible_robots,
+            visible_robots=robots.their_visible_robots,
         )
 
         # ロボットがいない場合
@@ -204,15 +192,12 @@ class BallActivityModel:
         else:
             return BallHolder(is_our_team=False, robot=nearest_their_robot)
 
-    def nearest_robot_of_team(
-        self, ball: BallModel, robots: dict[int, Robot], visible_ids: list[id]
-    ) -> tuple[Optional[Robot], float]:
+    def nearest_robot_of_team(self, ball: BallModel, visible_robots: dict[int, Robot]) -> tuple[Optional[Robot], float]:
         """チームの中で、ボールに最も近いロボットを取得するメソッド."""
         nearest_robot = None
         nearest_distance = float("inf")
 
-        for robot_id in visible_ids:
-            robot = robots[robot_id]
+        for robot in visible_robots.values():
             distance = tools.get_distance(ball.pos, robot.pos)
 
             if distance < nearest_distance:
