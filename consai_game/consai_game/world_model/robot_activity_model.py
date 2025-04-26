@@ -150,7 +150,6 @@ class RobotActivityModel:
         # ボールが到達するまでの時間で、ロボットがどれだけ移動できるかを計算する
         # TODO: ロボットの現在速度、加速度を考慮すべき
         available_distance = intercept_time * game_config.robot_max_linear_vel
-        print(f"robot_id: {robot.robot_id}, intercept_time: {intercept_time}, available_distance: {available_distance}")
 
         # ボール軌道からロボットまでの距離
         robot_arrival_distance = tr_robot_pos.y
