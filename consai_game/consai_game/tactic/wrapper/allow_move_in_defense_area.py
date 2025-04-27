@@ -16,17 +16,16 @@ from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_tools.geometry import geometry_tools as tool
 
 
-class WrapperLookBall(TacticBase):
-    """ボールを見るようにthetaを上書きするWrapperTactic.
+class AllowMoveInDefenseArea(TacticBase):
+    """ディフェンスエリア内での移動を許可するWrapperTactic."
 
-    WrapperLookBall(tactic=Position()) のように使用する
+    AllowMoveInDefenseArea(tactic=Position()) のように使用する
     """
 
     def __init__(self, tactic=TacticBase):
-        """内部tacticを初期化する関数."""
+        """inner_tacticを初期化する関数."""
         super().__init__()
         self.inner_tactic = tactic
 
@@ -36,11 +35,13 @@ class WrapperLookBall(TacticBase):
         self.inner_tactic.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
-        """ボールを見るようにdesired_poseを上書きする.`"""
+        """ディフェンスエリア内での移動と、ボールとの接触を許可する."""
         command = self.inner_tactic.run(world_model)
 
-        ball_pos = world_model.ball.pos
-        command.desired_pose.theta = tool.get_angle(command.desired_pose, ball_pos)
+        # ボールを回避をしない
+        command.navi_options.avoid_ball = False
+        # ディフェンスエリアを回避をしない
+        command.navi_options.avoid_defense_area = False
 
         # stateを上書きする
         self.state = self.inner_tactic.state
