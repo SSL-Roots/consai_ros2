@@ -115,15 +115,14 @@ class CompositeManMark(TacticBase):
     def __init__(self, default_tactic: TacticBase):
         super().__init__()
         self.default_tactic = default_tactic
-        self.man_mark_tactic = None
-        self.mark_target_id = None
+        self.man_mark_tactic = ManMark(-1)
+        self.mark_target_id = -1
 
     def reset(self, robot_id: int):
         super().reset(robot_id)
 
         self.default_tactic.reset(robot_id)
-        if self.man_mark_tactic is not None:
-            self.man_mark_tactic.reset(robot_id)
+        self.man_mark_tactic.reset(robot_id)
 
     def exit(self):
         super().exit()
@@ -147,9 +146,8 @@ class CompositeManMark(TacticBase):
             # 担当がない場合はデフォルトのtacticを実行
             return self.default_tactic.run(world_model)
         if new_target_id is not None and new_target_id != self.mark_target_id:
-            # ターゲットが変わったら再構築
+            # ターゲットが変わったら更新
             self.mark_target_id = new_target_id
-            self.man_mark_tactic = ManMark(new_target_id)
-            self.man_mark_tactic.reset(self.robot_id)
+            self.man_mark_tactic.target_robot_id = new_target_id
 
         return self.man_mark_tactic.run(world_model)
