@@ -65,8 +65,8 @@ class KickTargetModel:
         # pass_targetの位置と成功率を保持するリスト
         self.pass_target_list: list[PassTarget] = []
 
-    def update_goal_pos_list(self, field: Field) -> None:
-        """ゴール位置候補を更新する関数."""
+    def update_field_pos_list(self, field: Field) -> None:
+        """フィールドの位置候補を更新する関数."""
         quarter_width = field.half_goal_width / 2
         one_eighth_width = field.half_goal_width / 4
 
@@ -79,6 +79,8 @@ class KickTargetModel:
             ShootTarget(pos=Point(field.half_length, quarter_width + one_eighth_width)),
             ShootTarget(pos=Point(field.half_length, -(quarter_width + one_eighth_width))),
         ]
+
+        self._half_width = field.half_width
 
     def update(
         self,
@@ -115,11 +117,11 @@ class KickTargetModel:
             else:
                 # ボールからの角度（目標方向がゴール方向と合っているか）
                 angle = abs(tool.get_angle(self._ball.pos, target.pos))
-                score += max(0, 60 - np.rad2deg(angle) * 2)  # 小さい角度（正面）ほど高得点
+                score += max(0, 60 - np.rad2deg(angle))  # 小さい角度（正面）ほど高得点
 
                 # 距離（近いほうが成功率が高そう）
                 distance = tool.get_distance(self._ball.pos, target.pos)
-                score += max(0, 40 - distance * 20)  # 距離2m以内ならOK
+                score += max(0, 40 - distance * 5)  # 距離4m以内ならOK
                 target.success_rate = int(score)
 
     def _sort_kick_targets_by_success_rate(self, targets: list[ShootTarget]) -> list[ShootTarget]:
@@ -145,6 +147,30 @@ class KickTargetModel:
             return self.shoot_target_list[0]
         return last_shoot_target_list[0]
 
+    def _is_robot_inside_pass_area(self, robot: Robot) -> bool:
+        """味方ロボットがパスを出すロボットとハーフライン両サイドを結んでできる五角形のエリア内にいるかを判別する関数"""
+        if robot.is_visible is False:
+            return False
+        if robot.pos.x < 0.0:
+            return False
+
+        upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(
+            self._ball.pos, Point(0.0, self._half_width)
+        )
+        lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(
+            self._ball.pos, Point(0.0, -self._half_width)
+        )
+
+        if upper_side_slope is None or lower_side_slope is None:
+            if self._ball.pos.x > robot.pos.x:
+                return False
+        else:
+            upper_y_on_line = upper_side_intercept + upper_side_slope * robot.pos.x
+            lower_y_on_line = lower_side_intercept + lower_side_slope * robot.pos.x
+            if robot.pos.y < upper_y_on_line and robot.pos.y < lower_y_on_line:
+                return False
+        return True
+
     def _update_pass_scores(self, search_ours) -> None:
         """各パスターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = self.robot_radius  # ロボット半径
@@ -158,7 +184,7 @@ class KickTargetModel:
                 score = 0
             elif tool.get_distance(self._ball.pos, robot.pos) < 0.5:
                 score = 0
-            elif self._ball.pos.x > robot.pos.x or not robot.is_visible:
+            elif self._is_robot_inside_pass_area(robot) is False:
                 score = 0
             else:
                 # ボールとパスを受けるロボットの距離
