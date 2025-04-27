@@ -29,6 +29,8 @@ from consai_game.utils.process_info import process_info
 from consai_game.world_model.referee_model import parse_referee_msg
 from consai_game.world_model.world_model import WorldModel
 
+from consai_msgs.msg import MotionCommandArray
+
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy
 from rclpy.qos import QoSProfile
@@ -63,6 +65,9 @@ class WorldModelProviderNode(Node):
         self.world_model.game_config.our_team_is_yellow = team_is_yellow
         self.world_model.robots.our_team_is_yellow = team_is_yellow
         self.world_model.game_config.goalie_id = goalie_id
+        self.world_model.meta.update_rate = update_hz
+
+        self.motion_commands = MotionCommandArray()
 
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
         self.sub_detection_traced = self.create_subscription(
@@ -79,6 +84,10 @@ class WorldModelProviderNode(Node):
         self.sub_param_control = self.create_subscription(
             String, "consai_param/control", self.callback_param_control, qos_profile
         )
+        # motion_commandのsubscriber
+        self._sub_motion_command = self.create_subscription(
+            MotionCommandArray, "motion_commands", self.callback_motion_commands, 10
+        )
 
     def update(self) -> None:
         """
@@ -88,6 +97,9 @@ class WorldModelProviderNode(Node):
         """
         with self.lock:
             self.get_logger().debug(f"WorldModelProvider update, {process_info()}")
+            # メタ情報を更新
+            self.world_model.meta.update_counter += 1
+
             # ボールの位置情報を更新
             self.world_model.ball_position.update_position(
                 self.world_model.ball, self.world_model.field, self.world_model.field_points
@@ -113,6 +125,11 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
+            )
+
+            # ロボットが目標位置が到達したか更新
+            self.world_model.robot_activity.update_our_robots_arrived(
+                self.world_model.robots.our_visible_robots, self.motion_commands.commands
             )
 
     def callback_referee(self, msg: Referee) -> None:
@@ -157,3 +174,8 @@ class WorldModelProviderNode(Node):
             self.world_model.game_config.robot_max_angular_vel = param_dict["soft_limits"]["velocity_theta"]
             self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
+
+    def callback_motion_commands(self, msg: MotionCommandArray) -> None:
+        """トピック motion_commands からのパラメータを受け取り更新する."""
+        with self.lock:
+            self.motion_commands = msg
