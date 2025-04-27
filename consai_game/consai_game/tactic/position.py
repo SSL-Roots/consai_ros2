@@ -17,7 +17,7 @@
 from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 
 
 class Position(TacticBase):
@@ -29,11 +29,6 @@ class Position(TacticBase):
         self.x = x
         self.y = y
         self.theta = theta
-
-    def reset(self, robot_id: int) -> None:
-        """ロボットIDを設定し、Tacticの状態をRUNNINGにリセットする関数."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """指定した位置に移動するためのMotionCommandを生成する関数."""
