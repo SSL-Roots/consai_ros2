@@ -29,6 +29,7 @@ from consai_game.world_model.robots_model import RobotsModel
 from consai_game.world_model.kick_target_model import KickTargetModel
 from consai_game.world_model.game_config_model import GameConfigModel
 from consai_game.world_model.threats_model import ThreatsModel
+from consai_game.world_model.world_meta_model import WorldMetaModel
 
 
 @dataclass
@@ -46,3 +47,4 @@ class WorldModel:
     kick_target: KickTargetModel = KickTargetModel()
     game_config: GameConfigModel = GameConfigModel()
     threats: ThreatsModel = ThreatsModel(field, field_points)
+    meta: WorldMetaModel = WorldMetaModel()
