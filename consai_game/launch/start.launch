@@ -45,4 +45,11 @@
               --assign $(var assign)
               --goalie $(var goalie)
               " />
+
+  <node pkg="consai_referee_parser"
+        exec="main.py"
+        output="screen"
+        args="--yellow $(var yellow)
+              --invert $(var invert)
+              " />
 </launch>

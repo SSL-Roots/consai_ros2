@@ -233,6 +233,24 @@ bool ObstacleAvoidance::avoid_placement_area(
   return true;
 }
 
+State ObstacleAvoidance::avoid_placement_area(
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const std::optional<TrackedBall> & ball,
+  const State & designated_position) const
+{
+  State new_pose = goal_pose;
+
+  if (!ball) {
+    return new_pose;
+  }
+
+  avoid_placement_area(
+    my_robot, new_pose, *ball, designated_position, new_pose);
+
+  return new_pose;
+}
+
 bool ObstacleAvoidance::avoid_pushing_robots(
   const TrackedRobot & my_robot, const State & goal_pose,
   State & avoidance_pose) const
