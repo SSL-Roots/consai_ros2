@@ -25,6 +25,12 @@ WORKDIR $ROS_OVERLAY/src
 RUN sudo apt update && sudo apt install -y \
     curl
 
+# Install robocup_scenario_test
+# Ref: https://github.com/SSL-Roots/robocup_scenario_test
+RUN sudo apt update \
+    && sudo apt install -y protobuf-compiler python3-pip \
+    && pip install -v git+https://github.com/SSL-Roots/robocup_scenario_test
+
 # Install CONSAI dependent packages
 RUN git clone https://github.com/SSL-Roots/consai_frootspi_msgs.git \
     && git clone https://github.com/SSL-Roots/frootspi_msgs.git \
