@@ -57,7 +57,6 @@ class RobotActivityModel:
         self.our_robots_by_ball_distance: list[int] = []
         self.their_robots_by_ball_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
-        self.commands: list[MotionCommand] = []
         self.our_robots_arrived_list: list[OurRobotsArrived] = []
 
     def update(
