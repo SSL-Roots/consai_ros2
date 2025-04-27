@@ -30,7 +30,7 @@ class AllowMoveInDefenseArea(TacticBase):
         self.inner_tactic = tactic
 
     def reset(self, robot_id: int) -> None:
-        """iner_tacticをリセットする関数."""
+        """inner_tacticをリセットする関数."""
         super().reset(robot_id)
         self.inner_tactic.reset(robot_id)
 
