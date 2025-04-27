@@ -1,5 +1,5 @@
 from typing import List, Dict, Set
-
+from dataclasses import dataclass
 from consai_msgs.msg import MotionCommand
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
@@ -7,9 +7,15 @@ from consai_game.tactic.man_mark import ManMark
 from consai_game.world_model.threats_model import Threat
 
 
+@dataclass
+class MarkPair:
+    assigned_id: int  # マンマークを担当しているロボットID
+    target_id: int  # マンマークの対象ロボットID
+
+
 class ManMarkAssignment:
     def __init__(self):
-        self.current_target: Dict[int, int] = {}
+        self.current_mark_pairs: List[MarkPair] = []
         self.assigned_robots: Set[int] = set()  # マンマークを担当しているロボット
         self.score_threshold = 50  # マンマークを担当するための脅威度の閾値
         self.danger_score_threshold = 65  # 危険な敵ロボットを探すための脅威度の閾値
@@ -47,45 +53,46 @@ class ManMarkAssignment:
         """
         # danger_score_thresholdを超える敵ロボットで未割り当てのものを探す
         danger_threats = [t for t in threats if t.score >= self.danger_score_threshold]
-        assigned_targets = set(self.current_target.values())
+        assigned_targets = set(pair.target_id for pair in self.current_mark_pairs)
         unassigned_danger_threats = [t for t in danger_threats if t.robot_id not in assigned_targets]
 
-        # unassigned_danger_threatsがあれば、current_targetの中で一番スコアが低いものを削除
-        if unassigned_danger_threats and self.current_target:
-            # current_targetの中で一番スコアが低いものを探す
+        # unassigned_danger_threatsがあれば、current_mark_pairsの中で一番スコアが低いものを削除
+        if unassigned_danger_threats and self.current_mark_pairs:
+            # current_mark_pairsの中で一番スコアが低いものを探す
             min_score = float("inf")
-            min_robot_id = None
-            for robot_id, target_id in self.current_target.items():
+            min_pair_index = None
+            for i, pair in enumerate(self.current_mark_pairs):
                 # 対象のスコアを取得
-                score = next((t.score for t in threats if t.robot_id == target_id), float("-inf"))
+                score = next((t.score for t in threats if t.robot_id == pair.target_id), float("-inf"))
                 if score < min_score:
                     min_score = score
-                    min_robot_id = robot_id
-            if min_robot_id is not None:
-                self.current_target.pop(min_robot_id)
+                    min_pair_index = i
+            if min_pair_index is not None:
+                self.current_mark_pairs.pop(min_pair_index)
 
         # 既に割り当てられたターゲットを記録する集合
         used_targets = set()
-        for robot_id, target_id in list(self.current_target.items()):
+        for pair in list(self.current_mark_pairs):
             # 重複しているターゲットがあれば削除する
-            if target_id in used_targets:
-                self.current_target.pop(robot_id)
+            if pair.target_id in used_targets:
+                self.current_mark_pairs.remove(pair)
             else:
-                used_targets.add(target_id)
+                used_targets.add(pair.target_id)
 
-        # 新しい割り当て結果を格納する辞書
-        assignments = {}
+        # 新しい割り当て結果を格納するリスト
+        new_mark_pairs = []
 
         # 各担当ロボットに対して処理
         for our_id in self.assigned_robots:
             # 現在のマーク対象を取得
-            target_id = self.current_target.get(our_id)
+            current_pair = next((pair for pair in self.current_mark_pairs if pair.assigned_id == our_id), None)
+            target_id = current_pair.target_id if current_pair else None
 
             # 現在のマーク対象が依然として脅威（スコア >= score_threshold）なら、そのまま継続
             if target_id is not None and any(
                 t.robot_id == target_id and t.score >= self.score_threshold for t in threats
             ):
-                assignments[our_id] = target_id
+                new_mark_pairs.append(MarkPair(assigned_id=our_id, target_id=target_id))
                 continue
 
             # 新しいマーク対象を探す
@@ -94,11 +101,12 @@ class ManMarkAssignment:
                 if threat.robot_id in used_targets or threat.score < self.score_threshold:
                     continue
                 # 新しいマーク対象を割り当て
-                assignments[our_id] = threat.robot_id
+                new_mark_pairs.append(MarkPair(assigned_id=our_id, target_id=threat.robot_id))
+                used_targets.add(threat.robot_id)
                 break
 
-        self.current_target = assignments
-        return assignments
+        self.current_mark_pairs = new_mark_pairs
+        return {pair.assigned_id: pair.target_id for pair in new_mark_pairs}
 
 
 class CompositeManMark(TacticBase):
@@ -131,7 +139,10 @@ class CompositeManMark(TacticBase):
             self.assignment_module.assign_targets(threats)
             self.assignment_module.update_counter = world_model.meta.update_counter
         # 自分の担当するターゲットを取得
-        new_target_id = self.assignment_module.current_target.get(self.robot_id)
+        current_pair = next(
+            (pair for pair in self.assignment_module.current_mark_pairs if pair.assigned_id == self.robot_id), None
+        )
+        new_target_id = current_pair.target_id if current_pair else None
         if new_target_id is None:
             # 担当がない場合はデフォルトのtacticを実行
             return self.default_tactic.run(world_model)
