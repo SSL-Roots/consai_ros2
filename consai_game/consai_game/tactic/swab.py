@@ -75,7 +75,7 @@ class Swab(TacticBase):
         command.mode = MotionCommand.MODE_DIRECT_POSE
 
         # 状態遷移を更新
-        self.machine.update(world_model.robot_activity.all_robots_arrived)
+        self.machine.update(world_model.robot_activity.our_robots_arrived)
 
         # フィールドの大きさを取得
         # self.length = world_model.field.length

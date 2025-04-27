@@ -83,7 +83,7 @@ class WorldModelProviderNode(Node):
         )
         # motion_commandのsubscriber
         self._sub_motion_command = self.create_subscription(
-            MotionCommandArray, "motion_commands", self.callback_desired_pose, 10
+            MotionCommandArray, "motion_commands", self.callback_motion_commands, 10
         )
 
     def update(self) -> None:
@@ -119,7 +119,7 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
-                desired_poses=self.world_model.robot_activity.desired_poses,
+                commands=self.world_model.robot_activity.commands,
             )
 
     def callback_referee(self, msg: Referee) -> None:
@@ -165,7 +165,7 @@ class WorldModelProviderNode(Node):
             self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
 
-    def callback_desired_pose(self, msg: MotionCommandArray) -> None:
+    def callback_motion_commands(self, msg: MotionCommandArray) -> None:
         """トピック motion_commands からのパラメータを受け取り、ロボットの目標位置を更新する."""
         with self.lock:
-            self.world_model.robot_activity.desired_poses = [command.desired_pose for command in msg.commands]
+            self.world_model.robot_activity.commands = msg.commands

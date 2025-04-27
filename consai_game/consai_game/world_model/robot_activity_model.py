@@ -21,7 +21,7 @@ from consai_game.world_model.game_config_model import GameConfigModel
 
 from consai_tools.geometry import geometry_tools as tools
 
-from consai_msgs.msg import State2D
+from consai_msgs.msg import MotionCommand
 
 from dataclasses import dataclass
 
@@ -49,8 +49,8 @@ class RobotActivityModel:
         self.our_robots_by_ball_distance: list[int] = []
         self.their_robots_by_ball_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
-        self.desired_poses: list[State2D] = []
-        self.all_robots_arrived: bool = False
+        self.commands: list[MotionCommand] = []
+        self.our_robot_arrived: list[bool] = []
 
     def update(
         self,
@@ -58,7 +58,7 @@ class RobotActivityModel:
         ball: BallModel,
         ball_activity: BallActivityModel,
         game_config: GameConfigModel,
-        desired_poses: list[State2D],
+        commands: list[MotionCommand],
     ):
         """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
         self.our_visible_robots = [robot.robot_id for robot in robots.our_robots.values() if robot.is_visible]
@@ -97,10 +97,8 @@ class RobotActivityModel:
             game_config=game_config,
         )
 
-        # ロボットの目標位置を更新
-        self.desired_poses = desired_poses
-        # ロボットの目標位置が到達したか更新
-        self.all_robots_arrived = self.all_robots_arrived_desiered_poses(robots.our_robots)
+        # ロボットが目標位置が到達したか更新
+        self.update_our_robots_arrived(robots.our_visible_robots, commands)
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
         """過去の順序を保ちながら, 新しいリストでマージする関数."""
@@ -178,23 +176,26 @@ class RobotActivityModel:
             return intercept_time
         return float("inf")
 
-    def all_robots_arrived_desiered_poses(self, our_robots) -> bool:
+    def update_our_robots_arrived(self, our_visible_robots, commands) -> bool:
         """各ロボットが目標位置に到達したか判定する関数."""
 
-        all_arrived = True
-        # 情報が空の場合はFalseを返す
-        if len(our_robots) == 0:
-            return False
+        # 初期化
+        self.our_robot_arrived = []
+        # エラー処理
+        if len(our_visible_robots) == 0 or len(commands) == 0:
+            return
 
-        # 全ロボットが目標位置に到着したか判定するループ
-        for (key, desired_pose) in zip(our_robots.keys(), self.desired_poses):
-            robot_pos = our_robots.get(key).pos
-            robot_is_visible = our_robots.get(key).is_visible
+        # 更新
+        for robot in our_visible_robots.values():
+            command = commands[robot.robot_id]
+            robot_pos = robot.pos
+            desired_pose = command.desired_pose
+            # ロボットと目標位置の距離を計算
+            dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
+            # 目標位置に到達したか判定結果をリストに追加
+            self.our_robot_arrived.append(dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD)
 
-            # 可視状態にあるロボットのみ処理する
-            if robot_is_visible is True:
-                # ロボットと目標位置の距離を計算
-                dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
-                # ロボットが目標位置に到着したか判定
-                all_arrived = all_arrived and (dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD)
-        return all_arrived
+    @property
+    def our_robots_arrived(self) -> bool:
+        """すべての自ロボットが目標位置に到達したかを返す関数."""
+        return all(self.our_robot_arrived)
