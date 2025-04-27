@@ -14,6 +14,7 @@ class ManMarkAssignment:
         self.keep_score_threshold = 50  # マンマークを継続するための脅威度の閾値
         self.score_threshold = 40  # マンマークを担当するための脅威度の閾値
         self.danger_score_threshold = 65  # 危険な敵ロボットを探すための脅威度の閾値
+        self.update_counter = 0  # 内部用更新カウンター
 
     def register_robot(self, robot_id: int):
         """
@@ -49,21 +50,20 @@ class ManMarkAssignment:
         danger_threats = [t for t in threats if t.score >= self.danger_score_threshold]
         assigned_targets = set(self.current_target.values())
         unassigned_danger_threats = [t for t in danger_threats if t.robot_id not in assigned_targets]
-        print(f"unassigned_danger_threats: {unassigned_danger_threats}")
 
-        # # unassigned_danger_threatsがあれば、current_targetの中で一番スコアが低いものを削除
-        # if unassigned_danger_threats and self.current_target:
-        #     # current_targetの中で一番スコアが低いものを探す
-        #     min_score = float('inf')
-        #     min_robot_id = None
-        #     for robot_id, target_id in self.current_target.items():
-        #         # 対象のスコアを取得
-        #         score = next((t.score for t in threats if t.robot_id == target_id), float('-inf'))
-        #         if score < min_score:
-        #             min_score = score
-        #             min_robot_id = robot_id
-        #     if min_robot_id is not None:
-        #         self.current_target.pop(min_robot_id)
+        # unassigned_danger_threatsがあれば、current_targetの中で一番スコアが低いものを削除
+        if unassigned_danger_threats and self.current_target:
+            # current_targetの中で一番スコアが低いものを探す
+            min_score = float("inf")
+            min_robot_id = None
+            for robot_id, target_id in self.current_target.items():
+                # 対象のスコアを取得
+                score = next((t.score for t in threats if t.robot_id == target_id), float("-inf"))
+                if score < min_score:
+                    min_score = score
+                    min_robot_id = robot_id
+            if min_robot_id is not None:
+                self.current_target.pop(min_robot_id)
 
         # 既に割り当てられたターゲットを記録する集合
         used_targets = set()
@@ -83,7 +83,9 @@ class ManMarkAssignment:
             target_id = self.current_target.get(our_id)
 
             # 現在のマーク対象が依然として脅威（スコア >= keep_score_threshold）なら、そのまま継続
-            if target_id and any(t.robot_id == target_id and t.score >= self.keep_score_threshold for t in threats):
+            if target_id is not None and any(
+                t.robot_id == target_id and t.score >= self.keep_score_threshold for t in threats
+            ):
                 assignments[our_id] = target_id
                 continue
 
@@ -97,7 +99,6 @@ class ManMarkAssignment:
                 break
 
         self.current_target = assignments
-        print(f"current_target: {self.current_target}")
         return assignments
 
 
@@ -123,14 +124,17 @@ class CompositeManMark(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         threats = world_model.threats.threats
-        # 担当を自己申告
+        # マンマーク役であることを自己申告
         self.assignment_module.register_robot(self.robot_id)
 
-        # TODO: これが並列で実行されるのをなんとかしたい
-        assignments = self.assignment_module.assign_targets(threats)
-        new_target_id = assignments.get(self.robot_id)
+        # 更新カウンターが変わったタイミングで一度だけ実行
+        if self.assignment_module.update_counter != world_model.meta.update_counter:
+            self.assignment_module.assign_targets(threats)
+            self.assignment_module.update_counter = world_model.meta.update_counter
+        # 自分の担当するターゲットを取得
+        new_target_id = self.assignment_module.current_target.get(self.robot_id)
         if new_target_id is None:
-            # 担当がない場合はデフォルトのタクティクを実行
+            # 担当がない場合はデフォルトのtacticを実行
             return self.default_tactic.run(world_model)
         if new_target_id is not None and new_target_id != self.mark_target_id:
             # ターゲットが変わったら再構築
