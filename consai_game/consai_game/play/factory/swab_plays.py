@@ -16,53 +16,21 @@
 # limitations under the License.
 
 
-"""
-雑巾がけのPlayを定義するモジュール.
-
-Game controllerの信号をもとに動作する
-"""
+"""雑巾がけのPlayを定義するモジュール."""
 
 from consai_game.core.play.play import Play, invert_conditions
-from consai_game.play.conditions.referee_conditions import RefereeConditions
-from consai_game.tactic.stop import Stop
+from consai_game.play.conditions.debug_conditions import DebugConditions
 from consai_game.tactic.swab import Swab
 
 
-def halt() -> Play:
-    """HALT信号をトリガーにし停止のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.halt,
-    ]
-    return Play(
-        name="halt",
-        description="HALT信号をトリガーにした停止用のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-        ],
-    )
-
-
 def swab() -> Play:
-    """STOP信号をトリガーにして雑巾がけのPlayを作成する関数."""
+    """x軸方向に雑巾がけをするPlayを作成する関数."""
     applicable = [
-        RefereeConditions.stop,
+        DebugConditions.debug_ture,
     ]
     return Play(
         name="swab",
-        description="雑巾がけのPlay",
+        description="x軸方向の雑巾がけのPlay",
         applicable=applicable,
         aborted=invert_conditions(applicable),
         timeout_ms=0,
