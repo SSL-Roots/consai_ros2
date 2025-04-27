@@ -20,10 +20,12 @@ referee_parser_node モジュール.
 Referee メッセージを受け取り, designated_positionをpublishする.
 """
 
-import threading
+from consai_msgs.msg import State2D
+from consai_visualizer_msgs.msg import Objects
+from consai_referee_parser import referee_to_vis_msg
+from rclpy import qos
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import Referee
-from consai_msgs.msg import State2D
 
 
 class RefereeParserNode(Node):
@@ -36,23 +38,27 @@ class RefereeParserNode(Node):
             invert (bool): フィールドサイドを反転させるかどうか
         """
         super().__init__("referee_parser_node")
-        self.lock = threading.Lock()
-
         self.team_is_yellow = team_is_yellow
         self.invert = invert
 
         self.pub_designated_position = self.create_publisher(State2D, "parsed_referee/designated_position", 10)
+
+        self.pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
+
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
 
     def callback_referee(self, msg: Referee):
+        designated_position = State2D()
+
         if len(msg.designated_position) > 0:
-            position = State2D()
-            position.x = msg.designated_position[0].x * 0.001  # mm to meters
-            position.y = msg.designated_position[0].y * 0.001  # mm to meters
+            designated_position.x = msg.designated_position[0].x * 0.001  # mm to meters
+            designated_position.y = msg.designated_position[0].y * 0.001  # mm to meters
 
             # フィールドサイドを反転しているときは、目標座標も反転させる
             if self.invert:
-                position.x *= -1.0
-                position.y *= -1.0
+                designated_position.x *= -1.0
+                designated_position.y *= -1.0
 
-            self.pub_designated_position.publish(position)
+            self.pub_designated_position.publish(designated_position)
+
+        self.pub_visualizer_objects.publish(referee_to_vis_msg.vis_info(msg, 0, 0, designated_position))
