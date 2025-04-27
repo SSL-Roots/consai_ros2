@@ -26,7 +26,6 @@ from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
-from consai_game.tactic.kick.shoot import Shoot
 from consai_game.tactic.composite.chase_or_position import ChaseOrPosition
 from consai_game.tactic.composite.composite_offense import CompositeOffense
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
@@ -74,16 +73,16 @@ def stop() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal())],
-            [ChaseOrPosition(-3.0, 3.0)],
-            [ChaseOrPosition(-3.0, 2.0)],
-            [ChaseOrPosition(-3.0, 1.0)],
-            [ChaseOrPosition(-3.0, 0.0)],
-            [ChaseOrPosition(-3.0, -1.0)],
-            [ChaseOrPosition(-3.0, -2.0)],
-            [ChaseOrPosition(-3.0, -3.0)],
-            [ChaseOrPosition(-2.0, 1.0)],
-            [ChaseOrPosition(-2.0, 0.0)],
-            [ChaseOrPosition(-2.0, -1.0)],
+            [WrapperLookBall(ChaseOrPosition(-3.0, 2.0))],
+            [WrapperLookBall(ChaseOrPosition(-3.0, 0.0))],
+            [WrapperLookBall(ChaseOrPosition(-3.0, -2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, 4.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, 2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, -2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, -4.0))],
+            [WrapperLookBall(ChaseOrPosition(3.0, 3.0))],
+            [WrapperLookBall(ChaseOrPosition(3.0, -3.0))],
+            [WrapperLookBall(ChaseOrPosition(3.5, 0.0))],
         ],
     )
 
@@ -110,7 +109,7 @@ def force_start() -> Play:
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(4.0, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
         ],
     )
 
@@ -129,16 +128,16 @@ def our_free_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal())],
-            [Shoot()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
         ],
     )
 
@@ -157,16 +156,16 @@ def their_free_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal())],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [WrapperLookBall(ChaseOrPosition(-3.0, 2.0))],
+            [WrapperLookBall(ChaseOrPosition(-3.0, 0.0))],
+            [WrapperLookBall(ChaseOrPosition(-3.0, -2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, 4.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, 2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, -2.0))],
+            [WrapperLookBall(ChaseOrPosition(0.0, -4.0))],
+            [WrapperLookBall(ChaseOrPosition(3.0, 3.0))],
+            [WrapperLookBall(ChaseOrPosition(3.0, -3.0))],
+            [WrapperLookBall(ChaseOrPosition(3.5, 0.0))],
         ],
     )
 
