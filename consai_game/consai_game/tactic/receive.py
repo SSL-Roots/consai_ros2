@@ -23,6 +23,7 @@ from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
+from consai_msgs.msg import State2D
 
 from consai_tools.geometry import geometry_tools as tool
 
@@ -40,6 +41,7 @@ class Receive(TacticBase):
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
+        self.receive_pos = State2D()
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -75,27 +77,18 @@ class Receive(TacticBase):
         diff_theta = tool.angle_normalize(theta_robot_to_ball - theta_ball_to_next_ball - np.pi)
         diff_theta = np.rad2deg(abs(diff_theta))
 
+        # 受取の座標
+        self.receive_pos = robot_pos
         if ball_is_moving and diff_theta < 20:
             # ボールが動いていてロボットに向かってくる場合
 
-            # ボールの進行方向の直線に関する傾きと切片を計算
-            # 傾きと切片をそれぞれaとbとする
-            a, b, flag = tool.get_line_parameter(ball_pos, next_ball_pos)
+            # ボールの進行方向に対して垂直な位置を算出
+            trans = tool.Trans(ball_pos, theta_ball_to_next_ball)
+            receive_trans_pos = trans.transform(self.receive_pos)
+            receive_trans_pos.y = 0.0
+            self.receive_pos = trans.inverted_transform(receive_trans_pos)
 
-            # ボールの進行方向と垂直に交わる直線に関する傾きと切片を計算
-            # 傾きと切片をそれぞれcとdとする
-            c = -1 / a
-            d = robot_pos.y - c * robot_pos.x
-
-            # 交点を計算
-            x = -(b - d) / (a - c)
-            y = a * x + b
-        else:
-            x = robot_pos.x
-            y = robot_pos.y
-
-        command.desired_pose.x = x
-        command.desired_pose.y = y
+        command.desired_pose = self.receive_pos
         command.desired_pose.theta = theta_robot_to_ball
 
         return command
