@@ -1,0 +1,124 @@
+from typing import List, Dict, Set
+
+from consai_msgs.msg import MotionCommand
+from consai_game.world_model.world_model import WorldModel
+from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.tactic.man_mark import ManMark
+from consai_game.world_model.threats_model import Threat
+
+
+class ManMarkAssignment:
+    def __init__(self):
+        self.current_target: Dict[int, int] = {}
+        self.assigned_robots: Set[int] = set()  # マンマークを担当しているロボット
+        self.score_threshold = 50
+        self.high_threat_threshold = 50
+
+    def register_robot(self, robot_id: int):
+        """
+        ロボットを登録する関数
+
+        Args:
+            robot_id: 登録するロボットID
+        """
+        if robot_id not in self.assigned_robots:
+            self.assigned_robots.add(robot_id)
+
+    def unregister_robot(self, robot_id: int):
+        """
+        ロボットを登録解除する関数
+
+        Args:
+            robot_id: 登録解除するロボットID
+        """
+        if robot_id in self.assigned_robots:
+            self.assigned_robots.discard(robot_id)
+
+    def assign_targets(self, threats: List[Threat]) -> Dict[int, int]:
+        """
+        各ロボットにマーク対象を割り当てる関数
+
+        Args:
+            threats: 脅威度が計算された敵ロボットのリスト
+
+        Returns:
+            Dict[int, int]: ロボットIDとマーク対象IDのマッピング
+        """
+        # 重複しているターゲットを削除
+        used_targets = set()
+        for robot_id, target_id in list(self.current_target.items()):
+            if target_id in used_targets:
+                self.current_target.pop(robot_id)
+            else:
+                used_targets.add(target_id)
+
+        # 新しい割り当て結果を格納する辞書
+        assignments = {}
+        # 既に割り当てられたターゲットを記録する集合
+        used_targets = set()
+
+        # 各担当ロボットに対して処理
+        for our_id in self.assigned_robots:
+            # 現在のマーク対象を取得
+            target_id = self.current_target.get(our_id)
+
+            # 現在のマーク対象が依然として脅威（スコア >= score_threshold）なら、そのまま継続
+            if target_id and any(t.robot_id == target_id and t.score >= self.score_threshold for t in threats):
+                assignments[our_id] = target_id
+                used_targets.add(target_id)
+                continue
+
+            # 新しいマーク対象を探す
+            for threat in threats:
+                # 既に割り当て済み、または脅威度が低い（スコア < high_threat_threshold）ならスキップ
+                if threat.robot_id in used_targets or threat.score < self.high_threat_threshold:
+                    continue
+                # 新しいマーク対象を割り当て
+                assignments[our_id] = threat.robot_id
+                self.current_target[our_id] = threat.robot_id
+                used_targets.add(threat.robot_id)
+                break
+
+            # 割り当てられなかった場合、現在のターゲットを解除
+            if our_id not in assignments:
+                self.current_target.pop(our_id, None)
+
+        return assignments
+
+
+class CompositeManMark(TacticBase):
+    def __init__(self, assignment_module: ManMarkAssignment, default_tactic: TacticBase):
+        super().__init__()
+        self.assignment_module = assignment_module
+        self.default_tactic = default_tactic
+        self.man_mark_tactic = None
+        self.mark_target_id = None
+
+    def reset(self, robot_id: int):
+        super().reset(robot_id)
+
+        self.default_tactic.reset(robot_id)
+        if self.man_mark_tactic is not None:
+            self.man_mark_tactic.reset(robot_id)
+
+    def exit(self):
+        super().exit()
+        self.assignment_module.unregister_robot(self.robot_id)
+
+    def run(self, world_model: WorldModel) -> MotionCommand:
+        threats = world_model.threats.threats
+        # 担当を自己申告
+        self.assignment_module.register_robot(self.robot_id)
+
+        assignments = self.assignment_module.assign_targets(threats)
+        new_target_id = assignments.get(self.robot_id)
+        if new_target_id is not None and new_target_id != self.mark_target_id:
+            # ターゲットが変わったら再構築
+            self.mark_target_id = new_target_id
+            self.man_mark_tactic = ManMark(new_target_id)
+            self.man_mark_tactic.reset(self.robot_id)
+
+        if self.man_mark_tactic:
+            return self.man_mark_tactic.run(world_model)
+
+        return self.default_tactic.run(world_model)
