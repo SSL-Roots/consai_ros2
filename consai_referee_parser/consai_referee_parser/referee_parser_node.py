@@ -67,6 +67,14 @@ class RefereeParserNode(Node):
                 )
             )
 
+            self.pub_visualizer_objects.publish(
+                referee_to_vis_msg.vis_prohibited_area(
+                    referee=msg,
+                    ball_pos=self.support_info.ball_pos,
+                    placement_pos=self.support_info.placement_pos,
+                )
+            )
+
     def callback_referee_support_info(self, msg: RefereeSupportInfo):
         with self.lock:
             self.support_info = msg
