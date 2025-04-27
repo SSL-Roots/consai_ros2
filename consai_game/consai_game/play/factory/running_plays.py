@@ -24,6 +24,8 @@ from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
+from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
+from consai_game.tactic.defend_goal import DefendGoal
 
 
 def outside_defense_area() -> Play:
@@ -40,7 +42,7 @@ def outside_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Position(-6.0, 0.0)],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Shoot()],
             [Position(-3.0, 2.0)],
             [Position(-3.0, 1.0)],
@@ -68,7 +70,7 @@ def in_our_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Shoot()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -96,7 +98,7 @@ def in_their_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],

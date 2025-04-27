@@ -39,20 +39,10 @@ class DefendGoal(TacticBase):
         # ボールが動いているか判定する閾値
         self.ball_move_threshold = 0.1
 
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
-
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         command = MotionCommand()
         command.robot_id = self.robot_id
-
-        # ボールを回避をしない
-        command.navi_options.avoid_ball = False
-        # ディフェンスエリアを回避をしない
-        command.navi_options.avoid_defense_area = False
 
         # ボールが自チームエリアにあるか判定結果を取得
         is_in_our_side = world_model.ball_position.is_in_our_side()

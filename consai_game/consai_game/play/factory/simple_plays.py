@@ -24,13 +24,14 @@
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
-from consai_game.tactic.slow_safe_position import SlowSafePosition
 from consai_game.tactic.position import Position
 from consai_game.tactic.stop import Stop
 from consai_game.tactic.kick.shoot import Shoot
 from consai_game.tactic.composite.chase_or_position import ChaseOrPosition
 from consai_game.tactic.composite.composite_offense import CompositeOffense
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
+from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
+from consai_game.tactic.defend_goal import DefendGoal
 
 
 def halt() -> Play:
@@ -72,7 +73,7 @@ def stop() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [SlowSafePosition(-6.0, 0.0)],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [ChaseOrPosition(-3.0, 3.0)],
             [ChaseOrPosition(-3.0, 2.0)],
             [ChaseOrPosition(-3.0, 1.0)],
@@ -99,7 +100,7 @@ def force_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
@@ -127,7 +128,7 @@ def our_free_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Shoot()],
             [Stop()],
             [Stop()],
@@ -155,7 +156,7 @@ def their_free_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -182,7 +183,7 @@ def our_kick_off() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -209,7 +210,7 @@ def their_kick_off() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -237,7 +238,7 @@ def our_kick_off_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Shoot()],
             [Stop()],
             [Stop()],
@@ -265,7 +266,7 @@ def their_kick_off_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -292,7 +293,7 @@ def our_penalty_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -319,7 +320,7 @@ def their_penalty_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(Position(-6.0, 0.0))],
             [Stop()],
             [Stop()],
             [Stop()],
@@ -346,7 +347,7 @@ def our_penalty_kick_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Shoot()],
             [Stop()],
             [Stop()],
@@ -373,7 +374,7 @@ def their_penalty_kick_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
+            [AllowMoveInDefenseArea(DefendGoal())],
             [Stop()],
             [Stop()],
             [Stop()],
