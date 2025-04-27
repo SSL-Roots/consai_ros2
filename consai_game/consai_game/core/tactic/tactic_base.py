@@ -52,6 +52,10 @@ class TacticBase(ABC):
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
+    def exit(self) -> None:
+        """戦術の状態をFINISHEDにリセットする関数."""
+        self.state = TacticState.FINISHED
+
     @property
     def robot_id(self) -> int:
         """ロボットのIDを取得する関数."""

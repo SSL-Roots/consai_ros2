@@ -83,5 +83,8 @@ class Agent:
 
     def reset_tactic(self) -> None:
         """戦術をリセットし, 次の戦術を設定する関数."""
+        if self.present_tactic is not None:
+            self.present_tactic.exit()
+
         self.present_tactic = self.role.tactics[self.present_tactic_index]
         self.present_tactic.reset(self.role.robot_id)
