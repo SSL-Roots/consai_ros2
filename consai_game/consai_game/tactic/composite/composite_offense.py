@@ -30,6 +30,7 @@ class CompositeOffense(TacticBase):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False)
         self.tactic_pass = Kick(is_pass=True)
+        self.tactic_tapping = Kick(is_tapping=True)
         self.tactic_receive = Receive()
         self.tactic_default = tactic_default
 
@@ -41,6 +42,7 @@ class CompositeOffense(TacticBase):
         # 所有するTacticも初期化する
         self.tactic_shoot.reset(robot_id)
         self.tactic_pass.reset(robot_id)
+        self.tactic_tapping.reset(robot_id)
         self.tactic_receive.reset(robot_id)
         self.tactic_default.reset(robot_id)
 
@@ -49,13 +51,13 @@ class CompositeOffense(TacticBase):
 
         # ボールが動いている場合は、自分がレシーブできるかを判断する
         best_receive_score = world_model.robot_activity.our_ball_receive_score[0]
-        if world_model.ball_activity.ball_is_moving:
-            if best_receive_score.robot_id == self.robot_id and best_receive_score.intercept_time != float("inf"):
-                # 自分がレシーブできる場合
-                return self.tactic_receive.run(world_model)
-            else:
-                # 自分がレシーブできない場合は、ボールを追いかけないようにデフォルトを実行する
-                return self.tactic_default.run(world_model)
+        if (
+            world_model.ball_activity.ball_is_moving
+            and best_receive_score.robot_id == self.robot_id
+            and best_receive_score.intercept_time != float("inf")
+        ):
+            # 自分がレシーブできる場合
+            return self.tactic_receive.run(world_model)
 
         elif world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:
             # ボールに一番近い場合はボールを操作する
@@ -77,6 +79,7 @@ class CompositeOffense(TacticBase):
             self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
             return self.tactic_pass.run(world_model)
 
-        # TODO: コツコツドリブルを実行する
-        self.tactic_pass.target_pos = world_model.robots.our_visible_robots[self.robot_id].pos
-        return self.tactic_pass.run(world_model)
+        # TODO: 前進しつつ、敵がいない方向にドリブルしたい
+        # シュート成功率が一番高いところに向かってドリブルする
+        self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
+        return self.tactic_tapping.run(world_model)
