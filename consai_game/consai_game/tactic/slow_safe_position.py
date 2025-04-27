@@ -60,6 +60,5 @@ class SlowSafePosition(TacticBase):
         command.navi_options.avoid_their_robots = True
         command.navi_options.avoid_pushing = True
         command.navi_options.avoid_defense_area = True
-        command.navi_options.avoid_placement_area = True
 
         return command

@@ -55,6 +55,11 @@ public:
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const State & designated_position, State & avoidance_pose) const;
+  State avoid_placement_area(
+    const TrackedRobot & my_robot,
+    const State & goal_pose,
+    const std::optional<TrackedBall> & ball,
+    const State & designated_position) const;
   bool avoid_pushing_robots(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
