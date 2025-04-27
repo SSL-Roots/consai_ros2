@@ -11,8 +11,7 @@ class ManMarkAssignment:
     def __init__(self):
         self.current_target: Dict[int, int] = {}
         self.assigned_robots: Set[int] = set()  # マンマークを担当しているロボット
-        self.keep_score_threshold = 50  # マンマークを継続するための脅威度の閾値
-        self.score_threshold = 40  # マンマークを担当するための脅威度の閾値
+        self.score_threshold = 50  # マンマークを担当するための脅威度の閾値
         self.danger_score_threshold = 65  # 危険な敵ロボットを探すための脅威度の閾値
         self.update_counter = 0  # 内部用更新カウンター
 
@@ -82,9 +81,9 @@ class ManMarkAssignment:
             # 現在のマーク対象を取得
             target_id = self.current_target.get(our_id)
 
-            # 現在のマーク対象が依然として脅威（スコア >= keep_score_threshold）なら、そのまま継続
+            # 現在のマーク対象が依然として脅威（スコア >= score_threshold）なら、そのまま継続
             if target_id is not None and any(
-                t.robot_id == target_id and t.score >= self.keep_score_threshold for t in threats
+                t.robot_id == target_id and t.score >= self.score_threshold for t in threats
             ):
                 assignments[our_id] = target_id
                 continue
