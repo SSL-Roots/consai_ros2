@@ -66,6 +66,8 @@ class WorldModelProviderNode(Node):
         self.world_model.robots.our_team_is_yellow = team_is_yellow
         self.world_model.game_config.goalie_id = goalie_id
 
+        self.motion_commands = MotionCommandArray()
+
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
         self.sub_detection_traced = self.create_subscription(
             TrackedFrame, "detection_tracked", self.callback_detection_traced, 10
@@ -121,6 +123,11 @@ class WorldModelProviderNode(Node):
                 game_config=self.world_model.game_config,
             )
 
+            # ロボットが目標位置が到達したか更新
+            self.world_model.robot_activity.update_our_robots_arrived(
+                self.world_model.robots.our_visible_robots, self.motion_commands.commands
+            )
+
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""
         with self.lock:
@@ -165,6 +172,6 @@ class WorldModelProviderNode(Node):
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
 
     def callback_motion_commands(self, msg: MotionCommandArray) -> None:
-        """トピック motion_commands からのパラメータを受け取り、ロボットの目標位置を更新する."""
+        """トピック motion_commands からのパラメータを受け取り更新する."""
         with self.lock:
-            self.world_model.robot_activity.commands = msg.commands
+            self.motion_commands = msg
