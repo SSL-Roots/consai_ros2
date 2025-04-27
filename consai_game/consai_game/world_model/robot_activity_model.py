@@ -34,6 +34,14 @@ class ReceiveScore:
     intercept_time: float = float("inf")  # あと何秒後にボールを受け取れるか
 
 
+@dataclass
+class OurRobotsArrived:
+    """自ロボットが目標位置に到達したか保持するデータクラス."""
+
+    robot_id: int = 0
+    arrived: bool = False
+
+
 class RobotActivityModel:
     """ロボットの活動状態を保持するクラス."""
 
@@ -50,7 +58,7 @@ class RobotActivityModel:
         self.their_robots_by_ball_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
         self.commands: list[MotionCommand] = []
-        self.our_robot_arrived: list[bool] = []
+        self.our_robot_arrived: list[OurRobotsArrived] = []
 
     def update(
         self,
@@ -193,9 +201,14 @@ class RobotActivityModel:
             # ロボットと目標位置の距離を計算
             dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
             # 目標位置に到達したか判定結果をリストに追加
-            self.our_robot_arrived.append(dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD)
+            self.our_robot_arrived.append(
+                OurRobotsArrived(
+                    robot_id=robot.robot_id,
+                    arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
+                )
+            )
 
     @property
     def our_robots_arrived(self) -> bool:
         """すべての自ロボットが目標位置に到達したかを返す関数."""
-        return all(self.our_robot_arrived)
+        return all([_arrived.arrived for _arrived in self.our_robot_arrived])
