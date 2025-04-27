@@ -179,7 +179,7 @@ class RobotActivityModel:
             return intercept_time
         return float("inf")
 
-    def update_our_robots_arrived(self, our_visible_robots, commands) -> bool:
+    def update_our_robots_arrived(self, our_visible_robots: dict[int, Robot], commands: list[MotionCommand]) -> bool:
         """各ロボットが目標位置に到達したか判定する関数."""
 
         # 初期化
@@ -189,8 +189,11 @@ class RobotActivityModel:
             return
 
         # 更新
-        for robot in our_visible_robots.values():
-            command = commands[robot.robot_id]
+        for command in commands:
+            if command.robot_id not in our_visible_robots.keys():
+                continue
+
+            robot = our_visible_robots[command.robot_id]
             robot_pos = robot.pos
             desired_pose = command.desired_pose
             # ロボットと目標位置の距離を計算
