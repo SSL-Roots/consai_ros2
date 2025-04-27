@@ -47,6 +47,10 @@ class Agent:
         if self.role.robot_id == RoleConst.INVALID_ROLE_ID:
             return None
 
+        # ロボットがvisibleでなければ終了
+        if self.role.robot_id not in world_model.robots.our_visible_robots.keys():
+            return None
+
         # Tacticの処理が終了していたら、次のTacticに移る
         if self.present_tactic.state == TacticState.FINISHED:
             self.present_tactic_index += 1
