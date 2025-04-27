@@ -111,7 +111,7 @@ class ThreatsModel:
 
             # 総合スコアを計算
             # Bは一旦無視
-            total_score = int(score_a * 0.7 + score_b * 0.0 + score_c * 0.3)
+            total_score = int(score_a * 0.8 + score_b * 0.0 + score_c * 0.2)
 
             # ローパスフィルターを適用
             filtered_score = self._apply_low_pass_filter(robot_id, total_score)
