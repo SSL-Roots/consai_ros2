@@ -58,7 +58,7 @@ class RobotActivityModel:
         self.their_robots_by_ball_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
         self.commands: list[MotionCommand] = []
-        self.our_robot_arrived: list[OurRobotsArrived] = []
+        self.our_robots_arrived_list: list[OurRobotsArrived] = []
 
     def update(
         self,
@@ -188,7 +188,7 @@ class RobotActivityModel:
         """各ロボットが目標位置に到達したか判定する関数."""
 
         # 初期化
-        self.our_robot_arrived = []
+        self.our_robots_arrived_list = []
         # エラー処理
         if len(our_visible_robots) == 0 or len(commands) == 0:
             return
@@ -201,7 +201,7 @@ class RobotActivityModel:
             # ロボットと目標位置の距離を計算
             dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
             # 目標位置に到達したか判定結果をリストに追加
-            self.our_robot_arrived.append(
+            self.our_robots_arrived_list.append(
                 OurRobotsArrived(
                     robot_id=robot.robot_id,
                     arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
@@ -211,4 +211,4 @@ class RobotActivityModel:
     @property
     def our_robots_arrived(self) -> bool:
         """すべての自ロボットが目標位置に到達したかを返す関数."""
-        return all([_arrived.arrived for _arrived in self.our_robot_arrived])
+        return all([robot.arrived for robot in self.our_robots_arrived_list])
