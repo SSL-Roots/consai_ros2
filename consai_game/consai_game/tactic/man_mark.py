@@ -28,9 +28,12 @@ class ManMark(TacticBase):
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
 
-        target_robot = world_model.robots.their_robots.get(self.target_robot_id)
+        if self.target_robot_id in world_model.robot_activity.their_visible_robots:
+            target_robot = world_model.robots.their_robots.get(self.target_robot_id)
+        else:
+            target_robot = None
 
-        if not target_robot or not target_robot.is_visible:
+        if target_robot is None:
             # ターゲットが見えなければ止まる
             command.mode = MotionCommand.MODE_DIRECT_VELOCITY
             command.desired_velocity.x = 0.0
