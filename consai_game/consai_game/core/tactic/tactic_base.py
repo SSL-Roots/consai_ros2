@@ -43,14 +43,14 @@ class TacticBase(ABC):
         self._state = TacticState.BEFORE_INIT
 
     @abstractmethod
-    def reset(self, robot_id: int) -> None:
-        """戦術のリセット処理を行う関数."""
-        raise NotImplementedError()
-
-    @abstractmethod
     def run(self, world_model: WorldModel) -> MotionCommand:
         """戦術の実行を行い、MotionCommandを返す関数."""
         raise NotImplementedError()
+
+    def reset(self, robot_id: int) -> None:
+        """ロボットIDを設定し、Tacticの状態をRUNNINGにリセットする関数."""
+        self.robot_id = robot_id
+        self.state = TacticState.RUNNING
 
     @property
     def robot_id(self) -> int:

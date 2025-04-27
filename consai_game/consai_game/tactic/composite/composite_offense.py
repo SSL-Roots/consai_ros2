@@ -16,7 +16,7 @@
 条件に応じてキックやパスを切り替えるTactic
 """
 
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
@@ -36,8 +36,7 @@ class CompositeOffense(TacticBase):
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        super().reset(robot_id)
 
         # 所有するTacticも初期化する
         self.tactic_shoot.reset(robot_id)
