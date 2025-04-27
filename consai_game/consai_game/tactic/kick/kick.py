@@ -75,12 +75,25 @@ class Kick(TacticBase):
 
     MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
     CHASING_BALL_APPROACH_X = 0.5
+    # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
+    TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
 
-    def __init__(self, x=0.0, y=0.0, is_pass=False):
+    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False):
+        """
+        コンストラクタでキック目標位置と、キックの種類を設定する.
+
+        Args:
+            x (float) : キック目標位置のx座標
+            y (float) : キック目標位置のy座標
+            is_pass (bool) : パスをする場合はTrue
+            is_tapping (bool) : ボールをコツコツ蹴って前進する場合はTrue
+
+        """
         super().__init__()
 
         self.target_pos = State2D(x=x, y=y)
         self.is_pass = is_pass
+        self.is_tapping = is_tapping
 
         self.machine = KickStateMachine("robot")
 
@@ -123,6 +136,8 @@ class Kick(TacticBase):
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
                 command.kick_power = self.pass_power(ball_pos)
+            elif self.is_tapping:
+                command.kick_power = self.TAPPING_KICK_POWER
 
         return command
 
