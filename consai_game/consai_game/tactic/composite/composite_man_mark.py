@@ -11,8 +11,9 @@ class ManMarkAssignment:
     def __init__(self):
         self.current_target: Dict[int, int] = {}
         self.assigned_robots: Set[int] = set()  # マンマークを担当しているロボット
-        self.score_threshold = 50
-        self.high_threat_threshold = 50
+        self.keep_score_threshold = 50  # マンマークを継続するための脅威度の閾値
+        self.score_threshold = 40  # マンマークを担当するための脅威度の閾値
+        self.danger_score_threshold = 65  # 危険な敵ロボットを探すための脅威度の閾値
 
     def register_robot(self, robot_id: int):
         """
@@ -44,9 +45,30 @@ class ManMarkAssignment:
         Returns:
             Dict[int, int]: ロボットIDとマーク対象IDのマッピング
         """
-        # 重複しているターゲットを削除
+        # danger_score_thresholdを超える敵ロボットで未割り当てのものを探す
+        danger_threats = [t for t in threats if t.score >= self.danger_score_threshold]
+        assigned_targets = set(self.current_target.values())
+        unassigned_danger_threats = [t for t in danger_threats if t.robot_id not in assigned_targets]
+        print(f"unassigned_danger_threats: {unassigned_danger_threats}")
+
+        # # unassigned_danger_threatsがあれば、current_targetの中で一番スコアが低いものを削除
+        # if unassigned_danger_threats and self.current_target:
+        #     # current_targetの中で一番スコアが低いものを探す
+        #     min_score = float('inf')
+        #     min_robot_id = None
+        #     for robot_id, target_id in self.current_target.items():
+        #         # 対象のスコアを取得
+        #         score = next((t.score for t in threats if t.robot_id == target_id), float('-inf'))
+        #         if score < min_score:
+        #             min_score = score
+        #             min_robot_id = robot_id
+        #     if min_robot_id is not None:
+        #         self.current_target.pop(min_robot_id)
+
+        # 既に割り当てられたターゲットを記録する集合
         used_targets = set()
         for robot_id, target_id in list(self.current_target.items()):
+            # 重複しているターゲットがあれば削除する
             if target_id in used_targets:
                 self.current_target.pop(robot_id)
             else:
@@ -54,42 +76,36 @@ class ManMarkAssignment:
 
         # 新しい割り当て結果を格納する辞書
         assignments = {}
-        # 既に割り当てられたターゲットを記録する集合
-        used_targets = set()
 
         # 各担当ロボットに対して処理
         for our_id in self.assigned_robots:
             # 現在のマーク対象を取得
             target_id = self.current_target.get(our_id)
 
-            # 現在のマーク対象が依然として脅威（スコア >= score_threshold）なら、そのまま継続
-            if target_id and any(t.robot_id == target_id and t.score >= self.score_threshold for t in threats):
+            # 現在のマーク対象が依然として脅威（スコア >= keep_score_threshold）なら、そのまま継続
+            if target_id and any(t.robot_id == target_id and t.score >= self.keep_score_threshold for t in threats):
                 assignments[our_id] = target_id
-                used_targets.add(target_id)
                 continue
 
             # 新しいマーク対象を探す
             for threat in threats:
-                # 既に割り当て済み、または脅威度が低い（スコア < high_threat_threshold）ならスキップ
-                if threat.robot_id in used_targets or threat.score < self.high_threat_threshold:
+                # 既に割り当て済み、または脅威度が低い（スコア < score_threshold）ならスキップ
+                if threat.robot_id in used_targets or threat.score < self.score_threshold:
                     continue
                 # 新しいマーク対象を割り当て
                 assignments[our_id] = threat.robot_id
-                self.current_target[our_id] = threat.robot_id
-                used_targets.add(threat.robot_id)
                 break
 
-            # 割り当てられなかった場合、現在のターゲットを解除
-            if our_id not in assignments:
-                self.current_target.pop(our_id, None)
-
+        self.current_target = assignments
+        print(f"current_target: {self.current_target}")
         return assignments
 
 
 class CompositeManMark(TacticBase):
-    def __init__(self, assignment_module: ManMarkAssignment, default_tactic: TacticBase):
+    assignment_module = ManMarkAssignment()
+
+    def __init__(self, default_tactic: TacticBase):
         super().__init__()
-        self.assignment_module = assignment_module
         self.default_tactic = default_tactic
         self.man_mark_tactic = None
         self.mark_target_id = None
@@ -110,15 +126,16 @@ class CompositeManMark(TacticBase):
         # 担当を自己申告
         self.assignment_module.register_robot(self.robot_id)
 
+        # TODO: これが並列で実行されるのをなんとかしたい
         assignments = self.assignment_module.assign_targets(threats)
         new_target_id = assignments.get(self.robot_id)
+        if new_target_id is None:
+            # 担当がない場合はデフォルトのタクティクを実行
+            return self.default_tactic.run(world_model)
         if new_target_id is not None and new_target_id != self.mark_target_id:
             # ターゲットが変わったら再構築
             self.mark_target_id = new_target_id
             self.man_mark_tactic = ManMark(new_target_id)
             self.man_mark_tactic.reset(self.robot_id)
 
-        if self.man_mark_tactic:
-            return self.man_mark_tactic.run(world_model)
-
-        return self.default_tactic.run(world_model)
+        return self.man_mark_tactic.run(world_model)
