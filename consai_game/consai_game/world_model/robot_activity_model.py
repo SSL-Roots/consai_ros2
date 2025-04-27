@@ -14,11 +14,15 @@
 
 """可視ロボットの識別と順序づけを行うモデル."""
 
-from consai_game.world_model.robots_model import RobotsModel, Robot
+from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.game_config_model import GameConfigModel
+
 from consai_tools.geometry import geometry_tools as tools
+
+from consai_msgs.msg import MotionCommand
+
 from dataclasses import dataclass
 
 
@@ -30,8 +34,19 @@ class ReceiveScore:
     intercept_time: float = float("inf")  # あと何秒後にボールを受け取れるか
 
 
+@dataclass
+class OurRobotsArrived:
+    """自ロボットが目標位置に到達したか保持するデータクラス."""
+
+    robot_id: int = 0
+    arrived: bool = False
+
+
 class RobotActivityModel:
     """ロボットの活動状態を保持するクラス."""
+
+    # ロボットが目標位置に到着したと判定する距離[m]
+    DIST_ROBOT_TO_DESIRED_THRESHOLD = 0.1
 
     def __init__(self):
         """ロボットの可視状態と順序リストの初期化関数."""
@@ -42,9 +57,14 @@ class RobotActivityModel:
         self.our_robots_by_ball_distance: list[int] = []
         self.their_robots_by_ball_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
+        self.our_robots_arrived_list: list[OurRobotsArrived] = []
 
     def update(
-        self, robots: RobotsModel, ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
+        self,
+        robots: RobotsModel,
+        ball: BallModel,
+        ball_activity: BallActivityModel,
+        game_config: GameConfigModel,
     ):
         """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
         self.our_visible_robots = [robot.robot_id for robot in robots.our_robots.values() if robot.is_visible]
@@ -110,7 +130,7 @@ class RobotActivityModel:
     def calc_ball_receive_score_list(
         self, robots: dict[int, Robot], ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
     ) -> list[ReceiveScore]:
-        """ロボットごとにボールを受け取れるスコアを計算する"""
+        """ロボットごとにボールを受け取れるスコアを計算する."""
 
         # ボールが動いていない場合は、スコアをデフォルト値にする
         if not ball_activity.ball_is_moving:
@@ -158,3 +178,35 @@ class RobotActivityModel:
         if available_distance >= robot_arrival_distance:
             return intercept_time
         return float("inf")
+
+    def update_our_robots_arrived(self, our_visible_robots: dict[int, Robot], commands: list[MotionCommand]) -> bool:
+        """各ロボットが目標位置に到達したか判定する関数."""
+
+        # 初期化
+        self.our_robots_arrived_list = []
+        # エラー処理
+        if len(our_visible_robots) == 0 or len(commands) == 0:
+            return
+
+        # 更新
+        for command in commands:
+            if command.robot_id not in our_visible_robots.keys():
+                continue
+
+            robot = our_visible_robots[command.robot_id]
+            robot_pos = robot.pos
+            desired_pose = command.desired_pose
+            # ロボットと目標位置の距離を計算
+            dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
+            # 目標位置に到達したか判定結果をリストに追加
+            self.our_robots_arrived_list.append(
+                OurRobotsArrived(
+                    robot_id=robot.robot_id,
+                    arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
+                )
+            )
+
+    @property
+    def our_robots_arrived(self) -> bool:
+        """すべての自ロボットが目標位置に到達したかを返す関数."""
+        return all([robot.arrived for robot in self.our_robots_arrived_list])
