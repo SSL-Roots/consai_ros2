@@ -26,6 +26,7 @@ file(GLOB_RECURSE MSG_FILES
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/msg/*.msg
 )
+message("Message files: ${MSG_FILES}")
 
 set(action_files
   "action/RobotControl.action"

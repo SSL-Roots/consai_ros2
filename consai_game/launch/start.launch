@@ -42,6 +42,7 @@
         output="screen"
         args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py
               --yellow $(var yellow)
+              --invert $(var invert)
               --assign $(var assign)
               --goalie $(var goalie)
               " />

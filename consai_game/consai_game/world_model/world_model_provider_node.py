@@ -30,6 +30,7 @@ from consai_game.world_model.referee_model import parse_referee_msg
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommandArray
+from consai_msgs.msg import RefereeSupportInfo
 
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy
@@ -50,7 +51,7 @@ class WorldModelProviderNode(Node):
     consai_param/rule トピックからフィールド設定を受信し, フィールド寸法と関連情報を更新する.
     """
 
-    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False, goalie_id: int = 0):
+    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False, goalie_id: int = 0, invert: bool = False):
         """
         初期化.
 
@@ -63,11 +64,15 @@ class WorldModelProviderNode(Node):
 
         self.world_model = WorldModel()
         self.world_model.game_config.our_team_is_yellow = team_is_yellow
+        self.world_model.game_config.invert = invert
         self.world_model.robots.our_team_is_yellow = team_is_yellow
         self.world_model.game_config.goalie_id = goalie_id
         self.world_model.meta.update_rate = update_hz
 
         self.motion_commands = MotionCommandArray()
+
+        # consai_referee_parserのための補助情報
+        self.pub_referee_info = self.create_publisher(RefereeSupportInfo, "parsed_referee/referee_support_info", 10)
 
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
         self.sub_detection_traced = self.create_subscription(
@@ -132,6 +137,19 @@ class WorldModelProviderNode(Node):
                 self.world_model.robots.our_visible_robots, self.motion_commands.commands
             )
 
+            self.publish_referee_support_info()
+
+    def publish_referee_support_info(self) -> None:
+        """RefereeSupportInfo をパブリッシュする."""
+        msg = RefereeSupportInfo()
+        msg.ball_pos = self.world_model.ball.pos
+        msg.placement_pos.x = self.world_model.referee.placement_pos.x
+        msg.placement_pos.y = self.world_model.referee.placement_pos.y
+        msg.blue_robot_num = self.world_model.robots.blue_robot_num
+        msg.yellow_robot_num = self.world_model.robots.yellow_robot_num
+
+        self.pub_referee_info.publish(msg)
+
     def callback_referee(self, msg: Referee) -> None:
         """メッセージ Referee を受信して WorldModel に反映する."""
         with self.lock:
@@ -139,6 +157,7 @@ class WorldModelProviderNode(Node):
                 msg=msg,
                 prev_data=self.world_model.referee,
                 our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
+                invert=self.world_model.game_config.invert,
             )
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:

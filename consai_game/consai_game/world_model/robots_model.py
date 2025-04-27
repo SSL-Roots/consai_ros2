@@ -91,3 +91,17 @@ class RobotsModel:
             robot.is_visible = False
 
         return robot
+
+    @property
+    def blue_robot_num(self) -> int:
+        """青チームのロボット数を取得する."""
+        if self.our_team_is_yellow:
+            return len(self.their_visible_robots)
+        return len(self.our_visible_robots)
+
+    @property
+    def yellow_robot_num(self) -> int:
+        """黄色チームのロボット数を取得する."""
+        if self.our_team_is_yellow:
+            return len(self.our_visible_robots)
+        return len(self.their_visible_robots)
