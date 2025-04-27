@@ -119,7 +119,6 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
-                commands=self.world_model.robot_activity.commands,
             )
 
     def callback_referee(self, msg: Referee) -> None:

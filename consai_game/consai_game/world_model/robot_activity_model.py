@@ -66,7 +66,6 @@ class RobotActivityModel:
         ball: BallModel,
         ball_activity: BallActivityModel,
         game_config: GameConfigModel,
-        commands: list[MotionCommand],
     ):
         """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
         self.our_visible_robots = [robot.robot_id for robot in robots.our_robots.values() if robot.is_visible]
@@ -106,7 +105,7 @@ class RobotActivityModel:
         )
 
         # ロボットが目標位置が到達したか更新
-        self.update_our_robots_arrived(robots.our_visible_robots, commands)
+        self.update_our_robots_arrived(robots.our_visible_robots)
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
         """過去の順序を保ちながら, 新しいリストでマージする関数."""
@@ -184,18 +183,18 @@ class RobotActivityModel:
             return intercept_time
         return float("inf")
 
-    def update_our_robots_arrived(self, our_visible_robots, commands) -> bool:
+    def update_our_robots_arrived(self, our_visible_robots) -> bool:
         """各ロボットが目標位置に到達したか判定する関数."""
 
         # 初期化
         self.our_robots_arrived_list = []
         # エラー処理
-        if len(our_visible_robots) == 0 or len(commands) == 0:
+        if len(our_visible_robots) == 0 or len(self.commands) == 0:
             return
 
         # 更新
         for robot in our_visible_robots.values():
-            command = commands[robot.robot_id]
+            command = self.commands[robot.robot_id]
             robot_pos = robot.pos
             desired_pose = command.desired_pose
             # ロボットと目標位置の距離を計算
