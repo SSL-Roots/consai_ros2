@@ -43,7 +43,7 @@ class KickStateMachine(Machine):
         # 遷移定義
         transitions = [
             {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
+            {"trigger": "chase_ball", "source": "aiming", "dest": "chasing"},
             {"trigger": "kick", "source": "aiming", "dest": "kicking"},
             {"trigger": "reaiming", "source": "kicking", "dest": "aiming"},
             {"trigger": "done_kicking", "source": "kicking", "dest": "chasing"},
@@ -59,7 +59,7 @@ class KickStateMachine(Machine):
             self.ball_near()
 
         elif self.state == "aiming" and (dist_to_ball > self.BALL_NEAR_THRESHOLD or kick_diff_angle > 90):
-            self.ball_far()
+            self.chase_ball()
 
         elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
             self.kick()
