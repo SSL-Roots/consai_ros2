@@ -15,10 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""雑巾がけのプレイのリストを定義するモジュール."""
+"""デバッグ用にTure/Falseを返すplay_condition."""
 
-from consai_game.play.factory import swab_plays
+from consai_game.world_model.world_model import WorldModel
+from consai_game.core.play.play_condition import PlayCondition
 
-plays = [
-    swab_plays.swab(),
-]
+
+def TrueConditoin(world_model: WorldModel) -> bool:
+    """Tureを返す関数."""
+    return True
+
+
+def FalseConditoin(world_model: WorldModel) -> bool:
+    """Falseを返す関数."""
+    return False
+
+
+class DebugConditions:
+    """playのdebug用にTrue/Falseを返すだけのクラス."""
+
+    debug_ture = PlayCondition(TrueConditoin)
+    debug_false = PlayCondition(FalseConditoin)

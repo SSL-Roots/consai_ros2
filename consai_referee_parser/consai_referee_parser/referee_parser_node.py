@@ -20,10 +20,14 @@ referee_parser_node モジュール.
 Referee メッセージを受け取り, designated_positionをpublishする.
 """
 
-import threading
+from consai_msgs.msg import State2D
+from consai_msgs.msg import RefereeSupportInfo
+from consai_visualizer_msgs.msg import Objects
+from consai_referee_parser import referee_to_vis_msg
+from rclpy import qos
 from rclpy.node import Node
 from robocup_ssl_msgs.msg import Referee
-from consai_msgs.msg import State2D
+import threading
 
 
 class RefereeParserNode(Node):
@@ -37,22 +41,40 @@ class RefereeParserNode(Node):
         """
         super().__init__("referee_parser_node")
         self.lock = threading.Lock()
-
         self.team_is_yellow = team_is_yellow
         self.invert = invert
 
         self.pub_designated_position = self.create_publisher(State2D, "parsed_referee/designated_position", 10)
+
+        self.pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
+
         self.sub_referee = self.create_subscription(Referee, "referee", self.callback_referee, 10)
+        self.sub_referee_support_info = self.create_subscription(
+            RefereeSupportInfo, "parsed_referee/referee_support_info", self.callback_referee_support_info, 10
+        )
+        self.support_info = RefereeSupportInfo()
 
     def callback_referee(self, msg: Referee):
-        if len(msg.designated_position) > 0:
-            position = State2D()
-            position.x = msg.designated_position[0].x * 0.001  # mm to meters
-            position.y = msg.designated_position[0].y * 0.001  # mm to meters
+        with self.lock:
+            self.pub_designated_position.publish(self.support_info.placement_pos)
 
-            # フィールドサイドを反転しているときは、目標座標も反転させる
-            if self.invert:
-                position.x *= -1.0
-                position.y *= -1.0
+            self.pub_visualizer_objects.publish(
+                referee_to_vis_msg.vis_info(
+                    referee=msg,
+                    blue_bots=self.support_info.blue_robot_num,
+                    yellow_bots=self.support_info.yellow_robot_num,
+                    placement_pos=self.support_info.placement_pos,
+                )
+            )
 
-            self.pub_designated_position.publish(position)
+            self.pub_visualizer_objects.publish(
+                referee_to_vis_msg.vis_prohibited_area(
+                    referee=msg,
+                    ball_pos=self.support_info.ball_pos,
+                    placement_pos=self.support_info.placement_pos,
+                )
+            )
+
+    def callback_referee_support_info(self, msg: RefereeSupportInfo):
+        with self.lock:
+            self.support_info = msg

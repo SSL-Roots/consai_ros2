@@ -54,7 +54,7 @@ class KickStateMachine(Machine):
 
     def update(self, dist_to_ball: float, kick_diff_angle: float):
         """状態遷移を更新する関数."""
-        if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
+        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:

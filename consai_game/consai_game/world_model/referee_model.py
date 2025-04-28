@@ -20,6 +20,7 @@
 from dataclasses import dataclass
 
 from robocup_ssl_msgs.msg import Referee
+from consai_game.utils.geometry import Point
 
 
 @dataclass
@@ -47,9 +48,10 @@ class RefereeModel:
     our_ball_placement: bool = False
     their_ball_placement: bool = False
     running: bool = False
+    placement_pos: Point = Point(0.0, 0.0)
 
 
-def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool) -> RefereeModel:
+def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool) -> RefereeModel:
     """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
     data = RefereeModel()
 
@@ -110,5 +112,15 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
         data.our_penalty_kick_start = data.normal_start
     if prev_data.their_penalty_kick_start:
         data.their_penalty_kick_start = data.normal_start
+
+    # ボールプレースメント位置
+    if len(msg.designated_position) > 0:
+        data.placement_pos.x = msg.designated_position[0].x * 0.001  # mm to meters
+        data.placement_pos.y = msg.designated_position[0].y * 0.001  # mm to meters
+
+        # フィールドサイドを反転しているときは、目標座標も反転させる
+        if invert:
+            data.placement_pos.x *= -1.0
+            data.placement_pos.y *= -1.0
 
     return data
