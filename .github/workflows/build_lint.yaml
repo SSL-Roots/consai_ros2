@@ -34,15 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: src/consai_ros2
-
-      - name: debug
-        run: |
-          ls -la
-          ls -la ../
-          ls -la ../../
-          ls -la ../../../
-        shell: bash
+          path: /root/ros2_ws/src/consai_ros2
 
       - name: Build with colcon
         run: |
