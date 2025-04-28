@@ -36,6 +36,14 @@ jobs:
         with:
           path: src/consai_ros2
 
+      - name: debug
+        run: |
+          ls -la
+          ls -la ../
+          ls -la ../../
+          ls -la ../../../
+        shell: bash
+
       - name: Build with colcon
         run: |
           cd /root/ros2_ws
