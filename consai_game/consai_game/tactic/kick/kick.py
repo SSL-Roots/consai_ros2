@@ -29,8 +29,9 @@ from transitions import Machine
 class KickStateMachine(Machine):
     """状態遷移マシン."""
 
-    BALL_NEAR_THRESHOLD = 0.2  # ボールが近いとみなす距離の閾値[m]
+    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
     KICK_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
+    BALL_KICK_THRESHOLD = 0.2  # ボールが蹴られたとみなす距離[m]
 
     def __init__(self, name):
         """状態遷移マシンのインスタンスを初期化する関数."""
@@ -57,16 +58,16 @@ class KickStateMachine(Machine):
         if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD:
             self.ball_near()
 
-        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
+        elif self.state == "aiming" and (dist_to_ball > self.BALL_NEAR_THRESHOLD or kick_diff_angle > 90):
             self.ball_far()
 
         elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
             self.kick()
 
-        elif self.state == "kicking" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
             self.reaiming()
 
-        elif self.state == "kicking" and kick_diff_angle >= self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "kicking" and dist_to_ball > self.BALL_KICK_THRESHOLD:
             self.done_kicking()
 
 
@@ -123,21 +124,22 @@ class Kick(TacticBase):
         self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
 
         if self.machine.state == "chasing":
+            # ボール側面のどちらかに向かう
             print("chasing")
-            length = tool.get_distance(ball_pos, self.target_pos)
-            unit_dx = (self.target_pos.x - ball_pos.x) / length
-            unit_dy = (self.target_pos.y - ball_pos.y) / length
-            # ボールを蹴る方向に対して、少しずらした位置を目指す
-            command.desired_pose.x = ball_pos.x - unit_dx * self.CHASING_BALL_APPROACH
-            command.desired_pose.y = ball_pos.y - unit_dy * self.CHASING_BALL_APPROACH
+            if robot_pos.y > ball_pos.y:
+                command.desired_pose.y = ball_pos.y + self.CHASING_BALL_APPROACH
+            else:
+                command.desired_pose.y = ball_pos.y - self.CHASING_BALL_APPROACH
+            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH * np.cos(kick_angle)
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
 
         elif self.machine.state == "aiming":
-            print("aiming")
             # 蹴る方向に向けて移動
-            command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
+            print("aiming")
+            command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
 
         elif self.machine.state == "kicking":
+            print("kicking")
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
@@ -147,11 +149,11 @@ class Kick(TacticBase):
 
         return command
 
-    def kicking_pose(self, ball_pos: State2D, kick_angle: float) -> State2D:
+    def kicking_pose(self, ball_pos: State2D, kick_angle: float, dist_ball: float = 0.1) -> State2D:
         """ボールを蹴るための目標位置をを生成"""
         pose = State2D()
-        pose.x = ball_pos.x - 0.1 * np.cos(kick_angle)
-        pose.y = ball_pos.y - 0.1 * np.sin(kick_angle)
+        pose.x = ball_pos.x - dist_ball * np.cos(kick_angle)
+        pose.y = ball_pos.y - dist_ball * np.sin(kick_angle)
         pose.theta = kick_angle
         return pose
 
