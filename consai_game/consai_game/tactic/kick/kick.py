@@ -29,7 +29,7 @@ from transitions import Machine
 class KickStateMachine(Machine):
     """状態遷移マシン."""
 
-    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
+    BALL_NEAR_THRESHOLD = 0.2  # ボールが近いとみなす距離の閾値[m]
     KICK_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
 
     def __init__(self, name):
@@ -74,7 +74,7 @@ class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
     MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
-    CHASING_BALL_APPROACH_X = 0.5
+    CHASING_BALL_APPROACH = 0.2
     # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
     TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
 
@@ -123,11 +123,17 @@ class Kick(TacticBase):
         self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
 
         if self.machine.state == "chasing":
-            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH_X
-            command.desired_pose.y = ball_pos.y
+            print("chasing")
+            length = tool.get_distance(ball_pos, self.target_pos)
+            unit_dx = (self.target_pos.x - ball_pos.x) / length
+            unit_dy = (self.target_pos.y - ball_pos.y) / length
+            # ボールを蹴る方向に対して、少しずらした位置を目指す
+            command.desired_pose.x = ball_pos.x - unit_dx * self.CHASING_BALL_APPROACH
+            command.desired_pose.y = ball_pos.y - unit_dy * self.CHASING_BALL_APPROACH
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
 
         elif self.machine.state == "aiming":
+            print("aiming")
             # 蹴る方向に向けて移動
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
 
