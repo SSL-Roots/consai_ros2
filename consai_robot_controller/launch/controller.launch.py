@@ -14,15 +14,17 @@
 
 import launch
 from launch.actions import DeclareLaunchArgument
+from launch.actions.shutdown_action import Shutdown
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
-from launch.actions.shutdown_action import Shutdown
 
 
 def generate_launch_description():
+    """launchを生成する関数"""
     declare_arg_gui = DeclareLaunchArgument(
         "gui", default_value="true", description=('Set "true" to run consai_visualizer.')
     )
