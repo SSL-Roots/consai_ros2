@@ -131,6 +131,7 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
+                referee=self.world_model.referee,
             )
 
             # ロボットが目標位置が到達したか更新
