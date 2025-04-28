@@ -31,6 +31,7 @@ from consai_game.tactic.composite.composite_offense import CompositeOffense
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
 from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
 from consai_game.tactic.defend_goal import DefendGoal
+from consai_game.tactic.composite.composite_ball_placement import CompositeBallPlacement
 
 
 def halt() -> Play:
@@ -508,17 +509,17 @@ def our_ball_placement() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
+            [CompositeBallPlacement()],
         ],
     )
 
