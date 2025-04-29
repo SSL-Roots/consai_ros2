@@ -36,8 +36,6 @@ plays = [
     simple_plays.their_penalty_kick(),
     simple_plays.our_penalty_kick_start(),
     simple_plays.their_penalty_kick_start(),
-    simple_plays.our_goal(),
-    simple_plays.their_goal(),
     simple_plays.our_timeout(),
     simple_plays.their_timeout(),
     simple_plays.our_ball_placement(),
