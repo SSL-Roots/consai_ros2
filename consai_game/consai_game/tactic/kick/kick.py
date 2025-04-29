@@ -134,7 +134,6 @@ class Kick(TacticBase):
 
         if self.machine.state == "chasing":
             # ボール側面のどちらかに向かう
-            print("chasing")
             if robot_pos.y > ball_pos.y:
                 command.desired_pose.y = ball_pos.y + self.CHASING_BALL_APPROACH
             else:
@@ -144,11 +143,9 @@ class Kick(TacticBase):
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
-            print("aiming")
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
 
         elif self.machine.state == "kicking":
-            print("kicking")
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
