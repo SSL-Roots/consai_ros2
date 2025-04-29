@@ -44,25 +44,43 @@ class CompositeBallPlacement(TacticBase):
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
 
+        # ロボットの台数が2台未満の場合はplacementを諦める
+        if len(world_model.robots.our_visible_robots) < 2:
+            return self.tactic_avoid_and_stay.run(world_model)
+
+        nearest_ball_id = world_model.robot_activity.our_robots_by_ball_distance[0]
+        nearest_placement_id = world_model.robot_activity.our_robots_by_placement_distance[0]
+        next_nearest_placement_id = world_model.robot_activity.our_robots_by_placement_distance[1]
+
         # ボールがプレースメント位置についたら
         if world_model.ball_activity.ball_is_on_placement_area:
             # その場にとどまる
             return self.tactic_avoid_and_stay.run(world_model)
 
         # ボールに一番近かったら
-        if world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:
-            # ボールをドリブルする
-            self.tactic_dribble.target_pos = world_model.referee.placement_pos
-            return self.tactic_dribble.run(world_model)
+        if nearest_ball_id == self.robot_id:
+            return self.dribble_ball(world_model)
 
         # プレースメント位置に一番近かったら
-        if world_model.robot_activity.our_robots_by_placement_distance[0] == self.robot_id:
-            # ボールとプレースメント位置を結ぶ直線の後ろに移動する
+        if nearest_placement_id == self.robot_id:
+            return self.support_placement(world_model)
+
+        # ボールに一番近いロボットがプレースメント位置にも一番近い場合
+        # 2番目に近いロボットが対応する
+        if nearest_placement_id == nearest_ball_id and next_nearest_placement_id == self.robot_id:
             return self.support_placement(world_model)
 
         # それ以外の場合は
         # プレースメントエリア回避ONで、その場にとどまる
         return self.tactic_avoid_and_stay.run(world_model)
+
+    def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
+        """ボールをドリブルするコマンドを返す."""
+        self.tactic_dribble.target_pos = world_model.referee.placement_pos
+        command = self.tactic_dribble.run(world_model)
+        # ディフェンスエリア内の移動を許可する
+        command.navi_options.avoid_defense_area = False
+        return command
 
     def support_placement(self, world_model: WorldModel) -> MotionCommand:
         """プレースメントをサポートするコマンドを返す."""
@@ -78,5 +96,8 @@ class CompositeBallPlacement(TacticBase):
         # ボールを受け取れるように、プレースメント位置の後ろに移動する
         command.desired_pose = trans.inverted_transform(State2D(x=-0.1, y=0.0))
         command.desired_pose.theta = trans.inverted_transform_angle(0.0)
+
+        # ディフェンスエリア内の移動を許可する
+        command.navi_options.avoid_defense_area = False
 
         return command
