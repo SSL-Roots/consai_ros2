@@ -86,12 +86,6 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
         Referee.COMMAND_BALL_PLACEMENT_BLUE, Referee.COMMAND_BALL_PLACEMENT_YELLOW
     )
 
-    # current_action_time_remainingは
-    # NORMAL STARTやFREE KICKなどのセットプレーで値が初期化され、カウントダウンが始まる
-    # if not data.halt and not data.stop:
-    #     if msg.current_action_time_remaining:
-    #         data.running = msg.current_action_time_remaining[0] < 0
-
     # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
     if prev_data.our_kick_off:
         data.our_kick_off_start = data.normal_start
@@ -111,6 +105,13 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
         data.our_penalty_kick_start = data.normal_start
     if prev_data.their_penalty_kick_start:
         data.their_penalty_kick_start = data.normal_start
+
+    # runningへの切り替え判断
+    # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
+    # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
+    if data.our_free_kick or data.their_free_kick or data.our_kick_off_start or data.their_kick_off_start:
+        if msg.current_action_time_remaining:
+            data.running = msg.current_action_time_remaining[0] < 0
 
     # ボールプレースメント位置
     if len(msg.designated_position) > 0:
