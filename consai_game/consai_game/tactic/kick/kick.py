@@ -147,7 +147,7 @@ class Kick(TacticBase):
             upper_candidate_pos = trans.inverted_transform(upper_candidate_trans_pos)
             lower_candidate_pos = trans.inverted_transform(lower_candidate_trans_pos)
 
-            # 2つの目標位置に対してキョリが近い候補位置を目標位置に設定
+            # 2つの目標位置に対して距離が近い候補位置を目標位置に設定
             if tool.get_distance(robot_pos, upper_candidate_pos) < tool.get_distance(robot_pos, lower_candidate_pos):
                 command.desired_pose.y = upper_candidate_pos.y
             else:
