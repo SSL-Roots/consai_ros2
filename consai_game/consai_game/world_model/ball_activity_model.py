@@ -27,6 +27,7 @@ from consai_tools.geometry import geometry_tools as tools
 
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
+from consai_game.world_model.referee_model import RefereeModel
 
 from consai_msgs.msg import State2D
 
@@ -63,11 +64,12 @@ class BallActivityModel:
         self.ball_state = BallState.FREE
         self.ball_holder: Optional[BallHolder] = None
         self.ball_is_moving = False
+        self.ball_is_on_placement_area = False  # ボールがプレースメントエリアにあるか
 
         # ボールの将来の予測位置
         self.next_ball_pos = State2D()
 
-    def update(self, ball: BallModel, robots: RobotsModel):
+    def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots):
@@ -86,6 +88,9 @@ class BallActivityModel:
 
         # 最終的なボール状態を更新する
         self.update_ball_state()
+
+        # ボールがプレースメントエリアにあるかを更新する
+        self.update_ball_on_placement_area(ball, referee)
 
     def update_ball_state(self):
         """ボールの状態を更新するメソッド."""
@@ -233,3 +238,29 @@ class BallActivityModel:
         if vel_norm > self.MOVING_VELOCITY_THRESHOLD:
             return True
         return False
+
+    def update_ball_on_placement_area(self, ball: BallModel, referee: RefereeModel):
+        """ボールがプレースメントエリアにあるかを更新するメソッド."""
+        ON_AREA_THRESHOLD = 0.15  # Rule 5.2に基づく
+        DISTANCE_MARGIN = 0.05  # ヒステリシス処理に使用する
+
+        if not ball.is_visible:
+            self.ball_is_on_placement_area = False
+            return
+
+        # ボールが動いている場合はエリアに無いと判定する
+        if self.ball_is_moving:
+            self.ball_is_on_placement_area = False
+            return
+
+        # ボールがプレースメントエリアにない場合は、しきい値を厳しくする
+        threshold = ON_AREA_THRESHOLD - DISTANCE_MARGIN
+
+        if self.ball_is_on_placement_area:
+            # ボールgあプレースメントエリアにある場合は、しきい値を緩くする
+            threshold = ON_AREA_THRESHOLD
+
+        if tools.get_distance(ball.pos, referee.placement_pos) < threshold:
+            self.ball_is_on_placement_area = True
+        else:
+            self.ball_is_on_placement_area = False

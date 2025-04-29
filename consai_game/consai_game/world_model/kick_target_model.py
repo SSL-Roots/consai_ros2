@@ -32,6 +32,8 @@ from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.field_model import Field
 from consai_game.world_model.robots_model import Robot, RobotsModel
 
+from copy import deepcopy
+
 
 @dataclass
 class ShootTarget:
@@ -88,23 +90,19 @@ class KickTargetModel:
         robots_model: RobotsModel,
     ) -> None:
         """キックターゲットを更新する関数."""
-        self._ball = ball_model
-        self._our_robots = robots_model.our_visible_robots
-        self._their_robots = robots_model.their_visible_robots
-
         # 最も成功するshoot_targetの座標を取得
-        self.best_shoot_target = self._search_shoot_pos()
+        self.best_shoot_target = self._search_shoot_pos(ball=ball_model, robots=robots_model, search_ours=True)
 
-        self.best_pass_target = self._search_pass_robot()
+        self.best_pass_target = self._search_pass_robot(ball=ball_model, robots=robots_model, search_ours=False)
 
-    def _obstacle_exists(self, target: State2D, robots: dict[int, Robot], tolerance) -> bool:
+    def _obstacle_exists(self, target: State2D, ball: BallModel, robots: dict[int, Robot], tolerance) -> bool:
         """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
         for robot in robots.values():
-            if tool.is_on_line(robot.pos, self._ball.pos, target, tolerance):
+            if tool.is_on_line(pose=robot.pos, line_pose1=ball.pos, line_pose2=target, tolerance=tolerance):
                 return True
         return False
 
-    def _update_shoot_scores(self, search_ours) -> list[ShootTarget]:
+    def _update_shoot_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[ShootTarget]:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = self.robot_radius  # ロボット半径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
@@ -113,17 +111,24 @@ class KickTargetModel:
 
         for target in self._goal_pos_list:
             score = 0
-            if self._obstacle_exists(target.pos, self._our_robots, TOLERANCE) and search_ours:
+            if (
+                self._obstacle_exists(
+                    target=target.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
+                )
+                and search_ours
+            ):
                 target.success_rate = score
-            elif self._obstacle_exists(target.pos, self._their_robots, TOLERANCE):
+            elif self._obstacle_exists(
+                target=target.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
+            ):
                 target.success_rate = score
             else:
                 # ボールからの角度（目標方向がゴール方向と合っているか）
-                angle = abs(tool.get_angle(self._ball.pos, target.pos))
+                angle = abs(tool.get_angle(ball.pos, target.pos))
                 score += max(0, MAX_ANGLE_SCORE - np.rad2deg(angle) * 0.5)  # 小さい角度（正面）ほど高得点
 
                 # 距離（近いほうが成功率が高そう）
-                distance = tool.get_distance(self._ball.pos, target.pos)
+                distance = tool.get_distance(ball.pos, target.pos)
                 score += max(
                     0, MAX_DISTANCE_SCORE - (distance - MARGIN) * MAX_DISTANCE_SCORE / 6
                 )  # ディフェンスエリア外から6m以内ならOK
@@ -133,11 +138,11 @@ class KickTargetModel:
         """スコアの高いターゲット順にソートする関数."""
         return sorted(targets, key=attrgetter("success_rate"), reverse=True)
 
-    def _search_shoot_pos(self, search_ours=True) -> ShootTarget:
+    def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=True) -> ShootTarget:
         """ボールからの直線上にロボットがいないシュート位置を返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
         last_shoot_target_list = self.shoot_target_list.copy()
-        self._update_shoot_scores(search_ours)
+        self._update_shoot_scores(ball=ball, robots=robots, search_ours=search_ours)
         shoot_target_list = self._goal_pos_list.copy()
         self.shoot_target_list = self._sort_kick_targets_by_success_rate(shoot_target_list)
 
@@ -152,20 +157,16 @@ class KickTargetModel:
             return self.shoot_target_list[0]
         return last_shoot_target_list[0]
 
-    def _is_robot_inside_pass_area(self, robot: Robot) -> bool:
+    def _is_robot_inside_pass_area(self, ball: BallModel, robot: Robot) -> bool:
         """味方ロボットがパスを出すロボットとハーフライン両サイドを結んでできる五角形のエリア内にいるかを判別する関数"""
         if robot.pos.x < 0.0:
             return False
 
-        upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(
-            self._ball.pos, Point(0.0, self._half_width)
-        )
-        lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(
-            self._ball.pos, Point(0.0, -self._half_width)
-        )
+        upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, self._half_width))
+        lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, -self._half_width))
 
         if upper_side_slope is None or lower_side_slope is None:
-            if self._ball.pos.x > robot.pos.x:
+            if ball.pos.x > robot.pos.x:
                 return False
         else:
             upper_y_on_line = upper_side_intercept + upper_side_slope * robot.pos.x
@@ -174,32 +175,40 @@ class KickTargetModel:
                 return False
         return True
 
-    def _update_pass_scores(self, search_ours) -> None:
-        """各パスターゲットの成功率を計算し, リストを更新する関数."""
+    def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
+        """各パスターゲットの成功率を計算し, リストを返す関数."""
         TOLERANCE = self.robot_radius * 2  # ロボット直径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
         MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
         MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
-        pass_target_list = []
 
-        for robot in self._our_robots.values():
+        pass_target_list: list[PassTarget] = []
+
+        for robot in robots.our_visible_robots.values():
             score = 0
-            if self._obstacle_exists(robot.pos, self._our_robots, TOLERANCE) and search_ours:
+            if (
+                self._obstacle_exists(
+                    target=robot.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
+                )
+                and search_ours
+            ):
                 score = 0
-            elif self._obstacle_exists(robot.pos, self._their_robots, TOLERANCE):
+            elif self._obstacle_exists(
+                target=robot.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
+            ):
                 score = 0
-            elif tool.get_distance(self._ball.pos, robot.pos) < 0.5:
+            elif tool.get_distance(ball.pos, robot.pos) < 0.5:
                 score = 0
-            elif self._is_robot_inside_pass_area(robot) is False:
+            elif self._is_robot_inside_pass_area(ball, robot) is False:
                 score = 0
             else:
                 # ボールとパスを受けるロボットの距離
-                distance = tool.get_distance(self._ball.pos, robot.pos)
+                distance = tool.get_distance(ball.pos, robot.pos)
                 score += max(
                     0, MAX_DISTANCE_SCORE - (distance - MARGIN) * MAX_DISTANCE_SCORE / 4
                 )  # ディフェンスエリア外から4m以内ならOK
                 # ボールからの角度（目標方向がロボット方向と合っているか）
-                angle = abs(tool.get_angle(self._ball.pos, robot.pos))
+                angle = abs(tool.get_angle(ball.pos, robot.pos))
                 score += max(0, MAX_ANGLE_SCORE - np.rad2deg(angle) * 0.5)  # 小さい角度ほど高得点
                 # ロボットと相手ゴールの距離
                 distance = tool.get_distance(robot.pos, self._goal_pos_list[0].pos)
@@ -213,23 +222,36 @@ class KickTargetModel:
             )
 
         # スコアの高いターゲット順にソート
-        self.pass_target_list = sorted(pass_target_list, key=attrgetter("success_rate"), reverse=True)
+        return sorted(pass_target_list, key=attrgetter("success_rate"), reverse=True)
 
-    def _search_pass_robot(self, search_ours=False) -> PassTarget:
-        """パスをするロボットのIDと位置を返す関数."""
+    def _search_pass_robot(self, ball: BallModel, robots: RobotsModel, search_ours=False) -> PassTarget:
+        """
+        パスをするロボットのIDと位置を返す関数.
+
+        内部でpass_target_listを更新する.
+        """
         RATE_MARGIN = 50
-        last_pass_target_list = self.pass_target_list.copy()
-        self._update_pass_scores(search_ours)
 
+        # 前回のターゲットを保存する
+        last_pass_target_list = deepcopy(self.pass_target_list)
+
+        self.pass_target_list = self.make_pass_target_list(ball=ball, robots=robots, search_ours=search_ours)
+
+        # 今回ターゲットが見つからなければ、無効なターゲットを返す
+        if not self.pass_target_list:
+            return PassTarget(robot_id=-1)
+
+        # 前回のターゲットが空白であれば、今回のターゲットをそのまま返す
         if not last_pass_target_list:
-            if not self.pass_target_list:
-                return PassTarget(robot_id=-1)
             return self.pass_target_list[0]
 
-        if self.pass_target_list[0].robot_pos == last_pass_target_list[0].robot_pos:
+        # 前回と今回のベストターゲットが同じであれば、今回のターゲットをそのまま返す
+        if last_pass_target_list[0].robot_pos == self.pass_target_list[0].robot_pos:
             return self.pass_target_list[0]
 
-        # ヒステリシス処理
+        # ベストターゲットが変わった場合、
+        # 前回のターゲットより十分にスコアが大きければ、新しいターゲットを返す
         if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
             return self.pass_target_list[0]
+
         return last_pass_target_list[0]
