@@ -51,7 +51,6 @@ class BallClear(TacticBase):
 
         if is_in_our_defense_area:
             command = self.shoot.run(world_model)
-            command.navi_options.avoid_defense_area = False
         else:
             self.state = TacticState.FINISHED
 
