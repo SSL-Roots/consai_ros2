@@ -15,7 +15,7 @@
 """
 ボールに一番近ければボールを取りに行く、そうでなければ指定した位置に移動するモジュール.
 
-SlowSafePositionとChaseBallのTacticを組み合わせたTactic
+PositionとChaseBallのTacticを組み合わせたTactic
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
