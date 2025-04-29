@@ -44,23 +44,27 @@ class OpenKickLine(TacticBase):
 
         # キックラインを開く処理を追加
         # ここでは、desired_poseを適切な位置に変更するロジックを実装する
-        shoot_target = world_model.kick_target.best_shoot_target
+        shoot_target_pos = world_model.kick_target.best_shoot_target.pos
         pass_target = world_model.kick_target.best_pass_target
         ball_pos = world_model.ball.pos
 
         # 目標位置がシュートラインに干渉しているか計算
         is_shoot_line_blocked = tool.is_on_line(
-            pose=command.desired_pose, line_pose1=ball_pos, line_pose2=shoot_target, tolerance=self.AVOID_RADIUS
+            pose=command.desired_pose, line_pose1=ball_pos, line_pose2=shoot_target_pos, tolerance=self.AVOID_RADIUS
         )
 
         # 目標位置がパスラインに干渉しているか計算
         is_pass_line_blocked = tool.is_on_line(
-            pose=command.desired_pose, line_pose1=ball_pos, line_pose2=pass_target, tolerance=self.AVOID_RADIUS
+            pose=command.desired_pose,
+            line_pose1=ball_pos,
+            line_pose2=pass_target.robot_pos,
+            tolerance=self.AVOID_RADIUS,
         )
 
         # パスを受けるロボットが自分でなく、シュートラインもしくはパスラインに干渉している場合
         if self.robot_id != pass_target.robot_id and (is_shoot_line_blocked or is_pass_line_blocked):
             # パスラインを開く
+            command.navi_options.avoid_ball = True
             command.desired_pose.y = command.desired_pose.y + self.AVOID_RADIUS
             # stateを上書きする
             self.state = self.inner_tactic.state
