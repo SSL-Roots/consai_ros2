@@ -33,8 +33,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: src/consai_ros2
+
+      - name: Copy consai_ros2 to workspace
+        run: |
+          cp -r . /root/ros2_ws/src/consai_ros2
+        shell: bash
 
       - name: Build with colcon
         run: |

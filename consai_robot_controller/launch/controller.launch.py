@@ -14,41 +14,57 @@
 
 import launch
 from launch.actions import DeclareLaunchArgument
+from launch.actions.shutdown_action import Shutdown
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode
-from launch.actions.shutdown_action import Shutdown
 
 
 def generate_launch_description():
+    """launchを生成する関数"""
     declare_arg_gui = DeclareLaunchArgument(
-        "gui", default_value="true", description=('Set "true" to run consai_visualizer.')
+        "gui",
+        default_value="true",
+        description=('Set "true" to run consai_visualizer.'),
     )
 
     declare_arg_invert = DeclareLaunchArgument(
-        "invert", default_value="false", description=('Set "true" to invert detection_tracked data.')
+        "invert",
+        default_value="false",
+        description=('Set "true" to invert detection_tracked data.'),
     )
 
     declare_arg_yellow = DeclareLaunchArgument(
-        "yellow", default_value="false", description=('Set "true" to control yellow team robots.')
+        "yellow",
+        default_value="false",
+        description=('Set "true" to control yellow team robots.'),
     )
 
     declare_arg_vision_addr = DeclareLaunchArgument(
-        "vision_addr", default_value="224.5.23.2", description=("Set multicast address to connect SSL-Vision.")
+        "vision_addr",
+        default_value="224.5.23.2",
+        description=("Set multicast address to connect SSL-Vision."),
     )
 
     declare_arg_vision_port = DeclareLaunchArgument(
-        "vision_port", default_value="10006", description=("Set multicast port to connect SSL-Vision.")
+        "vision_port",
+        default_value="10006",
+        description=("Set multicast port to connect SSL-Vision."),
     )
 
     declare_arg_robot_control_ip = DeclareLaunchArgument(
-        "robot_control_ip", default_value="127.0.0.1", description=("Set GrSim control address.")
+        "robot_control_ip",
+        default_value="127.0.0.1",
+        description=("Set GrSim control address."),
     )
 
     declare_arg_robot_control_port = DeclareLaunchArgument(
-        "robot_control_port", default_value="20011", description=("Set GrSim control port.")
+        "robot_control_port",
+        default_value="20011",
+        description=("Set GrSim control port."),
     )
 
     container = ComposableNodeContainer(
