@@ -233,3 +233,10 @@ class RobotActivityModel:
     def our_robots_arrived(self) -> bool:
         """すべての自ロボットが目標位置に到達したかを返す関数."""
         return all([robot.arrived for robot in self.our_robots_arrived_list])
+
+    def our_robot_arrived(self, robot_id: int) -> bool:
+        """指定したロボットが目標位置に到達したかを返す関数."""
+        for robot in self.our_robots_arrived_list:
+            if robot.robot_id == robot_id:
+                return robot.arrived
+        return False
