@@ -30,29 +30,23 @@ from consai_tools.geometry import geometry_tools as tool
 class DefendGoal(TacticBase):
     """自ゴールを守るTactic."""
 
+    # ロボットの半径[m]
+    ROBOT_RADIUS = 0.1
+
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
 
-        # ディフェンス位置(x座標)を調整する変数
-        self.margin_defend_x = 0.1
         # ボールが動いているか判定する閾値
         self.ball_move_threshold = 0.1
-
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         command = MotionCommand()
         command.robot_id = self.robot_id
 
-        # ボールを回避をしない
-        command.navi_options.avoid_ball = False
-        # ディフェンスエリアを回避をしない
-        command.navi_options.avoid_defense_area = False
+        # ロボットの位置を取得
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # ボールが自チームエリアにあるか判定結果を取得
         is_in_our_side = world_model.ball_position.is_in_our_side()
@@ -73,13 +67,13 @@ class DefendGoal(TacticBase):
             slope, intercept, flag = tool.get_line_parameter(ball_pos, next_ball_pos)
 
             # ゴール前のボール進行方向上の位置を計算
-            x = -world_model.field.half_length + self.margin_defend_x
+            x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = slope * x + intercept
         elif is_in_our_defense_area:
             # ボールが自ディフェンスエリアにある場合
 
             # y座標をボールと同じ位置にする
-            x = -world_model.field.half_length + self.margin_defend_x
+            x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = ball_pos.y
 
             # Stateの終了
@@ -88,7 +82,7 @@ class DefendGoal(TacticBase):
             # ボールがゴールへ向かって来ない場合
 
             # y座標をボールと同じ位置にする
-            x = -world_model.field.half_length + self.margin_defend_x
+            x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = ball_pos.y
 
         if world_model.field.half_goal_width < abs(y):
@@ -96,6 +90,14 @@ class DefendGoal(TacticBase):
 
             # ゴール端になるようclamp
             y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
+
+        # ロボットがゴールラインより後ろにいる場合に回避するための位置を生成
+        if robot_pos.x < -world_model.field.half_length:
+            x = -world_model.field.half_length + self.ROBOT_RADIUS
+            if robot_pos.y < -world_model.field.half_goal_width:
+                y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
+            else:
+                y = world_model.field.half_goal_width + self.ROBOT_RADIUS
 
         command.desired_pose.x = x
         command.desired_pose.y = y

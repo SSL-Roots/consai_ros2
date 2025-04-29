@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding: UTF-8
+
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ゲーム設定情報を保持するモデルの定義.
-"""
+"""雑巾がけのプレイのリストを定義するモジュール."""
 
-from dataclasses import dataclass
+from consai_game.play.factory import swab_plays
 
-
-@dataclass
-class GameConfigModel:
-    """ゲーム設定情報を保持するクラス."""
-
-    goalie_id: int = 0
-    our_team_is_yellow: bool = True
-    invert: bool = False
-    robot_max_linear_vel: float = 0.0
-    robot_max_angular_vel: float = 0.0
-    robot_max_linear_accel: float = 0.0
-    robot_max_angular_accel: float = 0.0
+plays = [
+    swab_plays.swab(),
+]

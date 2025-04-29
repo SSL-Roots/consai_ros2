@@ -59,6 +59,7 @@ public:
   void set_consai_param_rule(const nlohmann::json & param);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_named_targets(const NamedTargets::SharedPtr msg);
+  void set_designated_position(const State::SharedPtr msg);
   bool is_parsable(const RobotControlMsg::SharedPtr goal) const;
   bool parse_goal(
     const RobotControlMsg::SharedPtr goal,
@@ -79,6 +80,7 @@ private:
 
   rclcpp::Subscription<TrackedFrame>::SharedPtr sub_detection_tracked_;
   rclcpp::Subscription<NamedTargets>::SharedPtr sub_named_targets_;
+  rclcpp::Subscription<State>::SharedPtr sub_designated_position_;
 
   bool team_is_yellow_ = false;
   bool invert_ = false;
@@ -91,6 +93,8 @@ private:
   std::shared_ptr<parser::ConstraintParser> constraint_parser_;
   std::shared_ptr<tactic::ControlBall> tactic_control_ball_;
   std::shared_ptr<tactic::ObstacleAvoidance> tactic_obstacle_avoidance_;
+
+  State designated_position_;
 };
 
 }  // namespace consai_robot_controller

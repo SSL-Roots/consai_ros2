@@ -25,7 +25,9 @@ from consai_visualizer_msgs.msg import Objects, ShapeCircle, ShapeLine, ShapeTex
 
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
+from consai_game.world_model.robot_activity_model import RobotActivityModel
 from consai_game.world_model.kick_target_model import KickTargetModel
+from consai_game.world_model.robots_model import RobotsModel
 from consai_game.world_model.world_model import WorldModel
 
 
@@ -49,6 +51,9 @@ class VisualizeMsgPublisherNode(Node):
 
         self.pub_visualizer_objects.publish(
             self.threats_to_vis_msg(threats=world_model.threats, robots=world_model.robots)
+        )
+        self.pub_visualizer_objects.publish(
+            self.robot_activity_to_vis_msg(robot_activity=world_model.robot_activity, robots=world_model.robots)
         )
 
     def kick_target_to_vis_msg(self, kick_target: KickTargetModel, ball: BallModel) -> Objects:
@@ -155,5 +160,38 @@ class VisualizeMsgPublisherNode(Node):
             text.size = 12
             text.color.name = "red"
             vis_obj.texts.append(text)
+
+        return vis_obj
+
+    def robot_activity_to_vis_msg(self, robot_activity: RobotActivityModel, robots: RobotsModel) -> Objects:
+        """robot_activityをObjectsメッセージに変換する."""
+        vis_obj = Objects()
+        vis_obj.layer = "game"
+        vis_obj.sub_layer = "robot_activity"
+        vis_obj.z_order = 4
+
+        # ボールの受け取りランキングを描画
+        COLOR_BEST_RECEIVE = "tomato"
+        COLOR_RECEIVE = "gray"
+        for i, score in enumerate(robot_activity.our_ball_receive_score):
+            if score.intercept_time == float("inf"):
+                return vis_obj
+
+            # ロボットの周りに円を描いて、レシーブ可能なことを描画する
+            robot_pos = robots.our_visible_robots[score.robot_id].pos
+
+            circle = ShapeCircle()
+            circle.center.x = robot_pos.x
+            circle.center.y = robot_pos.y
+            circle.radius = 0.3
+            circle.line_size = 1
+            circle.line_color.name = COLOR_RECEIVE
+            circle.fill_color.name = COLOR_RECEIVE
+            circle.caption = f"{i+1}: {score.intercept_time:.2f}"
+            if i == 0:
+                circle.line_color.name = COLOR_BEST_RECEIVE
+                circle.fill_color.name = COLOR_BEST_RECEIVE
+
+            vis_obj.circles.append(circle)
 
         return vis_obj

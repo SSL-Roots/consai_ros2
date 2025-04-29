@@ -47,6 +47,10 @@ class Agent:
         if self.role.robot_id == RoleConst.INVALID_ROLE_ID:
             return None
 
+        # ロボットがvisibleでなければ終了
+        if self.role.robot_id not in world_model.robots.our_visible_robots.keys():
+            return None
+
         # Tacticの処理が終了していたら、次のTacticに移る
         if self.present_tactic.state == TacticState.FINISHED:
             self.present_tactic_index += 1
@@ -79,5 +83,8 @@ class Agent:
 
     def reset_tactic(self) -> None:
         """戦術をリセットし, 次の戦術を設定する関数."""
+        if self.present_tactic is not None:
+            self.present_tactic.exit()
+
         self.present_tactic = self.role.tactics[self.present_tactic_index]
         self.present_tactic.reset(self.role.robot_id)

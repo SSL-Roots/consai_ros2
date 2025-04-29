@@ -12,21 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-ゲーム設定情報を保持するモデルの定義.
-"""
-
 from dataclasses import dataclass
 
 
 @dataclass
-class GameConfigModel:
-    """ゲーム設定情報を保持するクラス."""
-
-    goalie_id: int = 0
-    our_team_is_yellow: bool = True
-    invert: bool = False
-    robot_max_linear_vel: float = 0.0
-    robot_max_angular_vel: float = 0.0
-    robot_max_linear_accel: float = 0.0
-    robot_max_angular_accel: float = 0.0
+class WorldMetaModel:
+    update_rate: float = 0.0  # 更新周期 Hz
+    update_counter: int = 0  # 更新カウンタ

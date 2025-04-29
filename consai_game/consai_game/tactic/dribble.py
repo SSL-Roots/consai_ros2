@@ -29,10 +29,10 @@ from consai_tools.geometry import geometry_tools as tool
 
 import numpy as np
 
-from transitions import Machine
+from transitions.extensions import GraphMachine
 
 
-class DribbleStateMachine(Machine):
+class DribbleStateMachine(GraphMachine):
     """ドリブルの状態遷移マシン."""
 
     # ボールが近いとみなす距離の閾値[m]
@@ -64,7 +64,16 @@ class DribbleStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(model=self, states=states, transitions=transitions, initial="arrived")
+        super().__init__(
+            model=self,
+            states=states,
+            transitions=transitions,
+            initial="arrived",
+            auto_transitions=True,
+            ordered_transitions=False,
+            title="",
+            show_auto_transitions=False,
+        )
 
     def update(
         self,

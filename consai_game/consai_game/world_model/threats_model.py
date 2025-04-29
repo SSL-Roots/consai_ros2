@@ -109,8 +109,9 @@ class ThreatsModel:
             max_ball_distance = self._field.length
             score_c = int((max_ball_distance - ball_distance) * 100 / max_ball_distance)
 
-            # 総合スコアを計算（A:40%, B:30%, C:30%）
-            total_score = int(score_a * 0.4 + score_b * 0.3 + score_c * 0.3)
+            # 総合スコアを計算
+            # Bは一旦無視
+            total_score = int(score_a * 0.8 + score_b * 0.0 + score_c * 0.2)
 
             # ローパスフィルターを適用
             filtered_score = self._apply_low_pass_filter(robot_id, total_score)
