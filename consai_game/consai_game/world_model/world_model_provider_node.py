@@ -113,6 +113,7 @@ class WorldModelProviderNode(Node):
             self.world_model.ball_activity.update(
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
+                referee=self.world_model.referee,
             )
             # 最適なシュートターゲットを更新
             self.world_model.kick_target.update(
@@ -130,6 +131,7 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 ball_activity=self.world_model.ball_activity,
                 game_config=self.world_model.game_config,
+                referee=self.world_model.referee,
             )
 
             # ロボットが目標位置が到達したか更新
