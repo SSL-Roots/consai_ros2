@@ -109,18 +109,21 @@ def parse_referee_msg(
         data.their_penalty_kick_start = data.normal_start
 
     # runningへの切り替え判断
-    # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
-    # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
-    if data.our_free_kick or data.their_free_kick or data.our_kick_off_start or data.their_kick_off_start:
-        # 一度runningになったあとは、commandが変わるまで継続する
-        if prev_data.running:
+    if data.normal_start or data.our_free_kick or data.their_free_kick:
+        if data.our_penalty_kick or data.their_penalty_kick:
+            # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
+            data.running = False
+
+        elif prev_data.running:
+            # 一度runningになったあとは、commandが変わるまで継続する
             data.running = True
         else:
-            # 一定時間が経過したらrunningに切り替わる
+            # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
+            # 一定時間が経過したらrunningに切り替える
             if msg.current_action_time_remaining:
                 data.running = msg.current_action_time_remaining[0] < 0
 
-            # ボールが動いたらrunningに切り替わる
+            # ボールが動いたらrunningに切り替える
             if ball_is_moving:
                 data.running = True
 
