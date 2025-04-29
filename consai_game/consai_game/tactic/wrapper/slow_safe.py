@@ -12,42 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""ボールを避けながら指定した位置に移動するTacticを定義するモジュール."""
-
 from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 
 
-class SlowSafePosition(TacticBase):
-    """ボールを避けながら指定した位置に移動するTactic."""
+class SlowSafe(TacticBase):
+    """ボールを避けながら低速で移動するWrapperTactic."
 
-    # 最大速度の制限値 [m/s]
-    MAX_VELOCITY = 1.0
+    SlowSafe(tactic=Position()) のように使用する
+    """
 
-    def __init__(self, x=0.0, y=0.0, theta=0.0):
-        """SlowSafePositionのインスタンスを初期化する関数."""
+    MAX_VELOCITY = 1.0  # 最大速度の制限値 [m/s]
+    AVOID_RADIUS = 0.6  # ボールを避ける半径 [m]
+
+    def __init__(self, tactic=TacticBase):
+        """inner_tacticを初期化する関数."""
         super().__init__()
-        self.x = x
-        self.y = y
-        self.theta = theta
+        self.inner_tactic = tactic
 
     def reset(self, robot_id: int) -> None:
-        """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        """inner_tacticをリセットする関数."""
+        super().reset(robot_id)
+        self.inner_tactic.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
-        """指定した位置に移動し, ボールを避けるためのMotionCommandを生成する関数."""
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_NAVI
-
-        # 目標位置を設定
-        command.desired_pose.x = self.x
-        command.desired_pose.y = self.y
-        command.desired_pose.theta = self.theta
+        """ディフェンスエリア内での移動と、ボールとの接触を許可する."""
+        command = self.inner_tactic.run(world_model)
 
         # 最大速度を制限
         command.desired_velocity.x = self.MAX_VELOCITY
@@ -55,10 +47,13 @@ class SlowSafePosition(TacticBase):
 
         # NaviOptionsを設定してボールを避ける
         command.navi_options.avoid_ball = True
-        command.navi_options.ball_avoid_radius = 0.6
+        command.navi_options.ball_avoid_radius = self.AVOID_RADIUS
         command.navi_options.avoid_our_robots = True
         command.navi_options.avoid_their_robots = True
         command.navi_options.avoid_pushing = True
         command.navi_options.avoid_defense_area = True
+
+        # stateを上書きする
+        self.state = self.inner_tactic.state
 
         return command
