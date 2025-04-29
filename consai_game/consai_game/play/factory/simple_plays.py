@@ -35,6 +35,7 @@ from consai_game.tactic.ball_clear import BallClear
 from consai_game.tactic.composite.composite_ball_placement import CompositeBallPlacement
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
+from consai_game.tactic.wrapper.slow_safe import SlowSafe
 
 
 def halt() -> Play:
@@ -76,17 +77,17 @@ def stop() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(DefendGoal())],
-            [WrapperLookBall(ChaseOrPosition(-3.0, 2.0))],
-            [WrapperLookBall(ChaseOrPosition(-3.0, 0.0))],
-            [WrapperLookBall(ChaseOrPosition(-3.0, -2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, 4.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, 2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, -2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, -4.0))],
-            [WrapperLookBall(ChaseOrPosition(3.0, 3.0))],
-            [WrapperLookBall(ChaseOrPosition(3.0, -3.0))],
-            [WrapperLookBall(ChaseOrPosition(3.5, 0.0))],
+            [AllowMoveInDefenseArea(SlowSafe(DefendGoal()))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, 2.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, 0.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, -2.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(0.0, 4.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(0.0, 2.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(0.0, -2.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(0.0, -4.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, 3.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, -3.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(3.5, 0.0)))],
         ],
     )
 
