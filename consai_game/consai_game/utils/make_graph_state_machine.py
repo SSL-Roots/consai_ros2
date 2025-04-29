@@ -19,6 +19,7 @@ import os
 from consai_game.tactic.dribble import DribbleStateMachine
 from consai_game.tactic.kick.kick import KickStateMachine
 from consai_game.tactic.swab import SwabStateMachine
+from consai_game.tactic.back_dribble import BackDribbleStateMachine
 
 
 if __name__ == "__main__":
@@ -28,6 +29,7 @@ if __name__ == "__main__":
 
     model_dict = {
         "dribble": DribbleStateMachine("robot"),
+        "back_dribble": BackDribbleStateMachine("robot"),
         "kick": KickStateMachine("robot"),
         "swab": SwabStateMachine("robot"),
     }
