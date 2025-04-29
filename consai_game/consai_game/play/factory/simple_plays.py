@@ -32,6 +32,8 @@ from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
 from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
 from consai_game.tactic.defend_goal import DefendGoal
 from consai_game.tactic.composite.composite_ball_placement import CompositeBallPlacement
+from consai_game.tactic.stay import Stay
+from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 
 
 def halt() -> Play:
@@ -536,16 +538,16 @@ def their_ball_placement() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
+            [ForbidMovingInPlacementArea(Stay())],
         ],
     )
