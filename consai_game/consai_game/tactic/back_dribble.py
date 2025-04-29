@@ -29,10 +29,10 @@ from consai_tools.geometry import geometry_tools as tool
 
 import numpy as np
 
-from transitions import Machine
+from transitions.extensions import GraphMachine
 
 
-class DribbleStateMachine(Machine):
+class BackDribbleStateMachine(GraphMachine):
     """ドリブルの状態遷移マシン."""
 
     # ボールが近いとみなす距離の閾値[m]
@@ -64,7 +64,16 @@ class DribbleStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(model=self, states=states, transitions=transitions, initial="arrived")
+        super().__init__(
+            model=self,
+            states=states,
+            transitions=transitions,
+            initial="arrived",
+            auto_transitions=True,
+            ordered_transitions=False,
+            title="",
+            show_auto_transitions=False,
+        )
 
     def update(
         self,
@@ -94,7 +103,11 @@ class DribbleStateMachine(Machine):
         elif self.state == "aiming" and self.BALL_NEAR_THRESHOLD < dist_to_ball:
             self.ball_far()
 
-        elif self.state == "aiming" and self.DRIBBLE_ANGLE_THRESHOLD > dribble_diff_angle and 0.15 > dist_to_ball:
+        elif (
+            self.state == "aiming"
+            and dribble_diff_angle < self.DRIBBLE_ANGLE_THRESHOLD
+            and dist_to_ball < self.BALL_GET_THRESHOLD
+        ):
             self.dribble()
 
         elif (
@@ -132,7 +145,7 @@ class BackDribble(TacticBase):
 
         self.move_pos = State2D()
         self.target_pos = State2D(x=x, y=y)
-        self.machine = DribbleStateMachine("robot")
+        self.machine = BackDribbleStateMachine("robot")
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
