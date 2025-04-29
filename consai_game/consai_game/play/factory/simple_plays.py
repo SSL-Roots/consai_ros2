@@ -92,33 +92,6 @@ def stop() -> Play:
     )
 
 
-def force_start() -> Play:
-    """FORCE_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.force_start,
-    ]
-    return Play(
-        name="force_start",
-        description="FORCE_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
-        ],
-    )
-
-
 def normal_start() -> Play:
     """NORMAL_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [

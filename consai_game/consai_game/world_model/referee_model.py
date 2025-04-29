@@ -29,7 +29,6 @@ class RefereeModel:
 
     halt: bool = False
     stop: bool = False
-    force_start: bool = False
     normal_start: bool = False
     our_free_kick: bool = False
     their_free_kick: bool = False
@@ -57,7 +56,7 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
 
     data.halt = msg.command == Referee.COMMAND_HALT
     data.stop = msg.command == Referee.COMMAND_STOP
-    data.force_start = msg.command == Referee.COMMAND_FORCE_START
+    data.running = msg.command == Referee.COMMAND_FORCE_START
     data.normal_start = msg.command == Referee.COMMAND_NORMAL_START
 
     def parse_team_command(command_blue, command_yellow) -> tuple[bool, bool]:
@@ -89,9 +88,9 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
 
     # current_action_time_remainingは
     # NORMAL STARTやFREE KICKなどのセットプレーで値が初期化され、カウントダウンが始まる
-    if not data.halt and not data.stop:
-        if msg.current_action_time_remaining:
-            data.running = msg.current_action_time_remaining[0] < 0
+    # if not data.halt and not data.stop:
+    #     if msg.current_action_time_remaining:
+    #         data.running = msg.current_action_time_remaining[0] < 0
 
     # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
     if prev_data.our_kick_off:
