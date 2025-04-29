@@ -138,18 +138,20 @@ class Kick(TacticBase):
             upper_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y + offset_y)
             lower_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y - offset_y)
 
+            # ボールとゴールを結んだ直線を基準に座標変換する
             trans = tool.Trans(ball_pos, kick_angle)
+
+            # transの座標系でボールy軸±位置に候補位置を生成
             upper_candidate_trans_pos = trans.transform(upper_candidate_pos)
             lower_candidate_trans_pos = trans.transform(lower_candidate_pos)
             upper_candidate_pos = trans.inverted_transform(upper_candidate_trans_pos)
             lower_candidate_pos = trans.inverted_transform(lower_candidate_trans_pos)
 
+            # 2つの目標位置に対してキョリが近い候補位置を目標位置に設定
             if tool.get_distance(robot_pos, upper_candidate_pos) < tool.get_distance(robot_pos, lower_candidate_pos):
                 command.desired_pose.y = upper_candidate_pos.y
             else:
                 command.desired_pose.y = lower_candidate_pos.y
-
-            # command.desired_pose.x
             command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
 
@@ -159,6 +161,7 @@ class Kick(TacticBase):
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
 
         elif self.machine.state == "kicking":
+            # ボールを蹴る
             command.navi_options.avoid_pushing = False
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
             command.kick_power = self.MAX_KICK_POWER
