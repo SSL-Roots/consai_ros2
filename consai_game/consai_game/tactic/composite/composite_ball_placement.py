@@ -28,6 +28,8 @@ from consai_msgs.msg import State2D
 
 
 class CompositeBallPlacement(TacticBase):
+    DRIBBLE_VELOCITY = 0.5  # ドリブル時の移動速度 [m/s]
+
     def __init__(self):
         super().__init__()
         self.tactic_dribble = Dribble()
@@ -59,6 +61,12 @@ class CompositeBallPlacement(TacticBase):
 
         # ボールに一番近かったら
         if nearest_ball_id == self.robot_id:
+            # サポートロボットが目的地に到着してない場合
+            if not world_model.robot_activity.our_robot_arrived(nearest_placement_id):
+                # ボールに近づく
+                return self.approach_to_ball(world_model)
+
+            # サポートロボットが到着したら、ボールをドリブルする
             return self.dribble_ball(world_model)
 
         # プレースメント位置に一番近かったら
@@ -74,10 +82,21 @@ class CompositeBallPlacement(TacticBase):
         # プレースメントエリア回避ONで、その場にとどまる
         return self.tactic_avoid_and_stay.run(world_model)
 
+    def approach_to_ball(self, world_model: WorldModel) -> MotionCommand:
+        """ボールに近づくコマンドを返す."""
+        # ドリブル目標位置をボールにすることで、ボールに近づくだけの動きになる
+        self.tactic_dribble.target_pos = world_model.ball.pos
+        command = self.tactic_dribble.run(world_model)
+        # ディフェンスエリア内の移動を許可する
+        command.navi_options.avoid_defense_area = False
+        return command
+
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
         self.tactic_dribble.target_pos = world_model.referee.placement_pos
         command = self.tactic_dribble.run(world_model)
+        # ボールをこぼさないように走行速度を落とす
+        command.desired_velocity.x = self.DRIBBLE_VELOCITY
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
         return command
@@ -99,5 +118,8 @@ class CompositeBallPlacement(TacticBase):
 
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
+
+        # 移動時にボールと衝突しないように回避する
+        command.navi_options.avoid_ball = True
 
         return command
