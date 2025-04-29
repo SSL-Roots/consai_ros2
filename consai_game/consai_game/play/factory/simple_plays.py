@@ -92,60 +92,6 @@ def stop() -> Play:
     )
 
 
-def force_start() -> Play:
-    """FORCE_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.force_start,
-    ]
-    return Play(
-        name="force_start",
-        description="FORCE_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
-        ],
-    )
-
-
-def normal_start() -> Play:
-    """NORMAL_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.normal_start,
-    ]
-    return Play(
-        name="normal_start",
-        description="NORMAL_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
-        ],
-    )
-
-
 def our_free_kick() -> Play:
     """フリーキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
@@ -416,60 +362,6 @@ def their_penalty_kick_start() -> Play:
             [Position(5.0, 4.0)],
             [Position(4.6, 4.0)],
             [Position(4.3, 4.0)],
-        ],
-    )
-
-
-def our_goal() -> Play:
-    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
-    applicable = [
-        RefereeConditions.our_goal,
-    ]
-    return Play(
-        name="our_goal",
-        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-        ],
-    )
-
-
-def their_goal() -> Play:
-    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
-    applicable = [
-        RefereeConditions.their_goal,
-    ]
-    return Play(
-        name="their_goal",
-        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
         ],
     )
 
