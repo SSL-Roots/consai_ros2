@@ -18,7 +18,8 @@
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.dribble import Dribble
-from consai_game.tactic.position import Position
+from consai_game.tactic.stay import Stay
+from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tools
 
@@ -30,7 +31,7 @@ class CompositeBallPlacement(TacticBase):
     def __init__(self):
         super().__init__()
         self.tactic_dribble = Dribble()
-        self.tactic_position = Position()
+        self.tactic_avoid_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -38,7 +39,7 @@ class CompositeBallPlacement(TacticBase):
 
         # 所有するTacticも初期化する
         self.tactic_dribble.reset(robot_id)
-        self.tactic_position.reset(robot_id)
+        self.tactic_avoid_and_stay.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -46,7 +47,7 @@ class CompositeBallPlacement(TacticBase):
         # ボールがプレースメント位置についたら
         if world_model.ball_activity.ball_is_on_placement_area:
             # その場にとどまる
-            return self.stay(world_model)
+            return self.tactic_avoid_and_stay.run(world_model)
 
         # ボールに一番近かったら
         if world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:
@@ -61,22 +62,7 @@ class CompositeBallPlacement(TacticBase):
 
         # それ以外の場合は
         # プレースメントエリア回避ONで、その場にとどまる
-        return self.stay(world_model)
-
-    def stay(self, world_model: WorldModel) -> MotionCommand:
-        """その場にとどまるコマンドを返す."""
-        robot_pos = world_model.robots.our_visible_robots[self.robot_id].pos
-
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_NAVI
-        # 目標位置をロボット自身の座標にして、その場にとどまる
-        command.desired_pose = robot_pos
-
-        # プレースメントエリア回避ON
-        command.navi_options.avoid_placement_area = True
-
-        return command
+        return self.tactic_avoid_and_stay.run(world_model)
 
     def support_placement(self, world_model: WorldModel) -> MotionCommand:
         """プレースメントをサポートするコマンドを返す."""
