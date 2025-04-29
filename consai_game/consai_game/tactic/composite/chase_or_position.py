@@ -18,8 +18,8 @@
 SlowSafePositionとChaseBallのTacticを組み合わせたTactic
 """
 
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_game.tactic.slow_safe_position import SlowSafePosition
+from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.tactic.position import Position
 from consai_game.tactic.chase_ball import ChaseBall
 from consai_game.world_model.world_model import WorldModel
 
@@ -30,7 +30,7 @@ class ChaseOrPosition(TacticBase):
     """
     ボールに一番近ければボールを取りに行く、そうでなければ指定した位置に移動する.
 
-    ChaseBallとSlowSafePositionを利用する.
+    ChaseBallとPositionを利用する.
     """
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
@@ -41,12 +41,11 @@ class ChaseOrPosition(TacticBase):
         self.theta = theta
 
         self.tactic_chase = ChaseBall()
-        self.tactic_position = SlowSafePosition(x, y, theta)
+        self.tactic_position = Position(x, y, theta)
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        super().reset(robot_id)
 
         # 所有するTacticも初期化する
         self.tactic_chase.reset(robot_id)
