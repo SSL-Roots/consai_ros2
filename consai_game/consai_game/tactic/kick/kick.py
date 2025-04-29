@@ -64,7 +64,7 @@ class KickStateMachine(GraphMachine):
 
     def update(self, dist_to_ball: float, kick_diff_angle: float):
         """状態遷移を更新する関数."""
-        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD and kick_diff_angle < 90:
+        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD and kick_diff_angle < 135:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
@@ -134,18 +134,32 @@ class Kick(TacticBase):
 
         if self.machine.state == "chasing":
             # ボール側面のどちらかに向かう
-            if robot_pos.y > ball_pos.y:
-                command.desired_pose.y = ball_pos.y + self.CHASING_BALL_APPROACH
+            offset_y = self.CHASING_BALL_APPROACH * np.sin(kick_angle + np.pi / 3)
+            upper_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y + offset_y)
+            lower_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y - offset_y)
+
+            trans = tool.Trans(ball_pos, kick_angle)
+            upper_candidate_trans_pos = trans.transform(upper_candidate_pos)
+            lower_candidate_trans_pos = trans.transform(lower_candidate_pos)
+            upper_candidate_pos = trans.inverted_transform(upper_candidate_trans_pos)
+            lower_candidate_pos = trans.inverted_transform(lower_candidate_trans_pos)
+
+            if tool.get_distance(robot_pos, upper_candidate_pos) < tool.get_distance(robot_pos, lower_candidate_pos):
+                command.desired_pose.y = upper_candidate_pos.y
             else:
-                command.desired_pose.y = ball_pos.y - self.CHASING_BALL_APPROACH
-            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH * np.cos(kick_angle)
+                command.desired_pose.y = lower_candidate_pos.y
+
+            # command.desired_pose.x
+            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
+            command.navi_options.avoid_pushing = False
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
 
         elif self.machine.state == "kicking":
+            command.navi_options.avoid_pushing = False
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
