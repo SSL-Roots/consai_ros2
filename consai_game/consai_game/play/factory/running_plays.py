@@ -26,7 +26,6 @@ from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDef
 from consai_game.tactic.defend_goal import DefendGoal
 from consai_game.tactic.composite.composite_offense import CompositeOffense
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
-from consai_game.tactic.wrapper.open_kick_line import OpenKickLine
 
 
 def outside_defense_area() -> Play:
@@ -51,9 +50,9 @@ def outside_defense_area() -> Play:
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(4.0, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(4.0, 0.0)))],
         ],
     )
 

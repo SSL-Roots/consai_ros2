@@ -26,7 +26,7 @@ class OpenKickLine(TacticBase):
     OpenKickLine(tactic=Position()) のように使用する
     """
 
-    AVOID_RADIUS = 0.3  # ボールを避ける半径 [m]
+    AVOID_RADIUS = 0.5  # ボールを避ける半径 [m]
 
     def __init__(self, tactic=TacticBase):
         """inner_tacticを初期化する関数."""
@@ -62,11 +62,34 @@ class OpenKickLine(TacticBase):
         )
 
         # パスを受けるロボットが自分でなく、シュートラインもしくはパスラインに干渉している場合
-        if self.robot_id != pass_target.robot_id and (is_shoot_line_blocked or is_pass_line_blocked):
-            # パスラインを開く
+        if is_shoot_line_blocked:
+            # シュートラインをx軸に持つtransを生成
+            trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, shoot_target_pos))
+            desired_pose_trans = trans.transform(command.desired_pose)
+            desired_pose_from_shoot_line = trans.inverted_transform(desired_pose_trans)
+
+            # 避ける位置を生成
             command.navi_options.avoid_ball = True
-            command.desired_pose.y = command.desired_pose.y + self.AVOID_RADIUS
+            # 今いる位置がシュートラインからみてy軸の±どちらにいるか
+            if desired_pose_from_shoot_line.y > 0:
+                command.desired_pose.y = desired_pose_from_shoot_line.y + self.AVOID_RADIUS
+            else:
+                command.desired_pose.y = desired_pose_from_shoot_line.y - self.AVOID_RADIUS
             # stateを上書きする
             self.state = self.inner_tactic.state
+        elif self.robot_id != pass_target.robot_id and is_pass_line_blocked:
+            # パスラインをx軸に持つtransを生成
+            trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, shoot_target_pos))
+            desired_pose_trans = trans.transform(command.desired_pose)
+            desired_pose_from_pass_line = trans.inverted_transform(desired_pose_trans)
 
+            # 避ける位置を生成
+            command.navi_options.avoid_ball = True
+            # 今いる位置がパスラインからみてy軸の±どちらにいるか
+            if desired_pose_from_pass_line.y > 0:
+                command.desired_pose.y = desired_pose_from_pass_line.y + self.AVOID_RADIUS
+            else:
+                command.desired_pose.y = desired_pose_from_pass_line.y - self.AVOID_RADIUS
+            # stateを上書きする
+            self.state = self.inner_tactic.state
         return command
