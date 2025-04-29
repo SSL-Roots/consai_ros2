@@ -160,6 +160,7 @@ class WorldModelProviderNode(Node):
                 prev_data=self.world_model.referee,
                 our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
                 invert=self.world_model.game_config.invert,
+                ball_is_moving=self.world_model.ball_activity.ball_is_moving,
             )
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
