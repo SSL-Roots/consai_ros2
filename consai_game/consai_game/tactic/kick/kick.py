@@ -23,10 +23,10 @@ from consai_tools.geometry import geometry_tools as tool
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 
-from transitions import Machine
+from transitions.extensions import GraphMachine
 
 
-class KickStateMachine(Machine):
+class KickStateMachine(GraphMachine):
     """状態遷移マシン."""
 
     BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
@@ -51,7 +51,16 @@ class KickStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
+        super().__init__(
+            model=self,
+            states=states,
+            transitions=transitions,
+            initial="chasing",
+            auto_transitions=True,
+            ordered_transitions=False,
+            title="",
+            show_auto_transitions=False,
+        )
 
     def update(self, dist_to_ball: float, kick_diff_angle: float):
         """状態遷移を更新する関数."""
@@ -150,7 +159,7 @@ class Kick(TacticBase):
         return command
 
     def kicking_pose(self, ball_pos: State2D, kick_angle: float, dist_ball: float = 0.1) -> State2D:
-        """ボールを蹴るための目標位置をを生成"""
+        """ボールを蹴るための目標位置を生成"""
         pose = State2D()
         pose.x = ball_pos.x - dist_ball * np.cos(kick_angle)
         pose.y = ball_pos.y - dist_ball * np.sin(kick_angle)
