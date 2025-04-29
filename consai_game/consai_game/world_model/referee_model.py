@@ -50,7 +50,9 @@ class RefereeModel:
     placement_pos: Point = Point(0.0, 0.0)
 
 
-def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool) -> RefereeModel:
+def parse_referee_msg(
+    msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool, ball_is_moving: bool
+) -> RefereeModel:
     """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
     data = RefereeModel()
 
@@ -110,8 +112,17 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
     # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
     # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
     if data.our_free_kick or data.their_free_kick or data.our_kick_off_start or data.their_kick_off_start:
-        if msg.current_action_time_remaining:
-            data.running = msg.current_action_time_remaining[0] < 0
+        # 一度runningになったあとは、commandが変わるまで継続する
+        if prev_data.running:
+            data.running = True
+        else:
+            # 一定時間が経過したらrunningに切り替わる
+            if msg.current_action_time_remaining:
+                data.running = msg.current_action_time_remaining[0] < 0
+
+            # ボールが動いたらrunningに切り替わる
+            if ball_is_moving:
+                data.running = True
 
     # ボールプレースメント位置
     if len(msg.designated_position) > 0:
