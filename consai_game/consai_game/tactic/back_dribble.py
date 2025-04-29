@@ -94,10 +94,14 @@ class DribbleStateMachine(Machine):
         elif self.state == "aiming" and self.BALL_NEAR_THRESHOLD < dist_to_ball:
             self.ball_far()
 
-        elif self.state == "aiming" and self.DRIBBLE_ANGLE_THRESHOLD > dribble_diff_angle and self.BALL_GET_THRESHOLD >= dist_to_ball:
+        elif self.state == "aiming" and self.DRIBBLE_ANGLE_THRESHOLD > dribble_diff_angle and 0.15 > dist_to_ball:
             self.dribble()
 
-        elif self.state == "dribbling" and self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle and self.BALL_GET_THRESHOLD <= dist_to_ball:
+        elif (
+            self.state == "dribbling"
+            and self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle
+            and self.BALL_GET_THRESHOLD <= dist_to_ball
+        ):
             self.reaiming()
 
         elif self.state == "dribbling" and self.BALL_GET_THRESHOLD < dist_to_ball:
@@ -119,6 +123,8 @@ class BackDribble(TacticBase):
     CHASING_BALL_APPROACH_DIST = 0.5
     # ボールを運ぶ目標位置のマージン[m]
     TARGET_MARGIN_DIST = 0.15
+    # ボールを運ぶ目標位置のより厳しいマージン[m]
+    TARGET_MARGIN_DIST_STRICT = 0.08
 
     def __init__(self, x=0.0, y=0.0):
         """Initialize the DefendGoal tactic."""
@@ -177,8 +183,6 @@ class BackDribble(TacticBase):
             self.move_pos.y = ball_pos.y - self.CHASING_BALL_APPROACH_DIST * np.sin(dribble_angle)
             self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
 
-            print("chasing")
-
             # ドリブラーOFF
             command.dribble_power = self.DRIBBLE_OFF
 
@@ -187,11 +191,9 @@ class BackDribble(TacticBase):
 
         elif self.machine.state == "aiming":
             # 運搬方向に方向に向けて移動
-            self.move_pos.x = ball_pos.x - self.TARGET_MARGIN_DIST * np.cos(dribble_angle)
-            self.move_pos.y = ball_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
+            self.move_pos.x = ball_pos.x - self.TARGET_MARGIN_DIST_STRICT * np.cos(dribble_angle)
+            self.move_pos.y = ball_pos.y - self.TARGET_MARGIN_DIST_STRICT * np.sin(dribble_angle)
             self.move_pos.theta = dribble_angle
-
-            print("aiming")
 
             # ドリブラーOFF
             command.dribble_power = self.DRIBBLE_OFF
@@ -202,8 +204,6 @@ class BackDribble(TacticBase):
             self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
             self.move_pos.theta = dribble_angle
 
-            print("dribbling")
-
             # ドリブルON
             command.dribble_power = self.DRIBBLE_ON
 
@@ -212,8 +212,6 @@ class BackDribble(TacticBase):
             self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(robot_pos.theta)
             self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(robot_pos.theta)
             self.move_pos.theta = robot_pos.theta
-
-            print("stop")
 
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
