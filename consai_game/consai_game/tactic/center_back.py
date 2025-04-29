@@ -71,14 +71,16 @@ class CenterBack(TacticBase):
         super().exit()
         self.assignment_module.unregister_robot(self.robot_id)
 
-    def _calc_alignment_positions(self, base, robot_size, total):
+    def _calc_alignment_positions(self, base, robot_size, total, limit=None):
         """
         baseを中心に、robot_sizeの幅で均等に分散した位置の配列を返す
+        limitを超える場合は、limitを限界として配置を調整する
 
         Args:
             base: 中心位置
             robot_size: ロボット間の間隔
             total: ロボットの総数
+            limit: 下限値（マイナス値 or None）
 
         Returns:
             List[float]: 分散した位置の配列
@@ -89,7 +91,15 @@ class CenterBack(TacticBase):
         # 中心からのオフセットを計算
         # 例: total=3の場合、[-1, 0, 1] * (robot_size/2)
         offsets = [(i - (total - 1) / 2) * robot_size for i in range(total)]
-        return [base + offset for offset in offsets]
+        positions = [base + offset for offset in offsets]
+
+        # limitを超える位置がある場合、配置を調整
+        if limit is not None and min(positions) < limit:
+            # 最小値がlimitになるように全体をシフト
+            shift = limit - min(positions)
+            positions = [pos + shift for pos in positions]
+
+        return positions
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         # ロボットを登録
@@ -145,7 +155,7 @@ class CenterBack(TacticBase):
         if base_x is not None:
             y = defense_y_with_margin_top if intersection_top is not None else defense_y_with_margin_bottom
             # 複数台で均等にx方向に分散
-            x_positions = self._calc_alignment_positions(base_x, self.robot_size, total)
+            x_positions = self._calc_alignment_positions(base_x, self.robot_size, total, -field.half_length + 0.1)
             if y < 0:
                 x = x_positions[index]
             else:

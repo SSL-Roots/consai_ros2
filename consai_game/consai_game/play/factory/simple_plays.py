@@ -36,6 +36,7 @@ from consai_game.tactic.composite.composite_ball_placement import CompositeBallP
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.tactic.wrapper.slow_safe import SlowSafe
+from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
 
 
 def halt() -> Play:
@@ -92,60 +93,6 @@ def stop() -> Play:
     )
 
 
-def force_start() -> Play:
-    """FORCE_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.force_start,
-    ]
-    return Play(
-        name="force_start",
-        description="FORCE_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
-        ],
-    )
-
-
-def normal_start() -> Play:
-    """NORMAL_START信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
-    applicable = [
-        RefereeConditions.normal_start,
-    ]
-    return Play(
-        name="normal_start",
-        description="NORMAL_START信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
-        ],
-    )
-
-
 def our_free_kick() -> Play:
     """フリーキック信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
@@ -188,16 +135,16 @@ def their_free_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [WrapperLookBall(ChaseOrPosition(-3.0, 2.0))],
-            [WrapperLookBall(ChaseOrPosition(-3.0, 0.0))],
-            [WrapperLookBall(ChaseOrPosition(-3.0, -2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, 4.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, 2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, -2.0))],
-            [WrapperLookBall(ChaseOrPosition(0.0, -4.0))],
-            [WrapperLookBall(ChaseOrPosition(3.0, 3.0))],
-            [WrapperLookBall(ChaseOrPosition(3.0, -3.0))],
-            [WrapperLookBall(ChaseOrPosition(3.5, 0.0))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, 2.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, 0.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, -2.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(0.0, 4.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(0.0, 2.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(0.0, -2.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(0.0, -4.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.0, 3.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.0, -3.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.5, 0.0)))],
         ],
     )
 
@@ -215,16 +162,16 @@ def our_kick_off() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [ChaseOrPosition(-3.0, 3.0)],
-            [ChaseOrPosition(-3.0, 2.0)],
-            [ChaseOrPosition(-3.0, 1.0)],
-            [ChaseOrPosition(-3.0, 0.0)],
-            [ChaseOrPosition(-3.0, -1.0)],
-            [ChaseOrPosition(-3.0, -2.0)],
-            [ChaseOrPosition(-3.0, -3.0)],
-            [ChaseOrPosition(-2.0, 1.0)],
-            [ChaseOrPosition(-2.0, 0.0)],
-            [ChaseOrPosition(-2.0, -1.0)],
+            [SlowSafe(ChaseOrPosition(-3.0, 3.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 2.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 1.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 0.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -1.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -2.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -3.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, 1.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, 0.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, -1.0))],
         ],
     )
 
@@ -242,16 +189,16 @@ def their_kick_off() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [ChaseOrPosition(-3.0, 3.0)],
-            [ChaseOrPosition(-3.0, 2.0)],
-            [ChaseOrPosition(-3.0, 1.0)],
-            [ChaseOrPosition(-3.0, 0.0)],
-            [ChaseOrPosition(-3.0, -1.0)],
-            [ChaseOrPosition(-3.0, -2.0)],
-            [ChaseOrPosition(-3.0, -3.0)],
-            [ChaseOrPosition(-2.0, 1.0)],
-            [ChaseOrPosition(-2.0, 0.0)],
-            [ChaseOrPosition(-2.0, -1.0)],
+            [SlowSafe(ChaseOrPosition(-3.0, 3.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 2.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 1.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, 0.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -1.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -2.0))],
+            [SlowSafe(ChaseOrPosition(-3.0, -3.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, 1.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, 0.0))],
+            [SlowSafe(ChaseOrPosition(-2.0, -1.0))],
         ],
     )
 
@@ -325,16 +272,16 @@ def our_penalty_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [ChaseOrPosition(-5.6, 4.3)],
-            [ChaseOrPosition(-5.3, 4.3)],
-            [ChaseOrPosition(-5.0, 4.3)],
-            [ChaseOrPosition(-4.6, 4.3)],
-            [ChaseOrPosition(-4.3, 4.3)],
-            [ChaseOrPosition(-5.6, 4.0)],
-            [ChaseOrPosition(-5.3, 4.0)],
-            [ChaseOrPosition(-5.0, 4.0)],
-            [ChaseOrPosition(-4.6, 4.0)],
-            [ChaseOrPosition(-4.3, 4.0)],
+            [SlowSafe(ChaseOrPosition(-5.8, 4.3))],
+            [SlowSafe(ChaseOrPosition(-5.4, 4.3))],
+            [SlowSafe(ChaseOrPosition(-5.0, 4.3))],
+            [SlowSafe(ChaseOrPosition(-4.6, 4.3))],
+            [SlowSafe(ChaseOrPosition(-4.2, 4.3))],
+            [SlowSafe(ChaseOrPosition(-5.8, 4.0))],
+            [SlowSafe(ChaseOrPosition(-5.4, 4.0))],
+            [SlowSafe(ChaseOrPosition(-5.0, 4.0))],
+            [SlowSafe(ChaseOrPosition(-4.6, 4.0))],
+            [SlowSafe(ChaseOrPosition(-4.2, 4.0))],
         ],
     )
 
@@ -352,16 +299,16 @@ def their_penalty_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(Position(-6.0, 0.0)), AllowMoveInDefenseArea(BallClear())],
-            [Position(5.6, 4.3)],
-            [Position(5.3, 4.3)],
-            [Position(5.0, 4.3)],
-            [Position(4.6, 4.3)],
-            [Position(4.3, 4.3)],
-            [Position(5.6, 4.0)],
-            [Position(5.3, 4.0)],
-            [Position(5.0, 4.0)],
-            [Position(4.6, 4.0)],
-            [Position(4.3, 4.0)],
+            [SlowSafe(Position(5.8, 4.3))],
+            [SlowSafe(Position(5.4, 4.3))],
+            [SlowSafe(Position(5.0, 4.3))],
+            [SlowSafe(Position(4.6, 4.3))],
+            [SlowSafe(Position(4.2, 4.3))],
+            [SlowSafe(Position(5.8, 4.0))],
+            [SlowSafe(Position(5.4, 4.0))],
+            [SlowSafe(Position(5.0, 4.0))],
+            [SlowSafe(Position(4.6, 4.0))],
+            [SlowSafe(Position(4.2, 4.0))],
         ],
     )
 
@@ -379,16 +326,16 @@ def our_penalty_kick_start() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.6, 4.3)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.3, 4.3)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.8, 4.3)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.4, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.0, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.6, 4.3)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.3, 4.3)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.6, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.3, 4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.2, 4.3)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.8, 4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.4, 4.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.0, 4.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.6, 4.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.3, 4.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-4.2, 4.0)))],
         ],
     )
 
@@ -406,70 +353,16 @@ def their_penalty_kick_start() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(DefendGoal()), AllowMoveInDefenseArea(BallClear())],
-            [Position(5.6, 4.3)],
-            [Position(5.3, 4.3)],
+            [Position(5.8, 4.3)],
+            [Position(5.4, 4.3)],
             [Position(5.0, 4.3)],
             [Position(4.6, 4.3)],
-            [Position(4.3, 4.3)],
-            [Position(5.6, 4.0)],
-            [Position(5.3, 4.0)],
+            [Position(4.2, 4.3)],
+            [Position(5.8, 4.0)],
+            [Position(5.4, 4.0)],
             [Position(5.0, 4.0)],
             [Position(4.6, 4.0)],
-            [Position(4.3, 4.0)],
-        ],
-    )
-
-
-def our_goal() -> Play:
-    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
-    applicable = [
-        RefereeConditions.our_goal,
-    ]
-    return Play(
-        name="our_goal",
-        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-        ],
-    )
-
-
-def their_goal() -> Play:
-    """ゴール信号をトリガーにした, デバッグ用の空のPlayを生成する関数."""
-    applicable = [
-        RefereeConditions.their_goal,
-    ]
-    return Play(
-        name="their_goal",
-        description="ゴール信号をトリガーにした、デバッグ用の空のPlay",
-        applicable=applicable,
-        aborted=invert_conditions(applicable),
-        timeout_ms=0,
-        roles=[
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
-            [Stop()],
+            [Position(4.2, 4.0)],
         ],
     )
 

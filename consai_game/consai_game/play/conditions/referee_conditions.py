@@ -31,11 +31,6 @@ def stop_condition(world_model: WorldModel) -> bool:
     return world_model.referee.stop
 
 
-def force_start_condition(world_model: WorldModel) -> bool:
-    """ゲームが強制開始されたかどうかを判定する関数."""
-    return world_model.referee.force_start
-
-
 def running_condition(world_model: WorldModel) -> bool:
     """ゲームが進行中かどうかを判定する関数."""
     return world_model.referee.running
@@ -131,7 +126,6 @@ class RefereeConditions:
 
     halt = PlayCondition(halt_condition)
     stop = PlayCondition(stop_condition)
-    force_start = PlayCondition(force_start_condition)
     running = PlayCondition(running_condition)
     normal_start = PlayCondition(normal_start_condition)
     our_kick_off = PlayCondition(our_kick_off_condition)
