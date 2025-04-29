@@ -150,7 +150,7 @@ def get_line_intersection(
     line1_pose1: State2D, line1_pose2: State2D, line2_pose1: State2D, line2_pose2: State2D
 ) -> State2D:
     """
-    2つの線分の交点を計算する関数
+    2つの線分の交点を計算する関数.
 
     Args:
         line1_pose1: 1つ目の線分の始点
@@ -159,7 +159,7 @@ def get_line_intersection(
         line2_pose2: 2つ目の線分の終点
 
     Returns:
-        State2D: 交点の座標。線分が交差しない場合はNone
+        State2D: 交点の座標.線分が交差しない場合はNone.
     """
     # 1つ目の線分の傾きと切片を計算
     slope1, intercept1, flag1 = get_line_parameter(line1_pose1, line1_pose2)
