@@ -28,6 +28,8 @@ from consai_msgs.msg import State2D
 
 
 class CompositeBallPlacement(TacticBase):
+    DRIBBLE_VELOCITY = 1.0  # ドリブル時の移動速度 [m/s]
+
     def __init__(self):
         super().__init__()
         self.tactic_dribble = Dribble()
@@ -78,6 +80,8 @@ class CompositeBallPlacement(TacticBase):
         """ボールをドリブルするコマンドを返す."""
         self.tactic_dribble.target_pos = world_model.referee.placement_pos
         command = self.tactic_dribble.run(world_model)
+        # ボールをこぼさないように走行速度を落とす
+        command.desired_velocity.x = self.DRIBBLE_VELOCITY
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
         return command
