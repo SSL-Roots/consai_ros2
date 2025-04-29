@@ -32,6 +32,8 @@ from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.field_model import Field
 from consai_game.world_model.robots_model import Robot, RobotsModel
 
+from copy import deepcopy
+
 
 @dataclass
 class ShootTarget:
@@ -173,13 +175,14 @@ class KickTargetModel:
                 return False
         return True
 
-    def _update_pass_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> None:
-        """各パスターゲットの成功率を計算し, リストを更新する関数."""
+    def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
+        """各パスターゲットの成功率を計算し, リストを返す関数."""
         TOLERANCE = self.robot_radius * 2  # ロボット直径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
         MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
         MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
-        pass_target_list = []
+
+        pass_target_list: list[PassTarget] = []
 
         for robot in robots.our_visible_robots.values():
             score = 0
@@ -219,23 +222,36 @@ class KickTargetModel:
             )
 
         # スコアの高いターゲット順にソート
-        self.pass_target_list = sorted(pass_target_list, key=attrgetter("success_rate"), reverse=True)
+        return sorted(pass_target_list, key=attrgetter("success_rate"), reverse=True)
 
     def _search_pass_robot(self, ball: BallModel, robots: RobotsModel, search_ours=False) -> PassTarget:
-        """パスをするロボットのIDと位置を返す関数."""
+        """
+        パスをするロボットのIDと位置を返す関数.
+
+        内部でpass_target_listを更新する.
+        """
         RATE_MARGIN = 50
-        last_pass_target_list = self.pass_target_list.copy()
-        self._update_pass_scores(ball=ball, robots=robots, search_ours=search_ours)
 
+        # 前回のターゲットを保存する
+        last_pass_target_list = deepcopy(self.pass_target_list)
+
+        self.pass_target_list = self.make_pass_target_list(ball=ball, robots=robots, search_ours=search_ours)
+
+        # 今回ターゲットが見つからなければ、無効なターゲットを返す
+        if not self.pass_target_list:
+            return PassTarget(robot_id=-1)
+
+        # 前回のターゲットが空白であれば、今回のターゲットをそのまま返す
         if not last_pass_target_list:
-            if not self.pass_target_list:
-                return PassTarget(robot_id=-1)
             return self.pass_target_list[0]
 
-        if self.pass_target_list[0].robot_pos == last_pass_target_list[0].robot_pos:
+        # 前回と今回のベストターゲットが同じであれば、今回のターゲットをそのまま返す
+        if last_pass_target_list[0].robot_pos == self.pass_target_list[0].robot_pos:
             return self.pass_target_list[0]
 
-        # ヒステリシス処理
+        # ベストターゲットが変わった場合、
+        # 前回のターゲットより十分にスコアが大きければ、新しいターゲットを返す
         if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
             return self.pass_target_list[0]
+
         return last_pass_target_list[0]
