@@ -18,6 +18,10 @@
   <depend>python3-transitions</depend>
   <depend>python3-pre-commit</depend>
 
+  <depend>graphviz</depend>
+  <depend>graphviz-dev</depend>
+  <depend>python3-pygraphviz</depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

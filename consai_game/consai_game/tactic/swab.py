@@ -20,12 +20,12 @@ from consai_msgs.msg import State2D
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 
-from transitions import Machine
+from transitions.extensions import GraphMachine
 
 import math
 
 
-class SwabStateMachine(Machine):
+class SwabStateMachine(GraphMachine):
     """雑巾がけの状態遷移マシン."""
 
     def __init__(self, name):
@@ -43,7 +43,16 @@ class SwabStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(model=self, states=states, transitions=transitions, initial="moving_left")
+        super().__init__(
+            model=self,
+            states=states,
+            transitions=transitions,
+            initial="moving_left",
+            auto_transitions=True,
+            ordered_transitions=False,
+            title="",
+            show_auto_transitions=False,
+        )
 
     def update(self, all_robots_arrived: float):
         """状態遷移."""

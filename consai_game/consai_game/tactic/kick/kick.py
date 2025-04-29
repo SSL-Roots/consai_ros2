@@ -23,14 +23,15 @@ from consai_tools.geometry import geometry_tools as tool
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
 
-from transitions import Machine
+from transitions.extensions import GraphMachine
 
 
-class KickStateMachine(Machine):
+class KickStateMachine(GraphMachine):
     """状態遷移マシン."""
 
     BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
     KICK_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
+    BALL_KICK_THRESHOLD = 0.2  # ボールが蹴られたとみなす距離[m]
 
     def __init__(self, name):
         """状態遷移マシンのインスタンスを初期化する関数."""
@@ -50,11 +51,20 @@ class KickStateMachine(Machine):
         ]
 
         # ステートマシン構築
-        super().__init__(model=self, states=states, transitions=transitions, initial="chasing")
+        super().__init__(
+            model=self,
+            states=states,
+            transitions=transitions,
+            initial="chasing",
+            auto_transitions=True,
+            ordered_transitions=False,
+            title="",
+            show_auto_transitions=False,
+        )
 
     def update(self, dist_to_ball: float, kick_diff_angle: float):
         """状態遷移を更新する関数."""
-        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD:
+        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD and kick_diff_angle < 90:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
@@ -63,10 +73,10 @@ class KickStateMachine(Machine):
         elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
             self.kick()
 
-        elif self.state == "kicking" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
             self.reaiming()
 
-        elif self.state == "kicking" and kick_diff_angle >= self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "kicking" and dist_to_ball > self.BALL_KICK_THRESHOLD:
             self.done_kicking()
 
 
@@ -74,7 +84,7 @@ class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
     MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
-    CHASING_BALL_APPROACH_X = 0.5
+    CHASING_BALL_APPROACH = 0.2
     # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
     TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
 
@@ -123,13 +133,17 @@ class Kick(TacticBase):
         self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
 
         if self.machine.state == "chasing":
-            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH_X
-            command.desired_pose.y = ball_pos.y
+            # ボール側面のどちらかに向かう
+            if robot_pos.y > ball_pos.y:
+                command.desired_pose.y = ball_pos.y + self.CHASING_BALL_APPROACH
+            else:
+                command.desired_pose.y = ball_pos.y - self.CHASING_BALL_APPROACH
+            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH * np.cos(kick_angle)
             command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
-            command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
+            command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
 
         elif self.machine.state == "kicking":
             command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
@@ -141,11 +155,11 @@ class Kick(TacticBase):
 
         return command
 
-    def kicking_pose(self, ball_pos: State2D, kick_angle: float) -> State2D:
-        """ボールを蹴るための目標位置をを生成"""
+    def kicking_pose(self, ball_pos: State2D, kick_angle: float, dist_ball: float = 0.1) -> State2D:
+        """ボールを蹴るための目標位置を生成"""
         pose = State2D()
-        pose.x = ball_pos.x - 0.1 * np.cos(kick_angle)
-        pose.y = ball_pos.y - 0.1 * np.sin(kick_angle)
+        pose.x = ball_pos.x - dist_ball * np.cos(kick_angle)
+        pose.y = ball_pos.y - dist_ball * np.sin(kick_angle)
         pose.theta = kick_angle
         return pose
 
