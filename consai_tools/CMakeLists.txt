@@ -50,8 +50,15 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(consai_msgs robocup_ssl_msgs)
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  find_package(ament_cmake_flake8 REQUIRED)
+  ament_flake8(
+    CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../setup.cfg
+  ) 
+
+  find_package(ament_cmake_cpplint REQUIRED)
+  ament_cpplint()
+  find_package(ament_cmake_uncrustify REQUIRED)
+  ament_uncrustify()
 
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)

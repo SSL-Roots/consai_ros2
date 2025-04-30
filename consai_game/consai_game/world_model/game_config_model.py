@@ -30,3 +30,6 @@ class GameConfigModel:
     robot_max_angular_vel: float = 0.0
     robot_max_linear_accel: float = 0.0
     robot_max_angular_accel: float = 0.0
+
+    gravity: float = 9.81  # 重力加速度
+    ball_friction_coeff: float = 0.065  # ボールの摩擦係数

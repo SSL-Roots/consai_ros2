@@ -6,3 +6,6 @@
       robot_diameter: 0.18
       ball_diameter: 0.043
       
+    physics:
+      gravity: 9.81  # 重力加速度
+      ball_friction_coeff: 0.065  # ボールの摩擦係数
