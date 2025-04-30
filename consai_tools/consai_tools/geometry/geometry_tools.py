@@ -144,3 +144,45 @@ class Trans:
 
     def inverted_transform_angle(self, angle):
         return angle_normalize(angle + self._c_angle)
+
+
+def get_line_intersection(
+    line1_pose1: State2D, line1_pose2: State2D, line2_pose1: State2D, line2_pose2: State2D
+) -> State2D:
+    # 2つの線分の交点を計算する関数
+
+    # 1つ目の線分の傾きと切片を計算
+    slope1, intercept1, flag1 = get_line_parameter(line1_pose1, line1_pose2)
+    # 2つ目の線分の傾きと切片を計算
+    slope2, intercept2, flag2 = get_line_parameter(line2_pose1, line2_pose2)
+
+    # どちらかの線分が垂直な場合
+    if not flag1 or not flag2:
+        # 両方の線分が垂直な場合
+        if not flag1 and not flag2:
+            return None
+        # 1つ目の線分が垂直な場合
+        if not flag1:
+            x = line1_pose1.x
+            y = slope2 * x + intercept2
+        # 2つ目の線分が垂直な場合
+        else:
+            x = line2_pose1.x
+            y = slope1 * x + intercept1
+    else:
+        # 両方の線分が垂直でない場合
+        # 傾きが同じ場合（平行）
+        if math.isclose(slope1, slope2):
+            return None
+        # 交点のx座標を計算
+        x = (intercept2 - intercept1) / (slope1 - slope2)
+        # 交点のy座標を計算
+        y = slope1 * x + intercept1
+
+    # 交点が両方の線分上にあるかチェック
+    if not is_on_line(State2D(x=x, y=y), line1_pose1, line1_pose2, 0.001):
+        return None
+    if not is_on_line(State2D(x=x, y=y), line2_pose1, line2_pose2, 0.001):
+        return None
+
+    return State2D(x=x, y=y)

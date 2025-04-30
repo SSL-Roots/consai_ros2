@@ -12,32 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""指定した位置に移動するTacticを定義するモジュール."""
+"""ロボットに制御をかけたまま停止させるTacticを定義するモジュール."""
 
 from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.utils.adjust_position_to_field import AdjustPosition
 
 
-class Position(TacticBase):
-    """指定した位置に移動するTactic."""
+class Stay(TacticBase):
+    """ロボットに制御をかけたまま停止させるTactic.
 
-    def __init__(self, x=0.0, y=0.0, theta=0.0):
-        """Positionのインスタンスを初期化する関数."""
+    Stopと違い、動作目標位置を生成するため、進入禁止エリア回避を行える.
+    """
+
+    def __init__(self):
         super().__init__()
-        self.x = x
-        self.y = y
-        self.theta = theta
 
     def run(self, world_model: WorldModel) -> MotionCommand:
-        """指定した位置に移動するためのMotionCommandを生成する関数."""
+        """その場にとどまるMotionCommandを返す."""
+        robot_pos = world_model.robots.our_visible_robots[self.robot_id].pos
+
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
-
-        # フィールドサイズ変更に対応する
-        command.desired_pose = AdjustPosition.adjust(self.x, self.y, self.theta, world_model)
+        # 目標位置をロボット自身の座標にして、その場にとどまる
+        command.desired_pose = robot_pos
 
         return command

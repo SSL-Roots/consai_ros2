@@ -37,10 +37,9 @@ import time
 
 
 class Visualizer(Plugin):
-
     def __init__(self, context):
         super(Visualizer, self).__init__(context)
-        self.setObjectName('Visualizer')
+        self.setObjectName("Visualizer")
 
         self._node = context.node
         self._logger = self._node.get_logger()
@@ -49,16 +48,14 @@ class Visualizer(Plugin):
 
         # widgetを読み込む
         # FieldWidgetはカスタムウィジェットとしてuiファイルに設定済み
-        pkg_name = 'consai_visualizer'
-        _, package_path = get_resource('packages', pkg_name)
-        ui_file = os.path.join(
-            package_path, 'share', pkg_name, 'resource', 'visualizer.ui')
-        loadUi(ui_file, self._widget, {'FieldWidget': FieldWidget})
+        pkg_name = "consai_visualizer"
+        _, package_path = get_resource("packages", pkg_name)
+        ui_file = os.path.join(package_path, "share", pkg_name, "resource", "visualizer.ui")
+        loadUi(ui_file, self._widget, {"FieldWidget": FieldWidget})
 
         # rqtのUIにwidgetを追加する
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(
-                self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+            self._widget.setWindowTitle(self._widget.windowTitle() + (" (%d)" % context.serial_number()))
         context.add_widget(self._widget)
 
         # loggerをセット
@@ -68,36 +65,41 @@ class Visualizer(Plugin):
         # Subscriber、Publisherの作成
         self._sub_battery_voltage = []
         for i in range(16):
-            topic_name = 'robot' + str(i) + '/battery_voltage'
-            self._sub_battery_voltage.append(self._node.create_subscription(
-                BatteryVoltage, topic_name,
-                partial(self._callback_battery_voltage, robot_id=i), 10))
+            topic_name = "robot" + str(i) + "/battery_voltage"
+            self._sub_battery_voltage.append(
+                self._node.create_subscription(
+                    BatteryVoltage,
+                    topic_name,
+                    partial(self._callback_battery_voltage, robot_id=i),
+                    rclpy.qos.qos_profile_sensor_data,
+                )
+            )
 
         self._sub_kicker_voltage = []
         for i in range(16):
-            topic_name = 'robot' + str(i) + '/kicker_voltage'
-            self._sub_kicker_voltage.append(self._node.create_subscription(
-                BatteryVoltage, topic_name,
-                partial(self._callback_kicker_voltage, robot_id=i), 10))
+            topic_name = "robot" + str(i) + "/kicker_voltage"
+            self._sub_kicker_voltage.append(
+                self._node.create_subscription(
+                    BatteryVoltage,
+                    topic_name,
+                    partial(self._callback_kicker_voltage, robot_id=i),
+                    rclpy.qos.qos_profile_sensor_data,
+                )
+            )
 
         self._sub_visualize_objects = self._node.create_subscription(
-            Objects, 'visualizer_objects',
-            self._callback_visualizer_objects,
-            rclpy.qos.qos_profile_sensor_data)
+            Objects, "visualizer_objects", self._callback_visualizer_objects, rclpy.qos.qos_profile_sensor_data
+        )
 
-        self._pub_replacement = self._node.create_publisher(
-            Replacement, 'replacement', 10)
+        self._pub_replacement = self._node.create_publisher(Replacement, "replacement", 10)
 
         # Parameterを設定する
-        self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
+        self._widget.field_widget.set_invert(self._node.declare_parameter("invert", False).value)
 
         for team in ["blue", "yellow"]:
             for turnon in ["on", "off"]:
                 method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
-                eval(method)(
-                    partial(self._publish_all_robot_turnon_replacement,
-                            team == "yellow", turnon == "on")
-                )
+                eval(method)(partial(self._publish_all_robot_turnon_replacement, team == "yellow", turnon == "on"))
 
         # レイヤーツリーの初期設定
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
@@ -124,13 +126,13 @@ class Visualizer(Plugin):
         # layerとsub layerをカンマで結合して保存
         active_layers = self._extract_active_layers()
         combined_layers = list(map(lambda x: x[0] + "," + x[1], active_layers))
-        instance_settings.set_value('active_layers', pack(combined_layers))
+        instance_settings.set_value("active_layers", pack(combined_layers))
 
     def restore_settings(self, plugin_settings, instance_settings):
         # UIが起動したときに実行される関数
 
         # カンマ結合されたlayerを復元してセット
-        combined_layers = unpack(instance_settings.value('active_layers', []))
+        combined_layers = unpack(instance_settings.value("active_layers", []))
         active_layers = list(map(lambda x: x.split(","), combined_layers))
         for (layer, sub_layer) in active_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
@@ -157,8 +159,7 @@ class Visualizer(Plugin):
     def _add_visualizer_layer(self, layer: str, sub_layer: str, state=Qt.Unchecked):
         # レイヤーに重複しないように項目を追加する
         if layer == "" or sub_layer == "":
-            self._logger.warning(
-                "layer={} or sub_layer={} is empty".format(layer, sub_layer))
+            self._logger.warning("layer={} or sub_layer={} is empty".format(layer, sub_layer))
             return
 
         parents = self._widget.layer_widget.findItems(layer, Qt.MatchExactly, 0)
@@ -228,8 +229,7 @@ class Visualizer(Plugin):
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
 
-    def _publish_robot_replacement(
-            self, start: QPointF, end: QPointF, is_yellow: bool, robot_id: int) -> None:
+    def _publish_robot_replacement(self, start: QPointF, end: QPointF, is_yellow: bool, robot_id: int) -> None:
 
         theta_deg = math.degrees(math.atan2(end.y() - start.y(), end.x() - start.x()))
 
@@ -265,7 +265,7 @@ class Visualizer(Plugin):
     def _battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8
         MIN_VOLTAGE = 14.8
-        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
         elif percentage > 100:
@@ -275,7 +275,7 @@ class Visualizer(Plugin):
     def _kicker_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 200
         MIN_VOLTAGE = 0
-        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
         elif percentage > 100:
@@ -291,9 +291,11 @@ class Visualizer(Plugin):
 
             try:
                 getattr(self._widget, f"robot{i}_battery_voltage").setValue(
-                    self._battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                    self._battery_voltage_to_percentage(self.latest_battery_voltage[i])
+                )
                 getattr(self._widget, f"robot{i}_kicker_voltage").setValue(
-                    self._kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+                    self._kicker_voltage_to_percentage(self.latest_kicker_voltage[i])
+                )
             except AttributeError:
                 # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                 pass

@@ -27,8 +27,11 @@ from consai_tools.geometry import geometry_tools as tools
 
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
+from consai_game.world_model.referee_model import RefereeModel
 
 from consai_msgs.msg import State2D
+
+import numpy as np
 
 
 class BallState(Enum):
@@ -57,17 +60,24 @@ class BallActivityModel:
     HAS_BALL_MARGIN = 0.1  # ヒステリシス処理に使用する
     MOVING_VELOCITY_THRESHOLD = 0.1  # ボールが動いているとみなす速度の閾値
     MOVING_VELOCITY_MARGIN = 0.05  # ヒステリシス処理に使用する
+    # 速度に対するボール移動量を算出する比率[s]: 実質的に移動時間
+    MOVEMENT_GAIN = 0.1
 
     def __init__(self):
         """BallActivityModelの初期化処理."""
         self.ball_state = BallState.FREE
         self.ball_holder: Optional[BallHolder] = None
         self.ball_is_moving = False
+        self.ball_is_on_placement_area = False  # ボールがプレースメントエリアにあるか
 
+        # ボールの移動量
+        self.ball_movement = State2D()
         # ボールの将来の予測位置
         self.next_ball_pos = State2D()
+        # ボールの軌道角度
+        self.angle_trajectory = 0.0
 
-    def update(self, ball: BallModel, robots: RobotsModel):
+    def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots):
@@ -86,6 +96,9 @@ class BallActivityModel:
 
         # 最終的なボール状態を更新する
         self.update_ball_state()
+
+        # ボールがプレースメントエリアにあるかを更新する
+        self.update_ball_on_placement_area(ball, referee)
 
     def update_ball_state(self):
         """ボールの状態を更新するメソッド."""
@@ -208,14 +221,24 @@ class BallActivityModel:
 
     def prediction_next_ball_pos(self, ball: BallModel):
         """
-        次のボールの位置を予測するメソッド.
+        次のボールの位置を予測するメソッド
 
-        暫定的に0.1秒後の予測位置としている.
-        TODO: 何秒後か指定するか更新周期を使いたい
+        暫定的に0.1[m]移動すると仮定
         """
-        dt = 0.1
-        self.next_ball_pos.x = ball.pos.x + ball.vel.x / dt
-        self.next_ball_pos.y = ball.pos.y + ball.vel.y / dt
+        # 将来の位置
+        _future_ball_pos = State2D()
+        _future_ball_pos.x = ball.pos.x + ball.vel.x
+        _future_ball_pos.y = ball.pos.y + ball.vel.y
+        # 軌道角度を計算
+        self.angle_trajectory = tools.get_angle(ball.pos, _future_ball_pos)
+
+        # ボール移動量
+        self.ball_movement.x = ball.vel.x * self.MOVEMENT_GAIN * np.cos(self.angle_trajectory)
+        self.ball_movement.y = ball.vel.y * self.MOVEMENT_GAIN * np.sin(self.angle_trajectory)
+
+        # 予測位置を算出
+        self.next_ball_pos.x = ball.pos.x + self.ball_movement.x
+        self.next_ball_pos.y = ball.pos.y + self.ball_movement.y
 
     def is_ball_moving(self, ball: BallModel) -> bool:
         """ボールが動いているかを判定するメソッド."""
@@ -233,3 +256,29 @@ class BallActivityModel:
         if vel_norm > self.MOVING_VELOCITY_THRESHOLD:
             return True
         return False
+
+    def update_ball_on_placement_area(self, ball: BallModel, referee: RefereeModel):
+        """ボールがプレースメントエリアにあるかを更新するメソッド."""
+        ON_AREA_THRESHOLD = 0.15  # Rule 5.2に基づく
+        DISTANCE_MARGIN = 0.05  # ヒステリシス処理に使用する
+
+        if not ball.is_visible:
+            self.ball_is_on_placement_area = False
+            return
+
+        # ボールが動いている場合はエリアに無いと判定する
+        if self.ball_is_moving:
+            self.ball_is_on_placement_area = False
+            return
+
+        # ボールがプレースメントエリアにない場合は、しきい値を厳しくする
+        threshold = ON_AREA_THRESHOLD - DISTANCE_MARGIN
+
+        if self.ball_is_on_placement_area:
+            # ボールgあプレースメントエリアにある場合は、しきい値を緩くする
+            threshold = ON_AREA_THRESHOLD
+
+        if tools.get_distance(ball.pos, referee.placement_pos) < threshold:
+            self.ball_is_on_placement_area = True
+        else:
+            self.ball_is_on_placement_area = False

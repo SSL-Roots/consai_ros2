@@ -18,6 +18,8 @@ from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.game_config_model import GameConfigModel
+from consai_game.world_model.referee_model import RefereeModel
+from consai_game.utils.geometry import Point
 
 from consai_tools.geometry import geometry_tools as tools
 
@@ -56,6 +58,7 @@ class RobotActivityModel:
         self.their_visible_robots: list[int] = []
         self.our_robots_by_ball_distance: list[int] = []
         self.their_robots_by_ball_distance: list[int] = []
+        self.our_robots_by_placement_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
         self.our_robots_arrived_list: list[OurRobotsArrived] = []
 
@@ -65,6 +68,7 @@ class RobotActivityModel:
         ball: BallModel,
         ball_activity: BallActivityModel,
         game_config: GameConfigModel,
+        referee: RefereeModel,
     ):
         """ロボットの可視状態を更新し, 順序づけされたIDリストを更新する関数."""
         self.our_visible_robots = [robot.robot_id for robot in robots.our_robots.values() if robot.is_visible]
@@ -95,6 +99,15 @@ class RobotActivityModel:
             )
         ]
 
+        # プレースメント位置に近い順にリストを作る
+        self.our_robots_by_placement_distance = [
+            robot_id
+            for robot_id, _ in self.robot_placement_distances(
+                robots.our_visible_robots,
+                referee,
+            )
+        ]
+
         # ボールを受け取れるスコアを計算する
         self.our_ball_receive_score = self.calc_ball_receive_score_list(
             robots=robots.our_visible_robots,
@@ -113,19 +126,29 @@ class RobotActivityModel:
 
         return output_list
 
-    def robot_ball_distances(self, robots: dict[int, Robot], ball: BallModel) -> list[tuple[int, float]]:
-        """ロボットとボールの距離を計算し, 距離の昇順でソートしたリストを返す関数."""
+    def robot_something_distances(self, robots: dict[int, Robot], target: Point) -> list[tuple[int, float]]:
+        """ロボットとなにかの距離を計算し, 距離の昇順でソートしたリストを返す関数."""
 
-        robot_ball_distances = []
+        distances = []
 
         for robot in robots.values():
-            distance = tools.get_distance(robot.pos, ball.pos)
-            robot_ball_distances.append((robot.robot_id, distance))
+            distance = tools.get_distance(robot.pos, target)
+            distances.append((robot.robot_id, distance))
 
         # 距離でソート
-        robot_ball_distances.sort(key=lambda x: x[1])
+        distances.sort(key=lambda x: x[1])
 
-        return robot_ball_distances
+        return distances
+
+    def robot_ball_distances(self, robots: dict[int, Robot], ball: BallModel) -> list[tuple[int, float]]:
+        """ロボットとボールの距離を計算し, 距離の昇順でソートしたリストを返す関数."""
+        target = Point(x=ball.pos.x, y=ball.pos.y)
+
+        return self.robot_something_distances(robots, target)
+
+    def robot_placement_distances(self, robots: dict[int, Robot], referee: RefereeModel) -> list[tuple[int, float]]:
+        """ロボットとプレースメント位置の距離を計算し, 距離の昇順でソートしたリストを返す関数."""
+        return self.robot_something_distances(robots, referee.placement_pos)
 
     def calc_ball_receive_score_list(
         self, robots: dict[int, Robot], ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
@@ -210,3 +233,10 @@ class RobotActivityModel:
     def our_robots_arrived(self) -> bool:
         """すべての自ロボットが目標位置に到達したかを返す関数."""
         return all([robot.arrived for robot in self.our_robots_arrived_list])
+
+    def our_robot_arrived(self, robot_id: int) -> bool:
+        """指定したロボットが目標位置に到達したかを返す関数."""
+        for robot in self.our_robots_arrived_list:
+            if robot.robot_id == robot_id:
+                return robot.arrived
+        return False
