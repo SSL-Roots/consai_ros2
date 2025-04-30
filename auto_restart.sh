@@ -1,6 +1,20 @@
 #!/bin/bash
 
+# ログにTracebackが出たら関連プロセスを一通りkillして
+# 一定時間後に再起動するためのスクリプト
+# 実行方法:
+#   ./auto_restart.sh
+
 LAUNCH_PGID=""
+
+# kill対象プロセス名の一覧
+pkill_targets=(
+  "consai_visualizer"
+  "component_conta"
+  "parameter_publisher"
+  "consai_referee_parser"
+  "controller.launch.py"
+)
 
 cleanup() {
   echo "Interrupted! Cleaning up..."
@@ -10,13 +24,10 @@ cleanup() {
     kill -- -"$LAUNCH_PGID" 2>/dev/null
   fi
 
-  # 念のため補足的にプロセス名でもkill
-  # これやらないとvisualizerとcomponent_contaが残る
-  pkill -9 -f "consai_visualizer"
-  pkill -9 -f "component_conta"
-  pkill -9 -f "parameter_publisher"
-  pkill -9 -f "consai_referee_parser"
-  pkill -9 -f "controller.launch.py"
+  echo "Killing residual processes..."
+  for target in "${pkill_targets[@]}"; do
+    pkill -9 -f "$target"
+  done
 
   exit 0
 }
@@ -34,7 +45,6 @@ while true; do
   LAUNCH_PGID=$(ps -o pgid= "$LAUNCH_PID" | tr -d ' ')
   echo "Captured PGID: $LAUNCH_PGID"
 
-  # Traceback検知のために並列 tail を使う
   tail -F ros2_output.log | while read line; do
     echo "$line" | grep -q "Traceback"
     if [ $? -eq 0 ]; then
@@ -42,13 +52,10 @@ while true; do
 
       kill -- -"$LAUNCH_PGID"
 
-      # 念のため補足的にプロセス名でもkill
-      # これやらないとvisualizerとcomponent_contaが残る
-      pkill -9 -f "consai_visualizer"
-      pkill -9 -f "component_conta"
-      pkill -9 -f "parameter_publisher"
-      pkill -9 -f "consai_referee_parser"
-      pkill -9 -f "controller.launch.py"
+      echo "Killing residual processes..."
+      for target in "${pkill_targets[@]}"; do
+        pkill -9 -f "$target"
+      done
 
       break
     fi
