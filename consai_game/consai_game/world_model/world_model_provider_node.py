@@ -118,6 +118,7 @@ class WorldModelProviderNode(Node):
                 robots=self.world_model.robots,
                 referee=self.world_model.referee,
                 game_config=self.world_model.game_config,
+                field_points=self.world_model.field_points,
             )
             # 最適なシュートターゲットを更新
             self.world_model.kick_target.update(
