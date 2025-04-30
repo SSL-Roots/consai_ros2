@@ -77,7 +77,12 @@ class DribbleStateMachine(GraphMachine):
         )
 
     def update(
-        self, dist_robot_to_ball: float, dist_ball_to_target: float, dribble_diff_angle: float, approach_finish: bool
+        self,
+        dist_robot_to_ball: float,
+        dist_ball_to_target: float,
+        dribble_diff_angle: float,
+        ball_is_front: bool,
+        approach_finish: bool,
     ):
         """状態遷移."""
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
@@ -87,7 +92,9 @@ class DribbleStateMachine(GraphMachine):
             self.dribble()
 
         elif self.state == "dribbling" and (
-            self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle or self.DRIBBLE_DIST < dist_robot_to_ball
+            self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle
+            or self.DRIBBLE_DIST < dist_robot_to_ball
+            or ball_is_front is False
         ):
             self.reapproach()
 
@@ -102,9 +109,6 @@ class Dribble(TacticBase):
     DRIBBLE_ON = 1.0
     # ドリブルOFF時の出力(0.0)
     DRIBBLE_OFF = 0.0
-
-    # ドリブル時の速度
-    DRIBBLE_VELOCITY = 1.0
 
     # ボール追跡時の回り込みの距離[m]
     CHASING_BALL_APPROACH_DIST = 0.5
@@ -136,6 +140,8 @@ class Dribble(TacticBase):
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
+        # ボールの予測位置を取得
+        next_ball_pos = world_model.ball_activity.next_ball_pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
@@ -150,9 +156,20 @@ class Dribble(TacticBase):
         # ドリブル角度との差分を計算
         dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
 
-        state = self.ball_approach.machine.state == "arrived"
+        # 目標位置とボール予測位置の角度
+        angle_target_to_next_ball = tool.get_angle(self.target_pos, next_ball_pos)
+        trans = tool.Trans(next_ball_pos, angle_target_to_next_ball)
+        ball_trans_pos = trans.transform(ball_pos)
+        robot_trans_pos = trans.transform(robot_pos)
+
         # 状態遷移を更新
-        self.machine.update(dist_robot_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle), state)
+        self.machine.update(
+            dist_robot_to_ball,
+            dist_ball_to_target,
+            np.rad2deg(dribble_diff_angle),
+            ball_trans_pos.x < robot_trans_pos.x,
+            self.ball_approach.machine.state == "arrived",
+        )
 
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
@@ -169,9 +186,6 @@ class Dribble(TacticBase):
             self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
             self.move_pos.theta = dribble_angle
             command.desired_pose = self.move_pos
-
-            command.desired_velocity.x = self.DRIBBLE_VELOCITY * np.cos(dribble_angle)
-            command.desired_velocity.y = self.DRIBBLE_VELOCITY * np.sin(dribble_angle)
 
             # ドリブルON
             command.dribble_power = self.DRIBBLE_ON
