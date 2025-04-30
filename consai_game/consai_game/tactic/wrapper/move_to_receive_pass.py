@@ -47,7 +47,7 @@ class MoveToReceivePass(TacticBase):
 
         # ボールを持っていないロボットとボールを結んだtransを作成
         trans = tool.Trans(command.desired_pose, tool.get_angle(command.desired_pose, ball_pos))
-        # 相手ロボットの位置がパスライン上限おどちらに多く干渉しているかを確認
+        # 相手ロボットの位置がパスラインの上下どちらに多く干渉しているかを確認
         upper_count = 0
         lower_count = 0
         for their in their_robot.values():
@@ -61,9 +61,11 @@ class MoveToReceivePass(TacticBase):
         # パスラインに干渉している相手ロボットが少ない方向に移動する
         desired_pose_trans = trans.transform(command.desired_pose)
         desired_pose_from_pass_line = trans.inverted_transform(desired_pose_trans)
+        # 防いでいる相手ロボットがいなければ現在の位置にとどまる
         if upper_count == 0 and lower_count == 0:
             pass
         else:
+            # パスラインの上下のどちらにロボットが多くいるかで移動先を指定
             if upper_count > lower_count:
                 command.desired_pose.y = desired_pose_from_pass_line.y - self.THRESHOULD_RADIUS
             else:
@@ -74,6 +76,8 @@ class MoveToReceivePass(TacticBase):
                 command.desired_pose.y = desired_pose_from_pass_line.y - self.THRESHOULD_RADIUS * 2
             elif command.desired_pose.y < -world_model.field.half_width:
                 command.desired_pose.y = desired_pose_from_pass_line.y + self.THRESHOULD_RADIUS * 2
+        # ロボットがボールを向くようにthetaを上書きする
+        command.desired_pose.theta = tool.get_angle(command.desired_pose, ball_pos)
         # stateを上書きする
         self.state = self.inner_tactic.state
         return command
