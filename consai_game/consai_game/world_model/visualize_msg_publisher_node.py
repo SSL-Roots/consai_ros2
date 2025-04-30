@@ -141,6 +141,17 @@ class VisualizeMsgPublisherNode(Node):
             state_circle.fill_color.name = THEIR_COLOR
             vis_obj.circles.append(state_circle)
 
+        # ボールのストップ位置を描画
+        stop_pos_circle = ShapeCircle()
+        stop_pos_circle.center.x = activity.ball_stop_position.x
+        stop_pos_circle.center.y = activity.ball_stop_position.y
+        stop_pos_circle.radius = 0.2
+        stop_pos_circle.line_size = 2
+        stop_pos_circle.line_color.name = "coral"
+        stop_pos_circle.fill_color.alpha = 0.0
+        stop_pos_circle.caption = "stop_pos"
+        vis_obj.circles.append(stop_pos_circle)
+
         return vis_obj
 
     def threats_to_vis_msg(self, threats, robots) -> Objects:

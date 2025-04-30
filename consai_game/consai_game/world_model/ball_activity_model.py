@@ -75,6 +75,9 @@ class BallActivityModel:
         # ボールの軌道角度
         self.angle_trajectory = 0.0
 
+        # ボールが最終的に止まる予測位置
+        self.ball_stop_position = State2D()
+
     def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
@@ -97,6 +100,9 @@ class BallActivityModel:
 
         # ボールがプレースメントエリアにあるかを更新する
         self.update_ball_on_placement_area(ball, referee)
+
+        # ボールの最終的な停止位置を予測する
+        self.ball_stop_position = self.predict_ball_stop_position(ball)
 
     def update_ball_state(self):
         """ボールの状態を更新するメソッド."""
@@ -280,3 +286,23 @@ class BallActivityModel:
             self.ball_is_on_placement_area = True
         else:
             self.ball_is_on_placement_area = False
+
+    def predict_ball_stop_position(self, ball: BallModel) -> State2D:
+        """ボールが止まる位置を予測するメソッド."""
+        # ボールの速度が小さい場合は、現在の位置を返す
+        if not self.ball_is_moving:
+            return ball.pos
+
+        mu = 0.065  # 摩擦係数
+        g = 9.81  # 重力加速度
+        a = mu * g  # 減速度
+
+        # ボールを中心に、ボール速度方向への座標系を作成
+        trans = tools.Trans(ball.pos, tools.get_vel_angle(ball.vel))
+
+        vel_norm = tools.get_norm(ball.vel)
+
+        # 減速距離
+        distance = (vel_norm ** 2) / (2 * a)
+
+        return trans.inverted_transform(State2D(x=distance, y=0.0))
