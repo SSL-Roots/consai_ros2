@@ -110,9 +110,6 @@ class Dribble(TacticBase):
     # ドリブルOFF時の出力(0.0)
     DRIBBLE_OFF = 0.0
 
-    # ドリブル時の速度の比率
-    DRIBBLE_VELOCITY_GAIN = 0.5
-
     # ボール追跡時の回り込みの距離[m]
     CHASING_BALL_APPROACH_DIST = 0.5
     # ボールを運ぶ目標位置のマージン[m]
@@ -201,4 +198,5 @@ class Dribble(TacticBase):
 
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
+
         return command

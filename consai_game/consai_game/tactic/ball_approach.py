@@ -88,6 +88,7 @@ class BallApproachStateMachine(GraphMachine):
             ball_trans_pos.x > robot_trans_pos.x or diff_angle > self.DRIBBLE_ANGLE_THRESHOLD
         ):
             self.rechase()
+
         elif (
             self.state == "aiming"
             and dist_ball_to_target < self.BALL_GET_THRESHOLD
