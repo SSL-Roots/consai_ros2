@@ -36,7 +36,7 @@ from consai_game.tactic.composite.composite_ball_placement import CompositeBallP
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.tactic.wrapper.slow_safe import SlowSafe
-from consai_game.tactic.wrapper.open_kick_line import OpenKickLine
+from consai_game.tactic.wrapper.move_to_receive_pass import MoveToReceivePass
 
 
 def halt() -> Play:
@@ -113,9 +113,9 @@ def force_start() -> Play:
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(3.0, 3.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=OpenKickLine(Position(3.5, 0.0)))],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, 3.0)))],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, -3.0)))],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.5, 0.0)))],
         ],
     )
 
