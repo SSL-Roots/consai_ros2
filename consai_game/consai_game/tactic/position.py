@@ -18,6 +18,7 @@ from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.utils.adjust_position_to_field import AdjustPosition
 
 
 class Position(TacticBase):
@@ -35,8 +36,8 @@ class Position(TacticBase):
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
-        command.desired_pose.x = self.x
-        command.desired_pose.y = self.y
-        command.desired_pose.theta = self.theta
+
+        # フィールドサイズ変更に対応する
+        command.desired_pose = AdjustPosition.adjust(self.x, self.y, self.theta, world_model)
 
         return command

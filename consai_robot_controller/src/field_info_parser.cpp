@@ -54,6 +54,12 @@ void FieldInfoParser::set_subscriptions(rclcpp::Node * node)
 void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
 {
   constraint_parser_->set_field_size(param["field"]["length"], param["field"]["width"]);
+  tactic_obstacle_avoidance_->set_field_size(
+    param["field"]["length"],
+    param["field"]["width"],
+    param["field"]["penalty_depth"],
+    param["field"]["penalty_width"]
+  );
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)

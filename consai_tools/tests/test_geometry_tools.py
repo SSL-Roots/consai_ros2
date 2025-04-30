@@ -84,16 +84,17 @@ def test_get_distance():
 
 
 params = {
-    '0': (State2D(x=0.0, y=0.0), State2D(x=1.0, y=1.0), 1, 0, True),
-    '1': (State2D(x=-1.0, y=0.0), State2D(x=1.0, y=1.0), 1/2, 1/2, True),
-    '2': (State2D(x=1.0, y=0.0), State2D(x=-1.0, y=2.0), -1, 1, True),
-    'y=b': (State2D(x=-1.0, y=4.0), State2D(x=1.0, y=4.0), 0, 4, True),
-    'x=c': (State2D(x=1.0, y=0.0), State2D(x=1.0, y=2.0), None, None, False)
+    "0": (State2D(x=0.0, y=0.0), State2D(x=1.0, y=1.0), 1, 0, True),
+    "1": (State2D(x=-1.0, y=0.0), State2D(x=1.0, y=1.0), 1 / 2, 1 / 2, True),
+    "2": (State2D(x=1.0, y=0.0), State2D(x=-1.0, y=2.0), -1, 1, True),
+    "y=b": (State2D(x=-1.0, y=4.0), State2D(x=1.0, y=4.0), 0, 4, True),
+    "x=c": (State2D(x=1.0, y=0.0), State2D(x=1.0, y=2.0), None, None, False),
 }
 
 
-@pytest.mark.parametrize("pose1, pose2, expect_slope, expect_intercept, expect_flag",
-                         list(params.values()), ids=list(params.keys()))
+@pytest.mark.parametrize(
+    "pose1, pose2, expect_slope, expect_intercept, expect_flag", list(params.values()), ids=list(params.keys())
+)
 def test_get_line_parameter(pose1, pose2, expect_slope, expect_intercept, expect_flag):
 
     actual_slope, actual_intercept, actual_flag = tool.get_line_parameter(pose1, pose2)
@@ -144,3 +145,26 @@ def test_is_on_line():
 
     assert tool.is_on_line(State2D(x=2.0, y=1.0), p1, p2, 0.01) is False
     assert tool.is_on_line(State2D(x=2.0, y=1.0), p1, p2, 2.0) is True
+
+
+def test_is_intersect():
+    p1 = State2D(x=0.0, y=0.0)
+    p2 = State2D(x=1.0, y=1.0)
+    p3 = State2D(x=1.0, y=0.0)
+    p4 = State2D(x=0.0, y=1.0)
+
+    assert tool.is_intersect(p1, p2, p3, p4) is True
+
+    p1 = State2D(x=0.0, y=0.0)
+    p2 = State2D(x=1.0, y=1.0)
+    p3 = State2D(x=1.0, y=1.0)
+    p4 = State2D(x=2.0, y=2.0)
+
+    assert tool.is_intersect(p1, p2, p3, p4) is False
+
+    p1 = State2D(x=0.0, y=0.0)
+    p2 = State2D(x=1.0, y=1.0)
+    p3 = State2D(x=2.0, y=1.0)
+    p4 = State2D(x=1.0, y=2.0)
+
+    assert tool.is_intersect(p1, p2, p3, p4) is False

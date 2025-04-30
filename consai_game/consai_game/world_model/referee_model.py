@@ -29,7 +29,6 @@ class RefereeModel:
 
     halt: bool = False
     stop: bool = False
-    force_start: bool = False
     normal_start: bool = False
     our_free_kick: bool = False
     their_free_kick: bool = False
@@ -51,13 +50,15 @@ class RefereeModel:
     placement_pos: Point = Point(0.0, 0.0)
 
 
-def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool) -> RefereeModel:
+def parse_referee_msg(
+    msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool, ball_is_moving: bool
+) -> RefereeModel:
     """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
     data = RefereeModel()
 
     data.halt = msg.command == Referee.COMMAND_HALT
     data.stop = msg.command == Referee.COMMAND_STOP
-    data.force_start = msg.command == Referee.COMMAND_FORCE_START
+    data.running = msg.command == Referee.COMMAND_FORCE_START
     data.normal_start = msg.command == Referee.COMMAND_NORMAL_START
 
     def parse_team_command(command_blue, command_yellow) -> tuple[bool, bool]:
@@ -87,12 +88,6 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
         Referee.COMMAND_BALL_PLACEMENT_BLUE, Referee.COMMAND_BALL_PLACEMENT_YELLOW
     )
 
-    # current_action_time_remainingは
-    # NORMAL STARTやFREE KICKなどのセットプレーで値が初期化され、カウントダウンが始まる
-    if not data.halt and not data.stop:
-        if msg.current_action_time_remaining:
-            data.running = msg.current_action_time_remaining[0] < 0
-
     # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
     if prev_data.our_kick_off:
         data.our_kick_off_start = data.normal_start
@@ -112,6 +107,25 @@ def parse_referee_msg(msg: Referee, prev_data: RefereeModel, our_team_is_yellow:
         data.our_penalty_kick_start = data.normal_start
     if prev_data.their_penalty_kick_start:
         data.their_penalty_kick_start = data.normal_start
+
+    # runningへの切り替え判断
+    if data.normal_start or data.our_free_kick or data.their_free_kick:
+        if data.our_penalty_kick or data.their_penalty_kick:
+            # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
+            data.running = False
+
+        elif prev_data.running:
+            # 一度runningになったあとは、commandが変わるまで継続する
+            data.running = True
+        else:
+            # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
+            # 一定時間が経過したらrunningに切り替える
+            if msg.current_action_time_remaining:
+                data.running = msg.current_action_time_remaining[0] < 0
+
+            # ボールが動いたらrunningに切り替える
+            if ball_is_moving:
+                data.running = True
 
     # ボールプレースメント位置
     if len(msg.designated_position) > 0:
