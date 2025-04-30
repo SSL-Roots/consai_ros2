@@ -37,7 +37,7 @@ class BallApproachStateMachine(GraphMachine):
     # ボールが近いとみなす距離の閾値[m]
     BALL_NEAR_THRESHOLD = 0.4
     # ボールを保持していると判定する距離の閾値[m]
-    BALL_GET_THRESHOLD = 0.2
+    BALL_GET_THRESHOLD = 0.15
     # 目的地が近いとみなす距離の閾値[m]
     DIST_TARGET_TO_BALL_THRESHOLD = 0.1
 
@@ -55,6 +55,7 @@ class BallApproachStateMachine(GraphMachine):
         transitions = [
             {"trigger": "chase", "source": "arrived", "dest": "chasing"},
             {"trigger": "aim", "source": "chasing", "dest": "aiming"},
+            {"trigger": "rechase", "source": "aiming", "dest": "chasing"},
             {"trigger": "arrival", "source": "aiming", "dest": "arrived"},
             {"trigger": "reset", "source": "*", "dest": "arrived"},
         ]
@@ -71,19 +72,27 @@ class BallApproachStateMachine(GraphMachine):
             show_auto_transitions=False,
         )
 
-    def update(self, ball_trans_pos: float, robot_trans_pos: float):
+    def update(self, ball_trans_pos: float, robot_trans_pos: float, diff_angle: float):
         """状態遷移"""
         dist_ball_to_target = tool.get_distance(ball_trans_pos, robot_trans_pos)
-        angle_ball_to_target = tool.angle_normalize(tool.get_angle(ball_trans_pos, robot_trans_pos))
 
         if self.state == "arrived" and self.BALL_GET_THRESHOLD < dist_ball_to_target:
             self.chase()
-        if self.state == "chasing" and ball_trans_pos.x < robot_trans_pos.x and angle_ball_to_target < 5:
+        elif (
+            self.state == "chasing"
+            and ball_trans_pos.x < robot_trans_pos.x
+            and diff_angle < self.DRIBBLE_ANGLE_THRESHOLD
+        ):
             self.aim()
+        elif self.state == "aiming" and (
+            ball_trans_pos.x > robot_trans_pos.x or diff_angle > self.DRIBBLE_ANGLE_THRESHOLD
+        ):
+            self.rechase()
         elif (
             self.state == "aiming"
             and dist_ball_to_target < self.BALL_GET_THRESHOLD
             and ball_trans_pos.x < robot_trans_pos.x
+            and diff_angle < self.DRIBBLE_ANGLE_THRESHOLD
         ):
             self.arrival()
 
@@ -93,13 +102,8 @@ class BallApproach(TacticBase):
 
     # ボールアプローチ時の距離[m]
     BALL_APPROACH_DIST = 0.3
-    # アプローチ時に加算する速度のゲイン[s]
-    VEL_GAIN = 1.0
     # ロボット+ボールの距離[m]
-    ROBOT_TO_BALL_DIST = 0.15
-
-    # ボール追跡時の回り込みの距離[m]
-    # CHASING_BALL_APPROACH_DIST = 0.5
+    ROBOT_TO_BALL_DIST = 0.10
 
     def __init__(self, x: float = 0.0, y: float = 0.0):
         """Initialize the DefendGoal tactic"""
@@ -142,8 +146,11 @@ class BallApproach(TacticBase):
         ball_trans_pos = trans.transform(ball_pos)
         robot_trans_pos = trans.transform(robot_pos)
 
+        # ドリブル角度との差分を計算
+        diff_angle = abs(tool.angle_normalize(robot_pos.theta - angle_target_to_next_ball + np.pi))
+
         # 状態遷移を更新
-        self.machine.update(ball_trans_pos, robot_trans_pos)
+        self.machine.update(ball_trans_pos, robot_trans_pos, diff_angle)
 
         if self.machine.state == "chasing":
             # ボールを追いかける
