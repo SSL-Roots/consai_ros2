@@ -48,7 +48,7 @@ class Receive(TacticBase):
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
-    def run(self, world_model: WorldModel) -> MotionCommand:
+    def run(self, world_model: WorldModel, diff_angle_threshold: int = 20) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         command = MotionCommand()
         command.robot_id = self.robot_id
@@ -79,7 +79,7 @@ class Receive(TacticBase):
 
         # 受取の座標
         self.receive_pos = robot_pos
-        if ball_is_moving and diff_theta < 20:
+        if ball_is_moving and diff_theta < diff_angle_threshold:
             # ボールが動いていてロボットに向かってくる場合
 
             # ボールの進行方向に対して垂直な位置を算出

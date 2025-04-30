@@ -20,6 +20,7 @@ DefendGoal Tactic.
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState
+from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
@@ -36,9 +37,17 @@ class DefendGoal(TacticBase):
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
+        self.tactic_receive = Receive()
 
         # ボールが動いているか判定する閾値
         self.ball_move_threshold = 0.1
+
+    def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
+        super().reset(robot_id)
+
+        # 所有するTacticも初期化する
+        self.tactic_receive.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
@@ -66,9 +75,25 @@ class DefendGoal(TacticBase):
             # ボールの進行方向の直線に関する傾きと切片を計算
             slope, intercept, flag = tool.get_line_parameter(ball_pos, next_ball_pos)
 
-            # ゴール前のボール進行方向上の位置を計算
             x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = slope * x + intercept
+
+            if abs(y) < world_model.field.half_goal_width:
+                # ゴールに入りそうな場合
+
+                # ゴール前のボール進行方向上の位置を計算
+                receive_command = self.tactic_receive.run(world_model, 90)
+
+                if x < receive_command.desired_pose.x:
+                    # ディフェンス位置がゴールラインより前になる場合
+                    # ボールの垂直方向に移動
+                    x = receive_command.desired_pose.x
+                    y = receive_command.desired_pose.y
+            else:
+                # y座標をボールと同じ位置にする
+                x = -world_model.field.half_length + self.ROBOT_RADIUS
+                y = ball_pos.y
+
         elif is_in_our_defense_area:
             # ボールが自ディフェンスエリアにある場合
 
@@ -85,11 +110,7 @@ class DefendGoal(TacticBase):
             x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = ball_pos.y
 
-        if world_model.field.half_goal_width < abs(y):
-            # 生成した位置がゴール端を超える場合
-
-            # ゴール端になるようclamp
-            y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
+        y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
 
         # ロボットがゴールラインより後ろにいる場合に回避するための位置を生成
         if robot_pos.x < -world_model.field.half_length:
