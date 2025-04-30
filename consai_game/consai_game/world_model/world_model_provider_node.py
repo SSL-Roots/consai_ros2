@@ -89,6 +89,9 @@ class WorldModelProviderNode(Node):
         self.sub_param_control = self.create_subscription(
             String, "consai_param/control", self.callback_param_control, qos_profile
         )
+        self.sub_param_strategy = self.create_subscription(
+            String, "consai_param/strategy", self.callback_param_strategy, qos_profile
+        )
         # motion_commandのsubscriber
         self._sub_motion_command = self.create_subscription(
             MotionCommandArray, "motion_commands", self.callback_motion_commands, 10
@@ -114,6 +117,7 @@ class WorldModelProviderNode(Node):
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
                 referee=self.world_model.referee,
+                game_config=self.world_model.game_config,
             )
             # 最適なシュートターゲットを更新
             self.world_model.kick_target.update(
@@ -196,6 +200,13 @@ class WorldModelProviderNode(Node):
             self.world_model.game_config.robot_max_angular_vel = param_dict["soft_limits"]["velocity_theta"]
             self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
+
+    def callback_param_strategy(self, msg: String) -> None:
+        """トピック consai_param/strategy からのパラメータを受け取り、モデルを更新する."""
+        with self.lock:
+            param_dict = json.loads(msg.data)
+            self.world_model.game_config.gravity = param_dict["physics"]["gravity"]
+            self.world_model.game_config.ball_friction_coeff = param_dict["physics"]["ball_friction_coeff"]
 
     def callback_motion_commands(self, msg: MotionCommandArray) -> None:
         """トピック motion_commands からのパラメータを受け取り更新する."""

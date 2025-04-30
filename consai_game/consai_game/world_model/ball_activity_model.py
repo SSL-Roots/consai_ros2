@@ -28,6 +28,7 @@ from consai_tools.geometry import geometry_tools as tools
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.referee_model import RefereeModel
+from consai_game.world_model.game_config_model import GameConfigModel
 
 from consai_msgs.msg import State2D
 
@@ -78,7 +79,7 @@ class BallActivityModel:
         # ボールが最終的に止まる予測位置
         self.ball_stop_position = State2D()
 
-    def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel):
+    def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel, game_config: GameConfigModel):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots):
@@ -102,7 +103,7 @@ class BallActivityModel:
         self.update_ball_on_placement_area(ball, referee)
 
         # ボールの最終的な停止位置を予測する
-        self.ball_stop_position = self.predict_ball_stop_position(ball)
+        self.ball_stop_position = self.predict_ball_stop_position(ball=ball, game_config=game_config)
 
     def update_ball_state(self):
         """ボールの状態を更新するメソッド."""
@@ -287,15 +288,11 @@ class BallActivityModel:
         else:
             self.ball_is_on_placement_area = False
 
-    def predict_ball_stop_position(self, ball: BallModel) -> State2D:
+    def predict_ball_stop_position(self, ball: BallModel, game_config: GameConfigModel) -> State2D:
         """ボールが止まる位置を予測するメソッド."""
         # ボールの速度が小さい場合は、現在の位置を返す
         if not self.ball_is_moving:
             return ball.pos
-
-        mu = 0.065  # 摩擦係数
-        g = 9.81  # 重力加速度
-        a = mu * g  # 減速度
 
         # ボールを中心に、ボール速度方向への座標系を作成
         trans = tools.Trans(ball.pos, tools.get_vel_angle(ball.vel))
@@ -303,6 +300,7 @@ class BallActivityModel:
         vel_norm = tools.get_norm(ball.vel)
 
         # 減速距離
+        a = game_config.ball_friction_coeff * game_config.gravity
         distance = (vel_norm ** 2) / (2 * a)
 
         return trans.inverted_transform(State2D(x=distance, y=0.0))
