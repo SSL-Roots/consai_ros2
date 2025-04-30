@@ -21,6 +21,7 @@ Dribble Tactic.
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
+from consai_game.tactic.ball_approach import BallApproach
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
@@ -42,6 +43,8 @@ class DribbleStateMachine(GraphMachine):
     # 目的地が近いとみなす距離の閾値[m]
     DIST_TARGET_TO_BALL_THRESHOLD = 0.1
 
+    DRIBBLE_DIST = 0.2
+
     # ドリブル角度の閾値[degree]
     DRIBBLE_ANGLE_THRESHOLD = 5
 
@@ -50,16 +53,14 @@ class DribbleStateMachine(GraphMachine):
         self.name = name
 
         # 状態定義
-        states = ["arrived", "chasing", "aiming", "dribbling"]
+        states = ["arrived", "approaching", "dribbling"]
 
         # 遷移定義
         transitions = [
-            {"trigger": "start", "source": "arrived", "dest": "chasing"},
-            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
-            {"trigger": "dribble", "source": "aiming", "dest": "dribbling"},
-            {"trigger": "reaiming", "source": "dribbling", "dest": "aiming"},
+            {"trigger": "approach", "source": "arrived", "dest": "approaching"},
+            {"trigger": "dribble", "source": "approaching", "dest": "dribbling"},
             {"trigger": "arrival", "source": "dribbling", "dest": "arrived"},
+            {"trigger": "reapproach", "source": "dribbling", "dest": "approaching"},
             {"trigger": "reset", "source": "*", "dest": "arrived"},
         ]
 
@@ -76,41 +77,19 @@ class DribbleStateMachine(GraphMachine):
         )
 
     def update(
-        self,
-        dist_to_ball: float,
-        dist_ball_to_target: float,
-        dribble_diff_angle: float,
-        ball_trans_pos: float,
-        robot_trans_pos: float,
+        self, dist_robot_to_ball: float, dist_ball_to_target: float, dribble_diff_angle: float, approach_finish: bool
     ):
         """状態遷移."""
-        if self.state != "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
-            self.reset()
-
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
-            self.start()
+            self.approach()
 
-        elif (
-            self.state == "chasing"
-            and dist_to_ball <= self.BALL_NEAR_THRESHOLD
-            and ball_trans_pos.x < robot_trans_pos.x
-        ):
-            # 状態が"chasing"でボールと目標位置間の距離がしきい値以下かつ
-            # ボールの変換後のx座標がロボットの変換後のx座標より大きい場合
-            # 状態を"chasing"から"aiming"に遷移
-            self.ball_near()
-
-        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
-            self.ball_far()
-
-        elif self.state == "aiming" and dribble_diff_angle < self.DRIBBLE_ANGLE_THRESHOLD:
+        elif self.state == "approaching" and approach_finish:
             self.dribble()
 
-        elif self.state == "dribbling" and self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle:
-            self.reaiming()
-
-        elif self.state == "dribbling" and self.BALL_GET_THRESHOLD < dist_to_ball:
-            self.reaiming()
+        elif self.state == "dribbling" and (
+            self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle or self.DRIBBLE_DIST < dist_robot_to_ball
+        ):
+            self.reapproach()
 
         elif self.state == "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
             self.arrival()
@@ -123,6 +102,9 @@ class Dribble(TacticBase):
     DRIBBLE_ON = 1.0
     # ドリブルOFF時の出力(0.0)
     DRIBBLE_OFF = 0.0
+
+    # ドリブル時の速度
+    DRIBBLE_VELOCITY = 1.0
 
     # ボール追跡時の回り込みの距離[m]
     CHASING_BALL_APPROACH_DIST = 0.5
@@ -137,11 +119,14 @@ class Dribble(TacticBase):
         self.target_pos = State2D(x=x, y=y)
         self.machine = DribbleStateMachine("robot")
 
+        self.ball_approach = BallApproach(x=x, y=y)
+
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
         self.machine.reset()
+        self.ball_approach.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
@@ -155,7 +140,7 @@ class Dribble(TacticBase):
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # ロボットとボールの距離を計算
-        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
+        dist_robot_to_ball = tool.get_distance(ball_pos, robot_pos)
         # ボールと目標位置の距離を計算
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
@@ -165,40 +150,17 @@ class Dribble(TacticBase):
         # ドリブル角度との差分を計算
         dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
 
-        # ボールを中心にしターゲットを-x軸とする座標系を生成
-        trans = tool.Trans(ball_pos, tool.get_angle(self.target_pos, ball_pos))
-        # ボールの座標を変換
-        ball_trans_pos = trans.transform(ball_pos)
-        # ロボットの座標を変換
-        robot_trans_pos = trans.transform(robot_pos)
-
+        state = self.ball_approach.machine.state == "arrived"
         # 状態遷移を更新
-        self.machine.update(
-            dist_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle), ball_trans_pos, robot_trans_pos
-        )
+        self.machine.update(dist_robot_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle), state)
 
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
 
-        if self.machine.state == "chasing":
-            # ボールの近くへ移動
-            self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_DIST * np.cos(dribble_angle)
-            self.move_pos.y = ball_pos.y - self.CHASING_BALL_APPROACH_DIST * np.sin(dribble_angle)
-            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
+        if self.machine.state == "approaching":
+            command = self.ball_approach.run(world_model)
 
-            # ドリブラーOFF
-            command.dribble_power = self.DRIBBLE_OFF
-
-            # 追いかけるときはボール回避を実行
-            command.navi_options.avoid_ball = True
-
-        elif self.machine.state == "aiming":
-            # 運搬方向に方向に向けて移動
-            self.move_pos.x = ball_pos.x - self.TARGET_MARGIN_DIST * np.cos(dribble_angle)
-            self.move_pos.y = ball_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
-            self.move_pos.theta = dribble_angle
-
-            # ドリブラーOFF
+            # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
 
         elif self.machine.state == "dribbling":
@@ -206,19 +168,21 @@ class Dribble(TacticBase):
             self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(dribble_angle)
             self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
             self.move_pos.theta = dribble_angle
+            command.desired_pose = self.move_pos
+
+            command.desired_velocity.x = self.DRIBBLE_VELOCITY * np.cos(dribble_angle)
+            command.desired_velocity.y = self.DRIBBLE_VELOCITY * np.sin(dribble_angle)
 
             # ドリブルON
             command.dribble_power = self.DRIBBLE_ON
-
         else:
             # 停止処理
             self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(robot_pos.theta)
             self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(robot_pos.theta)
             self.move_pos.theta = robot_pos.theta
+            command.desired_pose = self.move_pos
 
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
-
-        command.desired_pose = self.move_pos
 
         return command
