@@ -23,7 +23,6 @@ from consai_game.play.factory import running_plays
 plays = [
     simple_plays.halt(),
     simple_plays.stop(),
-    simple_plays.force_start(),
     running_plays.outside_defense_area(),
     running_plays.in_our_defense_area(),
     running_plays.in_their_defense_area(),
@@ -37,8 +36,6 @@ plays = [
     simple_plays.their_penalty_kick(),
     simple_plays.our_penalty_kick_start(),
     simple_plays.their_penalty_kick_start(),
-    simple_plays.our_goal(),
-    simple_plays.their_goal(),
     simple_plays.our_timeout(),
     simple_plays.their_timeout(),
     simple_plays.our_ball_placement(),

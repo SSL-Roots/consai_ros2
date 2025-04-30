@@ -160,6 +160,7 @@ class PlayNode(Node):
         if self.current_play.should_abort(self.world_model):
             self.get_logger().info(f"Play aborted: {self.current_play.name}")
             self.current_play = None
+            return
 
         # ロボットの台数が変わったらPlayをリセットする
         visible_robots_num = len(self.world_model.robot_activity.our_visible_robots)
