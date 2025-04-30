@@ -113,6 +113,15 @@ def is_on_line(pose: State2D, line_pose1: State2D, line_pose2: State2D, toleranc
     return True
 
 
+def is_intersect(p1: State2D, p2: State2D, q1: State2D, q2: State2D) -> bool:
+    """2つの線分が交差しているかを判定する関数"""
+
+    def ccw(a, b, c):
+        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
+
+    return (ccw(p1, q1, q2) != ccw(p2, q1, q2)) and (ccw(p1, p2, q1) != ccw(p1, p2, q2))
+
+
 class Trans:
     # 座標系を移動、回転するクラス
     def __init__(self, center, theta):
