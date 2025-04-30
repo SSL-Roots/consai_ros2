@@ -78,20 +78,19 @@ class DefendGoal(TacticBase):
             x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = slope * x + intercept
 
-            if world_model.field.half_goal_width > abs(y):
+            if abs(y) < world_model.field.half_goal_width:
                 # ゴールに入りそうな場合
 
                 # ゴール前のボール進行方向上の位置を計算
                 receive_command = self.tactic_receive.run(world_model, 90)
 
-                if -world_model.field.half_length + self.ROBOT_RADIUS < receive_command.desired_pose.x:
-                    # ディフェンス位置がゴールラインより後ろになる場合
+                if x < receive_command.desired_pose.x:
+                    # ディフェンス位置がゴールラインより前になる場合
+                    # ボールの垂直方向に移動
                     x = receive_command.desired_pose.x
                     y = receive_command.desired_pose.y
-
             else:
                 # y座標をボールと同じ位置にする
-
                 x = -world_model.field.half_length + self.ROBOT_RADIUS
                 y = ball_pos.y
 
@@ -111,7 +110,6 @@ class DefendGoal(TacticBase):
             x = -world_model.field.half_length + self.ROBOT_RADIUS
             y = ball_pos.y
 
-        # ゴール端になるようclamp
         y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
 
         # ロボットがゴールラインより後ろにいる場合に回避するための位置を生成

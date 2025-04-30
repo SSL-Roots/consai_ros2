@@ -31,8 +31,6 @@ from consai_game.world_model.referee_model import RefereeModel
 
 from consai_msgs.msg import State2D
 
-import numpy as np
-
 
 class BallState(Enum):
     """ボールの状態を表す列挙型."""
@@ -233,8 +231,8 @@ class BallActivityModel:
         self.angle_trajectory = tools.get_angle(ball.pos, _future_ball_pos)
 
         # ボール移動量
-        self.ball_movement.x = ball.vel.x * self.MOVEMENT_GAIN * np.cos(self.angle_trajectory)
-        self.ball_movement.y = ball.vel.y * self.MOVEMENT_GAIN * np.sin(self.angle_trajectory)
+        self.ball_movement.x = ball.vel.x * self.MOVEMENT_GAIN  # * np.cos(self.angle_trajectory)
+        self.ball_movement.y = ball.vel.y * self.MOVEMENT_GAIN  # * np.sin(self.angle_trajectory)
 
         # 予測位置を算出
         self.next_ball_pos.x = ball.pos.x + self.ball_movement.x
