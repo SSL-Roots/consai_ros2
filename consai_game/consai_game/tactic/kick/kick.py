@@ -62,9 +62,9 @@ class KickStateMachine(GraphMachine):
             show_auto_transitions=False,
         )
 
-    def update(self, dist_to_ball: float, kick_diff_angle: float):
+    def update(self, dist_to_ball: float, kick_diff_angle: float, robot_is_backside: bool) -> None:
         """状態遷移を更新する関数."""
-        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD and kick_diff_angle < 135:
+        if self.state == "chasing" and robot_is_backside:
             self.ball_near()
 
         elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
@@ -130,7 +130,13 @@ class Kick(TacticBase):
         kick_angle = tool.get_angle(ball_pos, self.target_pos)
         kick_diff_angle = abs(tool.angle_normalize(robot_pos.theta - kick_angle))
 
-        self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
+        self.machine.update(
+            dist_to_ball=dist_to_ball,
+            kick_diff_angle=np.rad2deg(kick_diff_angle),
+            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
+        )
+
+        print(f"state: {self.machine.state}")
 
         if self.machine.state == "chasing":
             # ボール側面のどちらかに向かう
@@ -153,7 +159,9 @@ class Kick(TacticBase):
             else:
                 command.desired_pose.y = lower_candidate_pos.y
             command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH
-            command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+
+            # targetを見る
+            command.desired_pose.theta = tool.get_angle(ball_pos, self.target_pos)
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
@@ -171,6 +179,21 @@ class Kick(TacticBase):
                 command.kick_power = self.TAPPING_KICK_POWER
 
         return command
+
+    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D) -> bool:
+        """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
+        ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
+
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールから見たロボットの位置の角度
+        # ボールの後方にいれば角度は90度以上
+        tr_ball_to_robot_angle = tool.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
+
+        if abs(tr_ball_to_robot_angle) > np.deg2rad(ANGLE_BALL_TO_ROBOT_THRESHOLD):
+            return True
+        return False
 
     def kicking_pose(self, ball_pos: State2D, kick_angle: float, dist_ball: float = 0.1) -> State2D:
         """ボールを蹴るための目標位置を生成"""
