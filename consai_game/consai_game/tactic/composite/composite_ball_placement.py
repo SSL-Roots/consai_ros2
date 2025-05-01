@@ -20,6 +20,7 @@ from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.dribble import Dribble
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.chase_ball import ChaseBall
+from consai_game.tactic.move_to_ball import MoveToBall
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
 from consai_game.world_model.world_model import WorldModel
@@ -35,7 +36,8 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_dribble = Dribble()
         self.tactic_avoid_area_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
         self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
-        self.tactic_avoid_ball_and_stay = WithAvoidBallZone(Stay())
+        self.tactic_approach_to_ball = MoveToBall(distance=0.1)
+        self.tactic_avoid_ball = MoveToBall(distance=0.6)
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -45,7 +47,8 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_dribble.reset(robot_id)
         self.tactic_avoid_area_and_stay.reset(robot_id)
         self.tactic_chase_ball.reset(robot_id)
-        self.tactic_avoid_ball_and_stay.reset(robot_id)
+        self.tactic_approach_to_ball.reset(robot_id)
+        self.tactic_avoid_ball.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -62,7 +65,7 @@ class CompositeBallPlacement(TacticBase):
         if world_model.ball_activity.ball_is_on_placement_area:
             if self.robot_id == nearest_ball_id or self.robot_id == nearest_placement_id:
                 # ボールを扱うロボットの場合は、ボールからまっすぐ離れる
-                return self.tactic_avoid_ball_and_stay.run(world_model)
+                return self.tactic_avoid_ball.run(world_model)
             else:
                 # それ以外のロボットはプレースメントエリアから離れる
                 return self.tactic_avoid_area_and_stay.run(world_model)
@@ -72,7 +75,7 @@ class CompositeBallPlacement(TacticBase):
             # サポートロボットが目的地に到着してない場合
             if not world_model.robot_activity.our_robot_arrived(nearest_placement_id):
                 # ボールに近づく
-                return self.tactic_chase_ball.run(world_model)
+                return self.tactic_approach_to_ball.run(world_model)
 
             # サポートロボットが到着したら、ボールをドリブルする
             return self.dribble_ball(world_model)
