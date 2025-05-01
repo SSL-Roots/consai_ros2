@@ -29,10 +29,6 @@ from transitions.extensions import GraphMachine
 class KickStateMachine(GraphMachine):
     """状態遷移マシン."""
 
-    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-    KICK_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
-    BALL_KICK_THRESHOLD = 0.2  # ボールが蹴られたとみなす距離[m]
-
     def __init__(self, name):
         """状態遷移マシンのインスタンスを初期化する関数."""
         self.name = name
@@ -46,7 +42,6 @@ class KickStateMachine(GraphMachine):
             {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
             {"trigger": "kick", "source": "aiming", "dest": "kicking"},
             {"trigger": "reaiming", "source": "kicking", "dest": "aiming"},
-            {"trigger": "done_kicking", "source": "kicking", "dest": "chasing"},
             {"trigger": "reset", "source": "*", "dest": "chasing"},
         ]
 
@@ -62,9 +57,7 @@ class KickStateMachine(GraphMachine):
             show_auto_transitions=False,
         )
 
-    def update(
-        self, dist_to_ball: float, kick_diff_angle: float, robot_is_backside: bool, robot_is_on_kick_line: bool
-    ) -> None:
+    def update(self, robot_is_backside: bool, robot_is_on_kick_line: bool) -> None:
         """状態遷移を更新する関数."""
         if self.state == "chasing" and robot_is_backside:
             # ボールの後側に来た
@@ -78,11 +71,8 @@ class KickStateMachine(GraphMachine):
             # ロボットが狙いを定める直線上にいるか
             self.kick()
 
-        elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "kicking" and not robot_is_on_kick_line:
             self.reaiming()
-
-        # elif self.state == "kicking" and dist_to_ball > self.BALL_KICK_THRESHOLD:
-        #     self.done_kicking()
 
 
 class Kick(TacticBase):
@@ -128,16 +118,7 @@ class Kick(TacticBase):
         ball_pos = world_model.ball.pos
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
-        # ロボットとボールの距離を計算
-        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
-
-        # キック角度を計算
-        kick_angle = tool.get_angle(ball_pos, self.target_pos)
-        kick_diff_angle = abs(tool.angle_normalize(robot_pos.theta - kick_angle))
-
         self.machine.update(
-            dist_to_ball=dist_to_ball,
-            kick_diff_angle=np.rad2deg(kick_diff_angle),
             robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
             robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos),
         )
