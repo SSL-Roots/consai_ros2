@@ -36,24 +36,6 @@ class BallConditions:
 
         return PlayCondition(condition)
 
-    # @staticmethod
-    # def is_our_team_ball_holder() -> PlayCondition:
-    #     """自分チームがボールを保持しているか判定する関数"""
-
-    #     def condition(world_model: WorldModel) -> bool:
-    #         return world_model.ball_activity.ball_holder.is_our_team
-
-    #     return PlayCondition(condition)
-
-    # @staticmethod
-    # def is_their_team_ball_holder() -> PlayCondition:
-    #     """相手チームがボールを保持しているか判定する関数"""
-
-    #     def condition(world_model: WorldModel) -> bool:
-    #         return world_model.ball_activity.ball_holder.is_their_team
-
-    #     return PlayCondition(condition)
-
     # ボールが自分ディフェンスエリアにあるか
     is_in_our_defense_area = PlayCondition(lambda world_model: world_model.ball_position.is_in_our_defense_area())
 
