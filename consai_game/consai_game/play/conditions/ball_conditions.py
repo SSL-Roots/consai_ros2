@@ -36,6 +36,14 @@ class BallConditions:
 
         return PlayCondition(condition)
 
+    # ボールが自分ディフェンスエリアにあるか
     is_in_our_defense_area = PlayCondition(lambda world_model: world_model.ball_position.is_in_our_defense_area())
 
+    # ボールが相手ディフェンスエリアにあるか
     is_in_their_defense_area = PlayCondition(lambda world_model: world_model.ball_position.is_in_their_defense_area())
+
+    # ボールが自分サイドにあるか
+    is_in_our_side = PlayCondition(lambda world_model: world_model.ball_position.is_in_our_side())
+
+    # ボールが相手サイドにあるか
+    is_in_their_side = PlayCondition(lambda world_model: not world_model.ball_position.is_in_our_side())

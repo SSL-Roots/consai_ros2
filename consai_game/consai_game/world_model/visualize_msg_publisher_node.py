@@ -78,7 +78,7 @@ class VisualizeMsgPublisherNode(Node):
                 line.color.name = "red"
 
             # シュート成功率が高いほど色を刻する
-            line.color.alpha = min(1.0, target.success_rate / 100.0)
+            line.color.alpha = max(min(1.0, target.success_rate / 100.0), 0.0)
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
@@ -99,7 +99,7 @@ class VisualizeMsgPublisherNode(Node):
                 line.size = 2
 
             # シュート成功率が高いほど色を刻する
-            line.color.alpha = min(1.0, target.success_rate / 100.0)
+            line.color.alpha = max(min(1.0, target.success_rate / 100.0), 0.0)
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
@@ -140,6 +140,24 @@ class VisualizeMsgPublisherNode(Node):
             state_circle.line_color.name = THEIR_COLOR
             state_circle.fill_color.name = THEIR_COLOR
             vis_obj.circles.append(state_circle)
+
+        # ボールのストップ位置を描画
+        if activity.ball_is_moving:
+            stop_pos_circle = ShapeCircle()
+            stop_pos_circle.center.x = activity.ball_stop_position.x
+            stop_pos_circle.center.y = activity.ball_stop_position.y
+            stop_pos_circle.radius = 0.2
+            stop_pos_circle.line_size = 2
+            stop_pos_circle.line_color.name = "coral"
+            stop_pos_circle.fill_color.name = "coral"
+            stop_pos_circle.fill_color.alpha = 0.0
+            stop_pos_circle.caption = "stop_pos"
+            # ボールがゴールに入る場合は円を塗りつぶす
+            if activity.ball_will_enter_their_goal:
+                stop_pos_circle.fill_color.alpha = 1.0
+                stop_pos_circle.caption = "will enter goal"
+
+            vis_obj.circles.append(stop_pos_circle)
 
         return vis_obj
 

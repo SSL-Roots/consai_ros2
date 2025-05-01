@@ -28,6 +28,8 @@ from consai_tools.geometry import geometry_tools as tools
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.referee_model import RefereeModel
+from consai_game.world_model.game_config_model import GameConfigModel
+from consai_game.world_model.field_model import FieldPoints
 
 from consai_msgs.msg import State2D
 
@@ -75,7 +77,19 @@ class BallActivityModel:
         # ボールの軌道角度
         self.angle_trajectory = 0.0
 
-    def update(self, ball: BallModel, robots: RobotsModel, referee: RefereeModel):
+        # ボールが最終的に止まる予測位置
+        self.ball_stop_position = State2D()
+        # ボールが相手のゴールに入るか
+        self.ball_will_enter_their_goal = False
+
+    def update(
+        self,
+        ball: BallModel,
+        robots: RobotsModel,
+        referee: RefereeModel,
+        game_config: GameConfigModel,
+        field_points: FieldPoints,
+    ):
         """ボールの様々な状態を更新するメソッド."""
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots):
@@ -97,6 +111,15 @@ class BallActivityModel:
 
         # ボールがプレースメントエリアにあるかを更新する
         self.update_ball_on_placement_area(ball, referee)
+
+        # ボールの最終的な停止位置を予測する
+        self.ball_stop_position = self.predict_ball_stop_position(ball=ball, game_config=game_config)
+
+        # ボールが相手のゴールに入るかを判定する
+        self.ball_will_enter_their_goal = self.is_ball_will_enter_their_goal(
+            ball=ball,
+            field_points=field_points,
+        )
 
     def update_ball_state(self):
         """ボールの状態を更新するメソッド."""
@@ -280,3 +303,31 @@ class BallActivityModel:
             self.ball_is_on_placement_area = True
         else:
             self.ball_is_on_placement_area = False
+
+    def predict_ball_stop_position(self, ball: BallModel, game_config: GameConfigModel) -> State2D:
+        """ボールが止まる位置を予測するメソッド."""
+        # ボールの速度が小さい場合は、現在の位置を返す
+        if not self.ball_is_moving:
+            return ball.pos
+
+        # ボールを中心に、ボール速度方向への座標系を作成
+        trans = tools.Trans(ball.pos, tools.get_vel_angle(ball.vel))
+
+        vel_norm = tools.get_norm(ball.vel)
+
+        # 減速距離
+        a = game_config.ball_friction_coeff * game_config.gravity
+        distance = (vel_norm ** 2) / (2 * a)
+
+        return trans.inverted_transform(State2D(x=distance, y=0.0))
+
+    def is_ball_will_enter_their_goal(self, ball: BallModel, field_points: FieldPoints) -> bool:
+        """ボールが相手のゴールに入るかを判定するメソッド."""
+        # ボールが動いていない場合は、Falseを返す
+        if not self.ball_is_moving:
+            return False
+
+        # 2つの線が交差するかで判定する
+        return tools.is_intersect(
+            p1=ball.pos, p2=self.ball_stop_position, q1=field_points.their_goal_top, q2=field_points.their_goal_bottom
+        )
