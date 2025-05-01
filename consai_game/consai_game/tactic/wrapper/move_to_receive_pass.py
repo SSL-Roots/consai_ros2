@@ -39,43 +39,59 @@ class MoveToReceivePass(TacticBase):
         self.inner_tactic.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
-        """キックラインを開くようにdesired_poseを上書きする."""
+        """パスラインを開くようにdesired_poseを上書きする."""
         command = self.inner_tactic.run(world_model)
 
         ball_pos = world_model.ball.pos
         their_robot = world_model.robots.their_visible_robots
 
         # ボールを持っていないロボットとボールを結んだtransを作成
-        trans = tool.Trans(command.desired_pose, tool.get_angle(command.desired_pose, ball_pos))
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, command.desired_pose))
         # 相手ロボットの位置がパスラインの上下どちらに多く干渉しているかを確認
         upper_count = 0
         lower_count = 0
+
+        tr_desired_pose = trans.transform(command.desired_pose)
+
         for their in their_robot.values():
-            their_pos_trans = trans.transform(their.pos)
-            their_pos = trans.inverted_transform(their_pos_trans)
-            if their_pos.x > 0 and 0 < their_pos.y and their_pos.y < self.THRESHOULD_RADIUS:
-                upper_count += 1
-            elif their_pos.x > 0 and 0 > their_pos.y and their_pos.y > -self.THRESHOULD_RADIUS:
-                lower_count += 1
+            tr_their_pos = trans.transform(their.pos)
+            # 相手ロボットの位置がボールからパスを受けるロボットの1m後ろまでの範囲にいるか
+            if tr_their_pos.x > 0 and tr_their_pos.x < tr_desired_pose.x + 1.0:
+                # 相手ロボットの位置がパスラインの上下どちらにいるか
+                if 0 < tr_their_pos.y and tr_their_pos.y < self.THRESHOULD_RADIUS:
+                    upper_count += 1
+                elif 0 > tr_their_pos.y and tr_their_pos.y > -self.THRESHOULD_RADIUS:
+                    lower_count += 1
 
         # パスラインに干渉している相手ロボットが少ない方向に移動する
-        desired_pose_trans = trans.transform(command.desired_pose)
-        desired_pose_from_pass_line = trans.inverted_transform(desired_pose_trans)
-        # 防いでいる相手ロボットがいなければ現在の位置にとどまる
         if upper_count == 0 and lower_count == 0:
+            # 防いでいる相手ロボットがいなければ現在の位置にとどまる
             pass
         else:
             # パスラインの上下のどちらにロボットが多くいるかで移動先を指定
             if upper_count > lower_count:
-                command.desired_pose.y = desired_pose_from_pass_line.y - self.THRESHOULD_RADIUS
+                tr_desired_pose.y -= self.THRESHOULD_RADIUS * 2
             else:
-                command.desired_pose.y = desired_pose_from_pass_line.y + self.THRESHOULD_RADIUS
+                tr_desired_pose.y += self.THRESHOULD_RADIUS * 2
 
-            # desired_pose.yがフィールド外に出る場合は内側に回避するように設定
-            if command.desired_pose.y > world_model.field.half_width:
-                command.desired_pose.y = desired_pose_from_pass_line.y - self.THRESHOULD_RADIUS * 2
-            elif command.desired_pose.y < -world_model.field.half_width:
-                command.desired_pose.y = desired_pose_from_pass_line.y + self.THRESHOULD_RADIUS * 2
+            # 上書きするdesired_pose.yがフィールド外に出る場合内側に、ディフェンスエリアに入る場合は目標位置を反対側に設定して回避するように設定
+            if trans.inverted_transform(tr_desired_pose).y > world_model.field.half_width or (
+                trans.inverted_transform(tr_desired_pose).x < world_model.field.penalty_depth
+                and -world_model.field.half_penalty_width < trans.inverted_transform(tr_desired_pose).y
+                and trans.inverted_transform(tr_desired_pose).y < world_model.field.half_penalty_width
+            ):
+                tr_desired_pose.y -= self.THRESHOULD_RADIUS * 4
+            elif trans.inverted_transform(tr_desired_pose).y < -world_model.field.half_width or (
+                trans.inverted_transform(tr_desired_pose).x < world_model.field.penalty_depth
+                and -world_model.field.half_penalty_width < trans.inverted_transform(tr_desired_pose).y
+                and trans.inverted_transform(tr_desired_pose).y < world_model.field.half_penalty_width
+            ):
+                tr_desired_pose.y += self.THRESHOULD_RADIUS * 4
+            new_desired_pose = trans.inverted_transform(tr_desired_pose)
+
+            # desired_poseを上書きする
+            command.desired_pose.x = new_desired_pose.x
+            command.desired_pose.y = new_desired_pose.y
         # ロボットがボールを向くようにthetaを上書きする
         command.desired_pose.theta = tool.get_angle(command.desired_pose, ball_pos)
         # stateを上書きする
