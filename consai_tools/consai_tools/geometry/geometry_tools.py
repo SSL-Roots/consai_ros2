@@ -156,7 +156,12 @@ class Trans:
 
 
 def get_line_intersection(
-    line1_pose1: State2D, line1_pose2: State2D, line2_pose1: State2D, line2_pose2: State2D
+    line1_pose1: State2D,
+    line1_pose2: State2D,
+    line2_pose1: State2D,
+    line2_pose2: State2D,
+    is_on_line1_check: bool = True,
+    is_on_line2_check: bool = True,
 ) -> State2D:
     # 2つの線分の交点を計算する関数
 
@@ -189,9 +194,9 @@ def get_line_intersection(
         y = slope1 * x + intercept1
 
     # 交点が両方の線分上にあるかチェック
-    if not is_on_line(State2D(x=x, y=y), line1_pose1, line1_pose2, 0.001):
+    if is_on_line1_check and not is_on_line(State2D(x=x, y=y), line1_pose1, line1_pose2, 0.001):
         return None
-    if not is_on_line(State2D(x=x, y=y), line2_pose1, line2_pose2, 0.001):
+    if is_on_line2_check and not is_on_line(State2D(x=x, y=y), line2_pose1, line2_pose2, 0.001):
         return None
 
     return State2D(x=x, y=y)
