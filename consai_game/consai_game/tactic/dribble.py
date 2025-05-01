@@ -155,8 +155,6 @@ class Dribble(TacticBase):
             ball_is_front=self.ball_is_front(world_model),
         )
 
-        print(f"state: {self.machine.state}")
-
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
@@ -165,11 +163,11 @@ class Dribble(TacticBase):
         command.navi_options.avoid_ball = False
 
         if self.machine.state == "approaching":
-            command = self.approach_to_ball(command=command, world_model=world_model)
+            command = self.approach_to_ball(command=command, ball_pos=ball_pos)
         elif self.machine.state == "dribbling":
-            command = self.dribble_the_ball(command=command, world_model=world_model)
+            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
         else:
-            command = self.dribble_the_ball(command=command, world_model=world_model)
+            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
 
@@ -200,10 +198,9 @@ class Dribble(TacticBase):
             return False
         return True
 
-    def approach_to_ball(self, command: MotionCommand, world_model: WorldModel) -> MotionCommand:
+    def approach_to_ball(self, command: MotionCommand, ball_pos: State2D) -> MotionCommand:
         """ボールに近づくコマンドを返す."""
         APPROACH_DIST = 0.09  # ボールに近づく距離。ロボットの半径と同じくらいにする
-        ball_pos = world_model.ball.pos
 
         # ボールを中心にターゲットを+X軸とした座標系を作る
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
@@ -219,14 +216,12 @@ class Dribble(TacticBase):
         command.dribble_power = self.DRIBBLE_OFF
         return command
 
-    def dribble_the_ball(self, command: MotionCommand, world_model: WorldModel) -> MotionCommand:
+    def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
         DRIBBLING_VELOCITY = 0.5  # ドリブル時の速度[m/s]
         PLACING_VELOCITY = 0.1  # ボールを置くときの速度[m/s]
         PLACING_THRESHOLD = 0.5  # placingを始める距離
 
-        ball_pos = world_model.ball.pos
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
         # ボールと目標位置が離れている場合は、ボールを基準に目標位置を生成する
