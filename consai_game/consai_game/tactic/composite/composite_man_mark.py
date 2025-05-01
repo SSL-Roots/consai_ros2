@@ -112,16 +112,16 @@ class ManMarkAssignment:
 class CompositeManMark(TacticBase):
     assignment_module = ManMarkAssignment()
 
-    def __init__(self, default_tactic: TacticBase):
+    def __init__(self, tactic_default: TacticBase):
         super().__init__()
-        self.default_tactic = default_tactic
+        self.tactic_default = tactic_default
         self.man_mark_tactic = ManMark(-1)
         self.mark_target_id = -1
 
     def reset(self, robot_id: int):
         super().reset(robot_id)
 
-        self.default_tactic.reset(robot_id)
+        self.tactic_default.reset(robot_id)
         self.man_mark_tactic.reset(robot_id)
 
     def exit(self):
@@ -144,7 +144,7 @@ class CompositeManMark(TacticBase):
         new_target_id = current_pair.target_id if current_pair else None
         if new_target_id is None:
             # 担当がない場合はデフォルトのtacticを実行
-            return self.default_tactic.run(world_model)
+            return self.tactic_default.run(world_model)
         if new_target_id is not None and new_target_id != self.mark_target_id:
             # ターゲットが変わったら更新
             self.mark_target_id = new_target_id
