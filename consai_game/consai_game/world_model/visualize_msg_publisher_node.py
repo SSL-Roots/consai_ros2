@@ -78,7 +78,7 @@ class VisualizeMsgPublisherNode(Node):
                 line.color.name = "red"
 
             # シュート成功率が高いほど色を刻する
-            line.color.alpha = min(1.0, target.success_rate / 100.0)
+            line.color.alpha = max(min(1.0, target.success_rate / 100.0), 0.0)
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
@@ -99,7 +99,7 @@ class VisualizeMsgPublisherNode(Node):
                 line.size = 2
 
             # シュート成功率が高いほど色を刻する
-            line.color.alpha = min(1.0, target.success_rate / 100.0)
+            line.color.alpha = max(min(1.0, target.success_rate / 100.0), 0.0)
             line.caption = f"rate: {target.success_rate}"
 
             vis_obj.lines.append(line)
