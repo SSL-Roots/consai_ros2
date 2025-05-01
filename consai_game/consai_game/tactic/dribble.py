@@ -175,7 +175,7 @@ class Dribble(TacticBase):
 
     def ball_is_front(self, world_model: WorldModel) -> bool:
         """ボールがロボットの前にあるかどうかを判定する."""
-        FRONT_DIST_THRESHOLD = 0.1  # 正面方向にどれだけ離れることを許容するか
+        FRONT_DIST_THRESHOLD = 0.15  # 正面方向にどれだけ離れることを許容するか
         SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
 
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
@@ -218,7 +218,7 @@ class Dribble(TacticBase):
 
     def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
-        DRIBBLING_VELOCITY = 0.5  # ドリブル時の速度[m/s]
+        DRIBBLING_VELOCITY = 0.8  # ドリブル時の速度[m/s]
         PLACING_VELOCITY = 0.1  # ボールを置くときの速度[m/s]
         PLACING_THRESHOLD = 0.5  # placingを始める距離
 

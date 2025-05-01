@@ -36,7 +36,7 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_dribble = Dribble()
         self.tactic_avoid_area_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
         self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
-        self.tactic_approach_to_ball = MoveToBall(distance=0.1)
+        self.tactic_approach_to_ball = MoveToBall(distance=0.15)
         self.tactic_avoid_ball = MoveToBall(distance=0.6)
 
     def reset(self, robot_id: int) -> None:
