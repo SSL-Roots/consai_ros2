@@ -29,10 +29,6 @@ from transitions.extensions import GraphMachine
 class KickStateMachine(GraphMachine):
     """状態遷移マシン."""
 
-    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-    KICK_ANGLE_THRESHOLD = 5  # シュート角度の閾値[degree]
-    BALL_KICK_THRESHOLD = 0.2  # ボールが蹴られたとみなす距離[m]
-
     def __init__(self, name):
         """状態遷移マシンのインスタンスを初期化する関数."""
         self.name = name
@@ -42,11 +38,10 @@ class KickStateMachine(GraphMachine):
 
         # 遷移定義
         transitions = [
-            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
-            {"trigger": "kick", "source": "aiming", "dest": "kicking"},
-            {"trigger": "reaiming", "source": "kicking", "dest": "aiming"},
-            {"trigger": "done_kicking", "source": "kicking", "dest": "chasing"},
+            {"trigger": "can_aim", "source": "chasing", "dest": "aiming"},
+            {"trigger": "need_rechasing", "source": "aiming", "dest": "chasing"},
+            {"trigger": "can_kick", "source": "aiming", "dest": "kicking"},
+            {"trigger": "need_reaiming", "source": "kicking", "dest": "aiming"},
             {"trigger": "reset", "source": "*", "dest": "chasing"},
         ]
 
@@ -62,31 +57,33 @@ class KickStateMachine(GraphMachine):
             show_auto_transitions=False,
         )
 
-    def update(self, dist_to_ball: float, kick_diff_angle: float):
+    def update(self, robot_is_backside: bool, robot_is_on_kick_line: bool) -> None:
         """状態遷移を更新する関数."""
-        if self.state == "chasing" and dist_to_ball < self.BALL_NEAR_THRESHOLD and kick_diff_angle < 135:
-            self.ball_near()
+        if self.state == "chasing" and robot_is_backside:
+            # ボールの後側に来た
+            self.can_aim()
 
-        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
-            self.ball_far()
+        elif self.state == "aiming" and not robot_is_backside:
+            # ボールの前に出てしまった
+            self.need_rechasing()
 
-        elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
-            self.kick()
+        elif self.state == "aiming" and robot_is_on_kick_line:
+            # ロボットが狙いを定める直線上にいるか
+            self.can_kick()
 
-        elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
-            self.reaiming()
-
-        elif self.state == "kicking" and dist_to_ball > self.BALL_KICK_THRESHOLD:
-            self.done_kicking()
+        elif self.state == "kicking" and not robot_is_on_kick_line:
+            self.need_reaiming()
 
 
 class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
     MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
-    CHASING_BALL_APPROACH = 0.2
     # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
     TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
+
+    ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
+    ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
 
     def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False):
         """
@@ -123,47 +120,27 @@ class Kick(TacticBase):
         ball_pos = world_model.ball.pos
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
-        # ロボットとボールの距離を計算
-        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
-
-        # キック角度を計算
-        kick_angle = tool.get_angle(ball_pos, self.target_pos)
-        kick_diff_angle = abs(tool.angle_normalize(robot_pos.theta - kick_angle))
-
-        self.machine.update(dist_to_ball, np.rad2deg(kick_diff_angle))
+        self.machine.update(
+            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
+            robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos),
+        )
 
         if self.machine.state == "chasing":
-            # ボール側面のどちらかに向かう
-            offset_y = self.CHASING_BALL_APPROACH * np.sin(kick_angle + np.pi / 3)
-            upper_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y + offset_y)
-            lower_candidate_pos = State2D(x=ball_pos.x - self.CHASING_BALL_APPROACH, y=ball_pos.y - offset_y)
-
-            # ボールとゴールを結んだ直線を基準に座標変換する
-            trans = tool.Trans(ball_pos, kick_angle)
-
-            # transの座標系でボールy軸±位置に候補位置を生成
-            upper_candidate_trans_pos = trans.transform(upper_candidate_pos)
-            lower_candidate_trans_pos = trans.transform(lower_candidate_pos)
-            upper_candidate_pos = trans.inverted_transform(upper_candidate_trans_pos)
-            lower_candidate_pos = trans.inverted_transform(lower_candidate_trans_pos)
-
-            # 2つの目標位置に対して距離が近い候補位置を目標位置に設定
-            if tool.get_distance(robot_pos, upper_candidate_pos) < tool.get_distance(robot_pos, lower_candidate_pos):
-                command.desired_pose.y = upper_candidate_pos.y
-            else:
-                command.desired_pose.y = lower_candidate_pos.y
-            command.desired_pose.x = ball_pos.x - self.CHASING_BALL_APPROACH
-            command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+            command.desired_pose = self.move_to_backside_pose(
+                ball_pos=ball_pos,
+                robot_pos=robot_pos,
+                distance=0.3,
+            )
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
             command.navi_options.avoid_pushing = False
-            command.desired_pose = self.kicking_pose(ball_pos, kick_angle, 0.2)
+            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.15)
 
         elif self.machine.state == "kicking":
             # ボールを蹴る
             command.navi_options.avoid_pushing = False
-            command.desired_pose = self.kicking_pose(ball_pos, kick_angle)
+            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.1)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
                 command.kick_power = self.pass_power(ball_pos)
@@ -172,12 +149,68 @@ class Kick(TacticBase):
 
         return command
 
-    def kicking_pose(self, ball_pos: State2D, kick_angle: float, dist_ball: float = 0.1) -> State2D:
+    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D) -> bool:
+        """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
+        # ボールからターゲットへの座標系を作成
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールから見たロボットの位置の角度
+        # ボールの後方にいれば角度は90度以上
+        tr_ball_to_robot_angle = tool.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
+
+        if abs(tr_ball_to_robot_angle) > np.deg2rad(self.ANGLE_BALL_TO_ROBOT_THRESHOLD):
+            return True
+        return False
+
+    def robot_is_on_kick_line(self, robot_pos: State2D, ball_pos: State2D) -> bool:
+        """ボールからターゲットまでの直線上にロボットが居るかを判定する.
+
+        ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
+        """
+        MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
+        WIDTH_THRESHOLD = 0.03  # 直線に乗っているかの距離
+
+        # ボールからターゲットへの座標系を作成
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールより前にロボットが居る場合
+        if tr_robot_pos.x > 0.0:
+            return False
+
+        # ターゲットを向いていない
+        if abs(tr_robot_pos.theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
+            return False
+
+        if abs(tr_robot_pos.y) > WIDTH_THRESHOLD:
+            return False
+
+        return True
+
+    def move_to_backside_pose(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
+        """ボールの後側に移動するための目標位置を生成"""
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(self.ANGLE_FOR_PIVOT_POS)
+
+        tr_pivot_pos = State2D()
+        tr_pivot_pos.x = distance * np.cos(pivot_angle)
+        tr_pivot_pos.y = distance * np.sin(pivot_angle)
+
+        pose = trans.inverted_transform(tr_pivot_pos)
+        pose.theta = tool.get_angle(ball_pos, self.target_pos)
+        return pose
+
+    def kicking_pose(self, ball_pos: State2D, distance: float = 0.1) -> State2D:
         """ボールを蹴るための目標位置を生成"""
-        pose = State2D()
-        pose.x = ball_pos.x - dist_ball * np.cos(kick_angle)
-        pose.y = ball_pos.y - dist_ball * np.sin(kick_angle)
-        pose.theta = kick_angle
+
+        # ボールの中心からターゲットへの座標系を作成
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+
+        pose = trans.inverted_transform(State2D(x=-distance, y=0.0))
+        pose.theta = tool.get_angle(ball_pos, self.target_pos)
         return pose
 
     def pass_power(self, ball_pos: State2D) -> float:
