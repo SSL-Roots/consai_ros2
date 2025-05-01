@@ -72,11 +72,11 @@ class KickStateMachine(GraphMachine):
             # ボールの前に出てしまった
             self.ball_far()
 
-        # elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
-        #     self.kick()
+        elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
+            self.kick()
 
-        # elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
-        #     self.reaiming()
+        elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
+            self.reaiming()
 
         # elif self.state == "kicking" and dist_to_ball > self.BALL_KICK_THRESHOLD:
         #     self.done_kicking()
@@ -144,7 +144,7 @@ class Kick(TacticBase):
             command.desired_pose = self.move_to_backside_pose(
                 ball_pos=ball_pos,
                 robot_pos=robot_pos,
-                distance=0.2,
+                distance=0.3,
             )
 
         elif self.machine.state == "aiming":
@@ -155,7 +155,7 @@ class Kick(TacticBase):
         elif self.machine.state == "kicking":
             # ボールを蹴る
             command.navi_options.avoid_pushing = False
-            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.15)
+            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.1)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
                 command.kick_power = self.pass_power(ball_pos)
