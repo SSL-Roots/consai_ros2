@@ -33,7 +33,7 @@ class CompositeDefense(TacticBase):
         self.tactic_receive = Receive()
         self.tactic_default = tactic_default
         self.diff_goal_threshold = 2.5
-        self.very_close_to_ball_threshold = 0.5
+        self.very_close_to_ball_threshold = 0.3
         self.do_receive = do_receive
 
     def reset(self, robot_id: int) -> None:
