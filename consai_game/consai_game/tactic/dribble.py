@@ -154,7 +154,7 @@ class Dribble(TacticBase):
         trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
         tr_ball_pos = trans.transform(ball_pos)
         # ボールがロボットの正面にあるか
-        ball_is_front = tr_ball_pos.x > 0.0
+        ball_is_front = bool(tr_ball_pos.x > 0.0)  # convert numpy bool to python bool
 
         # ball_approachが完了したか
         approach_finish = self.ball_approach.machine.state == "arrived"
