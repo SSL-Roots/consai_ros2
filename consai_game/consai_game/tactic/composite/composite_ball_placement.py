@@ -33,8 +33,9 @@ class CompositeBallPlacement(TacticBase):
     def __init__(self):
         super().__init__()
         self.tactic_dribble = Dribble()
-        self.tactic_avoid_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
+        self.tactic_avoid_area_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
         self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
+        self.tactic_avoid_ball_and_stay = WithAvoidBallZone(Stay())
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -42,15 +43,16 @@ class CompositeBallPlacement(TacticBase):
 
         # 所有するTacticも初期化する
         self.tactic_dribble.reset(robot_id)
-        self.tactic_avoid_and_stay.reset(robot_id)
+        self.tactic_avoid_area_and_stay.reset(robot_id)
         self.tactic_chase_ball.reset(robot_id)
+        self.tactic_avoid_ball_and_stay.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
 
         # ロボットの台数が2台未満の場合はplacementを諦める
         if len(world_model.robots.our_visible_robots) < 2:
-            return self.tactic_avoid_and_stay.run(world_model)
+            return self.tactic_avoid_area_and_stay.run(world_model)
 
         nearest_ball_id = world_model.robot_activity.our_robots_by_ball_distance[0]
         nearest_placement_id = world_model.robot_activity.our_robots_by_placement_distance[0]
@@ -58,8 +60,12 @@ class CompositeBallPlacement(TacticBase):
 
         # ボールがプレースメント位置についたら
         if world_model.ball_activity.ball_is_on_placement_area:
-            # その場にとどまる
-            return self.tactic_avoid_and_stay.run(world_model)
+            if self.robot_id == nearest_ball_id or self.robot_id == nearest_placement_id:
+                # ボールを扱うロボットの場合は、ボールからまっすぐ離れる
+                return self.tactic_avoid_ball_and_stay.run(world_model)
+            else:
+                # それ以外のロボットはプレースメントエリアから離れる
+                return self.tactic_avoid_area_and_stay.run(world_model)
 
         # ボールに一番近かったら
         if nearest_ball_id == self.robot_id:
@@ -82,7 +88,7 @@ class CompositeBallPlacement(TacticBase):
 
         # それ以外の場合は
         # プレースメントエリア回避ONで、その場にとどまる
-        return self.tactic_avoid_and_stay.run(world_model)
+        return self.tactic_avoid_area_and_stay.run(world_model)
 
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
