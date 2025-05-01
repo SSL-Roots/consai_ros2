@@ -47,3 +47,9 @@ class BallConditions:
 
     # ボールが相手サイドにあるか
     is_in_their_side = PlayCondition(lambda world_model: not world_model.ball_position.is_in_our_side())
+
+    # ボールを持っているのが自分チームか
+    is_our_team_ball_holder = PlayCondition(lambda world_model: world_model.ball_activity.is_our_team_ball_holder)
+
+    # ボールを持っているのが相手チームか
+    is_their_team_ball_holder = PlayCondition(lambda world_model: world_model.ball_activity.is_their_team_ball_holder)
