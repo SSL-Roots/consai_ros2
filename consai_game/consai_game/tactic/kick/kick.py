@@ -62,7 +62,9 @@ class KickStateMachine(GraphMachine):
             show_auto_transitions=False,
         )
 
-    def update(self, dist_to_ball: float, kick_diff_angle: float, robot_is_backside: bool) -> None:
+    def update(
+        self, dist_to_ball: float, kick_diff_angle: float, robot_is_backside: bool, robot_is_on_kick_line: bool
+    ) -> None:
         """状態遷移を更新する関数."""
         if self.state == "chasing" and robot_is_backside:
             # ボールの後側に来た
@@ -72,7 +74,8 @@ class KickStateMachine(GraphMachine):
             # ボールの前に出てしまった
             self.ball_far()
 
-        elif self.state == "aiming" and kick_diff_angle < self.KICK_ANGLE_THRESHOLD:
+        elif self.state == "aiming" and robot_is_on_kick_line:
+            # ロボットが狙いを定める直線上にいるか
             self.kick()
 
         elif self.state == "kicking" and kick_diff_angle > self.KICK_ANGLE_THRESHOLD:
@@ -136,6 +139,7 @@ class Kick(TacticBase):
             dist_to_ball=dist_to_ball,
             kick_diff_angle=np.rad2deg(kick_diff_angle),
             robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
+            robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos),
         )
 
         print(f"state: {self.machine.state}")
@@ -179,6 +183,31 @@ class Kick(TacticBase):
         if abs(tr_ball_to_robot_angle) > np.deg2rad(ANGLE_BALL_TO_ROBOT_THRESHOLD):
             return True
         return False
+
+    def robot_is_on_kick_line(self, robot_pos: State2D, ball_pos: State2D) -> bool:
+        """ボールからターゲットまでの直線上にロボットが居るかを判定する.
+
+        ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
+        """
+        MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
+        WIDTH_THRESHOLD = 0.03  # 直線に乗っているかの距離
+
+        # ボールからターゲットへの座標系を作成
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールより前にロボットが居る場合
+        if tr_robot_pos.x > 0.0:
+            return False
+
+        # ターゲットを向いていない
+        if abs(tr_robot_pos.theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
+            return False
+
+        if abs(tr_robot_pos.y) > WIDTH_THRESHOLD:
+            return False
+
+        return True
 
     def move_to_backside_pose(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
         """ボールの後側に移動するための目標位置を生成"""
