@@ -50,8 +50,10 @@ class FieldPoints:
     center: Point
     our_goal_top: Point
     our_goal_bottom: Point
+    our_goal_center: Point
     their_goal_top: Point
     their_goal_bottom: Point
+    their_goal_center: Point
     corners: Rectangle
     our_defense_area: Rectangle
     their_defense_area: Rectangle
@@ -67,8 +69,10 @@ class FieldPoints:
 
         our_goal_top = Point(-half_length, half_goal_width)
         our_goal_bottom = Point(-half_length, -half_goal_width)
+        our_goal_center = Point(-half_length, 0.0)
         their_goal_top = Point(half_length, half_goal_width)
         their_goal_bottom = Point(half_length, -half_goal_width)
+        their_goal_center = Point(half_length, 0.0)
 
         corners = Rectangle(
             top_left=Point(-half_length, half_width),
@@ -96,8 +100,10 @@ class FieldPoints:
             center=center,
             our_goal_top=our_goal_top,
             our_goal_bottom=our_goal_bottom,
+            our_goal_center=our_goal_center,
             their_goal_top=their_goal_top,
             their_goal_bottom=their_goal_bottom,
+            their_goal_center=their_goal_center,
             corners=corners,
             our_defense_area=our_defense_area,
             their_defense_area=their_defense_area,
