@@ -331,3 +331,19 @@ class BallActivityModel:
         return tools.is_intersect(
             p1=ball.pos, p2=self.ball_stop_position, q1=field_points.their_goal_top, q2=field_points.their_goal_bottom
         )
+
+    @property
+    def is_our_team_ball_holder(self) -> bool:
+        """ボール保持者が自分チームか判定を返す関数"""
+        if self.ball_holder is None:
+            return False
+        else:
+            return self.ball_holder.is_our_team
+
+    @property
+    def is_their_team_ball_holder(self) -> bool:
+        """ボール保持者が相手チームか判定を返す関数"""
+        if self.ball_holder is None:
+            return False
+        else:
+            return not self.ball_holder.is_our_team
