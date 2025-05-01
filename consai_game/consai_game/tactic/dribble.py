@@ -119,7 +119,6 @@ class Dribble(TacticBase):
         """Initialize the DefendGoal tactic."""
         super().__init__()
 
-        self.move_pos = State2D()
         self.target_pos = State2D(x=x, y=y)
         self.machine = DribbleStateMachine("robot")
 
