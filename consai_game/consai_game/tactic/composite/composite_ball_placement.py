@@ -21,6 +21,7 @@ from consai_game.tactic.dribble import Dribble
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.chase_ball import ChaseBall
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
+from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tools
 
@@ -33,7 +34,7 @@ class CompositeBallPlacement(TacticBase):
         super().__init__()
         self.tactic_dribble = Dribble()
         self.tactic_avoid_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
-        self.tactic_chase_ball = ChaseBall()
+        self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""

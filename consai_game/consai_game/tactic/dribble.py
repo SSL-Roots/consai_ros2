@@ -175,13 +175,10 @@ class Dribble(TacticBase):
         command.navi_options.avoid_ball = False
 
         if self.machine.state == "approaching":
-            # command = self.ball_approach.run(world_model)
+            command = self.ball_approach.run(world_model)
 
-            # # ドリブルOFF
-            # command.dribble_power = self.DRIBBLE_OFF
-
-            command = self.dribble_the_ball(command=command, world_model=world_model)
-
+            # ドリブルOFF
+            command.dribble_power = self.DRIBBLE_OFF
         elif self.machine.state == "dribbling":
             command = self.dribble_the_ball(command=command, world_model=world_model)
         else:
