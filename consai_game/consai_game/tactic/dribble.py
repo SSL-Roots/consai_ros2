@@ -136,8 +136,6 @@ class Dribble(TacticBase):
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
-        # ボールの予測位置を取得
-        next_ball_pos = world_model.ball_activity.next_ball_pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
@@ -152,19 +150,22 @@ class Dribble(TacticBase):
         # ドリブル角度との差分を計算
         dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
 
-        # 目標位置とボール予測位置の角度
-        angle_target_to_next_ball = tool.get_angle(self.target_pos, next_ball_pos)
-        trans = tool.Trans(next_ball_pos, angle_target_to_next_ball)
-        ball_trans_pos = trans.transform(ball_pos)
-        robot_trans_pos = trans.transform(robot_pos)
+        # ロボットを中心に、ターゲットを+x軸とした座標系を作る
+        trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
+        tr_ball_pos = trans.transform(ball_pos)
+        # ボールがロボットの正面にあるか
+        ball_is_front = tr_ball_pos.x > 0.0
+
+        # ball_approachが完了したか
+        approach_finish = self.ball_approach.machine.state == "arrived"
 
         # 状態遷移を更新
         self.machine.update(
-            dist_robot_to_ball,
-            dist_ball_to_target,
-            np.rad2deg(dribble_diff_angle),
-            ball_trans_pos.x < robot_trans_pos.x,
-            self.ball_approach.machine.state == "arrived",
+            dist_robot_to_ball=dist_robot_to_ball,
+            dist_ball_to_target=dist_ball_to_target,
+            dribble_diff_angle=np.rad2deg(dribble_diff_angle),
+            ball_is_front=ball_is_front,
+            approach_finish=approach_finish,
         )
 
         command = MotionCommand()
