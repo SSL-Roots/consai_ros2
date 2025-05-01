@@ -38,10 +38,10 @@ class KickStateMachine(GraphMachine):
 
         # 遷移定義
         transitions = [
-            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
-            {"trigger": "kick", "source": "aiming", "dest": "kicking"},
-            {"trigger": "reaiming", "source": "kicking", "dest": "aiming"},
+            {"trigger": "can_aim", "source": "chasing", "dest": "aiming"},
+            {"trigger": "need_rechasing", "source": "aiming", "dest": "chasing"},
+            {"trigger": "can_kick", "source": "aiming", "dest": "kicking"},
+            {"trigger": "need_reaiming", "source": "kicking", "dest": "aiming"},
             {"trigger": "reset", "source": "*", "dest": "chasing"},
         ]
 
@@ -61,27 +61,29 @@ class KickStateMachine(GraphMachine):
         """状態遷移を更新する関数."""
         if self.state == "chasing" and robot_is_backside:
             # ボールの後側に来た
-            self.ball_near()
+            self.can_aim()
 
         elif self.state == "aiming" and not robot_is_backside:
             # ボールの前に出てしまった
-            self.ball_far()
+            self.need_rechasing()
 
         elif self.state == "aiming" and robot_is_on_kick_line:
             # ロボットが狙いを定める直線上にいるか
-            self.kick()
+            self.can_kick()
 
         elif self.state == "kicking" and not robot_is_on_kick_line:
-            self.reaiming()
+            self.need_reaiming()
 
 
 class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
     MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
-    CHASING_BALL_APPROACH = 0.2
     # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
     TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
+
+    ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
+    ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
 
     def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False):
         """
@@ -123,8 +125,6 @@ class Kick(TacticBase):
             robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos),
         )
 
-        print(f"state: {self.machine.state}")
-
         if self.machine.state == "chasing":
             command.desired_pose = self.move_to_backside_pose(
                 ball_pos=ball_pos,
@@ -151,8 +151,6 @@ class Kick(TacticBase):
 
     def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D) -> bool:
         """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
-        ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
-
         # ボールからターゲットへの座標系を作成
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
         tr_robot_pos = trans.transform(robot_pos)
@@ -161,7 +159,7 @@ class Kick(TacticBase):
         # ボールの後方にいれば角度は90度以上
         tr_ball_to_robot_angle = tool.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
 
-        if abs(tr_ball_to_robot_angle) > np.deg2rad(ANGLE_BALL_TO_ROBOT_THRESHOLD):
+        if abs(tr_ball_to_robot_angle) > np.deg2rad(self.ANGLE_BALL_TO_ROBOT_THRESHOLD):
             return True
         return False
 
@@ -192,12 +190,10 @@ class Kick(TacticBase):
 
     def move_to_backside_pose(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
         """ボールの後側に移動するための目標位置を生成"""
-        ANGLE_BALL_TO_ROBOT_THRESHOLD = 130
-
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
         tr_robot_pos = trans.transform(robot_pos)
 
-        pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(ANGLE_BALL_TO_ROBOT_THRESHOLD)
+        pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(self.ANGLE_FOR_PIVOT_POS)
 
         tr_pivot_pos = State2D()
         tr_pivot_pos.x = distance * np.cos(pivot_angle)
