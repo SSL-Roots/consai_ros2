@@ -19,6 +19,7 @@
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.dribble import Dribble
 from consai_game.tactic.stay import Stay
+from consai_game.tactic.chase_ball import ChaseBall
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tools
@@ -28,12 +29,11 @@ from consai_msgs.msg import State2D
 
 
 class CompositeBallPlacement(TacticBase):
-    DRIBBLE_VELOCITY = 0.5  # ドリブル時の移動速度 [m/s]
-
     def __init__(self):
         super().__init__()
         self.tactic_dribble = Dribble()
         self.tactic_avoid_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
+        self.tactic_chase_ball = ChaseBall()
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -42,6 +42,7 @@ class CompositeBallPlacement(TacticBase):
         # 所有するTacticも初期化する
         self.tactic_dribble.reset(robot_id)
         self.tactic_avoid_and_stay.reset(robot_id)
+        self.tactic_chase_ball.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -64,7 +65,7 @@ class CompositeBallPlacement(TacticBase):
             # サポートロボットが目的地に到着してない場合
             if not world_model.robot_activity.our_robot_arrived(nearest_placement_id):
                 # ボールに近づく
-                return self.approach_to_ball(world_model)
+                return self.tactic_chase_ball.run(world_model)
 
             # サポートロボットが到着したら、ボールをドリブルする
             return self.dribble_ball(world_model)
@@ -82,21 +83,10 @@ class CompositeBallPlacement(TacticBase):
         # プレースメントエリア回避ONで、その場にとどまる
         return self.tactic_avoid_and_stay.run(world_model)
 
-    def approach_to_ball(self, world_model: WorldModel) -> MotionCommand:
-        """ボールに近づくコマンドを返す."""
-        # ドリブル目標位置をボールにすることで、ボールに近づくだけの動きになる
-        self.tactic_dribble.target_pos = world_model.ball.pos
-        command = self.tactic_dribble.run(world_model)
-        # ディフェンスエリア内の移動を許可する
-        command.navi_options.avoid_defense_area = False
-        return command
-
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
         self.tactic_dribble.target_pos = world_model.referee.placement_pos
         command = self.tactic_dribble.run(world_model)
-        # ボールをこぼさないように走行速度を落とす
-        command.desired_velocity.x = self.DRIBBLE_VELOCITY
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
         return command

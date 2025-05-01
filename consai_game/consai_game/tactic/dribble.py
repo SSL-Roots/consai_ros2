@@ -113,7 +113,7 @@ class Dribble(TacticBase):
     # ボール追跡時の回り込みの距離[m]
     CHASING_BALL_APPROACH_DIST = 0.5
     # ボールを運ぶ目標位置のマージン[m]
-    TARGET_MARGIN_DIST = 0.15
+    TARGET_MARGIN_DIST = 0.1
 
     def __init__(self, x=0.0, y=0.0):
         """Initialize the DefendGoal tactic."""
@@ -134,10 +134,6 @@ class Dribble(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_NAVI
-
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
         # ボールの予測位置を取得
@@ -171,32 +167,86 @@ class Dribble(TacticBase):
             self.ball_approach.machine.state == "arrived",
         )
 
+        command = MotionCommand()
+        command.robot_id = self.robot_id
+        command.mode = MotionCommand.MODE_NAVI
+
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
 
         if self.machine.state == "approaching":
-            command = self.ball_approach.run(world_model)
+            # command = self.ball_approach.run(world_model)
 
-            # ドリブルOFF
-            command.dribble_power = self.DRIBBLE_OFF
+            # # ドリブルOFF
+            # command.dribble_power = self.DRIBBLE_OFF
+
+            command = self.dribble_the_ball(command=command, world_model=world_model)
 
         elif self.machine.state == "dribbling":
-            # 角度が適切な場合はドリブルを実行
-            self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(dribble_angle)
-            self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
-            self.move_pos.theta = dribble_angle
-            command.desired_pose = self.move_pos
-
-            # ドリブルON
-            command.dribble_power = self.DRIBBLE_ON
+            command = self.dribble_the_ball(command=command, world_model=world_model)
         else:
-            # 停止処理
-            self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(robot_pos.theta)
-            self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(robot_pos.theta)
-            self.move_pos.theta = robot_pos.theta
-            command.desired_pose = self.move_pos
-
+            command = self.dribble_the_ball(command=command, world_model=world_model)
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
 
         return command
+
+    def dribble_the_ball(self, command: MotionCommand, world_model: WorldModel) -> MotionCommand:
+        """ボールをドリブルするコマンドを返す."""
+        DRIBBLING_VELOCITY = 0.5  # ドリブル時の速度[m/s]
+        PLACING_VELOCITY = 0.1  # ボールを置くときの速度[m/s]
+        PLACING_THRESHOLD = 0.5  # placingを始める距離
+
+        ball_pos = world_model.ball.pos
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
+
+        # ボールと目標位置が離れている場合は、ボールを基準に目標位置を生成する
+        if dist_ball_to_target > PLACING_THRESHOLD:
+            command.desired_pose = self.dribbling_pose_from_ball(
+                target_pos=self.target_pos, ball_pos=ball_pos, distance=self.TARGET_MARGIN_DIST
+            )
+
+            # 走行速度を落としてドリブルする
+            command.desired_velocity.x = DRIBBLING_VELOCITY
+            command.dribble_power = self.DRIBBLE_ON
+        else:
+            # ボールと目標位置が近い場合は、ロボットを基準に目標位置を生成する
+            # これをしなければ、ボールと目標位置が超接近し、目標位置が不安定になってしまう
+            command.desired_pose = self.dribbling_pose_from_robot(
+                target_pos=self.target_pos, robot_pos=robot_pos, distance=self.TARGET_MARGIN_DIST
+            )
+
+            # 走行速度を落として、ボールを置く
+            command.desired_velocity.x = PLACING_VELOCITY
+            # place後にボールをこぼさないように、ドリブルを止める
+            command.dribble_power = self.DRIBBLE_OFF
+
+        return command
+
+    def dribbling_pose_from_ball(self, target_pos: State2D, ball_pos: State2D, distance: float) -> State2D:
+        """ボールをドリブルするための目標位置を生成.
+
+        ボールとターゲットを結ぶ直線を作るため、ターゲットとの距離が近づくと位置生成が不安定になる.
+        """
+
+        # ボールを中心にターゲットを+X軸とした座標系を作る
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
+        # ボールからdistanceだけ前に進んだ位置を目標にする
+        pose = trans.inverted_transform(State2D(x=distance, y=0.0))
+        pose.theta = trans.inverted_transform_angle(0.0)  # ボールからターゲットを見る角度
+
+        return pose
+
+    def dribbling_pose_from_robot(self, target_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
+        """ボールをドリブルするための目標位置を生成.
+
+        ロボットとターゲット位置をもとに目標位置を生成するため、ボールがロボット前方にない場合はドリブルに失敗する.
+        """
+        # ロボットを中心にターゲットを+X軸とした座標系を作る
+        trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, target_pos))
+        # ロボットからdistanceだけ前に進んだ位置を目標にする
+        pose = trans.inverted_transform(State2D(x=distance, y=0.0))
+        pose.theta = trans.inverted_transform_angle(0.0)  # ロボットからターゲットを見る角度
+
+        return pose
