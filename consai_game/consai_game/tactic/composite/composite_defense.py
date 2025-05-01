@@ -26,13 +26,15 @@ from consai_msgs.msg import MotionCommand
 
 
 class CompositeDefense(TacticBase):
-    def __init__(self, tactic_default: TacticBase):
+    def __init__(self, tactic_default: TacticBase, do_receive: bool = True):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False)
         self.tactic_pass = Kick(is_pass=True)
         self.tactic_receive = Receive()
         self.tactic_default = tactic_default
         self.diff_goal_threshold = 2.5
+        self.very_close_to_ball_threshold = 0.5
+        self.do_receive = do_receive
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -48,21 +50,24 @@ class CompositeDefense(TacticBase):
         """状況に応じて実行するtacticを切り替えてrunする."""
 
         diff_boll_to_goal = tool.get_distance(world_model.ball.pos, world_model.field_points.our_goal_center)
-        # ボールが動いている場合は、自分がレシーブできるかを判断する
+        diff_boll_to_robot = tool.get_distance(world_model.ball.pos, world_model.robots.our_robots[self.robot_id].pos)
+
+        # レシーブフラグがTrueかつボールが動いている場合は、自分がレシーブできるかを判断する
         best_receive_score = world_model.robot_activity.our_ball_receive_score[0]
         if (
-            world_model.ball_activity.ball_is_moving
+            self.do_receive
+            and world_model.ball_activity.ball_is_moving
             and best_receive_score.robot_id == self.robot_id
             and best_receive_score.intercept_time != float("inf")
         ):
             # 自分がレシーブできる場合
             return self.tactic_receive.run(world_model)
 
-        elif (
-            world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id
-            and diff_boll_to_goal > self.diff_goal_threshold
+        elif world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id and (
+            diff_boll_to_goal > self.diff_goal_threshold or diff_boll_to_robot < self.very_close_to_ball_threshold
         ):
-            # ボールに一番近い、かつゴールからある程度遠い場合はボールを操作する
+            # ボールに一番近いかつ
+            # ゴールからある程度遠い場合 or ボールに非常に近い場合はボールを操作する
             return self.control_the_ball(world_model)
 
         # ボールに近くない場合はデフォルトのtacticを実行する
