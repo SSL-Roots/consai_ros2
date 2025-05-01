@@ -130,27 +130,31 @@ class CenterBack(TacticBase):
         defense_line_bottom_left = State2D(x=-field.half_length, y=defense_y_with_margin_bottom)
 
         # ボールとゴール中央を結んだ線と、ディフェンスエリアの水平線の交点を計算
+        # ボールとゴール中央を結んだ線は線分ではなく直線で判定する
         intersection_right = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_top_right, defense_line_bottom_right
+            ball_pos, goal_center, defense_line_top_right, defense_line_bottom_right, is_on_line1_check=False
         )
         intersection_top = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_top_right, defense_line_top_left
+            ball_pos, goal_center, defense_line_top_right, defense_line_top_left, is_on_line1_check=False
         )
         intersection_bottom = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_bottom_right, defense_line_bottom_left
+            ball_pos, goal_center, defense_line_bottom_right, defense_line_bottom_left, is_on_line1_check=False
         )
 
         base_x = None
         base_y = 0.0
-        if intersection_right is not None:
-            base_y = intersection_right.y
-        else:
-            # ボールが上半分にある場合
-            if intersection_top is not None:
-                base_x = intersection_top.x
-            # ボールが下半分にある場合
-            if intersection_bottom is not None:
-                base_x = intersection_bottom.x
+
+        # ボールがフィールド内にあることを確認
+        if not world_model.ball_position.is_outside():
+            if intersection_right is not None:
+                base_y = intersection_right.y
+            else:
+                # ボールが上半分にある場合
+                if intersection_top is not None:
+                    base_x = intersection_top.x
+                # ボールが下半分にある場合
+                if intersection_bottom is not None:
+                    base_x = intersection_bottom.x
 
         if base_x is not None:
             y = defense_y_with_margin_top if intersection_top is not None else defense_y_with_margin_bottom
