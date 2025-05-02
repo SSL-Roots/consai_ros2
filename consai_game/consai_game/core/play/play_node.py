@@ -64,6 +64,8 @@ class PlayNode(Node):
         # Playをリセットするためにロボット数を保存する
         self.our_robots_num = 0
 
+        self.previous_applicable_state = True
+
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser):
         """コマンドライン引数を追加する関数."""
@@ -143,8 +145,12 @@ class PlayNode(Node):
         applicable_plays = [play for play in self.playbook if play.is_applicable(self.world_model)]
 
         if not applicable_plays:
-            self.get_logger().warn("No applicable plays found")
+            if self.previous_applicable_state is True:
+                self.get_logger().warn("No applicable plays found")
+            self.previous_applicable_state = False
             return None
+        elif applicable_plays:
+            self.previous_applicable_state = True
 
         # TODO: 評価関数を実装して選択する
         return applicable_plays[0]
