@@ -50,6 +50,16 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_approach_to_ball.reset(robot_id)
         self.tactic_avoid_ball.reset(robot_id)
 
+    def exit(self):
+        super().exit()
+
+        # 所有するTacticもexitする
+        self.tactic_dribble.exit()
+        self.tactic_avoid_area_and_stay.exit()
+        self.tactic_chase_ball.exit()
+        self.tactic_approach_to_ball.exit()
+        self.tactic_avoid_ball.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
 
