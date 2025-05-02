@@ -220,27 +220,7 @@ class Kick(TacticBase):
         pose.theta = tool.get_angle(ball_pos, self.target_pos)
         return pose
 
-    def ball_come_around_behind(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
-        """ボールの後側に移動するための目標位置を生成"""
-        # 座標変換クラスのインスタンスの生成
-        # ボール中心にボールから目標位置までの角度で変換
-        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
-        # ロボットの位置を変換
-        tr_robot_pos = trans.transform(robot_pos)
-
-        pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(self.ANGLE_FOR_PIVOT_POS)
-
-        tr_pivot_pos = State2D()
-        tr_pivot_pos.x = distance * np.cos(pivot_angle)
-        tr_pivot_pos.y = distance * np.sin(pivot_angle)
-
-        pose = trans.inverted_transform(tr_pivot_pos)
-        pose.theta = tool.get_angle(ball_pos, self.target_pos)
-        return pose
-
-
-
-    def kicking_pose(self, ball_pos: State2D, distance: float = 0.1) -> State2D:
+    def kicking_pose(self, ball_pos: State2D, distance: float=0.1) -> State2D:
         """ボールを蹴るための目標位置を生成"""
 
         # ボールの中心からターゲットへの座標系を作成
