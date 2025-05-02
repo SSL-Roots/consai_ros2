@@ -46,6 +46,15 @@ class CompositeDefense(TacticBase):
         self.tactic_receive.reset(robot_id)
         self.tactic_default.reset(robot_id)
 
+    def exit(self):
+        super().exit()
+
+        # 所有するTacticもexitする
+        self.tactic_shoot.exit()
+        self.tactic_pass.exit()
+        self.tactic_receive.exit()
+        self.tactic_default.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
 
