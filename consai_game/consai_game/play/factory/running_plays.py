@@ -15,6 +15,7 @@
 """
 ボールの位置に応じたPlayを定義するモジュール.
 
+ボールが動くか一定時間経過するとrunning状態になり実行される.
 ディフェンスエリア内外でのPlayを設定する.
 """
 
@@ -23,7 +24,7 @@ from consai_game.play.conditions.ball_conditions import BallConditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
-from consai_game.tactic.defend_goal import DefendGoal
+from consai_game.tactic.composite.composite_goalie import CompositeGoalie
 from consai_game.tactic.composite.composite_offense import CompositeOffense
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
 from consai_game.tactic.composite.composite_defense import CompositeDefense
@@ -46,7 +47,7 @@ def outside_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeOffense(DefendGoal()))],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, 2.0)))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, 0.0)))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, -2.0)))],
@@ -74,7 +75,7 @@ def in_our_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeOffense(DefendGoal()))],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
@@ -102,7 +103,7 @@ def in_their_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(DefendGoal())],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
