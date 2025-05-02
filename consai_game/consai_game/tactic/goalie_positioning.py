@@ -47,14 +47,11 @@ class GoaliePositioning(TacticBase):
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
-        # ロボットの位置を取得
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # x座標をゴール前にする
         x = -world_model.field.half_length + self.ROBOT_RADIUS
         # y座標をボールと同じ位置にする
         y = ball_pos.y
-        # 角度はボール方向
 
         # ゴールからはみ出ないようにclamp
         y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)

@@ -48,9 +48,6 @@ class DefendGoal(TacticBase):
         command = MotionCommand()
         command.robot_id = self.robot_id
 
-        # ロボットの位置を取得
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
-
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
         # ボールの速度を取得
@@ -75,14 +72,6 @@ class DefendGoal(TacticBase):
                 y = receive_command.desired_pose.y
 
         y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
-
-        # ロボットがゴールラインより後ろにいる場合に回避するための位置を生成
-        if robot_pos.x < -world_model.field.half_length:
-            x = -world_model.field.half_length + self.ROBOT_RADIUS
-            if robot_pos.y < -world_model.field.half_goal_width:
-                y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
-            else:
-                y = world_model.field.half_goal_width + self.ROBOT_RADIUS
 
         command.desired_pose.x = x
         command.desired_pose.y = y
