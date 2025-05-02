@@ -55,19 +55,24 @@ class GoaliePositioning(TacticBase):
         ball_holder = world_model.ball_activity.ball_holder
 
         if ball_holder is None:
+            # ボールを誰も保持していないとき
+
             # x座標をゴール前にする
             x = -world_model.field.half_length + self.ROBOT_RADIUS
             # y座標をボールと同じ位置にする
             y = ball_pos.y
 
         elif not ball_holder.is_our_team:
+            # ボールを相手ロボットが保持しているとき
             robot = ball_holder.robot
 
+            # ゴールラインについての座標
             l1p1 = world_model.field_points.our_goal_top
             l1p2 = world_model.field_points.our_goal_bottom
+
+            # 相手ロボットと相手ロボットの向いている線分の座標
             l2p1 = robot.pos
             l2p2 = State2D()
-
             l2p2.x = robot.pos.x + 10 * math.cos(robot.pos.theta)
             l2p2.y = robot.pos.y + 10 * math.sin(robot.pos.theta)
 
