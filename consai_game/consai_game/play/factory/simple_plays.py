@@ -459,7 +459,7 @@ def their_ball_placement() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [ForbidMovingInPlacementArea(Stay())],
+            [AllowMoveInDefenseArea(ForbidMovingInPlacementArea(Stay()))],
             [ForbidMovingInPlacementArea(Stay())],
             [ForbidMovingInPlacementArea(Stay())],
             [ForbidMovingInPlacementArea(Stay())],
