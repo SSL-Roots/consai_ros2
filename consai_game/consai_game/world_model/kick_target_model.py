@@ -138,7 +138,7 @@ class KickTargetModel:
         """スコアの高いターゲット順にソートする関数."""
         return sorted(targets, key=attrgetter("success_rate"), reverse=True)
 
-    def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=True) -> ShootTarget:
+    def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=False) -> ShootTarget:
         """ボールからの直線上にロボットがいないシュート位置を返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
         last_shoot_target_list = self.shoot_target_list.copy()
