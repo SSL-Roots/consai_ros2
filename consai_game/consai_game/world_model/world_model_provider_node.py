@@ -24,6 +24,7 @@ Referee メッセージや TrackedFrame を受け取り, ワールドモデル�
 
 import json
 import threading
+from typing import Optional
 
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.referee_model import parse_referee_msg
@@ -69,7 +70,13 @@ class WorldModelProviderNode(Node):
         self.world_model.game_config.goalie_id = goalie_id
         self.world_model.meta.update_rate = update_hz
 
-        self.motion_commands = MotionCommandArray()
+        # subscribeするトピック
+        self.msg_referee = Referee()
+        self.msg_detection_traced = TrackedFrame()
+        self.msg_param_rule: Optional[String] = None
+        self.msg_param_control: Optional[String] = None
+        self.msg_param_strategy: Optional[String] = None
+        self.msg_motion_commands = MotionCommandArray()
 
         # consai_referee_parserのための補助情報
         self.pub_referee_info = self.create_publisher(RefereeSupportInfo, "parsed_referee/referee_support_info", 10)
@@ -108,6 +115,25 @@ class WorldModelProviderNode(Node):
             # メタ情報を更新
             self.world_model.meta.update_counter += 1
 
+            # ゲーム設定を更新
+            self.update_game_config()
+
+            # レフェリー情報を更新
+            self.world_model.referee = parse_referee_msg(
+                msg=self.msg_referee,
+                prev_data=self.world_model.referee,
+                our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
+                invert=self.world_model.game_config.invert,
+                ball_is_moving=self.world_model.ball_activity.ball_is_moving,
+            )
+
+            # トラッキング情報を更新
+            self.world_model.robots.parse_frame(self.msg_detection_traced)
+            self.world_model.ball.parse_frame(self.msg_detection_traced)
+
+            # フィールド情報を更新
+            self.update_field_model()
+
             # ボールの位置情報を更新
             self.world_model.ball_position.update_position(
                 self.world_model.ball, self.world_model.field, self.world_model.field_points
@@ -141,7 +167,7 @@ class WorldModelProviderNode(Node):
 
             # ロボットが目標位置が到達したか更新
             self.world_model.robot_activity.update_our_robots_arrived(
-                self.world_model.robots.our_visible_robots, self.motion_commands.commands
+                self.world_model.robots.our_visible_robots, self.msg_motion_commands.commands
             )
 
             self.publish_referee_support_info()
@@ -158,58 +184,66 @@ class WorldModelProviderNode(Node):
         self.pub_referee_info.publish(msg)
 
     def callback_referee(self, msg: Referee) -> None:
-        """メッセージ Referee を受信して WorldModel に反映する."""
+        """refereeメッセージを受信する."""
         with self.lock:
-            self.world_model.referee = parse_referee_msg(
-                msg=msg,
-                prev_data=self.world_model.referee,
-                our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
-                invert=self.world_model.game_config.invert,
-                ball_is_moving=self.world_model.ball_activity.ball_is_moving,
-            )
+            self.msg_referee = msg
 
     def callback_detection_traced(self, msg: TrackedFrame) -> None:
-        """メッセージ TrackedFrame を受信してロボットとボールの状態を更新する."""
+        """detection_tracedメッセージを受信する."""
         with self.lock:
-            self.world_model.robots.parse_frame(msg)
-            self.world_model.ball.parse_frame(msg)
+            self.msg_detection_traced = msg
 
     def callback_param_rule(self, msg: String) -> None:
-        """トピック consai_param/rule からのパラメータを受け取り、フィールドの寸法を更新する."""
+        """param/ruleメッセージを受信する."""
         with self.lock:
-            param_dict = json.loads(msg.data)
-            self.world_model.field.length = param_dict["field"]["length"]
-            self.world_model.field.width = param_dict["field"]["width"]
-            self.world_model.field.goal_width = param_dict["field"]["goal_width"]
-            self.world_model.field.penalty_depth = param_dict["field"]["penalty_depth"]
-            self.world_model.field.penalty_width = param_dict["field"]["penalty_width"]
-
-            self.world_model.field.half_length = self.world_model.field.length / 2
-            self.world_model.field.half_width = self.world_model.field.width / 2
-            self.world_model.field.half_goal_width = self.world_model.field.goal_width / 2
-            self.world_model.field.half_penalty_depth = self.world_model.field.penalty_depth / 2
-            self.world_model.field.half_penalty_width = self.world_model.field.penalty_width / 2
-
-            self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
-            self.world_model.kick_target.update_field_pos_list(self.world_model.field)
+            self.msg_param_rule = msg
 
     def callback_param_control(self, msg: String) -> None:
-        """トピック consai_param/control からのパラメータを受け取り、ロボットの最大速度を更新する."""
+        """param/controlメッセージを受信する."""
         with self.lock:
-            param_dict = json.loads(msg.data)
+            self.msg_param_control = msg
+
+    def callback_param_strategy(self, msg: String) -> None:
+        """トピック consai_param/strategy からのパラメータを受け取り、モデルを更新する."""
+        with self.lock:
+            self.msg_param_strategy = msg
+
+    def callback_motion_commands(self, msg: MotionCommandArray) -> None:
+        """トピック motion_commands からのパラメータを受け取り更新する."""
+        with self.lock:
+            self.msg_motion_commands = msg
+
+    def update_field_model(self) -> None:
+        """self.msg_param_ruleを元にフィールドモデルを更新する."""
+        if self.msg_param_rule is None:
+            return
+
+        param_dict = json.loads(self.msg_param_rule.data)
+        self.world_model.field.length = param_dict["field"]["length"]
+        self.world_model.field.width = param_dict["field"]["width"]
+        self.world_model.field.goal_width = param_dict["field"]["goal_width"]
+        self.world_model.field.penalty_depth = param_dict["field"]["penalty_depth"]
+        self.world_model.field.penalty_width = param_dict["field"]["penalty_width"]
+
+        self.world_model.field.half_length = self.world_model.field.length / 2
+        self.world_model.field.half_width = self.world_model.field.width / 2
+        self.world_model.field.half_goal_width = self.world_model.field.goal_width / 2
+        self.world_model.field.half_penalty_depth = self.world_model.field.penalty_depth / 2
+        self.world_model.field.half_penalty_width = self.world_model.field.penalty_width / 2
+
+        self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
+        self.world_model.kick_target.update_field_pos_list(self.world_model.field)
+
+    def update_game_config(self) -> None:
+        """self.msg_param_control、self.msg_param_strategyを元にゲーム設定を更新する."""
+        if self.msg_param_control is not None:
+            param_dict = json.loads(self.msg_param_control.data)
             self.world_model.game_config.robot_max_linear_vel = param_dict["soft_limits"]["velocity_xy"]
             self.world_model.game_config.robot_max_angular_vel = param_dict["soft_limits"]["velocity_theta"]
             self.world_model.game_config.robot_max_linear_accel = param_dict["soft_limits"]["acceleration_xy"]
             self.world_model.game_config.robot_max_angular_accel = param_dict["soft_limits"]["acceleration_theta"]
 
-    def callback_param_strategy(self, msg: String) -> None:
-        """トピック consai_param/strategy からのパラメータを受け取り、モデルを更新する."""
-        with self.lock:
-            param_dict = json.loads(msg.data)
+        if self.msg_param_strategy is not None:
+            param_dict = json.loads(self.msg_param_strategy.data)
             self.world_model.game_config.gravity = param_dict["physics"]["gravity"]
             self.world_model.game_config.ball_friction_coeff = param_dict["physics"]["ball_friction_coeff"]
-
-    def callback_motion_commands(self, msg: MotionCommandArray) -> None:
-        """トピック motion_commands からのパラメータを受け取り更新する."""
-        with self.lock:
-            self.motion_commands = msg
