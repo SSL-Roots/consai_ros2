@@ -111,7 +111,6 @@ class WorldModelProviderNode(Node):
         ロボットのアクティビティやボール位置を再計算する.
         """
         with self.lock:
-            start_time = self.get_clock().now()
             self.get_logger().debug(f"WorldModelProvider update, {process_info()}")
             # メタ情報を更新
             self.world_model.meta.update_counter += 1
@@ -172,9 +171,6 @@ class WorldModelProviderNode(Node):
             )
 
             self.publish_referee_support_info()
-            end_time = self.get_clock().now()
-            elapsed_time = (end_time - start_time).nanoseconds / 1e6
-            self.get_logger().info(f"WorldModelProvider update time: {elapsed_time:.2f} ms")
 
     def publish_referee_support_info(self) -> None:
         """RefereeSupportInfo をパブリッシュする."""
