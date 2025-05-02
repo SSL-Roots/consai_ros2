@@ -23,8 +23,6 @@ from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
 
-from consai_tools.geometry import geometry_tools as tool
-
 
 class GoaliePositioning(TacticBase):
     """ゴーリーのポジションを生成するTactic"""
