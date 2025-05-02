@@ -30,7 +30,7 @@ from consai_tools.geometry import geometry_tools as tool
 class ChaseBall(TacticBase):
     """ボールを追いかけるTactic."""
 
-    def __init__(self, chase_distance: float=0.6):
+    def __init__(self, chase_distance: float = 0.6):
         """Initialize the DefendGoal tactic."""
         super().__init__()
         self.move_pos = State2D()
