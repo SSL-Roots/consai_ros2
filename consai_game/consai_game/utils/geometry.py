@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+2D座標や図形を扱うモジュール.
+
+Pointクラス, ctangleクラス, びState2Dオブジェクトのノルムを計算する関数を提供する.
+"""
+
+import math
+from dataclasses import dataclass
 
 from consai_msgs.msg import State2D
-from dataclasses import dataclass
-import math
 
 
 @dataclass
 class Point:
-    """2D point class."""
+    """2D座標を表すクラス."""
 
     x: float
     y: float
@@ -28,7 +34,7 @@ class Point:
 
 @dataclass
 class Rectangle:
-    """2D rectangle class."""
+    """2D矩形を表すクラス."""
 
     top_left: Point
     top_right: Point
@@ -37,5 +43,5 @@ class Rectangle:
 
 
 def state2d_norm(state: State2D) -> float:
-    """Return the norm of a State2D object."""
+    """State2Dオブジェクトのノルムを返す関数."""
     return math.sqrt(state.x ** 2 + state.y ** 2)

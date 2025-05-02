@@ -15,21 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットを指定された位置に往復させるモジュール."""
+
 import argparse
-import threading
+import math
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import OneShotOperation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
 
 import rclpy
-import math
-from rclpy.executors import MultiThreadedExecutor
-from consai_examples.robot_operator import RobotOperator
-
-from consai_examples.operation import OneShotOperation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def test_move_to(target_x: float, target_y: float):
-    # フィールド上の全ロボットが、フィールドを上下(y軸)に往復する
+    """フィールド上の全ロボットが, フィールドを上下(y軸)に往復する関数."""
     ROBOT_NUM = 16
     OFFSET_X = 0.5
     TARGET_THETA = math.pi * 0.5

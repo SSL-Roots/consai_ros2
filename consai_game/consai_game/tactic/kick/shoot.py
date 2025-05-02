@@ -12,116 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""シュート動作に関するTacticを定義するモジュール."""
+
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_msgs.msg import MotionCommand
-from consai_msgs.msg import State2D
-from consai_tools.geometry import geometry_tools as tool
-import numpy as np
-
-from transitions import Machine
-
-
-class ShootStateMachine(Machine):
-    """シュート状態遷移マシン."""
-
-    BALL_NEAR_THRESHOLD = 0.5  # ボールが近いとみなす距離の閾値[m]
-    SHOOT_ANGLE_THRESHOLD = 10  # シュート角度の閾値[degree]
-
-    def __init__(self, name):
-        self.name = name
-
-        # 状態定義
-        states = ["chasing", "aiming", "shooting"]
-
-        # 遷移定義
-        transitions = [
-            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
-            {"trigger": "shoot", "source": "aiming", "dest": "shooting"},
-            {"trigger": "reaiming", "source": "shooting", "dest": "aiming"},
-            {"trigger": "done_shooting", "source": "shooting", "dest": "chasing"},
-            {"trigger": "reset", "source": "*", "dest": "chasing"},
-        ]
-
-        # ステートマシン構築
-        super().__init__(
-            model=self, states=states, transitions=transitions, initial="chasing"
-        )
-
-    def update(self, dist_to_ball: float, shoot_angle: float):
-        if self.state == "chasing" and dist_to_ball <= self.BALL_NEAR_THRESHOLD:
-            self.ball_near()
-
-        elif self.state == "aiming" and dist_to_ball > self.BALL_NEAR_THRESHOLD:
-            self.ball_far()
-
-        elif self.state == "aiming" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
-            self.shoot()
-
-        elif self.state == "shooting" and shoot_angle < self.SHOOT_ANGLE_THRESHOLD:
-            self.reaiming()
-
-        elif self.state == "shooting" and shoot_angle >= self.SHOOT_ANGLE_THRESHOLD:
-            self.done_shooting()
+from consai_game.tactic.kick.kick import Kick
+from consai_msgs.msg import MotionCommand, State2D
 
 
 class Shoot(TacticBase):
-    """指定した位置にシュートするTactic."""
+    """シュート動作を行うTactic"""
 
-    KICK_POWER_OFF = 0.0
-    KICK_POWER_ON = 10.0
-    CHASING_BALL_APPROACH_X = 0.5
-
-    def __init__(self, target_x=6.0, target_y=0.0):
+    def __init__(self):
+        """シュートのTacticインスタンスを初期化する関数."""
         super().__init__()
 
-        self.target_pos = State2D()
-        self.target_pos.x = target_x
-        self.target_pos.y = target_y
-        self.move_pos = State2D()
-
-        self.machine = ShootStateMachine("robot")
+        self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=False)
 
     def reset(self, robot_id: int) -> None:
+        """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
-        self.machine.reset()
+        self.kick_tactic.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_NAVI
+        """シュートを実行するためのMotionCommandを生成する関数."""
 
-        # ボールの位置を取得
-        ball_pos = world_model.ball.pos
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # キックターゲットを取得
+        kick_target_model = world_model.kick_target
+        if kick_target_model.best_shoot_target.success_rate > 50:
+            # シュートターゲットの位置を取得
+            target_pos = kick_target_model.best_shoot_target.pos
+        elif kick_target_model.best_pass_target.success_rate > 50 and kick_target_model.best_pass_target.robot_id != -1:
+            # パスターゲットの位置を取得
+            target_pos = kick_target_model.best_pass_target.robot_pos
+        else:
+            # デフォルトのシュートターゲットの位置を設定
+            target_pos = State2D()
+            target_pos.x = 6.0
+            target_pos.y = 0.0
 
-        # ロボットとボールの距離を計算
-        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
+        self.kick_tactic.target_pos = target_pos
 
-        # シュートの角度を計算
-        shoot_angle = tool.get_angle(ball_pos, self.target_pos)
-
-        self.machine.update(dist_to_ball, shoot_angle)
-
-        if self.machine.state == "chasing":
-            command.kick_power = self.KICK_POWER_OFF
-            self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_X
-            self.move_pos.y = ball_pos.y
-            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
-
-        elif self.machine.state == "aiming":
-            # 蹴る方向に向けて移動
-            self.move_pos.x = ball_pos.x - 0.1 * np.cos(shoot_angle)
-            self.move_pos.y = ball_pos.y - 0.1 * np.sin(shoot_angle)
-            self.move_pos.theta = shoot_angle
-
-        elif self.machine.state == "shooting":
-            # シュートの角度が適切な場合、シュートを実行
-            self.move_pos.theta = shoot_angle
-            command.kick_power = self.KICK_POWER_ON
-
-        command.desired_pose = self.move_pos
-
-        return command
+        return self.kick_tactic.run(world_model)

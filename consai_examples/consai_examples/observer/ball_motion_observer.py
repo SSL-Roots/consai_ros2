@@ -12,28 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples.observer.pos_vel import PosVel
-from consai_examples.observer.field_normalizer import FieldNormalizer
+"""ボールの動きを監視するモジュール."""
+
 import math
+
+from consai_examples.observer.field_normalizer import FieldNormalizer
+from consai_examples.observer.pos_vel import PosVel
 
 
 class BallMotionObserver:
+    """ボールの動きを監視するクラス."""
+
     def __init__(self):
+        """BallMotionObserverを初期化する関数."""
         self._ball_is_moving = False
 
         self._field = FieldNormalizer()
 
     def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        """フィールドの正規化を設定する関数."""
         self._field = field_normalizer
 
     def update(self, ball: PosVel) -> None:
+        """ボールの状態を更新する関数."""
         self._update_ball_moving_state(ball)
 
     def is_moving(self) -> bool:
+        """ボールが動いているかを判定する関数."""
         return self._ball_is_moving
 
     def _update_ball_moving_state(self, ball: PosVel) -> None:
-        # ボールが動いているか判定する
+        """ボールが動いているかの状態を更新する関数."""
         BALL_MOVING_THRESHOLD = self._field.on_div_a_x(1.0)  # m/s
         BALL_MOVING_HYSTERESIS = self._field.on_div_a_x(0.3)  # m/s
 

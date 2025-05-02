@@ -12,31 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""指定した位置に移動するTacticを定義するモジュール."""
+
+from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_msgs.msg import MotionCommand
+from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.utils.adjust_position_to_field import AdjustPosition
 
 
 class Position(TacticBase):
     """指定した位置に移動するTactic."""
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
+        """Positionのインスタンスを初期化する関数."""
         super().__init__()
         self.x = x
         self.y = y
         self.theta = theta
 
-    def reset(self, robot_id: int) -> None:
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
-
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """指定した位置に移動するためのMotionCommandを生成する関数."""
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
-        command.desired_pose.x = self.x
-        command.desired_pose.y = self.y
-        command.desired_pose.theta = self.theta
+
+        # フィールドサイズ変更に対応する
+        command.desired_pose = AdjustPosition.adjust(self.x, self.y, self.theta, world_model)
 
         return command

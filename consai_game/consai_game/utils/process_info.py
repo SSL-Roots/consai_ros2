@@ -15,11 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+プロセスに関する情報を取得するモジュール.
+
+現在実行中のプロセスのIDとCPUコア数を取得する関数を提供する.
+"""
+
 import os
+
 import psutil
 
 
 def process_info() -> str:
+    """
+    プロセス情報を取得する関数.
+
+    現在のプロセスIDとCPUコア数を返す.
+    """
     process = psutil.Process(os.getpid())
     cpu = process.cpu_num()
-    return f'process ID: {os.getpid()}, CPU: {cpu}'
+    return f"process ID: {os.getpid()}, CPU: {cpu}"

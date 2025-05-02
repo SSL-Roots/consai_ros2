@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの役割割り当て手法のインターフェースを定義するモジュール."""
+
 from abc import ABC, abstractmethod
+from typing import List
+
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
-from typing import List
 
 
 class RoleAssignmentBase(ABC):

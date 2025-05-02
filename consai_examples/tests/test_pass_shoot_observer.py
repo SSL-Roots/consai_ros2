@@ -15,10 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""PassShootObserverを使ったテストのセットアップ."""
+
 from consai_examples.observer.pass_shoot_observer import PassShootObserver
 
 
 def test_パサーロボットがいないときには空リストを返す():
+    """パサーロボットがいない場合に空のリストが返されることを確認するテスト."""
     observer = PassShootObserver(goalie_id=1)
     my_robot_id = 0
     receivers_list = observer.search_receivers_list(my_robot_id)

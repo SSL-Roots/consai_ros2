@@ -15,22 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの移動やシュート操作を制御するモジュール."""
+
 import argparse
-from consai_examples.field_observer import FieldObserver
-from consai_examples.operation import OneShotOperation
-# from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_examples.referee_parser import RefereeParser
-from consai_examples.robot_operator import RobotOperator
 import math
-import rclpy
-from rclpy.executors import MultiThreadedExecutor
 import threading
 import time
 
+from consai_examples.field_observer import FieldObserver
+from consai_examples.operation import OneShotOperation, TargetTheta, TargetXY
+from consai_examples.referee_parser import RefereeParser
+from consai_examples.robot_operator import RobotOperator
+
+import rclpy
+from rclpy.executors import MultiThreadedExecutor
+
 
 def move_to(args: argparse.Namespace) -> None:
+    """ロボットを目標座標に移動させる関数."""
     CYCLE_TIME = 5.0
 
     while True:
@@ -48,6 +50,7 @@ def move_to(args: argparse.Namespace) -> None:
 
 
 def motion_check_for_all_robots(args: argparse.Namespace) -> None:
+    """全ロボットの移動とシュートを行う関数."""
     CYCLE_TIME = 5.0  # seconds
 
     DESTINATION = 6.0  # meters
@@ -57,9 +60,10 @@ def motion_check_for_all_robots(args: argparse.Namespace) -> None:
     def move_all_robots_on_a_line(
             x, y, theta, offset_x=0.0, offset_y=0.0, sleep_time=0.0,
             robot_ids=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
+        """ロボットを直線的に移動させる内部関数."""
         for i in robot_ids:
-            pos_x = x + offset_x*i
-            pos_y = y + offset_y*i
+            pos_x = x + offset_x * i
+            pos_y = y + offset_y * i
             operation = OneShotOperation().move_to_pose(
                 TargetXY.value(pos_x, pos_y), TargetTheta.value(theta)
             )
@@ -83,6 +87,7 @@ def motion_check_for_all_robots(args: argparse.Namespace) -> None:
         -HALF_DESTINATION, -HALF_DESTINATION, math.radians(90), OFFSET, 0.0, CYCLE_TIME)
 
     def set_shoot_operation_for_all_robots(target_x, target_y):
+        """全ロボットにシュート操作を設定する内部関数."""
         for i in range(11):
             operation = OneShotOperation().move_to_pose(
                 TargetXY.our_robot(i), TargetTheta.look_ball())

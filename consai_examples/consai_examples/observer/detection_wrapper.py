@@ -12,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの検出とボールの位置・速度をラップし, 更新するクラスを提供するモジュール."""
 
 from consai_examples.observer.pos_vel import PosVel
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-from robocup_ssl_msgs.msg import TrackedBall
+
+from robocup_ssl_msgs.msg import RobotId, TrackedBall, TrackedFrame, TrackedRobot
 
 
 class DetectionWrapper:
+    """ロボットの検出とボールの位置・速度をラップするクラス."""
+
     def __init__(self, our_team_is_yellow: bool, visibility_threshold=0.01):
+        """自チームの色と可視性の閾値を設定する初期化関数."""
         self._our_team_is_yellow = our_team_is_yellow
         self._visibility_threshold = visibility_threshold
 
@@ -30,7 +32,7 @@ class DetectionWrapper:
         self._their_robots: dict[int, PosVel] = {}
 
     def update(self, detection_tracked: TrackedFrame):
-
+        """検出されたフレームを更新し、ボールとロボットの位置・速度を抽出する関数."""
         for ball in detection_tracked.balls:
             if len(ball.visibility) <= 0:
                 continue
@@ -60,15 +62,19 @@ class DetectionWrapper:
             self._their_robots = visible_yellow_robots
 
     def ball(self) -> PosVel:
+        """現在のボールの位置・速度を返す関数."""
         return self._visible_ball
 
     def our_robots(self) -> dict[int, PosVel]:
+        """自チームのロボットの位置・速度を返す関数."""
         return self._our_robots
 
     def their_robots(self) -> dict[int, PosVel]:
+        """相手チームのロボットの位置・速度を返す関数."""
         return self._their_robots
 
     def _extract_ball(self, ball: TrackedBall) -> PosVel:
+        """ボールの位置・速度をPosVelに変換する関数."""
         pos_vel = PosVel()
         pos_vel.set_pos(ball.pos.x, ball.pos.y)
         if len(ball.vel) > 0:
@@ -76,6 +82,7 @@ class DetectionWrapper:
         return pos_vel
 
     def _extract_robot(self, robot: TrackedRobot) -> PosVel:
+        """ロボットの位置・速度・角度をPosVelに変換する関数."""
         pos_vel = PosVel()
         pos_vel.set_pos(robot.pos.x, robot.pos.y, robot.orientation)
         if len(robot.vel) > 0 and len(robot.vel_angular) > 0:

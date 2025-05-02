@@ -15,15 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Playの定義および適用可否や中断条件の評価を行うモジュール."""
+
+from dataclasses import dataclass, field
+from typing import List
+
 from consai_game.core.play.play_condition import PlayCondition
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
-from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
 class Play:
+    """Playの定義クラス."""
+
     name: str
     description: str
     applicable: List[PlayCondition]
@@ -32,14 +37,14 @@ class Play:
     roles: List[List[TacticBase]] = field(default_factory=lambda: [[] for _ in range(11)])
 
     def is_applicable(self, world_model: WorldModel) -> bool:
-        """Playが適用可能か判定."""
+        """Playが適用可能か判定する関数."""
         return all(cond.is_met(world_model) for cond in self.applicable)
 
     def should_abort(self, world_model: WorldModel) -> bool:
-        """Playが中断されるべきか判定."""
+        """Playが中断されるべきか判定する関数."""
         return any(cond.is_met(world_model) for cond in self.aborted)
 
 
 def invert_conditions(conditions: List[PlayCondition]) -> List[PlayCondition]:
-    """条件を反転させる."""
+    """条件を反転させる関数."""
     return [cond.invert() for cond in conditions]

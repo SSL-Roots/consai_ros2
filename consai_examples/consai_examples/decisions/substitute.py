@@ -15,21 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットの交代処理を行うモジュール."""
+
 from consai_examples.decisions.decision_base import DecisionBase
 from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
 from consai_examples.operation import TargetTheta
+from consai_examples.operation import TargetXY
 
 
 class SubstituteDecision(DecisionBase):
+    """ロボット交代を担当するクラス."""
 
     def __init__(self, robot_operator, field_observer, invert=False):
+        """SubstituteDecisionのインスタンスを初期化する関数."""
         super().__init__(robot_operator, field_observer)
 
         # サイドチェンジに関わらず退避位置を常に同じするためにinvertフラグを取得する
         self._invert = invert
 
     def _substitute_operation(self):
+        """ロボット交代位置への移動動作を返す関数."""
         # ロボット交代位置
         # ロボットは
         #    フィールドマージンに部分的接触している
@@ -49,7 +54,9 @@ class SubstituteDecision(DecisionBase):
 
 
 def gen_substitute_function():
+    """ロボット交代動作を実行させる関数を生成する関数."""
     def function(self, robot_id, placement_pos=None):
+        """ロボットに交代動作を実行させる関数."""
         operation = self._substitute_operation()
         self._operator.operate(robot_id, operation)
     return function

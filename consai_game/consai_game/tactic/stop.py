@@ -12,23 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットを停止させるTacticを定義するモジュール."""
+
+from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
-from consai_msgs.msg import MotionCommand
 
 
 class Stop(TacticBase):
     """ロボットを停止させるTactic."""
 
     def __init__(self):
+        """StopTacticのインスタンスを初期化する関数."""
         super().__init__()
 
     def reset(self, robot_id: int) -> None:
+        """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
         self.robot_id = robot_id
         self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel) -> MotionCommand:
+        """ロボットを停止させるためのMotionCommandを生成する関数."""
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_DIRECT_VELOCITY

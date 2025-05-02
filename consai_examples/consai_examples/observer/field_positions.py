@@ -14,15 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_msgs.msg import State2D
+"""フィールドの位置データを管理し, ゴールやペナルティの位置を提供するモジュール."""
+
 import copy
+
+from consai_msgs.msg import State2D
 
 
 class FieldPositions:
+    """フィールド上の位置を管理するクラス."""
+
     def __init__(self):
+        """フィールドの初期位置を設定する関数."""
         self._set_positions()
 
     def set_field_size(self, length=12.0, goal_width=9.0, penalty_depth=1.8, penalty_width=3.6):
+        """フィールドのサイズを設定する関数."""
         self._set_positions(
             length * 0.5,
             goal_width * 0.5,
@@ -31,6 +38,7 @@ class FieldPositions:
 
     def _set_positions(
             self, half_length=6.0, half_goal_width=0.9, penalty_depth=1.8, half_penalty_width=1.8):
+        """フィールド上のゴールとペナルティの位置を設定する関数."""
         _our_goal_dict = {
             'upper': State2D(x=-half_length, y=half_goal_width),
             'center': State2D(x=-half_length, y=0.0),
@@ -60,7 +68,9 @@ class FieldPositions:
             'their': copy.deepcopy(_their_penalty_dict)}
 
     def goal_pose(self, team='our', position='center'):
+        """指定したチームの指定位置のゴール位置を取得する関数."""
         return self._goal_pose[team][position]
 
     def penalty_pose(self, team='our', position='upper_front'):
+        """指定したチームの指定位置のペナルティ位置を取得する関数."""
         return self._penalty_pose[team][position]

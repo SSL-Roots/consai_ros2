@@ -39,6 +39,9 @@ class ObstacleAvoidance
 {
 public:
   explicit ObstacleAvoidance(const std::shared_ptr<DetectionExtractor> & detection_extractor);
+  void set_field_size(
+    const double field_length, const double field_width,
+    const double penalty_depth, const double penalty_width);
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose, const std::optional<TrackedBall> & ball,
     const bool & avoid_our_robots,
@@ -55,6 +58,11 @@ public:
   bool avoid_placement_area(
     const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
     const State & designated_position, State & avoidance_pose) const;
+  State avoid_placement_area(
+    const TrackedRobot & my_robot,
+    const State & goal_pose,
+    const std::optional<TrackedBall> & ball,
+    const State & designated_position) const;
   bool avoid_pushing_robots(
     const TrackedRobot & my_robot, const State & goal_pose,
     State & avoidance_pose) const;
@@ -87,9 +95,11 @@ private:
 
   std::shared_ptr<DetectionExtractor> detection_;
 
-  const double field_half_length_ = 6.0;
-  const double field_half_width_ = 4.5;
-  const double field_boundary_width_ = 0.3;
+  double field_half_length_ = 6.0;
+  double field_half_width_ = 4.5;
+  double field_boundary_width_ = 0.3;
+  double field_penalty_depth_ = 1.8;
+  double field_penalty_width_ = 3.6;
 };
 
 }  // namespace tactic

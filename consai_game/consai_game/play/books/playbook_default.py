@@ -15,26 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ゲーム内で使用するプレイのリストを定義するモジュール."""
+
 from consai_game.play.factory import simple_plays
 from consai_game.play.factory import running_plays
 
 plays = [
     simple_plays.halt(),
     simple_plays.stop(),
-    simple_plays.force_start(),
-    # simple_plays.running(),
     running_plays.outside_defense_area(),
     running_plays.in_our_defense_area(),
     running_plays.in_their_defense_area(),
-    simple_plays.normal_start(),
     simple_plays.our_free_kick(),
     simple_plays.their_free_kick(),
     simple_plays.our_kick_off(),
     simple_plays.their_kick_off(),
+    simple_plays.our_kick_off_start(),
+    simple_plays.their_kick_off_start(),
     simple_plays.our_penalty_kick(),
     simple_plays.their_penalty_kick(),
-    simple_plays.our_goal(),
-    simple_plays.their_goal(),
+    simple_plays.our_penalty_kick_start(),
+    simple_plays.their_penalty_kick_start(),
     simple_plays.our_timeout(),
     simple_plays.their_timeout(),
     simple_plays.our_ball_placement(),

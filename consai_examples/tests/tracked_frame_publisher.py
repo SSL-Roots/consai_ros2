@@ -12,32 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rclpy.node import Node
-from robocup_ssl_msgs.msg import RobotId
-from robocup_ssl_msgs.msg import TrackedBall
-from robocup_ssl_msgs.msg import TrackedFrame
-from robocup_ssl_msgs.msg import TrackedRobot
-from robocup_ssl_msgs.msg import Vector2
+"""TrackedFrameトピックをpublishするノードを提供するモジュール."""
 
-# TrackedFrameトピックをpublishするためのクラス
+from rclpy.node import Node
+
+from robocup_ssl_msgs.msg import RobotId, TrackedBall, TrackedFrame, TrackedRobot, Vector2
 
 
 class TrackedFramePublisher(Node):
-    def __init__(self):
-        super().__init__('publisher')
+    """TrackedFrameトピックをpublishするためのクラス."""
 
-        self._publisher = self.create_publisher(TrackedFrame, 'detection_tracked', 1)
+    def __init__(self):
+        """ノードの初期化を行う関数."""
+        super().__init__("publisher")
+
+        self._publisher = self.create_publisher(TrackedFrame, "detection_tracked", 1)
         self._preset_frame = TrackedFrame()
 
     def _publish(self, frame):
+        """TrackedFrameをpublishする関数."""
         self._publisher.publish(frame)
         print("Test topic published")
 
     def publish_empty_data(self):
+        """空のデータをpublishする関数."""
         frame = TrackedFrame()
         self._publish(frame)
 
     def publish_valid_robots(self, blue_ids=[], yellow_ids=[]):
+        """有効なロボットのIDを含むTrackedFrameをpublishする関数."""
         frame = TrackedFrame()
         for blue_id in blue_ids:
             robot = TrackedRobot()
@@ -56,6 +59,7 @@ class TrackedFramePublisher(Node):
         self._publish(frame)
 
     def set_robot_pos(self, is_yellow, robot_id, pos_x, pos_y):
+        """ロボットの位置情報を設定する関数."""
         robot = TrackedRobot()
         robot.robot_id.id = robot_id
         robot.robot_id.team_color = RobotId.TEAM_COLOR_YELLOW
@@ -66,8 +70,8 @@ class TrackedFramePublisher(Node):
         robot.visibility.append(1.0)
         self._preset_frame.robots.append(robot)
 
-    def set_robot(self, is_yellow, robot_id, pos_x, pos_y, orientation,
-                  vel_x=0.0, vel_y=0.0, vel_angular=0.0):
+    def set_robot(self, is_yellow, robot_id, pos_x, pos_y, orientation, vel_x=0.0, vel_y=0.0, vel_angular=0.0):
+        """ロボットの位置, 向き, 速度を設定する関数."""
         robot = TrackedRobot()
         robot.robot_id.id = robot_id
         robot.robot_id.team_color = RobotId.TEAM_COLOR_YELLOW
@@ -82,6 +86,7 @@ class TrackedFramePublisher(Node):
         self._preset_frame.robots.append(robot)
 
     def set_ball_pos(self, pos_x, pos_y):
+        """ボールの位置情報を設定する関数."""
         ball = TrackedBall()
         ball.pos.x = pos_x
         ball.pos.y = pos_y
@@ -89,7 +94,9 @@ class TrackedFramePublisher(Node):
         self._preset_frame.balls.append(ball)
 
     def publish_preset_frame(self):
+        """設定されたTrackedFrameをpublishする関数."""
         self._publish(self._preset_frame)
 
     def clear_preset_frame(self):
+        """設定されたTrackedFrameをクリアする関数."""
         self._preset_frame = TrackedFrame()

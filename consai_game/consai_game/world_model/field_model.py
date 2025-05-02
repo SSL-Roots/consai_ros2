@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # coding: UTF-8
 
-"""
-フィールドの寸法およびフィールド上の各ポイントを定義するクラスを提供する.
-
-各クラスはフィールドの基本情報（長さ・幅・ゴールの大きさ）やフィールド上の重要な座標を保持・生成する.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+フィールドの寸法およびフィールド上の各ポイントを定義するクラスを提供する.
+
+各クラスはフィールドの基本情報（長さ・幅・ゴールの大きさ）やフィールド上の重要な座標を保持・生成する.
+"""
 
 from dataclasses import dataclass
 
@@ -51,8 +50,10 @@ class FieldPoints:
     center: Point
     our_goal_top: Point
     our_goal_bottom: Point
+    our_goal_center: Point
     their_goal_top: Point
     their_goal_bottom: Point
+    their_goal_center: Point
     corners: Rectangle
     our_defense_area: Rectangle
     their_defense_area: Rectangle
@@ -68,8 +69,10 @@ class FieldPoints:
 
         our_goal_top = Point(-half_length, half_goal_width)
         our_goal_bottom = Point(-half_length, -half_goal_width)
+        our_goal_center = Point(-half_length, 0.0)
         their_goal_top = Point(half_length, half_goal_width)
         their_goal_bottom = Point(half_length, -half_goal_width)
+        their_goal_center = Point(half_length, 0.0)
 
         corners = Rectangle(
             top_left=Point(-half_length, half_width),
@@ -97,8 +100,10 @@ class FieldPoints:
             center=center,
             our_goal_top=our_goal_top,
             our_goal_bottom=our_goal_bottom,
+            our_goal_center=our_goal_center,
             their_goal_top=their_goal_top,
             their_goal_bottom=their_goal_bottom,
+            their_goal_center=their_goal_center,
             corners=corners,
             our_defense_area=our_defense_area,
             their_defense_area=their_defense_area,

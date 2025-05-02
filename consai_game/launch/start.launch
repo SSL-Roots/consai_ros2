@@ -32,8 +32,8 @@
   </node_container>
 
   <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
-  <arg name="assign" default="by_visible"
-    description='Select a role_assignment method from {by_id, by_visible}'/>
+  <arg name="assign" default="by_cost"
+    description='Select a role_assignment method from {by_id, by_visible, by_cost}'/>
 
   <set_env name="PYTHONUNBUFFERED" value="1" />
 
@@ -42,7 +42,15 @@
         output="screen"
         args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py
               --yellow $(var yellow)
+              --invert $(var invert)
               --assign $(var assign)
               --goalie $(var goalie)
+              " />
+
+  <node pkg="consai_referee_parser"
+        exec="main.py"
+        output="screen"
+        args="--yellow $(var yellow)
+              --invert $(var invert)
               " />
 </launch>

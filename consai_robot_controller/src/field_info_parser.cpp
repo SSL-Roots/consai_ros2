@@ -45,11 +45,21 @@ void FieldInfoParser::set_subscriptions(rclcpp::Node * node)
 
   sub_named_targets_ = node->create_subscription<NamedTargets>(
     "named_targets", qos, std::bind(&FieldInfoParser::set_named_targets, this, _1));
+
+  sub_designated_position_ = node->create_subscription<State>(
+    "parsed_referee/designated_position", qos,
+    std::bind(&FieldInfoParser::set_designated_position, this, _1));
 }
 
 void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
 {
   constraint_parser_->set_field_size(param["field"]["length"], param["field"]["width"]);
+  tactic_obstacle_avoidance_->set_field_size(
+    param["field"]["length"],
+    param["field"]["width"],
+    param["field"]["penalty_depth"],
+    param["field"]["penalty_width"]
+  );
 }
 
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
@@ -60,6 +70,11 @@ void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detect
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
   constraint_parser_->set_named_targets(msg);
+}
+
+void FieldInfoParser::set_designated_position(const State::SharedPtr msg)
+{
+  designated_position_ = *msg;
 }
 
 bool FieldInfoParser::is_parsable(const RobotControlMsg::SharedPtr goal) const
@@ -210,6 +225,11 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
 
   if (navi_options.avoid_defense_area) {
     new_pose = tactic_obstacle_avoidance_->avoid_defense_area(my_robot, new_pose);
+  }
+
+  if (navi_options.avoid_placement_area) {
+    new_pose = tactic_obstacle_avoidance_->avoid_placement_area(
+      my_robot, new_pose, ball, designated_position_);
   }
 
   return new_pose;

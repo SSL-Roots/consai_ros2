@@ -15,162 +15,126 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Refereeメッセージを解析し, ゲームの状態を抽象化したモデルに変換するモジュール."""
+
+from dataclasses import dataclass
+
 from robocup_ssl_msgs.msg import Referee
+from consai_game.utils.geometry import Point
 
 
+@dataclass
 class RefereeModel:
-    def __init__(self, our_team_is_yellow: bool = False):
-        self.our_team_is_yellow = our_team_is_yellow
-        self.sub_referee = None
-        self.current_command = Referee.COMMAND_HALT
-        self.current_action_time_remaining = 0
+    """Refereeメッセージを抽象化したゲーム状態を表現するクラス."""
 
-    def parse_msg(self, msg: Referee):
-        self.current_command = msg.command
+    halt: bool = False
+    stop: bool = False
+    normal_start: bool = False
+    our_free_kick: bool = False
+    their_free_kick: bool = False
+    our_kick_off: bool = False
+    their_kick_off: bool = False
+    our_kick_off_start: bool = False
+    their_kick_off_start: bool = False
+    our_penalty_kick: bool = False
+    their_penalty_kick: bool = False
+    our_penalty_kick_start: bool = False
+    their_penalty_kick_start: bool = False
+    our_goal: bool = False
+    their_goal: bool = False
+    our_timeout: bool = False
+    their_timeout: bool = False
+    our_ball_placement: bool = False
+    their_ball_placement: bool = False
+    running: bool = False
+    placement_pos: Point = Point(0.0, 0.0)
 
-        # current_action_time_remainingは
-        # NORMAL STARTやFREE KICKなどのセットプレーで値が初期化され、カウントダウンが始まる
-        if self.halt or self.stop:
-            self.current_action_time_remaining = 0
-        elif msg.current_action_time_remaining:
-            self.current_action_time_remaining = msg.current_action_time_remaining[0]
 
-    @property
-    def halt(self):
-        return self.current_command == Referee.COMMAND_HALT
+def parse_referee_msg(
+    msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool, ball_is_moving: bool
+) -> RefereeModel:
+    """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
+    data = RefereeModel()
 
-    @property
-    def stop(self):
-        return self.current_command == Referee.COMMAND_STOP
+    data.halt = msg.command == Referee.COMMAND_HALT
+    data.stop = msg.command == Referee.COMMAND_STOP
+    data.running = msg.command == Referee.COMMAND_FORCE_START
+    data.normal_start = msg.command == Referee.COMMAND_NORMAL_START
 
-    @property
-    def force_start(self):
-        return self.current_command == Referee.COMMAND_FORCE_START
-
-    @property
-    def normal_start(self):
-        return self.current_command == Referee.COMMAND_NORMAL_START
-
-    @property
-    def our_free_kick(self):
-        return (
-            self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
-            and self.our_team_is_yellow is True
+    def parse_team_command(command_blue, command_yellow) -> tuple[bool, bool]:
+        """チームごとのコマンド種別を解析する内部関数."""
+        is_our_command = (msg.command == command_blue and not our_team_is_yellow) or (
+            msg.command == command_yellow and our_team_is_yellow
         )
-
-    @property
-    def their_free_kick(self):
-        return (
-            self.current_command == Referee.COMMAND_DIRECT_FREE_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_DIRECT_FREE_BLUE
-            and self.our_team_is_yellow is True
+        is_their_command = (msg.command == command_yellow and not our_team_is_yellow) or (
+            msg.command == command_blue and our_team_is_yellow
         )
+        return is_our_command, is_their_command
 
-    @property
-    def our_kick_off(self):
-        return (
-            self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
-            and self.our_team_is_yellow is True
-        )
+    data.our_free_kick, data.their_free_kick = parse_team_command(
+        Referee.COMMAND_DIRECT_FREE_BLUE, Referee.COMMAND_DIRECT_FREE_YELLOW
+    )
+    data.our_kick_off, data.their_kick_off = parse_team_command(
+        Referee.COMMAND_PREPARE_KICKOFF_BLUE, Referee.COMMAND_PREPARE_KICKOFF_YELLOW
+    )
+    data.our_penalty_kick, data.their_penalty_kick = parse_team_command(
+        Referee.COMMAND_PREPARE_PENALTY_BLUE, Referee.COMMAND_PREPARE_PENALTY_YELLOW
+    )
+    data.our_goal, data.their_goal = parse_team_command(Referee.COMMAND_GOAL_BLUE, Referee.COMMAND_GOAL_YELLOW)
+    data.our_timeout, data.their_timeout = parse_team_command(
+        Referee.COMMAND_TIMEOUT_BLUE, Referee.COMMAND_TIMEOUT_YELLOW
+    )
+    data.our_ball_placement, data.their_ball_placement = parse_team_command(
+        Referee.COMMAND_BALL_PLACEMENT_BLUE, Referee.COMMAND_BALL_PLACEMENT_YELLOW
+    )
 
-    @property
-    def their_kick_off(self):
-        return (
-            self.current_command == Referee.COMMAND_PREPARE_KICKOFF_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_PREPARE_KICKOFF_BLUE
-            and self.our_team_is_yellow is True
-        )
+    # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
+    if prev_data.our_kick_off:
+        data.our_kick_off_start = data.normal_start
+    if prev_data.their_kick_off:
+        data.their_kick_off_start = data.normal_start
+    if prev_data.our_penalty_kick:
+        data.our_penalty_kick_start = data.normal_start
+    if prev_data.their_penalty_kick:
+        data.their_penalty_kick_start = data.normal_start
 
-    @property
-    def our_penalty_kick(self):
-        return (
-            self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
-            and self.our_team_is_yellow is True
-        )
+    # normal_startの継続処理
+    if prev_data.our_kick_off_start:
+        data.our_kick_off_start = data.normal_start
+    if prev_data.their_kick_off_start:
+        data.their_kick_off_start = data.normal_start
+    if prev_data.our_penalty_kick_start:
+        data.our_penalty_kick_start = data.normal_start
+    if prev_data.their_penalty_kick_start:
+        data.their_penalty_kick_start = data.normal_start
 
-    @property
-    def their_penalty_kick(self):
-        return (
-            self.current_command == Referee.COMMAND_PREPARE_PENALTY_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_PREPARE_PENALTY_BLUE
-            and self.our_team_is_yellow is True
-        )
+    # runningへの切り替え判断
+    if data.normal_start or data.our_free_kick or data.their_free_kick:
+        if data.our_penalty_kick or data.their_penalty_kick:
+            # NOTE: penaltyにも設けられているが、Playの切り替えを防ぐためrunningには切り替えない
+            data.running = False
 
-    @property
-    def our_goal(self):
-        return (
-            self.current_command == Referee.COMMAND_GOAL_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_GOAL_YELLOW
-            and self.our_team_is_yellow is True
-        )
+        elif prev_data.running:
+            # 一度runningになったあとは、commandが変わるまで継続する
+            data.running = True
+        else:
+            # kick_offやfree_kickにはcurrent_action_time_remainingという制限時間が設けられている
+            # 一定時間が経過したらrunningに切り替える
+            if msg.current_action_time_remaining:
+                data.running = msg.current_action_time_remaining[0] < 0
 
-    @property
-    def their_goal(self):
-        return (
-            self.current_command == Referee.COMMAND_GOAL_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_GOAL_BLUE
-            and self.our_team_is_yellow is True
-        )
+            # ボールが動いたらrunningに切り替える
+            if ball_is_moving:
+                data.running = True
 
-    @property
-    def our_timeout(self):
-        return (
-            self.current_command == Referee.COMMAND_TIMEOUT_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
-            and self.our_team_is_yellow is True
-        )
+    # ボールプレースメント位置
+    if len(msg.designated_position) > 0:
+        data.placement_pos.x = msg.designated_position[0].x * 0.001  # mm to meters
+        data.placement_pos.y = msg.designated_position[0].y * 0.001  # mm to meters
 
-    @property
-    def their_timeout(self):
-        return (
-            self.current_command == Referee.COMMAND_TIMEOUT_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_TIMEOUT_BLUE
-            and self.our_team_is_yellow is True
-        )
+        # フィールドサイドを反転しているときは、目標座標も反転させる
+        if invert:
+            data.placement_pos.x *= -1.0
+            data.placement_pos.y *= -1.0
 
-    @property
-    def our_ball_placement(self):
-        return (
-            self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
-            and self.our_team_is_yellow is True
-        )
-
-    @property
-    def their_ball_placement(self):
-        return (
-            self.current_command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
-            and self.our_team_is_yellow is False
-        ) or (
-            self.current_command == Referee.COMMAND_BALL_PLACEMENT_BLUE
-            and self.our_team_is_yellow is True
-        )
-
-    @property
-    def running(self):
-        return self.current_action_time_remaining < 0
+    return data

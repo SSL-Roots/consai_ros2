@@ -15,7 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""レフェリーの指示に基づきロボットの役割を更新し, 各ロボットの動作を決定するプログラム."""
+
 import argparse
+import threading
+import time
+
 from consai_examples.decisions.attacker import AttackerDecision
 from consai_examples.decisions.center_back import CenterBackDecision, CenterBackID
 from consai_examples.decisions.goalie import GoaleDecision
@@ -28,39 +33,31 @@ from consai_examples.field_observer import FieldObserver
 from consai_examples.referee_parser import RefereeParser
 from consai_examples.robot_operator import RobotOperator
 from consai_examples.role_assignment import RoleAssignment, RoleName
+
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
-import threading
-import time
 
 
 def num_of_active_center_back_roles(active_roles):
-    # アクティブなセンターバック担当者の数を返す
-    role_zone_list = [
-        RoleName.CENTER_BACK1,
-        RoleName.CENTER_BACK2]
+    """アクティブなセンターバック担当者の数を返す関数."""
+    role_zone_list = [RoleName.CENTER_BACK1, RoleName.CENTER_BACK2]
     return len(set(role_zone_list) & set(active_roles))
 
 
 def num_of_active_side_back_roles(active_roles):
-    # アクティブなサイドバック担当者の数を返す
-    role_zone_list = [
-        RoleName.SIDE_BACK1,
-        RoleName.SIDE_BACK2]
+    """アクティブなサイドバック担当者の数を返す関数."""
+    role_zone_list = [RoleName.SIDE_BACK1, RoleName.SIDE_BACK2]
     return len(set(role_zone_list) & set(active_roles))
 
 
 def num_of_active_zone_roles(active_roles):
-    # アクティブなゾーンディフェンス担当者の数を返す
-    role_zone_list = [
-        RoleName.ZONE1,
-        RoleName.ZONE2,
-        RoleName.ZONE3]
+    """アクティブなゾーンディフェンス担当者の数を返す関数."""
+    role_zone_list = [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3]
     return len(set(role_zone_list) & set(active_roles))
 
 
 def zone_role_ids(aVctive_roles) -> list[int]:
-    # ゾーンディンフェンスを担当するロボットIDのリストを返す
+    """ゾーンディンフェンスを担当するロボットIDのリストを返す関数."""
     ids = []
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         if role in [RoleName.ZONE1, RoleName.ZONE2, RoleName.ZONE3]:
@@ -69,19 +66,20 @@ def zone_role_ids(aVctive_roles) -> list[int]:
 
 
 def enable_role_update():
-    # ロールの更新を許可する条件
-    return not referee.our_pre_penalty() and \
-        not referee.our_penalty() and \
-        not referee.our_penalty_inplay() and \
-        not referee.our_ball_placement() and \
-        not referee.their_pre_penalty() and \
-        not referee.their_penalty() and \
-        not referee.their_penalty_inplay()
+    """ロールの更新を許可する条件を返す関数."""
+    return (
+        not referee.our_pre_penalty()
+        and not referee.our_penalty()
+        and not referee.our_penalty_inplay()
+        and not referee.our_ball_placement()
+        and not referee.their_pre_penalty()
+        and not referee.their_penalty()
+        and not referee.their_penalty_inplay()
+    )
 
 
-def update_decisions(num_of_center_back_roles: int,
-                     num_of_side_back_roles: int,
-                     num_of_zone_roles: int):
+def update_decisions(num_of_center_back_roles: int, num_of_side_back_roles: int, num_of_zone_roles: int):
+    """各役割に対応する決定を更新する関数."""
     for role, robot_id in assignor.get_assigned_roles_and_ids():
         # センターバックの担当者数をセットする
         decisions[role].set_num_of_center_back_roles(num_of_center_back_roles)
@@ -134,11 +132,9 @@ def update_decisions(num_of_center_back_roles: int,
         elif referee.their_timeout():
             decisions[role].their_timeout(robot_id)
         elif referee.our_ball_placement():
-            decisions[role].our_ball_placement(
-                robot_id, referee.placement_position())
+            decisions[role].our_ball_placement(robot_id, referee.placement_position())
         elif referee.their_ball_placement():
-            decisions[role].their_ball_placement(
-                robot_id, referee.placement_position())
+            decisions[role].their_ball_placement(robot_id, referee.placement_position())
         elif referee.goal_blue():
             decisions[role].halt(robot_id)
         elif referee.goal_yellow():
@@ -148,6 +144,7 @@ def update_decisions(num_of_center_back_roles: int,
 
 
 def main():
+    """メイン処理を開始する関数."""
     TARGET_PERIOD = 0.01  # 100Hz
 
     while rclpy.ok():
@@ -160,9 +157,9 @@ def main():
 
         # ロボットの役割の更新する
         if enable_role_update():
-            assignor.update_role(observer.detection().ball(),
-                                 observer.detection().our_robots(),
-                                 referee.max_allowed_our_bots())
+            assignor.update_role(
+                observer.detection().ball(), observer.detection().our_robots(), referee.max_allowed_our_bots()
+            )
 
         # 担当者がいるroleの中から、ゾーンディフェンスの数を抽出する
         assigned_roles = [t[0] for t in assignor.get_assigned_roles_and_ids()]
@@ -172,8 +169,7 @@ def main():
         observer.set_num_of_zone_roles(num_of_zone_roles)
         observer.man_mark().set_our_active_bot_ids(zone_role_ids(assigned_roles))
 
-        update_decisions(num_of_center_back_roles,
-                         num_of_side_back_roles, num_of_zone_roles)
+        update_decisions(num_of_center_back_roles, num_of_side_back_roles, num_of_zone_roles)
 
         # 役割情報を出力する
         assignor.publish_role_for_visualizer(observer.detection().our_robots())
@@ -182,24 +178,14 @@ def main():
         if elapsed_time < TARGET_PERIOD:
             time.sleep(TARGET_PERIOD - elapsed_time)
         else:
-            rclpy.logging.get_logger("game.py").warn(
-                "Update took too long: {}".format(elapsed_time))
+            rclpy.logging.get_logger("game.py").warn("Update took too long: {}".format(elapsed_time))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--yellow',
-                            default=False,
-                            action='store_true',
-                            help='yellowロボットを動かす場合にセットする')
-    arg_parser.add_argument('--invert',
-                            default=False,
-                            action='store_true',
-                            help='ball placementの目標座標を反転する場合にセットする')
-    arg_parser.add_argument('--goalie',
-                            default=0,
-                            type=int,
-                            help='ゴールキーパのIDをセットする')
+    arg_parser.add_argument("--yellow", default=False, action="store_true", help="yellowロボットを動かす場合にセットする")
+    arg_parser.add_argument("--invert", default=False, action="store_true", help="ball placementの目標座標を反転する場合にセットする")
+    arg_parser.add_argument("--goalie", default=0, type=int, help="ゴールキーパのIDをセットする")
     args, other_args = arg_parser.parse_known_args()
 
     rclpy.init(args=other_args)

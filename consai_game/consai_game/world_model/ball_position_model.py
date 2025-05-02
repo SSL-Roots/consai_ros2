@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # coding: UTF-8
 
-"""
-ボールの位置情報を管理するためのクラスを提供する.
-
-ボールの位置更新, フィールド境界の判定（ヒステリシス付き）, および各エリア内かどうかの判定をする.
-"""
-
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +14,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+ボールの位置情報を管理するためのクラスを提供する.
+
+ボールの位置更新, フィールド境界の判定（ヒステリシス付き）, および各エリア内かどうかの判定をする.
+"""
 
 import math
 

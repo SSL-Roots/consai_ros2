@@ -35,13 +35,14 @@ public:
   : socket_(io_service_, asio::ip::udp::v4())
   {
     asio::ip::address addr = asio::ip::address::from_string(host);
-    if (!addr.is_multicast()) {
-      throw std::runtime_error("expected multicast address");
-    }
 
     socket_.set_option(asio::socket_base::reuse_address(true));
-    socket_.set_option(asio::ip::multicast::join_group(addr.to_v4()));
-    socket_.bind(asio::ip::udp::endpoint(asio::ip::udp::v4(), port));
+    socket_.bind(asio::ip::udp::endpoint(asio::ip::address::from_string(host), port));
+
+    if (addr.is_multicast()) {
+      socket_.set_option(asio::ip::multicast::join_group(addr.to_v4()));
+    }
+
     socket_.non_blocking(true);
   }
 

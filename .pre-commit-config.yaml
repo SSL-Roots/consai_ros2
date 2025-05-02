@@ -8,11 +8,12 @@ repos:
         language: system
         types: [python]
 
-      - id: ament_pep257
-        name: ament_pep257
-        entry: hooks/run_ament_pep257.sh
-        language: system
-        types: [python]
+      # Docstringに関する内容は無視
+      # - id: ament_pep257
+      #   name: ament_pep257
+      #   entry: hooks/run_ament_pep257.sh
+      #   language: system
+      #   types: [python]
 
       - id: ament-black
         name: ament_black

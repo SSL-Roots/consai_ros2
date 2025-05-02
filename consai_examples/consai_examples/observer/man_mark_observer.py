@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""自チームのロボットがマークすべき相手ロボットを判定するモジュール."""
+
+import copy
+import math
+
 from consai_examples.observer.field_normalizer import FieldNormalizer
 from consai_examples.observer.field_positions import FieldPositions
 from consai_examples.observer.pos_vel import PosVel
+
 from consai_msgs.msg import State2D
+
 from consai_tools.geometry import geometry_tools as tool
-from consai_visualizer_msgs.msg import Objects
-from consai_visualizer_msgs.msg import ShapeLine
-import copy
-import math
+
+from consai_visualizer_msgs.msg import Objects, ShapeLine
+
 
 IDType = int
 OurIDType = int
@@ -28,9 +34,11 @@ TheirIDType = int
 InValidID = -1
 
 
-# 指定した自チームのロボットが、どの相手ロボットをマークすべきかを判定するObserver
 class ManMarkObserver:
+    """指定した自チームのロボットが, どの相手ロボットをマークすべきかを判定するクラス."""
+
     def __init__(self):
+        """ManMarkObserverのインスタンスを初期化する関数."""
         self._mark_dict: dict[OurIDType, TheirIDType] = {}
         self._our_active_bot_ids: list[OurIDType] = []
 
@@ -38,14 +46,17 @@ class ManMarkObserver:
         self._field = FieldNormalizer()
 
     def set_field_positions(self, field_positions: FieldPositions) -> None:
+        """フィールドの位置情報を設定する関数."""
         self._field_pos = field_positions
 
     def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        """フィールドの正規化処理を設定する関数."""
         self._field = field_normalizer
 
     def update(self, ball: PosVel,
                our_robots: dict[OurIDType, PosVel],
                their_robots: dict[TheirIDType, PosVel]) -> None:
+        """自チームのロボットと相手ロボットの状態に基づいて, マークするロボットを更新する関数."""
         self._remove_non_exist_robots_from_mark(our_robots, their_robots)
 
         # マーク条件に該当するロボットを抽出
@@ -75,7 +86,7 @@ class ManMarkObserver:
                 our_active_bots.pop(nearest_our_bot_id)
 
     def set_our_active_bot_ids(self, our_active_bot_ids: list[OurIDType]) -> None:
-        # アクティブじゃなくなったロボットのマーク情報を削除
+        """アクティブじゃなくなったロボットのマーク情報を削除する関数."""
         fired_bot_ids = set(self._our_active_bot_ids) - set(our_active_bot_ids)
         for fired_bot_id in fired_bot_ids:
             if fired_bot_id in self._mark_dict.keys():
@@ -84,6 +95,7 @@ class ManMarkObserver:
         self._our_active_bot_ids = our_active_bot_ids
 
     def get_mark_robot_id(self, our_id: OurIDType) -> TheirIDType:
+        """自チームのロボットがマークしている相手ロボットIDを取得する関数."""
         if our_id in self._mark_dict.keys():
             return self._mark_dict[our_id]
         else:
@@ -92,8 +104,7 @@ class ManMarkObserver:
     def to_visualize_msg(
             self, our_robots: dict[OurIDType, PosVel],
             their_robots: dict[TheirIDType, PosVel]) -> Objects:
-        # アクティブロボットとマーク対象の相手ロボットを結ぶ直線を描画する
-
+        """アクティブロボットとマーク対象の相手ロボットを結ぶ直線を描画する関数."""
         vis_objects = Objects()
 
         vis_objects.layer = 'game'
@@ -124,6 +135,7 @@ class ManMarkObserver:
 
     def _detect_their_bots_in_our_side(
             self, their_robots: dict[OurIDType, PosVel]) -> list[OurIDType]:
+        """相手ロボットが自チームの側にいるか判定し, リストとして返す関数."""
         DETECTION_THRESHOLD_X = 0.0
 
         bot_ids = []
@@ -135,6 +147,7 @@ class ManMarkObserver:
 
     def _detect_their_bots_in_our_side_without_our_df_area_side(
             self, their_robots: dict[OurIDType, PosVel]) -> list[OurIDType]:
+        """相手ロボットが自チームのディフェンスエリアを越えず, 自チーム側にいるかを判定する関数."""
         penalty_corner_upper_front = self._field_pos.penalty_pose('our', 'upper_front')
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
         DEFENSE_AREA_MARGIN = self._field.on_div_a_x(0.2)
@@ -150,6 +163,7 @@ class ManMarkObserver:
         return bot_ids
 
     def _remove_mark_via_their_id(self, their_id: TheirIDType) -> None:
+        """相手ロボットIDに基づいてマークを削除する関数."""
         # 削除するキーを一時リストに保存
         to_remove = [
             our_id for our_id, their_id_ in self._mark_dict.items() if their_id == their_id_]
@@ -160,6 +174,7 @@ class ManMarkObserver:
     def _remove_non_exist_robots_from_mark(
             self, our_robots: dict[OurIDType, PosVel],
             their_robots: dict[TheirIDType, PosVel]) -> None:
+        """存在しないロボットに対するマークを削除する関数."""
         # 存在しないキーを一時リストに保存
         to_remove_via_theirs = [
             our_id for our_id, their_id in self._mark_dict.items() if their_id not in their_robots]
@@ -172,23 +187,27 @@ class ManMarkObserver:
                 self._mark_dict.pop(our_id)
 
     def _is_marked(self, their_bot_id: TheirIDType) -> bool:
+        """指定された相手ロボットが既にマークされているかを判定する関数."""
         return their_bot_id in self._mark_dict.values()
 
     def _our_active_free_bots(
             self, our_robots: dict[OurIDType, PosVel]) -> dict[OurIDType, PosVel]:
+        """マークされていない自チームのアクティブなロボットを取得する関数."""
         return {our_id: our_bot
                 for our_id, our_bot in our_robots.items() if self._is_our_free_bot(our_id)}
 
     def _is_our_free_bot(self, our_id: OurIDType) -> bool:
+        """指定された自チームロボットがフリーの状態かを判定する関数."""
         return our_id in self._our_free_bot_ids()
 
     def _our_free_bot_ids(self) -> list[OurIDType]:
+        """フリーな自チームロボットのIDリストを取得する関数."""
         return list(set(self._our_active_bot_ids) - set(self._mark_dict.keys()))
 
     def _search_nearest_bot_id(
             self, my_pos: State2D,
             target_robots: dict[IDType, PosVel]) -> IDType:
-
+        """指定された位置から最も近いロボットIDを検索する関数."""
         nearest_id = InValidID
         nearest_dist = math.inf
 
@@ -203,6 +222,7 @@ class ManMarkObserver:
         return nearest_id
 
     def _assign_mark(self, our_id: OurIDType, their_id: TheirIDType) -> bool:
+        """自チームのロボットに相手ロボットをマークとして割り当てる関数."""
         if our_id != InValidID:
             self._mark_dict[our_id] = their_id
             return True

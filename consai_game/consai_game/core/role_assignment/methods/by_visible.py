@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""視認可能なロボット順に基づいて役割を割り当てる手法を定義するモジュール."""
+
+from typing import List
+
 from consai_game.core.role_assignment.methods.base import RoleAssignmentBase
+from consai_game.core.role_assignment.methods.fill_role_gaps import fill_role_gaps
 from consai_game.core.tactic.role import RoleConst
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
-from typing import List
 
 
 class ByVisible(RoleAssignmentBase):
@@ -27,6 +31,7 @@ class ByVisible(RoleAssignmentBase):
     """
 
     def __init__(self):
+        """割当履歴を初期化するコンストラクタ."""
         super().__init__()
         self.prev_id_list: List[int] = []
 
@@ -36,6 +41,7 @@ class ByVisible(RoleAssignmentBase):
         world_model: WorldModel,
         goalie_id: int,
     ) -> List[int]:
+        """視認順と前回割当をもとにロールを割り当てる関数."""
         role_num = len(play_roles)
 
         if len(self.prev_id_list) == role_num:
@@ -56,9 +62,7 @@ class ByVisible(RoleAssignmentBase):
 
         # 新しく現れたロボットを抽出する
         new_robots = [
-            robot_id
-            for robot_id in world_model.robot_activity.ordered_our_visible_robots
-            if robot_id not in id_list
+            robot_id for robot_id in world_model.robot_activity.ordered_our_visible_robots if robot_id not in id_list
         ]
 
         # 新しく現れたロボットを、空いている役割に割り当てる
@@ -67,6 +71,10 @@ class ByVisible(RoleAssignmentBase):
                 if id_list[i] == RoleConst.INVALID_ROLE_ID:
                     id_list[i] = new_robot_id
                     break
+
+        # 割当リストの先頭から見て空きがあれば、末尾から順に割当を変えていく
+        # ゴーリーは穴埋めさせない
+        id_list = fill_role_gaps(id_list=id_list, ignore_index=0)
 
         # 割当を記憶する
         self.prev_id_list = id_list.copy()

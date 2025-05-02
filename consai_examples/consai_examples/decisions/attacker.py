@@ -15,19 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples.decisions.decision_base import DecisionBase
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_msgs.msg import State2D
-from consai_tools.geometry import geometry_tools
+"""ロボットのアタッカー用意思決定を行うクラス群を定義したモジュール."""
+
 import copy
 import math
 
+from consai_examples.decisions.decision_base import DecisionBase
+from consai_examples.operation import Operation
+from consai_examples.operation import TargetTheta
+from consai_examples.operation import TargetXY
+
+from consai_msgs.msg import State2D
+
+from consai_tools.geometry import geometry_tools
+
 
 class AttackerDecision(DecisionBase):
+    """アタッカーの意思決定を行うクラス."""
 
     def __init__(self, robot_operator, field_observer):
+        """アタッカーの意思決定を行うクラス."""
         super().__init__(robot_operator, field_observer)
         self._inpay_flag = 0
         self._attacker_id = -1
@@ -35,6 +42,7 @@ class AttackerDecision(DecisionBase):
         self.receivers_id_list = []
 
     def stop(self, robot_id):
+        """ロボットを停止し, ボールに向かって移動する関数."""
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         move_to_ball = move_to_ball.enable_avoid_ball()
         move_to_ball = move_to_ball.enable_avoid_pushing_robots()
@@ -44,7 +52,7 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, chase_ball)
 
     def inplay(self, robot_id):
-
+        """ボールがプレイ中の場合のロボットの動作を決定する関数."""
         # 前回のアタッカーのIDと一致しない場合
         if robot_id is not self._attacker_id:
             self._in_flag = 0
@@ -108,6 +116,7 @@ class AttackerDecision(DecisionBase):
         return
 
     def our_direct(self, robot_id):
+        """味方ゴールに向かってシュートやパスを行う関数."""
         # 何メートル後ろの味方ロボットまでパス対象に含めるかオフセットをかける
         search_offset = self._div_a_x(0.7)
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
@@ -143,6 +152,7 @@ class AttackerDecision(DecisionBase):
         return
 
     def their_direct(self, robot_id):
+        """相手のゴールに向かってシュートを防ぐ関数."""
         prevent_direct_shooting = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_goal(), self._div_a_x(0.9), TargetTheta.look_ball())
         prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
@@ -150,6 +160,7 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, prevent_direct_shooting)
 
     def their_indirect(self, robot_id):
+        """相手の間接的なシュートを防ぐ関数."""
         prevent_direct_shooting = Operation().move_on_line(
             TargetXY.ball(), TargetXY.our_goal(), self._div_a_x(0.9), TargetTheta.look_ball())
         prevent_direct_shooting = prevent_direct_shooting.with_ball_receiving()
@@ -157,6 +168,7 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, prevent_direct_shooting)
 
     def their_ball_placement(self, robot_id, placement_pos):
+        """相手がボールを配置する際の操作を行う関数."""
         operation = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         operation = operation.offset_pose_x(-self._div_a_x(0.6))
         operation = operation.enable_avoid_ball()
@@ -165,7 +177,7 @@ class AttackerDecision(DecisionBase):
         self._operator.operate(robot_id, operation)
 
     def _kick_pos_to_reflect_on_wall(self, placement_pos: State2D) -> State2D:
-        # 壁に向かってボールを蹴り、反射させるためのシュート目標位置を生成する
+        """壁に向かってボールを蹴り, 反射させるためのシュート目標位置を生成する関数."""
         ball_pos = self._field_observer.detection().ball().pos()
         wall_x = self._field_observer.field_half_length() \
             + self._field_observer.field_margin_to_wall()
@@ -195,6 +207,7 @@ class AttackerDecision(DecisionBase):
                 return State2D(x=ball_pos.x + offset, y=-wall_y)
 
     def our_ball_placement(self, robot_id, placement_pos):
+        """ボールを配置する関数."""
         # 壁際にあると判定した場合
         # ボールがフィールド外にある場合は、バックドリブルでボールをフィールド内に戻す
         if self._field_observer.ball_position().is_outside():
@@ -257,6 +270,7 @@ class AttackerDecision(DecisionBase):
 
 
 def gen_chase_ball_function():
+    """ボールを追いかける関数."""
     def function(self, robot_id):
         move_to_ball = Operation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
         chase_ball = move_to_ball.offset_pose_x(-self._div_a_x(0.6))
@@ -266,7 +280,9 @@ def gen_chase_ball_function():
 
 
 def gen_their_kickoff_function():
+    """相手のキックオフを処理する関数."""
     def function(self, robot_id):
+        """相手のキックオフの動作をする関数."""
         # 角度の最大値
         max_angle = 100
         # ボールとの距離
@@ -313,7 +329,9 @@ def gen_their_kickoff_function():
 
 
 def gen_setplay_shoot_function():
+    """セットプレーのシュート処理をする関数."""
     def function(self, robot_id):
+        """セットプレーでシュートを行う関数."""
         # 該当レフリー信号開始から経過時間の上限
         time_out = 4.0
 
@@ -368,7 +386,9 @@ def gen_setplay_shoot_function():
 
 
 def gen_their_penalty_function():
+    """相手のペナルティ処理をする関数."""
     def function(self, robot_id):
+        """相手のペナルティエリア内での処理をする関数."""
         operation = Operation().move_to_pose(
             TargetXY.value(self._penalty_wait_x(), self._div_a_y(4.5 - 0.3 * 0.0)),
             TargetTheta.look_ball())
@@ -378,7 +398,9 @@ def gen_their_penalty_function():
 
 
 def gen_our_penalty_function():
+    """自分のペナルティ処理をする関数."""
     def function(self, robot_id):
+        """自分のペナルティエリア内での処理をする関数."""
         ball_pos = self._field_observer.detection().ball().pos()
         dribble_pos = State2D(x=ball_pos.x + self._div_a_x(2.0), y=ball_pos.y)
 
