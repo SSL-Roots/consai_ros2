@@ -270,7 +270,7 @@ def our_penalty_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(WrapperLookBall(Position(-6.0, 0.0)))],
+            [SlowSafe(ChaseOrPosition(-5.0, 3.7))],
             [SlowSafe(ChaseOrPosition(-5.8, 4.3))],
             [SlowSafe(ChaseOrPosition(-5.4, 4.3))],
             [SlowSafe(ChaseOrPosition(-5.0, 4.3))],
@@ -324,7 +324,7 @@ def our_penalty_kick_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(WrapperLookBall(Position(-6.0, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.0, 3.7)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.8, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.4, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.0, 4.3)))],
