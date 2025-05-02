@@ -85,7 +85,7 @@ class Kick(TacticBase):
     ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
     ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
 
-    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False):
+    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=True):
         """
         コンストラクタでキック目標位置と、キックの種類を設定する.
 
@@ -101,6 +101,8 @@ class Kick(TacticBase):
         self.target_pos = State2D(x=x, y=y)
         self.is_pass = is_pass
         self.is_tapping = is_tapping
+
+        self.is_setplay = is_setplay
 
         self.machine = KickStateMachine("robot")
 
@@ -118,7 +120,10 @@ class Kick(TacticBase):
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
+        # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # ロボットとボール間の距離を取得
+        dist_robot_to_ball = tool.get_distance(robot_pos, ball_pos)
 
         self.machine.update(
             robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
@@ -126,11 +131,20 @@ class Kick(TacticBase):
         )
 
         if self.machine.state == "chasing":
-            command.desired_pose = self.move_to_backside_pose(
-                ball_pos=ball_pos,
-                robot_pos=robot_pos,
-                distance=0.3,
-            )
+            if self.is_setplay or 0.3 < dist_robot_to_ball:
+                command.desired_pose = self.move_to_backside_pose(
+                    ball_pos=ball_pos,
+                    robot_pos=robot_pos,
+                    distance=0.3,
+                )
+            else:
+                command.desired_pose = self.move_to_backside_pose(
+                    ball_pos=ball_pos,
+                    robot_pos=robot_pos,
+                    distance=0.15,
+                )
+                command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+                command.navi_options.avoid_pushing = False
 
         elif self.machine.state == "aiming":
             # 蹴る方向に向けて移動
@@ -190,7 +204,10 @@ class Kick(TacticBase):
 
     def move_to_backside_pose(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
         """ボールの後側に移動するための目標位置を生成"""
+        # 座標変換クラスのインスタンスの生成
+        # ボール中心にボールから目標位置までの角度で変換
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        # ロボットの位置を変換
         tr_robot_pos = trans.transform(robot_pos)
 
         pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(self.ANGLE_FOR_PIVOT_POS)
@@ -202,6 +219,26 @@ class Kick(TacticBase):
         pose = trans.inverted_transform(tr_pivot_pos)
         pose.theta = tool.get_angle(ball_pos, self.target_pos)
         return pose
+
+    def ball_come_around_behind(self, ball_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
+        """ボールの後側に移動するための目標位置を生成"""
+        # 座標変換クラスのインスタンスの生成
+        # ボール中心にボールから目標位置までの角度で変換
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        # ロボットの位置を変換
+        tr_robot_pos = trans.transform(robot_pos)
+
+        pivot_angle = np.sign(tr_robot_pos.y) * np.deg2rad(self.ANGLE_FOR_PIVOT_POS)
+
+        tr_pivot_pos = State2D()
+        tr_pivot_pos.x = distance * np.cos(pivot_angle)
+        tr_pivot_pos.y = distance * np.sin(pivot_angle)
+
+        pose = trans.inverted_transform(tr_pivot_pos)
+        pose.theta = tool.get_angle(ball_pos, self.target_pos)
+        return pose
+
+
 
     def kicking_pose(self, ball_pos: State2D, distance: float = 0.1) -> State2D:
         """ボールを蹴るための目標位置を生成"""

@@ -29,11 +29,11 @@ import math
 
 
 class CompositeOffense(TacticBase):
-    def __init__(self, tactic_default: TacticBase):
+    def __init__(self, tactic_default: TacticBase, is_setplay=True):
         super().__init__()
-        self.tactic_shoot = Kick(is_pass=False)
-        self.tactic_pass = Kick(is_pass=True)
-        self.tactic_tapping = Kick(is_tapping=True)
+        self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
+        self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
+        self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
         self.tactic_receive = Receive()
         self.tactic_default = tactic_default
 
