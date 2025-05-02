@@ -87,7 +87,7 @@ def stop() -> Play:
             [SlowSafe(WrapperLookBall(ChaseOrPosition(0.0, -4.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, 3.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, -3.0)))],
-            [SlowSafe(WrapperLookBall(ChaseOrPosition(3.5, 0.0)))],
+            [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, 0.0)))],
         ],
     )
 
@@ -115,7 +115,7 @@ def our_free_kick() -> Play:
             [CompositeOffense(tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.5, 0.0)))],
+            [CompositeOffense(tactic_default=WrapperLookBall(Position(3.0, 0.0)))],
         ],
     )
 
@@ -143,7 +143,7 @@ def their_free_kick() -> Play:
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(0.0, -4.0)))],
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.0, 3.0)))],
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.0, -3.0)))],
-            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.5, 0.0)))],
+            [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(3.0, 0.0)))],
         ],
     )
 
