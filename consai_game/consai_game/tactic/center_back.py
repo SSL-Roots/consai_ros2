@@ -68,6 +68,7 @@ class CenterBack(TacticBase):
         self.robot_size = 0.2  # ロボット同士が離れる距離[m]
         self.ball_move_threshold = 0.5  # ボールが動いているか判定する閾値
         # ボールが速度を持っているときのディフェンスエリア拡張用
+        # TODO: 要調整
         self.receive_defense_area_margin = 1.0
 
     def exit(self):
@@ -123,9 +124,11 @@ class CenterBack(TacticBase):
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
-        next_ball_pos = world_model.ball_activity.next_ball_pos
+        ball_stop_position = world_model.ball_activity.ball_stop_position
         # ボールの速度を取得
         ball_vel = world_model.ball.vel
+        # ボール動いている判定
+        is_ball_moving = world_model.ball_activity.is_ball_moving(world_model.ball)
         # ゴール中央の位置
         goal_center = State2D(x=-field.half_length, y=0.0)
         target_pos = goal_center
@@ -145,11 +148,12 @@ class CenterBack(TacticBase):
         )
 
         # ボールが速度を持っている＆ゴールへ向かっている
-        if ball_vel.x < -self.ball_move_threshold:
+        # ディフェンスエリア手前で止まる場合を除く
+        if is_ball_moving and ball_vel.x < -self.ball_move_threshold and ball_stop_position.x < defense_x_with_margin:
             # ボールの行く先がディフェンスエリア + マージンにあるかどうかを判定
             intersection_left = tools.get_line_intersection(
                 ball_pos,
-                next_ball_pos,
+                ball_stop_position,
                 defense_line_top_left_with_margin,
                 defense_line_bottom_left_with_margin,
                 is_on_line1_check=False,
