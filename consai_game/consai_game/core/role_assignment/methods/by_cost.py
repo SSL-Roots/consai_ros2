@@ -15,13 +15,11 @@
 """ロボットの現在位置とTacticの目標位置の距離に基づいて役割を割り当てる手法を定義するモジュール."""
 
 import numpy as np
-
+from scipy.optimize import linear_sum_assignment
+from copy import deepcopy
 from typing import List
 
-from scipy.optimize import linear_sum_assignment
-
 from consai_msgs.msg import MotionCommand
-
 from consai_tools.geometry.geometry_tools import get_distance
 
 from consai_game.core.role_assignment.methods.base import RoleAssignmentBase
@@ -58,26 +56,33 @@ class ByCost(RoleAssignmentBase):
 
         # goalieを除いたIDリスト
         robots_without_goalie = [
-            robot_id for robot_id in world_model.robot_activity.our_visible_robots if robot_id != goalie_id
+            robot_id for robot_id in world_model.robots.our_visible_robots.keys() if robot_id != goalie_id
         ]
 
         # ロボットがいなければ終了
         if len(robots_without_goalie) == 0:
             return id_list
 
+        # ゴーリー(play[0])を除き、ロボットの台数だけplay_rolesを用意する
+        # 後段でtacticを実行するため、deepcopyする
+        play_roles_without_goalie = deepcopy(play_roles[1 : len(robots_without_goalie) + 1])  # noqa: E203
+
         # ゴーリーを除いたコスト行列を作成
-        cost_matrix = np.zeros((len(robots_without_goalie), role_num - 1))
+        # NOTE:ロボットの台数が少ない場合、末端のroleは切り捨てられる
+        cost_matrix = np.zeros((len(robots_without_goalie), len(play_roles_without_goalie)))
 
         for i, robot_id in enumerate(robots_without_goalie):
             # ロボットの位置
-            # TODO: 例外処理を入れたほうが良い
-            robot_pos = world_model.robots.our_robots[robot_id].pos
+            robot_pos = world_model.robots.our_visible_robots[robot_id].pos
 
-            # Role0はgoalieのため除く
-            for j, tactic in enumerate(play_roles[1:]):
-                # TODO: 例外処理を入れたほうが良い
+            for j, tactic in enumerate(play_roles_without_goalie):
+                if len(tactic) == 0:
+                    # tacticが空の場合はコストを最大にする
+                    cost_matrix[i, j] = float("inf")
+                    continue
+
+                # tacticを実行する
                 tactic[0].reset(robot_id)
-
                 command = tactic[0].run(world_model)
 
                 if command.mode == MotionCommand.MODE_DIRECT_VELOCITY:
@@ -93,6 +98,7 @@ class ByCost(RoleAssignmentBase):
         robot_index, role_index = linear_sum_assignment(cost_matrix)
 
         # id_listにロボットIDをセットする
+        # id_list[0]はゴーリーのため、robot_indexの先頭から1つずらす
         for i, robot in enumerate(robot_index):
             id_list[role_index[i] + 1] = robots_without_goalie[robot]
 

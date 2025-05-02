@@ -17,6 +17,7 @@
 from typing import List
 
 from consai_game.core.role_assignment.methods.base import RoleAssignmentBase
+from consai_game.core.role_assignment.methods.fill_role_gaps import fill_role_gaps
 from consai_game.core.tactic.role import RoleConst
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
@@ -73,33 +74,9 @@ class ByVisible(RoleAssignmentBase):
 
         # 割当リストの先頭から見て空きがあれば、末尾から順に割当を変えていく
         # ゴーリーは穴埋めさせない
-        id_list = self.fill_role_gaps(id_list=id_list, ignore_index=0)
+        id_list = fill_role_gaps(id_list=id_list, ignore_index=0)
 
         # 割当を記憶する
         self.prev_id_list = id_list.copy()
-
-        return id_list
-
-    def fill_role_gaps(self, id_list: List[int], ignore_index: int) -> List[int]:
-        """空いている役割を埋める関数.
-
-        インデックスの先頭ほど優先度が高い.
-        優先度の低いもの（配列の末尾）から順に割当を変えていく.
-        """
-        fill_candidate_idx = len(id_list) - 1
-
-        for empty_idx in range(len(id_list)):
-            if empty_idx == ignore_index:
-                continue
-
-            if id_list[empty_idx] == RoleConst.INVALID_ROLE_ID:
-                # 後ろから探して、robot_idが設定されているものを探す
-                while fill_candidate_idx > empty_idx and id_list[fill_candidate_idx] == RoleConst.INVALID_ROLE_ID:
-                    fill_candidate_idx -= 1
-
-                if fill_candidate_idx > empty_idx:
-                    id_list[empty_idx] = id_list[fill_candidate_idx]
-                    id_list[fill_candidate_idx] = -1
-                    fill_candidate_idx -= 1
 
         return id_list
