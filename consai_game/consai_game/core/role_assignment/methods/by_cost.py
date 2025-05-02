@@ -84,6 +84,8 @@ class ByCost(RoleAssignmentBase):
                 # tacticを実行する
                 tactic[0].reset(robot_id)
                 command = tactic[0].run(world_model)
+                # 終了処理を確実に実行
+                tactic[0].exit()
 
                 if command.mode == MotionCommand.MODE_DIRECT_VELOCITY:
                     # 速度制御の場合は、コストを0にする
