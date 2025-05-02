@@ -86,6 +86,6 @@ class DefendGoal(TacticBase):
 
         command.desired_pose.x = x
         command.desired_pose.y = y
-        command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+        command.desired_pose.theta = 0.0
 
         return command

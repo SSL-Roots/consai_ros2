@@ -55,13 +55,12 @@ class GoaliePositioning(TacticBase):
         # y座標をボールと同じ位置にする
         y = ball_pos.y
         # 角度はボール方向
-        theta = tool.get_angle(robot_pos, ball_pos)
 
         # ゴールからはみ出ないようにclamp
         y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
 
         command.desired_pose.x = x
         command.desired_pose.y = y
-        command.desired_pose.theta = theta
+        command.desired_pose.theta = 0.0
 
         return command

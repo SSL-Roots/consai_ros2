@@ -47,7 +47,7 @@ def outside_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, 2.0)))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, 0.0)))],
             [CompositeOffense(tactic_default=MoveToReceivePass(Position(3.0, -2.0)))],
@@ -75,7 +75,7 @@ def in_our_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
@@ -103,7 +103,7 @@ def in_their_defense_area() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],

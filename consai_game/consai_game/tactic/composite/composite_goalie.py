@@ -47,8 +47,8 @@ class CompositeGoalie(TacticBase):
             # ボールが自分再度にありボールが動いている場合はゴールを守る
             return self.defend_goal.run(world_model)
         elif world_model.ball_position.is_in_our_defense_area():
-            # ボールがディフェンスエリアにある場合はボールクリア
+            # ボールがディフェンスエリアにある場合かつボールクリアフラグがONであればボールクリア
             return self.ball_clear.run(world_model)
         else:
-            # デフォルトはゴーリーのポジショニングを実行
+            # ゴーリーのポジショニングを実行
             return self.positioning.run(world_model)

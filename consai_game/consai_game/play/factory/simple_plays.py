@@ -77,7 +77,7 @@ def stop() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(SlowSafe(CompositeGoalie()))],
+            [AllowMoveInDefenseArea(SlowSafe(WrapperLookBall(Position(-6.0, 0.0))))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, 2.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, 0.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(-3.0, -2.0)))],
@@ -105,7 +105,7 @@ def our_free_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
@@ -133,7 +133,7 @@ def their_free_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(AllowMoveInDefenseArea(CompositeGoalie()))],
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, 2.0)))],
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, 0.0)))],
             [WrapperLookBall(WithAvoidBallZone(ChaseOrPosition(-3.0, -2.0)))],
@@ -160,7 +160,7 @@ def our_kick_off() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 3.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 2.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 1.0))],
@@ -187,7 +187,7 @@ def their_kick_off() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 3.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 2.0))],
             [SlowSafe(ChaseOrPosition(-3.0, 1.0))],
@@ -215,7 +215,7 @@ def our_kick_off_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 3.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-3.0, 1.0)))],
@@ -243,7 +243,7 @@ def their_kick_off_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [ChaseOrPosition(-3.0, 3.0)],
             [ChaseOrPosition(-3.0, 2.0)],
             [ChaseOrPosition(-3.0, 1.0)],
@@ -270,7 +270,7 @@ def our_penalty_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [SlowSafe(ChaseOrPosition(-5.8, 4.3))],
             [SlowSafe(ChaseOrPosition(-5.4, 4.3))],
             [SlowSafe(ChaseOrPosition(-5.0, 4.3))],
@@ -297,7 +297,7 @@ def their_penalty_kick() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [SlowSafe(Position(5.8, 4.3))],
             [SlowSafe(Position(5.4, 4.3))],
             [SlowSafe(Position(5.0, 4.3))],
@@ -324,7 +324,7 @@ def our_penalty_kick_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [WrapperLookBall(Position(-6.0, 0.0))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.8, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.4, 4.3)))],
             [CompositeOffense(tactic_default=WrapperLookBall(Position(-5.0, 4.3)))],
@@ -351,7 +351,7 @@ def their_penalty_kick_start() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [AllowMoveInDefenseArea(CompositeGoalie())],
+            [Position(-6.0, 0.0)],
             [Position(5.8, 4.3)],
             [Position(5.4, 4.3)],
             [Position(5.0, 4.3)],
