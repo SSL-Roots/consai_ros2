@@ -220,7 +220,7 @@ class Kick(TacticBase):
         pose.theta = tool.get_angle(ball_pos, self.target_pos)
         return pose
 
-    def kicking_pose(self, ball_pos: State2D, distance: float=0.1) -> State2D:
+    def kicking_pose(self, ball_pos: State2D, distance: float = 0.1) -> State2D:
         """ボールを蹴るための目標位置を生成"""
 
         # ボールの中心からターゲットへの座標系を作成
