@@ -126,7 +126,12 @@ class CompositeManMark(TacticBase):
 
     def exit(self):
         super().exit()
+        # 登録から削除
         self.assignment_module.unregister_robot(self.robot_id)
+
+        # 所有するTacticもexitする
+        self.tactic_default.exit()
+        self.man_mark_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         threats = world_model.threats.threats
