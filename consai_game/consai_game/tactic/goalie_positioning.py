@@ -54,8 +54,8 @@ class GoaliePositioning(TacticBase):
         # ボールの保持状態を取得
         ball_holder = world_model.ball_activity.ball_holder
 
-        if ball_holder is None:
-            # ボールを誰も保持していないとき
+        if ball_holder is None or ball_holder.is_our_team:
+            # ボールを誰も保持していないとき、もしくは味方ロボットが保持しているとき
 
             # x座標をゴール前にする
             x = -world_model.field.half_length + self.ROBOT_RADIUS
