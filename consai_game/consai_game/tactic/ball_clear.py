@@ -40,6 +40,7 @@ class BallClear(TacticBase):
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
+        super().reset(robot_id)
         self.robot_id = robot_id
         self.kick_tactic.reset(robot_id)
 
