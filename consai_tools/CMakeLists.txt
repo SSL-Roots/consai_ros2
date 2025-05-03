@@ -64,6 +64,8 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_geometry_tools tests/test_geometry_tools.py)
   ament_add_pytest_test(test_constraint_hasher tests/test_constraint_hasher.py)
   ament_add_pytest_test(test_robot_control_hasher tests/test_robot_control_hasher.py)
+  ament_add_pytest_test(test_hysteresis tests/test_hysteresis.py)
+
 
   find_package(ament_cmake_gtest)
   ament_add_gtest(geometry_tools_test
