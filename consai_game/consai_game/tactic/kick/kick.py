@@ -154,7 +154,7 @@ class Kick(TacticBase):
         elif self.machine.state == "kicking":
             # ボールを蹴る
             command.navi_options.avoid_pushing = False
-            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.08)
+            command.desired_pose = self.kicking_pose(ball_pos=ball_pos, distance=0.04)
             command.kick_power = self.MAX_KICK_POWER
             if self.is_pass:
                 command.kick_power = self.pass_power(ball_pos)
