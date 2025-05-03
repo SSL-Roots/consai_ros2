@@ -235,14 +235,13 @@ class Kick(TacticBase):
         """自チームのゴール中心とボールを結んだ直線上に目標位置を生成する"""
         # 座標変換クラスのインスタンスの生成
         # ボール中心にボールから目標位置までの角度で変換
-        print("defence")
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, their_holder))
 
         tr_pivot_pos = State2D()
         tr_pivot_pos.x = -distance
 
         pose = trans.inverted_transform(tr_pivot_pos)
-        pose.theta = tool.get_angle(ball_pos, self.target_pos)
+        pose.theta = tool.get_angle(pose, ball_pos)
         return pose
 
     def kicking_pose(self, ball_pos: State2D, distance: float = 0.1) -> State2D:
