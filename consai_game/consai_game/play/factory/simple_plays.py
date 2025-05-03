@@ -36,6 +36,7 @@ from consai_game.tactic.stay import Stay
 from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMovingInPlacementArea
 from consai_game.tactic.wrapper.slow_safe import SlowSafe
 from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
+from consai_game.play.conditions.ball_conditions import BallConditions
 
 
 def halt() -> Play:
@@ -69,6 +70,7 @@ def stop() -> Play:
     """STOP信号をトリガーにした, デバッグ用の空のPlayを作成する関数."""
     applicable = [
         RefereeConditions.stop,
+        BallConditions.is_in_their_defense_area.invert(),
     ]
     return Play(
         name="stop",
@@ -88,6 +90,34 @@ def stop() -> Play:
             [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, 3.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, -3.0)))],
             [SlowSafe(WrapperLookBall(ChaseOrPosition(3.0, 0.0)))],
+        ],
+    )
+
+
+def stop_ball_in_defence_area() -> Play:
+    """ボールが相手チームのディフェンスエリアにあるときのPlayを生成する関数."""
+    applicable = [
+        RefereeConditions.stop,
+        BallConditions.is_in_their_defense_area,
+    ]
+    return Play(
+        name="Stop. Ball is in their defense area",
+        description="ボールが相手チームのディフェンスエリアにあるときのPlay",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [AllowMoveInDefenseArea(SlowSafe(WrapperLookBall(Position(-6.0, 0.0))))],
+            [SlowSafe(WrapperLookBall(Position(-3.0, 2.0)))],
+            [SlowSafe(WrapperLookBall(Position(-3.0, 0.0)))],
+            [SlowSafe(WrapperLookBall(Position(-3.0, -2.0)))],
+            [SlowSafe(WrapperLookBall(Position(0.0, 4.0)))],
+            [SlowSafe(WrapperLookBall(Position(0.0, 2.0)))],
+            [SlowSafe(WrapperLookBall(Position(0.0, -2.0)))],
+            [SlowSafe(WrapperLookBall(Position(0.0, -4.0)))],
+            [SlowSafe(WrapperLookBall(Position(3.0, 3.0)))],
+            [SlowSafe(WrapperLookBall(Position(3.0, -3.0)))],
+            [SlowSafe(WrapperLookBall(Position(3.0, 0.0)))],
         ],
     )
 
