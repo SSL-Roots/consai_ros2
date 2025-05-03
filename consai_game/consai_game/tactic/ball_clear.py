@@ -35,7 +35,8 @@ class BallClear(TacticBase):
         """Initialize the DefendGoal tactic."""
         super().__init__()
         self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=False, is_setplay=False)
-        self.hysteresis = Hysteresis(off_threshold=-0.1, on_threshold=0.1, initial_state=True)
+        # ヒステリシスの設定
+        self.hysteresis = Hysteresis(off_threshold=-0.1, on_threshold=0.1)
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -64,7 +65,6 @@ class BallClear(TacticBase):
 
         # ボールクリアの位置を設定
         target_pos = State2D()
-        # if 0.0 < robot_pos.y and state:
         if state:
             target_pos.y = y
         else:
