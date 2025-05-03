@@ -23,6 +23,7 @@ from operator import attrgetter
 
 from dataclasses import dataclass, field
 
+
 from consai_msgs.msg import State2D
 
 from consai_tools.geometry import geometry_tools as tool
@@ -255,7 +256,7 @@ class KickTargetModel:
 
         内部でpass_target_listを更新する.
         """
-        RATE_MARGIN = 50
+        # RATE_MARGIN = 50
 
         # 前回のターゲットを保存する
         last_pass_target_list = deepcopy(self.pass_target_list)
@@ -274,9 +275,10 @@ class KickTargetModel:
         if last_pass_target_list[0].robot_pos == self.pass_target_list[0].robot_pos:
             return self.pass_target_list[0]
 
+        # TODO: 本来いれるべきだが、これによりターゲットが切り替わり続けるため一旦無効化
         # ベストターゲットが変わった場合、
         # 前回のターゲットより十分にスコアが大きければ、新しいターゲットを返す
-        if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
-            return self.pass_target_list[0]
+        # if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
+        #     return self.pass_target_list[0]
 
         return last_pass_target_list[0]

@@ -162,8 +162,7 @@ TrackedBall BallTracker::update(const bool use_uncertain_sys_model)
   if (size == 0) {
     // 観測値が無い場合の処理
     // visibilityを下げる
-    // prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
-    prev_tracked_ball_.visibility[0] = 1.0;
+    prev_tracked_ball_.visibility[0] -= VISIBILITY_CONTROL_VALUE;
     if (prev_tracked_ball_.visibility[0] <= 0) {
       // visibilityが0になったらカルマンフィルタの演算を実行しない
       prev_tracked_ball_.visibility[0] = 0.0;
