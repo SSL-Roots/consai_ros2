@@ -43,6 +43,9 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_avoid_ball = MoveToBall(distance=0.6)
         self.tactic_back_dribble = BackDribble()
 
+        self.placer_id = None
+        self.supporter_id = None
+
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
         super().reset(robot_id)
@@ -54,6 +57,9 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_approach_to_ball.reset(robot_id)
         self.tactic_avoid_ball.reset(robot_id)
         self.tactic_back_dribble.reset(robot_id)
+
+        self.placer_id = None
+        self.supporter_id = None
 
     def exit(self):
         super().exit()
@@ -73,13 +79,27 @@ class CompositeBallPlacement(TacticBase):
         if len(world_model.robots.our_visible_robots) < 2:
             return self.tactic_avoid_area_and_stay.run(world_model)
 
-        nearest_ball_id = world_model.robot_activity.our_robots_by_ball_distance[0]
-        nearest_placement_id = world_model.robot_activity.our_robots_by_placement_distance[0]
-        next_nearest_placement_id = world_model.robot_activity.our_robots_by_placement_distance[1]
+        # 担当者のリセット処理
+        if self.placer_id not in world_model.robots.our_visible_robots.keys():
+            self.placer_id = None
+        if self.supporter_id not in world_model.robots.our_visible_robots.keys():
+            self.supporter_id = None
+
+        # 担当者をアサインする
+        if self.placer_id is None:
+            # ボールに近いロボットを担当者にする
+            self.placer_id = world_model.robot_activity.our_robots_by_ball_distance[0]
+        if self.supporter_id is None:
+            # プレースメント位置に近いロボットを担当者にする
+            self.supporter_id = world_model.robot_activity.our_robots_by_placement_distance[0]
+            if self.supporter_id == self.placer_id:
+                # プレースメント位置に近いロボットがボールに近いロボットと同じ場合は
+                # 2番目に近いロボットを担当者にする
+                self.supporter_id = world_model.robot_activity.our_robots_by_placement_distance[1]
 
         # ボールがプレースメント位置についたら
         if world_model.ball_activity.ball_is_on_placement_area:
-            if self.robot_id == nearest_ball_id or self.robot_id == nearest_placement_id:
+            if self.robot_id == self.placer_id or self.robot_id == self.supporter_id:
                 # ボールを扱うロボットの場合は、ボールからまっすぐ離れる
                 return self.tactic_avoid_ball.run(world_model)
             else:
@@ -87,9 +107,9 @@ class CompositeBallPlacement(TacticBase):
                 return self.tactic_avoid_area_and_stay.run(world_model)
 
         # ボールに一番近かったら
-        if nearest_ball_id == self.robot_id:
+        if self.placer_id == self.robot_id:
             # サポートロボットが目的地に到着してない場合
-            if not world_model.robot_activity.our_robot_arrived(nearest_placement_id):
+            if not world_model.robot_activity.our_robot_arrived(self.supporter_id):
                 # ボールに近づく
                 return self.tactic_approach_to_ball.run(world_model)
 
@@ -97,12 +117,7 @@ class CompositeBallPlacement(TacticBase):
             return self.dribble_ball(world_model)
 
         # プレースメント位置に一番近かったら
-        if nearest_placement_id == self.robot_id:
-            return self.support_placement(world_model)
-
-        # ボールに一番近いロボットがプレースメント位置にも一番近い場合
-        # 2番目に近いロボットが対応する
-        if nearest_placement_id == nearest_ball_id and next_nearest_placement_id == self.robot_id:
+        if self.supporter_id == self.robot_id:
             return self.support_placement(world_model)
 
         # それ以外の場合は
