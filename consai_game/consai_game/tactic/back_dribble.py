@@ -15,7 +15,7 @@
 """
 Dribble Tactic.
 
-指定位置へボールをドリブルで運ぶ.
+指定位置へボールを後ろ向きのドリブルで運ぶ.
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
@@ -32,7 +32,7 @@ import numpy as np
 from transitions.extensions import GraphMachine
 
 
-class BackDribbleStateMachine(GraphMachine):
+class DribbleStateMachine(GraphMachine):
     """ドリブルの状態遷移マシン."""
 
     # ボールが近いとみなす距離の閾値[m]
@@ -42,6 +42,8 @@ class BackDribbleStateMachine(GraphMachine):
     # 目的地が近いとみなす距離の閾値[m]
     DIST_TARGET_TO_BALL_THRESHOLD = 0.1
 
+    DRIBBLE_DIST = 0.2
+
     # ドリブル角度の閾値[degree]
     DRIBBLE_ANGLE_THRESHOLD = 5
 
@@ -50,16 +52,16 @@ class BackDribbleStateMachine(GraphMachine):
         self.name = name
 
         # 状態定義
-        states = ["arrived", "chasing", "aiming", "dribbling"]
+        states = ["arrived", "approaching", "catching", "dribbling"]
 
         # 遷移定義
         transitions = [
-            {"trigger": "start", "source": "arrived", "dest": "chasing"},
-            {"trigger": "ball_near", "source": "chasing", "dest": "aiming"},
-            {"trigger": "ball_far", "source": "aiming", "dest": "chasing"},
-            {"trigger": "dribble", "source": "aiming", "dest": "dribbling"},
-            {"trigger": "reaiming", "source": "dribbling", "dest": "aiming"},
+            {"trigger": "approach", "source": "arrived", "dest": "approaching"},
+            {"trigger": "catch", "source": "approaching", "dest": "catching"},
+            {"trigger": "dribble", "source": "catching", "dest": "dribbling"},
+            {"trigger": "need_approach", "source": "catching", "dest": "approaching"},
             {"trigger": "arrival", "source": "dribbling", "dest": "arrived"},
+            {"trigger": "reapproach", "source": "dribbling", "dest": "approaching"},
             {"trigger": "reset", "source": "*", "dest": "arrived"},
         ]
 
@@ -77,50 +79,36 @@ class BackDribbleStateMachine(GraphMachine):
 
     def update(
         self,
-        dist_to_ball: float,
+        dist_robot_to_ball: float,
         dist_ball_to_target: float,
         dribble_diff_angle: float,
-        ball_trans_pos: float,
-        robot_trans_pos: float,
+        ball_is_front: bool,
+        robot_has_ball: bool,
     ):
         """状態遷移."""
-        if self.state != "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
-            self.reset()
-
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
-            self.start()
+            # ボールがロボットから離れすぎている
+            self.approach()
 
-        elif (
-            self.state == "chasing"
-            and dist_to_ball <= self.BALL_NEAR_THRESHOLD
-            and ball_trans_pos.x > robot_trans_pos.x
-        ):
-            # 状態が"chasing"でボールと目標位置間の距離がしきい値以下かつ
-            # ボールの変換後のx座標がロボットの変換後のx座標より大きい場合
-            # 状態を"chasing"から"aiming"に遷移
-            self.ball_near()
+        elif self.state == "approaching" and ball_is_front:
+            # ボールがロボットの正面にある
+            self.catch()
 
-        elif self.state == "aiming" and self.BALL_NEAR_THRESHOLD < dist_to_ball:
-            self.ball_far()
-
-        elif (
-            self.state == "aiming"
-            and dribble_diff_angle < self.DRIBBLE_ANGLE_THRESHOLD
-            and dist_to_ball < self.BALL_GET_THRESHOLD
-        ):
+        elif self.state == "catching" and robot_has_ball:
+            # ロボットがボールを持っている
             self.dribble()
 
-        elif (
-            self.state == "dribbling"
-            and self.DRIBBLE_ANGLE_THRESHOLD < dribble_diff_angle
-            and self.BALL_GET_THRESHOLD <= dist_to_ball
-        ):
-            self.reaiming()
+        elif self.state == "catching" and self.DRIBBLE_DIST < dist_robot_to_ball:
+            # ロボットがボールから離れた
+            self.need_approach()
 
-        elif self.state == "dribbling" and self.BALL_GET_THRESHOLD < dist_to_ball:
-            self.reaiming()
+        elif self.state == "dribbling" and (self.DRIBBLE_DIST < dist_robot_to_ball):
+            # ロボットがドリブル角度から外れる
+            # または、ロボットがボールから離れすぎている
+            self.reapproach()
 
-        elif self.state == "dribbling" and dist_ball_to_target <= self.DIST_TARGET_TO_BALL_THRESHOLD:
+        elif self.state == "dribbling" and dist_ball_to_target < self.DIST_TARGET_TO_BALL_THRESHOLD:
+            # ボールが目的位置に到着する
             self.arrival()
 
 
@@ -135,17 +123,14 @@ class BackDribble(TacticBase):
     # ボール追跡時の回り込みの距離[m]
     CHASING_BALL_APPROACH_DIST = 0.5
     # ボールを運ぶ目標位置のマージン[m]
-    TARGET_MARGIN_DIST = 0.15
-    # ボールを運ぶ目標位置のより厳しいマージン[m]
-    TARGET_MARGIN_DIST_STRICT = 0.08
+    TARGET_MARGIN_DIST = 0.1
 
     def __init__(self, x=0.0, y=0.0):
         """Initialize the DefendGoal tactic."""
         super().__init__()
 
-        self.move_pos = State2D()
         self.target_pos = State2D(x=x, y=y)
-        self.machine = BackDribbleStateMachine("robot")
+        self.machine = DribbleStateMachine("robot")
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -155,82 +140,114 @@ class BackDribble(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
-        command = MotionCommand()
-        command.robot_id = self.robot_id
-        command.mode = MotionCommand.MODE_NAVI
-
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # ロボットとボールの距離を計算
-        dist_to_ball = tool.get_distance(ball_pos, robot_pos)
+        dist_robot_to_ball = tool.get_distance(ball_pos, robot_pos)
         # ボールと目標位置の距離を計算
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
         # ドリブル角度を計算
-        dribble_angle = tool.get_angle(self.target_pos, ball_pos)
+        dribble_angle = tool.get_angle(ball_pos, self.target_pos)
 
         # ドリブル角度との差分を計算
         dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
 
-        # ボールを中心にしターゲットを-x軸とする座標系を生成
-        trans = tool.Trans(ball_pos, tool.get_angle(self.target_pos, ball_pos))
-        # ボールの座標を変換
-        ball_trans_pos = trans.transform(ball_pos)
-        # ロボットの座標を変換
-        robot_trans_pos = trans.transform(robot_pos)
-
         # 状態遷移を更新
         self.machine.update(
-            dist_to_ball, dist_ball_to_target, np.rad2deg(dribble_diff_angle), ball_trans_pos, robot_trans_pos
+            dist_robot_to_ball=dist_robot_to_ball,
+            dist_ball_to_target=dist_ball_to_target,
+            dribble_diff_angle=np.rad2deg(dribble_diff_angle),
+            ball_is_front=self.ball_is_front(world_model, dist_threshold=0.2),
+            robot_has_ball=self.ball_is_front(world_model, dist_threshold=0.12),
         )
+
+        command = MotionCommand()
+        command.robot_id = self.robot_id
+        command.mode = MotionCommand.MODE_NAVI
 
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
 
-        print(f"state{self.machine.state}")
-
-        if self.machine.state == "chasing":
-            # ボールの近くへ移動
-            self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_DIST * np.cos(dribble_angle)
-            self.move_pos.y = ball_pos.y - self.CHASING_BALL_APPROACH_DIST * np.sin(dribble_angle)
-            self.move_pos.theta = tool.get_angle(robot_pos, ball_pos)
-
-            # ドリブラーOFF
-            command.dribble_power = self.DRIBBLE_OFF
-
-            # 追いかけるときはボール回避を実行
-            command.navi_options.avoid_ball = True
-
-        elif self.machine.state == "aiming":
-            # 運搬方向に方向に向けて移動
-            self.move_pos.x = ball_pos.x - self.TARGET_MARGIN_DIST_STRICT * np.cos(dribble_angle)
-            self.move_pos.y = ball_pos.y - self.TARGET_MARGIN_DIST_STRICT * np.sin(dribble_angle)
-            self.move_pos.theta = dribble_angle
-
-            # ドリブラーOFF
-            command.dribble_power = self.DRIBBLE_OFF
-
+        if self.machine.state == "approaching":
+            command = self.approach_to_ball(command=command, ball_pos=ball_pos, distance=0.15, avoid_ball=True)
+        elif self.machine.state == "catching":
+            command = self.approach_to_ball(command=command, ball_pos=ball_pos, distance=0.0, avoid_ball=False)
         elif self.machine.state == "dribbling":
-            # 角度が適切な場合はドリブルを実行
-            self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(dribble_angle)
-            self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(dribble_angle)
-            self.move_pos.theta = dribble_angle
-
-            # ドリブルON
-            command.dribble_power = self.DRIBBLE_ON
-
+            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
         else:
-            # 停止処理
-            self.move_pos.x = self.target_pos.x - self.TARGET_MARGIN_DIST * np.cos(robot_pos.theta)
-            self.move_pos.y = self.target_pos.y - self.TARGET_MARGIN_DIST * np.sin(robot_pos.theta)
-            self.move_pos.theta = robot_pos.theta
-
+            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
 
-        command.desired_pose = self.move_pos
+        return command
 
+    def ball_is_front(self, world_model: WorldModel, dist_threshold: float) -> bool:
+        SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
+        THETA_THRESHOLD = 15  # 最低限守るべきロボットの姿勢 deg
+
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        ball_pos = world_model.ball.pos
+
+        # ボールを中心に、ターゲットを+x軸とした座標系を作る
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+        tr_robot_theta = trans.transform_angle(robot_pos.theta)
+
+        # ロボットがボールの後ろにいる
+        if tr_robot_pos.x < 0:
+            return False
+
+        # ボールが正面から離れすぎている
+        if tr_robot_pos.x > dist_threshold:
+            return False
+
+        # ロボットがボールを見ていない
+        if abs(tr_robot_theta) < np.deg2rad(180 - THETA_THRESHOLD):
+            return False
+
+        # ボールが横方向に離れすぎている
+        if abs(tr_robot_pos.y) > SIDE_DIST_THRESHOLD:
+            return False
+        return True
+
+    def approach_to_ball(
+        self, command: MotionCommand, ball_pos: State2D, distance: float, avoid_ball: bool
+    ) -> MotionCommand:
+        """ボールに近づくコマンドを返す."""
+
+        # ボールを中心にターゲットを+X軸とした座標系を作る
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+
+        # ボールの前に目標位置を生成する
+        command.desired_pose = trans.inverted_transform(State2D(x=distance, y=0.0))
+        command.desired_pose.theta = tool.get_angle(self.target_pos, ball_pos)  # ターゲットからボールを見る
+
+        # ボール回避をONにして、ボールに回り込む
+        if avoid_ball:
+            command.navi_options.avoid_ball = True
+
+        # ドリブルON
+        command.dribble_power = self.DRIBBLE_ON
+        return command
+
+    def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
+        """ボールをドリブルするコマンドを返す."""
+        DRIBBLING_POS = 0.5
+        DRIBBLING_VELOCITY = 0.8  # ドリブル時の速度[m/s]
+
+        # ロボットを中心にターゲットを+X軸とした座標系を作る
+        trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
+
+        # ロボットの後ろに目標位置を生成する
+        command.desired_pose = trans.inverted_transform(State2D(x=DRIBBLING_POS, y=0.0))
+        command.desired_pose.theta = tool.get_angle(self.target_pos, robot_pos)  # ターゲットからロボットを見る
+
+        command.desired_velocity.x = DRIBBLING_VELOCITY
+
+        # ドリブルON
+        command.dribble_power = self.DRIBBLE_ON
         return command
