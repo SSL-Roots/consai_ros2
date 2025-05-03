@@ -218,31 +218,22 @@ class Dribble(TacticBase):
 
     def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
-        DRIBBLING_VELOCITY = 0.8  # ドリブル時の速度[m/s]
-        PLACING_VELOCITY = 0.1  # ボールを置くときの速度[m/s]
-        PLACING_THRESHOLD = 0.5  # placingを始める距離
-
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
-        # ボールと目標位置が離れている場合は、ボールを基準に目標位置を生成する
-        if dist_ball_to_target > PLACING_THRESHOLD:
-            command.desired_pose = self.dribbling_pose_from_ball(
-                target_pos=self.target_pos, ball_pos=ball_pos, distance=self.TARGET_MARGIN_DIST
-            )
+        # ロボットを基準に目標位置を生成する
+        # これをしなければ、ボールと目標位置が超接近し、目標位置が不安定になってしまう
 
-            # 走行速度を落としてドリブルする
-            command.desired_velocity.x = DRIBBLING_VELOCITY
-            command.dribble_power = self.DRIBBLE_ON
-        else:
-            # ボールと目標位置が近い場合は、ロボットを基準に目標位置を生成する
-            # これをしなければ、ボールと目標位置が超接近し、目標位置が不安定になってしまう
-            command.desired_pose = self.dribbling_pose_from_robot(
-                target_pos=self.target_pos, robot_pos=robot_pos, distance=self.TARGET_MARGIN_DIST
-            )
+        distance = min(0.5, dist_ball_to_target)
+        velocity_limit = min(0.8, dist_ball_to_target)
 
-            # 走行速度を落として、ボールを置く
-            command.desired_velocity.x = PLACING_VELOCITY
-            command.dribble_power = self.DRIBBLE_ON
+        command.desired_pose = self.dribbling_pose_from_robot(
+            target_pos=self.target_pos, robot_pos=robot_pos, distance=distance
+        )
+
+        command.desired_velocity.x = velocity_limit
+        command.dribble_power = self.DRIBBLE_ON
+
+        command.navi_options.avoid_our_robots = False
 
         return command
 
