@@ -129,7 +129,7 @@ class RobotActivityModel:
         )
 
         # ダブルタッチ防止のために、キック禁止ロボット情報を更新する
-        self.update_prohibited_kick_robot(ball_activity, referee)
+        self.update_prohibited_kick_robot(ball_activity, referee, ball)
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
         """過去の順序を保ちながら, 新しいリストでマージする関数."""
@@ -244,12 +244,13 @@ class RobotActivityModel:
                 )
             )
 
-    def update_prohibited_kick_robot(self, ball_activity: BallActivityModel, referee: RefereeModel):
+    def update_prohibited_kick_robot(self, ball_activity: BallActivityModel, referee: RefereeModel, ball: BallModel):
         """レフェリー信号を見て、ダブルタッチをしてはいけないロボットを更新する関数."""
         # ストップゲームで初期化する
         if referee.stop:
             self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
             self.our_prohibited_kick_robot_id = self.INVALID_ROBOT_ID
+            self.stop_ball_pos = ball.pos
             return
 
         # ボール保持者を候補としてセットする
@@ -266,8 +267,10 @@ class RobotActivityModel:
 
         elif self.prohibited_kick_robot_search_state == ProhibitedKickRobotSearchState.SHOULD_FIRST_SEARCH:
             # 一番はじめにボールをけるロボットを探す
-
-            if ball_activity.ball_state == BallState.OURS_KICKED:
+            if (
+                ball_activity.ball_state == BallState.OURS_KICKED
+                and tools.get_distance(self.stop_ball_pos, ball.pos) > 0.02
+            ):
                 # 自チームがボールを蹴ったらIDをセットする
                 self.our_prohibited_kick_robot_id = self.prohibited_kick_robot_candidate_id
                 self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SHOULD_SECOND_SEARCH
