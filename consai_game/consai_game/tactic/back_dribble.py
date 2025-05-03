@@ -30,15 +30,12 @@ from consai_tools.geometry import geometry_tools as tool
 import numpy as np
 
 from transitions.extensions import GraphMachine
+from typing import Optional
 
 
 class DribbleStateMachine(GraphMachine):
     """ドリブルの状態遷移マシン."""
 
-    # ボールが近いとみなす距離の閾値[m]
-    BALL_NEAR_THRESHOLD = 0.5
-    # ボールを保持していると判定する距離の閾値[m]
-    BALL_GET_THRESHOLD = 0.2
     # 目的地が近いとみなす距離の閾値[m]
     DIST_TARGET_TO_BALL_THRESHOLD = 0.1
 
@@ -81,9 +78,9 @@ class DribbleStateMachine(GraphMachine):
         self,
         dist_robot_to_ball: float,
         dist_ball_to_target: float,
-        dribble_diff_angle: float,
         ball_is_front: bool,
         robot_has_ball: bool,
+        ball_is_far: bool,
     ):
         """状態遷移."""
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
@@ -98,7 +95,7 @@ class DribbleStateMachine(GraphMachine):
             # ロボットがボールを持っている
             self.dribble()
 
-        elif self.state == "catching" and self.DRIBBLE_DIST < dist_robot_to_ball:
+        elif self.state == "catching" and ball_is_far:
             # ロボットがボールから離れた
             self.need_approach()
 
@@ -144,25 +141,21 @@ class BackDribble(TacticBase):
         ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
-
         # ロボットとボールの距離を計算
         dist_robot_to_ball = tool.get_distance(ball_pos, robot_pos)
         # ボールと目標位置の距離を計算
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
-        # ドリブル角度を計算
-        dribble_angle = tool.get_angle(ball_pos, self.target_pos)
-
-        # ドリブル角度との差分を計算
-        dribble_diff_angle = abs(tool.angle_normalize(robot_pos.theta - dribble_angle))
-
         # 状態遷移を更新
+        APPROACH_DISTANCE = 0.3  # ボールに近づく距離
+        BALL_IS_FAR_THRESHOLD = 0.5  # ボールがロボットから離れすぎているとみなす距離
+        ball_is_far = dist_robot_to_ball > BALL_IS_FAR_THRESHOLD
         self.machine.update(
             dist_robot_to_ball=dist_robot_to_ball,
             dist_ball_to_target=dist_ball_to_target,
-            dribble_diff_angle=np.rad2deg(dribble_diff_angle),
-            ball_is_front=self.ball_is_front(world_model, dist_threshold=0.2),
+            ball_is_front=self.ball_is_front(world_model, dist_threshold=APPROACH_DISTANCE + 0.1),  # マージンをもたせる
             robot_has_ball=self.ball_is_front(world_model, dist_threshold=0.12),
+            ball_is_far=ball_is_far,
         )
 
         command = MotionCommand()
@@ -173,11 +166,16 @@ class BackDribble(TacticBase):
         command.navi_options.avoid_ball = False
 
         if self.machine.state == "approaching":
-            command = self.approach_to_ball(command=command, ball_pos=ball_pos, distance=0.15, avoid_ball=True)
+            command = self.approach_to_ball(
+                command=command, ball_pos=ball_pos, distance=APPROACH_DISTANCE, avoid_ball=True
+            )
         elif self.machine.state == "catching":
-            command = self.approach_to_ball(command=command, ball_pos=ball_pos, distance=0.0, avoid_ball=False)
+            # ゆっくり近づく
+            command = self.approach_to_ball(
+                command=command, ball_pos=ball_pos, distance=0.0, avoid_ball=False, velocity=0.1
+            )
         elif self.machine.state == "dribbling":
-            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
+            command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos, velocity=0.1)
         else:
             command = self.dribble_the_ball(command=command, ball_pos=ball_pos, robot_pos=robot_pos)
             # ドリブルOFF
@@ -187,7 +185,7 @@ class BackDribble(TacticBase):
 
     def ball_is_front(self, world_model: WorldModel, dist_threshold: float) -> bool:
         SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
-        THETA_THRESHOLD = 15  # 最低限守るべきロボットの姿勢 deg
+        THETA_THRESHOLD = 5  # 最低限守るべきロボットの姿勢 deg
 
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
         ball_pos = world_model.ball.pos
@@ -215,7 +213,12 @@ class BackDribble(TacticBase):
         return True
 
     def approach_to_ball(
-        self, command: MotionCommand, ball_pos: State2D, distance: float, avoid_ball: bool
+        self,
+        command: MotionCommand,
+        ball_pos: State2D,
+        distance: float,
+        avoid_ball: bool,
+        velocity: Optional[float] = None,
     ) -> MotionCommand:
         """ボールに近づくコマンドを返す."""
 
@@ -230,14 +233,19 @@ class BackDribble(TacticBase):
         if avoid_ball:
             command.navi_options.avoid_ball = True
 
+        # 移動速度を制限する
+        if velocity:
+            command.desired_velocity.x = velocity
+
         # ドリブルON
         command.dribble_power = self.DRIBBLE_ON
         return command
 
-    def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
+    def dribble_the_ball(
+        self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D, velocity: Optional[float] = None
+    ) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
-        DRIBBLING_POS = 0.5
-        DRIBBLING_VELOCITY = 0.8  # ドリブル時の速度[m/s]
+        DRIBBLING_POS = 0.5  # 適当にボールから離れた位置を指定する。
 
         # ロボットを中心にターゲットを+X軸とした座標系を作る
         trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
@@ -246,7 +254,9 @@ class BackDribble(TacticBase):
         command.desired_pose = trans.inverted_transform(State2D(x=DRIBBLING_POS, y=0.0))
         command.desired_pose.theta = tool.get_angle(self.target_pos, robot_pos)  # ターゲットからロボットを見る
 
-        command.desired_velocity.x = DRIBBLING_VELOCITY
+        # 移動速度を制限する
+        if velocity:
+            command.desired_velocity.x = velocity
 
         # ドリブルON
         command.dribble_power = self.DRIBBLE_ON

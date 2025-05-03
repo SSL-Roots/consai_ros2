@@ -218,47 +218,24 @@ class Dribble(TacticBase):
 
     def dribble_the_ball(self, command: MotionCommand, ball_pos: State2D, robot_pos: State2D) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
-        DRIBBLING_VELOCITY = 0.8  # ドリブル時の速度[m/s]
-        PLACING_VELOCITY = 0.1  # ボールを置くときの速度[m/s]
-        PLACING_THRESHOLD = 0.5  # placingを始める距離
-
         dist_ball_to_target = tool.get_distance(ball_pos, self.target_pos)
 
-        # ボールと目標位置が離れている場合は、ボールを基準に目標位置を生成する
-        if dist_ball_to_target > PLACING_THRESHOLD:
-            command.desired_pose = self.dribbling_pose_from_ball(
-                target_pos=self.target_pos, ball_pos=ball_pos, distance=self.TARGET_MARGIN_DIST
-            )
+        # ロボットを基準に目標位置を生成する
+        # これをしなければ、ボールと目標位置が超接近し、目標位置が不安定になってしまう
 
-            # 走行速度を落としてドリブルする
-            command.desired_velocity.x = DRIBBLING_VELOCITY
-            command.dribble_power = self.DRIBBLE_ON
-        else:
-            # ボールと目標位置が近い場合は、ロボットを基準に目標位置を生成する
-            # これをしなければ、ボールと目標位置が超接近し、目標位置が不安定になってしまう
-            command.desired_pose = self.dribbling_pose_from_robot(
-                target_pos=self.target_pos, robot_pos=robot_pos, distance=self.TARGET_MARGIN_DIST
-            )
+        distance = min(0.5, dist_ball_to_target)  # だんだん目標位置を近づける。0.5は適当な値
+        velocity_limit = min(0.8, dist_ball_to_target)  # だんだん速度を落とす。0.8は早すぎず遅すぎずにしたい。
 
-            # 走行速度を落として、ボールを置く
-            command.desired_velocity.x = PLACING_VELOCITY
-            command.dribble_power = self.DRIBBLE_ON
+        command.desired_pose = self.dribbling_pose_from_robot(
+            target_pos=self.target_pos, robot_pos=robot_pos, distance=distance
+        )
+
+        command.desired_velocity.x = velocity_limit
+        command.dribble_power = self.DRIBBLE_ON
+
+        command.navi_options.avoid_our_robots = False
 
         return command
-
-    def dribbling_pose_from_ball(self, target_pos: State2D, ball_pos: State2D, distance: float) -> State2D:
-        """ボールをドリブルするための目標位置を生成.
-
-        ボールとターゲットを結ぶ直線を作るため、ターゲットとの距離が近づくと位置生成が不安定になる.
-        """
-
-        # ボールを中心にターゲットを+X軸とした座標系を作る
-        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
-        # ボールからdistanceだけ前に進んだ位置を目標にする
-        pose = trans.inverted_transform(State2D(x=distance, y=0.0))
-        pose.theta = trans.inverted_transform_angle(0.0)  # ボールからターゲットを見る角度
-
-        return pose
 
     def dribbling_pose_from_robot(self, target_pos: State2D, robot_pos: State2D, distance: float) -> State2D:
         """ボールをドリブルするための目標位置を生成.
