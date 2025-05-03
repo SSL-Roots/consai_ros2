@@ -30,13 +30,15 @@ from typing import Optional
 
 
 class CompositeOffense(TacticBase):
-    def __init__(self, tactic_default: TacticBase, is_setplay=True):
+    def __init__(self, tactic_default: TacticBase, is_setplay=True, kick_score_threshold=50):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
         self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
         self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
         self.tactic_receive = Receive()
         self.tactic_default = tactic_default
+
+        self.kick_score_threshold = kick_score_threshold
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -138,7 +140,7 @@ class CompositeOffense(TacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
-        if world_model.kick_target.best_shoot_target.success_rate > 50:
+        if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold:
             # シュートできる場合
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
             return self.tactic_shoot.run(world_model)
