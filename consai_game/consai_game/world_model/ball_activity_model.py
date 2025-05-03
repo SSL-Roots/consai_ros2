@@ -287,11 +287,6 @@ class BallActivityModel:
             self.ball_is_on_placement_area = False
             return
 
-        # ボールが動いている場合はエリアに無いと判定する
-        if self.ball_is_moving:
-            self.ball_is_on_placement_area = False
-            return
-
         # ボールがプレースメントエリアにない場合は、しきい値を厳しくする
         threshold = ON_AREA_THRESHOLD - DISTANCE_MARGIN
 
