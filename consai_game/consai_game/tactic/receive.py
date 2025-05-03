@@ -55,8 +55,8 @@ class Receive(TacticBase):
 
         # ボールを回避をしない
         command.navi_options.avoid_ball = False
-        # ドリブラーOFF
-        command.dribble_power = self.DRIBBLE_OFF
+        # ドリブラーON
+        command.dribble_power = self.DRIBBLE_ON
 
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
