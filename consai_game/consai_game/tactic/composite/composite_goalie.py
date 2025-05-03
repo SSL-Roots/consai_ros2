@@ -29,8 +29,6 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tools
 from consai_msgs.msg import MotionCommand
 
-import math
-
 
 class CompositeGoalie(TacticBase):
     """ゴーリーの動作をまとめたTactic"""
@@ -68,7 +66,6 @@ class CompositeGoalie(TacticBase):
                     command.desired_pose.y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
                 elif world_model.field.half_goal_width < y:
                     command.desired_pose.y = world_model.field.half_goal_width + self.ROBOT_RADIUS
-            
             return command
 
         field = world_model.field
