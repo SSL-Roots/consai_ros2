@@ -55,19 +55,6 @@ class CompositeGoalie(TacticBase):
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替える関数"""
 
-        def avoid_goal(command):
-            """ロボットがゴールラインより後ろにいる場合に回避するための位置を生成"""
-            robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
-
-            if robot_pos.x < -world_model.field.half_length + self.ROBOT_RADIUS:
-                command.desired_pose.x = -world_model.field.half_length + self.ROBOT_RADIUS
-                y = robot_pos.y
-                if y < -world_model.field.half_goal_width:
-                    command.desired_pose.y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
-                elif world_model.field.half_goal_width < y:
-                    command.desired_pose.y = world_model.field.half_goal_width + self.ROBOT_RADIUS
-            return command
-
         field = world_model.field
         field_points = world_model.field_points
         ball = world_model.ball
@@ -75,16 +62,16 @@ class CompositeGoalie(TacticBase):
 
         if self._is_likely_to_score(field, field_points, ball, ball_activity):
             # ボールがゴールに入りそうならブロック
-            return avoid_goal(self.defend_goal.run(world_model))
+            return self.defend_goal.run(world_model)
         elif (
             world_model.ball_position.is_in_our_defense_area()
             and not world_model.ball_position.is_outside_with_margin()
         ):
             # ボールがディフェンスエリアにある場合はボールクリア
-            return avoid_goal(self.ball_clear.run(world_model))
+            return self.ball_clear.run(world_model)
         else:
             # ゴーリーのポジショニングを実行
-            return avoid_goal(self.positioning.run(world_model))
+            return self.positioning.run(world_model)
 
     def _is_likely_to_score(
         self, field: Field, field_points: FieldPoints, ball: BallModel, ball_activity: BallActivityModel
