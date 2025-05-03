@@ -36,6 +36,11 @@ class WithAvoidBallZone(TacticBase):
         super().reset(robot_id)
         self.inner_tactic.reset(robot_id)
 
+    def exit(self):
+        """inner_tacticをexitする関数."""
+        super().exit()
+        self.inner_tactic.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ボールの周囲を避ける."""
         command = self.inner_tactic.run(world_model)

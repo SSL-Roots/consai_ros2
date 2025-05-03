@@ -34,6 +34,11 @@ class ForbidMovingInPlacementArea(TacticBase):
         super().reset(robot_id)
         self.inner_tactic.reset(robot_id)
 
+    def exit(self):
+        """inner_tacticをexitする関数."""
+        super().exit()
+        self.inner_tactic.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """プレースメントエリア内での移動を禁止する関数."""
         command = self.inner_tactic.run(world_model)
