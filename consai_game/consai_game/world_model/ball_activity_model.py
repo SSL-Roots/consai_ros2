@@ -19,6 +19,7 @@
 ボールの状態や移動状況を更新し, ボールを保持しているロボットを追跡する機能を提供する.
 """
 
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional
@@ -56,7 +57,10 @@ class BallHolder:
 class BallActivityModel:
     """ボールの活動状態を保持するクラス."""
 
-    HAS_BALL_DISTANCE_THRESHOLD = 0.2  # ボールとロボットの距離の閾値
+    # ボールが動いたと判断する距離
+    # ここが小さすぎると、ノイズによって動いた判定になってしまう
+    BALL_MOVING_DIST_THRESHOLD = 0.3
+    HAS_BALL_DISTANCE_THRESHOLD = BALL_MOVING_DIST_THRESHOLD + 0.05  # ボールとロボットの距離の閾値
     HAS_BALL_MARGIN = 0.1  # ヒステリシス処理に使用する
     MOVING_VELOCITY_THRESHOLD = 0.1  # ボールが動いているとみなす速度の閾値
     MOVING_VELOCITY_MARGIN = 0.05  # ヒステリシス処理に使用する
@@ -81,6 +85,9 @@ class BallActivityModel:
         self.ball_stop_position = State2D()
         # ボールが相手のゴールに入るか
         self.ball_will_enter_their_goal = False
+
+        # ボール移動判定用の変数
+        self.last_ball_pos_to_detect_moving: Optional[State2D] = None
 
     def update(
         self,
@@ -268,14 +275,25 @@ class BallActivityModel:
 
         vel_norm = tools.get_norm(ball.vel)
 
-        # ヒステリシス性をもたせる
-        if self.ball_is_moving:
-            if vel_norm > self.MOVING_VELOCITY_THRESHOLD - self.MOVING_VELOCITY_MARGIN:
+        if vel_norm < self.MOVING_VELOCITY_THRESHOLD:
+            # ボールの速度が小さいときは、ボールが停止したと判断して、位置をキャプチャする
+            if self.last_ball_pos_to_detect_moving is None:
+                self.last_ball_pos_to_detect_moving = deepcopy(ball.pos)
+        else:
+            # ボールの速度が大きくて、前回の位置情報を持っていないときは
+            # 移動が継続していると判断してTrueを返す
+            if self.last_ball_pos_to_detect_moving is None:
                 return True
-            return False
 
-        if vel_norm > self.MOVING_VELOCITY_THRESHOLD:
+        # 停止時のボール位置からの移動距離
+        move_distance = tools.get_distance(ball.pos, self.last_ball_pos_to_detect_moving)
+
+        if move_distance > self.BALL_MOVING_DIST_THRESHOLD:
+            # 一定距離以上離れたら、動いたと判定してキャプチャした位置をリセット
+            self.last_ball_pos_to_detect_moving = None
             return True
+
+        # 一定距離移動してなければ、ボールは止まっていると判断
         return False
 
     def update_ball_on_placement_area(self, ball: BallModel, referee: RefereeModel):
