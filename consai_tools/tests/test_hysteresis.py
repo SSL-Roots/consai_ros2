@@ -22,10 +22,10 @@ def test_hysteresis():
 
     h = Hysteresis(off_threshold=-0.1, on_threshold=0.1, initial_state=False)
     assert h.update(0.0) is False
-    assert h.update(0.1) is False
+    assert h.update(0.1) is True
     assert h.update(0.2) is True
     assert h.update(0.1) is True
     assert h.update(0.0) is True
-    assert h.update(-0.1) is True
+    assert h.update(-0.1) is False
     assert h.update(-0.2) is False
     assert h.update(-0.1) is False
