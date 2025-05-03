@@ -190,6 +190,8 @@ class BackDribble(TacticBase):
         # 基本はボール回避をしない
         command.navi_options.avoid_ball = False
 
+        print(f"state{self.machine.state}")
+
         if self.machine.state == "chasing":
             # ボールの近くへ移動
             self.move_pos.x = ball_pos.x - self.CHASING_BALL_APPROACH_DIST * np.cos(dribble_angle)
