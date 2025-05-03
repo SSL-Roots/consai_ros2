@@ -25,9 +25,12 @@ from consai_game.tactic.wrapper.forbid_moving_in_placement_area import ForbidMov
 from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tools
+from consai_game.tactic.back_dribble import BackDribble
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
+
+from copy import deepcopy
 
 
 class CompositeBallPlacement(TacticBase):
@@ -38,6 +41,7 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
         self.tactic_approach_to_ball = MoveToBall(distance=0.15)
         self.tactic_avoid_ball = MoveToBall(distance=0.6)
+        self.tactic_back_dribble = BackDribble()
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -49,6 +53,7 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_chase_ball.reset(robot_id)
         self.tactic_approach_to_ball.reset(robot_id)
         self.tactic_avoid_ball.reset(robot_id)
+        self.tactic_back_dribble.reset(robot_id)
 
     def exit(self):
         super().exit()
@@ -59,6 +64,7 @@ class CompositeBallPlacement(TacticBase):
         self.tactic_chase_ball.exit()
         self.tactic_approach_to_ball.exit()
         self.tactic_avoid_ball.exit()
+        self.tactic_back_dribble.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -105,8 +111,42 @@ class CompositeBallPlacement(TacticBase):
 
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
-        self.tactic_dribble.target_pos = world_model.referee.placement_pos
-        command = self.tactic_dribble.run(world_model)
+        BACK_DRIBBLE_DISTANCE = 0.5
+        # ボールがフィールド外にあるか
+        target_pos = deepcopy(world_model.referee.placement_pos)
+        need_back_dribble = False
+
+        ball_pos = world_model.ball.pos
+        if world_model.ball_position.is_outside_of_top():
+            # ボールがフィールドの上にあったら、ボールの下にドリブルする
+            need_back_dribble = True
+            target_pos.x = ball_pos.x
+            target_pos.y = ball_pos.y - BACK_DRIBBLE_DISTANCE
+        elif world_model.ball_position.is_outside_of_bottom():
+            # ボールがフィールドの下にあったら、ボールの上にドリブルする
+            need_back_dribble = True
+            target_pos.x = ball_pos.x
+            target_pos.y = ball_pos.y + BACK_DRIBBLE_DISTANCE
+        elif world_model.ball_position.is_outside_of_left():
+            # ボールがフィールドの左にあったら、ボールの右にドリブルする
+            need_back_dribble = True
+            target_pos.x = ball_pos.x + BACK_DRIBBLE_DISTANCE
+            target_pos.y = ball_pos.y
+        elif world_model.ball_position.is_outside_of_right():
+            # ボールがフィールドの右にあったら、ボールの左にドリブルする
+            need_back_dribble = True
+            target_pos.x = ball_pos.x - BACK_DRIBBLE_DISTANCE
+            target_pos.y = ball_pos.y
+
+        if need_back_dribble:
+            # ボールがフィールド外にある場合は、バックドリブルする
+            self.tactic_back_dribble.target_pos = target_pos
+            command = self.tactic_back_dribble.run(world_model)
+        else:
+            # ボールがフィールド内にある場合は、ドリブルする
+            self.tactic_dribble.target_pos = target_pos
+            command = self.tactic_dribble.run(world_model)
+
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
         return command
