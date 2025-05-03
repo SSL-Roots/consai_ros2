@@ -22,6 +22,8 @@ from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.world_model.world_model import WorldModel
 
+from consai_tools.hysteresis.hysteresis import Hysteresis
+
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 
@@ -33,6 +35,7 @@ class BallClear(TacticBase):
         """Initialize the DefendGoal tactic."""
         super().__init__()
         self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=False, is_setplay=False)
+        self.hysteresis = Hysteresis(off_threshold=-0.1, on_threshold=0.1, initial_state=True)
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -42,8 +45,8 @@ class BallClear(TacticBase):
     def run(self, world_model: WorldModel, x=0.0, y=3.5) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
 
-        # ロボットの位置を取得
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # ボールの位置を取得
+        ball_pos = world_model.ball.pos
 
         # キックターゲットを取得
         # TODO: いつかパスをやるようにしたいのでコメントアウトとして残す
@@ -56,9 +59,13 @@ class BallClear(TacticBase):
         #     target_pos = kick_target_model.best_pass_target.robot_pos
         # else:
 
+        # ヒステリシスを更新
+        state = self.hysteresis.update(ball_pos.y)
+
         # ボールクリアの位置を設定
         target_pos = State2D()
-        if 0.0 < robot_pos.y:
+        # if 0.0 < robot_pos.y and state:
+        if state:
             target_pos.y = y
         else:
             target_pos.y = -y
