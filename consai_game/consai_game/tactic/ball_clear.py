@@ -25,6 +25,7 @@ from consai_game.world_model.world_model import WorldModel
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 
+
 class BallClear(TacticBase):
     """自ディフェンスエリアにあるボールをクリアするTactic."""
 
@@ -46,15 +47,10 @@ class BallClear(TacticBase):
 
         # キックターゲットを取得
         kick_target_model = world_model.kick_target
-        if (
-            kick_target_model.best_pass_target.success_rate > 30
-            and kick_target_model.best_pass_target.robot_id != -1
-        ):
-            print('pass')
+        if kick_target_model.best_pass_target.success_rate > 30 and kick_target_model.best_pass_target.robot_id != -1:
             # パスターゲットの位置を取得
             target_pos = kick_target_model.best_pass_target.robot_pos
         else:
-            print('clear')
             # デフォルトのシュートターゲットの位置を設定
             target_pos = State2D()
             if robot_pos.y < 0.0:
