@@ -21,7 +21,7 @@ WorldModelProviderNode モジュール.
 このモジュールは ROS2 ノードとして動作する.
 Referee メッセージや TrackedFrame を受け取り, ワールドモデルをリアルタイムに更新する.
 """
-
+import copy
 import json
 import threading
 from typing import Optional
@@ -118,6 +118,10 @@ class WorldModelProviderNode(Node):
             # ゲーム設定を更新
             self.update_game_config()
 
+            # トラッキング情報を更新
+            self.world_model.robots.parse_frame(self.msg_detection_traced)
+            self.world_model.ball.parse_frame(self.msg_detection_traced)
+
             # レフェリー情報を更新
             self.world_model.referee = parse_referee_msg(
                 msg=self.msg_referee,
@@ -125,11 +129,8 @@ class WorldModelProviderNode(Node):
                 our_team_is_yellow=self.world_model.game_config.our_team_is_yellow,
                 invert=self.world_model.game_config.invert,
                 ball_is_moving=self.world_model.ball_activity.ball_is_moving,
+                ball_pos=copy.deepcopy(self.world_model.ball.pos),
             )
-
-            # トラッキング情報を更新
-            self.world_model.robots.parse_frame(self.msg_detection_traced)
-            self.world_model.ball.parse_frame(self.msg_detection_traced)
 
             # フィールド情報を更新
             self.update_field_model()

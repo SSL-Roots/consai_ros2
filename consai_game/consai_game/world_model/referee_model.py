@@ -21,6 +21,8 @@ from dataclasses import dataclass
 
 from robocup_ssl_msgs.msg import Referee
 from consai_game.utils.geometry import Point
+from consai_msgs.msg import State2D
+from consai_tools.geometry.geometry_tools import get_distance
 
 
 @dataclass
@@ -49,9 +51,16 @@ class RefereeModel:
     running: bool = False
     placement_pos: Point = Point(0.0, 0.0)
 
+    stop_game_ball_pos: State2D = State2D(x=0.0, y=0.0)
+
 
 def parse_referee_msg(
-    msg: Referee, prev_data: RefereeModel, our_team_is_yellow: bool, invert: bool, ball_is_moving: bool
+    msg: Referee,
+    prev_data: RefereeModel,
+    our_team_is_yellow: bool,
+    invert: bool,
+    ball_is_moving: bool,
+    ball_pos: State2D,
 ) -> RefereeModel:
     """Refereeメッセージを解析し, 現在のゲーム状態を表すRefereeModelを返す関数."""
     data = RefereeModel()
@@ -87,6 +96,11 @@ def parse_referee_msg(
     data.our_ball_placement, data.their_ball_placement = parse_team_command(
         Referee.COMMAND_BALL_PLACEMENT_BLUE, Referee.COMMAND_BALL_PLACEMENT_YELLOW
     )
+
+    if data.stop:
+        data.stop_game_ball_pos = ball_pos
+    else:
+        data.stop_game_ball_pos = prev_data.stop_game_ball_pos
 
     # NORMAL_STARTはKICKOFFとPENALTYを兼任しているので、前回のコマンドをもとにコマンドを判別しなければならない
     if prev_data.our_kick_off:
@@ -124,7 +138,8 @@ def parse_referee_msg(
                 data.running = msg.current_action_time_remaining[0] < 0
 
             # ボールが動いたらrunningに切り替える
-            if ball_is_moving:
+            diff = get_distance(ball_pos, data.stop_game_ball_pos)
+            if diff > 0.07:  # Rule: 0.05 + margin
                 data.running = True
 
     # ボールプレースメント位置

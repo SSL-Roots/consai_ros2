@@ -15,7 +15,7 @@
 """
 条件に応じてキックやパスを切り替えるTactic
 """
-
+import copy
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
@@ -39,6 +39,7 @@ class CompositeOffense(TacticBase):
         self.tactic_default = tactic_default
 
         self.kick_score_threshold = kick_score_threshold
+        self.SHOOTING_MARGIN = 0
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -140,14 +141,18 @@ class CompositeOffense(TacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
-        if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold:
+        if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN:
             # シュートできる場合
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
+            # シュート相手がコロコロ切り替わらないようにマージンを設定
+            self.SHOOTING_MARGIN = 20
             return self.tactic_shoot.run(world_model)
 
         elif world_model.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
-            self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
+            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
+            # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
+            self.SHOOTING_MARGIN = 0
             return self.tactic_pass.run(world_model)
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい

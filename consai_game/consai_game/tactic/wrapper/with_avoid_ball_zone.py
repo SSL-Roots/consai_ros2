@@ -24,7 +24,7 @@ class WithAvoidBallZone(TacticBase):
     WithAvoidBallZone(tactic=Position()) のように使用する
     """
 
-    AVOID_RADIUS = 0.6  # ボールを避ける半径 [m]
+    AVOID_RADIUS = 0.7  # ボールを避ける半径 [m]
 
     def __init__(self, tactic=TacticBase):
         """inner_tacticを初期化する関数."""
