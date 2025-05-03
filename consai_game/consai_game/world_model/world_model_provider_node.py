@@ -52,7 +52,7 @@ class WorldModelProviderNode(Node):
     consai_param/rule トピックからフィールド設定を受信し, フィールド寸法と関連情報を更新する.
     """
 
-    def __init__(self, update_hz: float = 10, team_is_yellow: bool = False, goalie_id: int = 0, invert: bool = False):
+    def __init__(self, update_hz: float = 20, team_is_yellow: bool = False, goalie_id: int = 0, invert: bool = False):
         """
         初期化.
 

@@ -91,6 +91,15 @@ class BallActivityModel:
         field_points: FieldPoints,
     ):
         """ボールの様々な状態を更新するメソッド."""
+        # ボールの移動状態を更新する
+        self.ball_is_moving = self.is_ball_moving(ball)
+
+        # ボールの予測位置を更新する
+        self.prediction_next_ball_pos(ball)
+
+        # 最終的なボール状態を更新する
+        self.update_ball_state()
+
         # ボール保持者が有効か確認する
         if not self.validate_and_update_ball_holder(ball, robots):
             self.ball_holder = None
@@ -100,14 +109,6 @@ class BallActivityModel:
             ball=ball,
             robots=robots,
         )
-        # ボールの移動状態を更新する
-        self.ball_is_moving = self.is_ball_moving(ball)
-
-        # ボールの予測位置を更新する
-        self.prediction_next_ball_pos(ball)
-
-        # 最終的なボール状態を更新する
-        self.update_ball_state()
 
         # ボールがプレースメントエリアにあるかを更新する
         self.update_ball_on_placement_area(ball, referee)

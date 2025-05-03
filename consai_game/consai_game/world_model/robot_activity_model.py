@@ -27,6 +27,7 @@ from consai_msgs.msg import MotionCommand
 
 from dataclasses import dataclass
 from enum import Enum, auto
+from copy import deepcopy
 
 
 @dataclass
@@ -73,6 +74,7 @@ class RobotActivityModel:
         self.our_prohibited_kick_robot_id: int = self.INVALID_ROBOT_ID  # 直近のキック禁止ロボットID
         self.prohibited_kick_robot_candidate_id: int = self.INVALID_ROBOT_ID  # キック禁止ロボット候補ID
         self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
+        self.stop_ball_pos = BallModel().pos
 
     def update(
         self,
@@ -250,7 +252,7 @@ class RobotActivityModel:
         if referee.stop:
             self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
             self.our_prohibited_kick_robot_id = self.INVALID_ROBOT_ID
-            self.stop_ball_pos = ball.pos
+            self.stop_ball_pos = deepcopy(ball.pos)
             return
 
         # ボール保持者を候補としてセットする
@@ -267,13 +269,12 @@ class RobotActivityModel:
 
         elif self.prohibited_kick_robot_search_state == ProhibitedKickRobotSearchState.SHOULD_FIRST_SEARCH:
             # 一番はじめにボールをけるロボットを探す
-            if (
-                ball_activity.ball_state == BallState.OURS_KICKED
-                and tools.get_distance(self.stop_ball_pos, ball.pos) > 0.02
-            ):
-                # 自チームがボールを蹴ったらIDをセットする
-                self.our_prohibited_kick_robot_id = self.prohibited_kick_robot_candidate_id
-                self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SHOULD_SECOND_SEARCH
+            if ball_activity.ball_state == BallState.OURS_KICKED:
+                # ボールがstop時のボールの位置から5cm以上動いていればキックしたものとする
+                if tools.get_distance(self.stop_ball_pos, ball.pos) > 0.05:
+                    # 自チームがボールを蹴ったらIDをセットする
+                    self.our_prohibited_kick_robot_id = self.prohibited_kick_robot_candidate_id
+                    self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SHOULD_SECOND_SEARCH
             elif ball_activity.ball_state == BallState.THEIRS_KICKED:
                 # 相手がボールを蹴ったら探索終了
                 self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SEARCH_COMPLETED
