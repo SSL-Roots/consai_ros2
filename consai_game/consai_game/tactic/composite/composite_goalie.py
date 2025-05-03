@@ -76,7 +76,7 @@ class CompositeGoalie(TacticBase):
         ball_activity = world_model.ball_activity
         ball_is_moving = ball_activity.ball_is_moving
 
-        if self.isLikelyToScore(field, field_points, ball, ball_activity):
+        if self._isLikelyToScore(field, field_points, ball, ball_activity):
             # ボールがゴールに入りそうならブロック
             return avoid_goal(self.defend_goal.run(world_model))
         elif (
@@ -90,7 +90,7 @@ class CompositeGoalie(TacticBase):
             # ゴーリーのポジショニングを実行
             return avoid_goal(self.positioning.run(world_model))
 
-    def isLikelyToScore(
+    def _isLikelyToScore(
         self, field: Field, field_points: FieldPoints, ball: BallModel, ball_activity: BallActivityModel
     ) -> bool:
         """ボールがゴールに入りそうかどうかを判定する"""
@@ -99,6 +99,8 @@ class CompositeGoalie(TacticBase):
         ball_pos = ball.pos
         ball_stop_position = ball_activity.ball_stop_position
 
+        # ゴールの上端・下端の座標
+        # マージンを足して少し広く取る
         goal_top_with_margin = State2D(x=-field.half_length, y=goal_y_top + self.goal_with_margin)
         goal_bottom_with_margin = State2D(x=-field.half_length, y=goal_y_bottom - self.goal_with_margin)
 
