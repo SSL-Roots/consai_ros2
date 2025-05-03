@@ -30,6 +30,8 @@ from consai_game.tactic.back_dribble import BackDribble
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 
+from copy import deepcopy
+
 
 class CompositeBallPlacement(TacticBase):
     def __init__(self):
@@ -111,7 +113,7 @@ class CompositeBallPlacement(TacticBase):
         """ボールをドリブルするコマンドを返す."""
         BACK_DRIBBLE_DISTANCE = 0.5
         # ボールがフィールド外にあるか
-        target_pos = world_model.referee.placement_pos
+        target_pos = deepcopy(world_model.referee.placement_pos)
         need_back_dribble = False
 
         ball_pos = world_model.ball.pos
