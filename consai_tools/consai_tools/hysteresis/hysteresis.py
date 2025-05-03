@@ -36,7 +36,7 @@ class Hysteresis:
     def update(self, value) -> bool:
         """引数にセットした値を元にヒステリシスを更新."""
         if self.state:
-            self.state = value > self.off_threshold
+            self.state = value >= self.off_threshold
         else:
             self.state = value > self.on_threshold
         return self.state

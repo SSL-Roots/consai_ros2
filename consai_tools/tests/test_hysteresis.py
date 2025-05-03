@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_tools.hysteresis import Hysteresis
+from consai_tools.hysteresis.hysteresis import Hysteresis
 
 
 def test_hysteresis():
