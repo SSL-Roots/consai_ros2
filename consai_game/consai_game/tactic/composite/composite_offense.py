@@ -15,7 +15,7 @@
 """
 条件に応じてキックやパスを切り替えるTactic
 """
-
+import copy
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
@@ -150,7 +150,7 @@ class CompositeOffense(TacticBase):
 
         elif world_model.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
-            self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
+            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
             return self.tactic_pass.run(world_model)

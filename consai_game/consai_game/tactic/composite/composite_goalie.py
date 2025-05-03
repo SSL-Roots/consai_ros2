@@ -29,8 +29,6 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tools
 from consai_msgs.msg import MotionCommand
 
-import math
-
 
 class CompositeGoalie(TacticBase):
     """ゴーリーの動作をまとめたTactic"""
@@ -61,22 +59,19 @@ class CompositeGoalie(TacticBase):
             """ロボットがゴールラインより後ろにいる場合に回避するための位置を生成"""
             robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
-            if robot_pos.x < -world_model.field.half_length:
+            if robot_pos.x < -world_model.field.half_length + self.ROBOT_RADIUS:
                 command.desired_pose.x = -world_model.field.half_length + self.ROBOT_RADIUS
-                if abs(robot_pos.y) < world_model.field.half_goal_width:
-                    y = robot_pos.y
-                elif robot_pos.y < -world_model.field.half_goal_width:
-                    y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
-                else:
-                    y = world_model.field.half_goal_width + self.ROBOT_RADIUS
-                command.desired_pose.y = y
+                y = robot_pos.y
+                if y < -world_model.field.half_goal_width:
+                    command.desired_pose.y = -(world_model.field.half_goal_width + self.ROBOT_RADIUS)
+                elif world_model.field.half_goal_width < y:
+                    command.desired_pose.y = world_model.field.half_goal_width + self.ROBOT_RADIUS
             return command
 
         field = world_model.field
         field_points = world_model.field_points
         ball = world_model.ball
         ball_activity = world_model.ball_activity
-        ball_is_moving = ball_activity.ball_is_moving
 
         if self._is_likely_to_score(field, field_points, ball, ball_activity):
             # ボールがゴールに入りそうならブロック

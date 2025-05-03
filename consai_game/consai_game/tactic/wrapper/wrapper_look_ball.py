@@ -35,6 +35,11 @@ class WrapperLookBall(TacticBase):
         super().reset(robot_id)
         self.inner_tactic.reset(robot_id)
 
+    def exit(self):
+        """inner_tacticをexitする関数."""
+        super().exit()
+        self.inner_tactic.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ボールを見るようにdesired_poseを上書きする.`"""
         command = self.inner_tactic.run(world_model)
