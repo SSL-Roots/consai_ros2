@@ -140,7 +140,7 @@ class Kick(TacticBase):
             if world_model.ball_activity.is_their_team_ball_holder:
                 # 相手がボールを持っている場合は目標位置をボールと自チームのゴールの直線上に設定
                 command.desired_pose = self.move_to_pose_with_protecting_our_goal(
-                    ball_pos=ball_pos, their_holder=world_model.ball_activity.ball_holder.robot.pos, distance=0.15
+                    ball_pos=ball_pos, their_holder=world_model.ball_activity.ball_holder.robot.pos, distance=0.09
                 )
             else:
                 if self.is_setplay or 0.3 < dist_robot_to_ball:
