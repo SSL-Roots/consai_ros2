@@ -139,7 +139,7 @@ def parse_referee_msg(
 
             # ボールが動いたらrunningに切り替える
             diff = get_distance(ball_pos, data.stop_game_ball_pos)
-            if ball_is_moving and diff > 0.05:
+            if diff > 0.07:  # Rule: 0.05 + margin
                 data.running = True
 
     # ボールプレースメント位置
