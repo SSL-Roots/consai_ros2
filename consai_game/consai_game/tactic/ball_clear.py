@@ -58,10 +58,10 @@ class BallClear(TacticBase):
 
         # ボールクリアの位置を設定
         target_pos = State2D()
-        if robot_pos.y < 0.0:
-            target_pos.y = -y
-        else:
+        if 0.0 < robot_pos.y:
             target_pos.y = y
+        else:
+            target_pos.y = -y
         target_pos.x = x
 
         self.kick_tactic.target_pos = target_pos

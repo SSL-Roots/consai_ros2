@@ -32,7 +32,6 @@ class DefendGoal(TacticBase):
 
     # ロボットの半径[m]
     ROBOT_RADIUS = 0.1
-    GOAL_POSITION_MARGIN = 0.20
 
     def __init__(self):
         """Initialize the DefendGoal tactic."""
