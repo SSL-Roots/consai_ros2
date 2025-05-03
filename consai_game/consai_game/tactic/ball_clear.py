@@ -46,9 +46,6 @@ class BallClear(TacticBase):
 
         # キックターゲットを取得
         kick_target_model = world_model.kick_target
-        # if kick_target_model.best_shoot_target.success_rate > 50:
-        #     # シュートターゲットの位置を取得
-        #     target_pos = kick_target_model.best_shoot_target.pos
         if (
             kick_target_model.best_pass_target.success_rate > 30
             and kick_target_model.best_pass_target.robot_id != -1

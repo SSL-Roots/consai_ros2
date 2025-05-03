@@ -85,7 +85,7 @@ class CompositeGoalie(TacticBase):
             world_model.ball_position.is_in_our_defense_area()
             and not world_model.ball_position.is_outside_with_margin()
         ):
-            # ボールがディフェンスエリアにある場合かつボールが止まっている
+            # ボールがディフェンスエリアにある場合はボールクリア
             return avoid_goal(self.ball_clear.run(world_model))
         else:
             # ゴーリーのポジショニングを実行
