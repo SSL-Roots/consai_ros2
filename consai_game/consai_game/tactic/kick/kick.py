@@ -131,18 +131,27 @@ class Kick(TacticBase):
         )
 
         if self.machine.state == "chasing":
-            if self.is_setplay or 0.3 < dist_robot_to_ball:
-                command.desired_pose = self.move_to_backside_pose(
+            if world_model.ball_activity.is_their_team_ball_holder:
+                # 相手がボールを持っている場合は目標位置をボールと自チームのゴールの直線上に設定
+                command.desired_pose = self.move_to_pose_with_protecting_our_goal(
                     ball_pos=ball_pos,
                     robot_pos=robot_pos,
-                    distance=0.3,
-                )
-            else:
-                command.desired_pose = self.move_to_backside_pose(
-                    ball_pos=ball_pos,
-                    robot_pos=robot_pos,
+                    their_holder=world_model.ball_activity.ball_holder.robot.pos,
                     distance=0.15,
                 )
+            else:
+                if self.is_setplay or 0.3 < dist_robot_to_ball:
+                    command.desired_pose = self.move_to_backside_pose(
+                        ball_pos=ball_pos,
+                        robot_pos=robot_pos,
+                        distance=0.3,
+                    )
+                else:
+                    command.desired_pose = self.move_to_backside_pose(
+                        ball_pos=ball_pos,
+                        robot_pos=robot_pos,
+                        distance=0.15,
+                    )
                 command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
                 command.navi_options.avoid_pushing = False
 
@@ -215,6 +224,22 @@ class Kick(TacticBase):
         tr_pivot_pos = State2D()
         tr_pivot_pos.x = distance * np.cos(pivot_angle)
         tr_pivot_pos.y = distance * np.sin(pivot_angle)
+
+        pose = trans.inverted_transform(tr_pivot_pos)
+        pose.theta = tool.get_angle(ball_pos, self.target_pos)
+        return pose
+
+    def move_to_pose_with_protecting_our_goal(
+        self, ball_pos: State2D, robot_pos: State2D, their_holder: State2D, distance: float
+    ) -> State2D:
+        """自チームのゴール中心とボールを結んだ直線上に目標位置を生成する"""
+        # 座標変換クラスのインスタンスの生成
+        # ボール中心にボールから目標位置までの角度で変換
+        print("defence")
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, their_holder))
+
+        tr_pivot_pos = State2D()
+        tr_pivot_pos.x = -distance
 
         pose = trans.inverted_transform(tr_pivot_pos)
         pose.theta = tool.get_angle(ball_pos, self.target_pos)

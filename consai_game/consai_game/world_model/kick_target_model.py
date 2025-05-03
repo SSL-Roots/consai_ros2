@@ -253,7 +253,7 @@ class KickTargetModel:
 
         内部でpass_target_listを更新する.
         """
-        RATE_MARGIN = 50
+        RATE_MARGIN = 60
 
         # 前回のターゲットを保存する
         last_pass_target_list = deepcopy(self.pass_target_list)
