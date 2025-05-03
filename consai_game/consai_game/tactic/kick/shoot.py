@@ -27,7 +27,7 @@ class Shoot(TacticBase):
         """シュートのTacticインスタンスを初期化する関数."""
         super().__init__()
 
-        self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=False)
+        self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=True)
 
     def reset(self, robot_id: int) -> None:
         """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
@@ -35,7 +35,7 @@ class Shoot(TacticBase):
         self.state = TacticState.RUNNING
         self.kick_tactic.reset(robot_id)
 
-    def run(self, world_model: WorldModel) -> MotionCommand:
+    def run(self, world_model: WorldModel, x=6.0, y=0.0) -> MotionCommand:
         """シュートを実行するためのMotionCommandを生成する関数."""
 
         # キックターゲットを取得
@@ -49,8 +49,8 @@ class Shoot(TacticBase):
         else:
             # デフォルトのシュートターゲットの位置を設定
             target_pos = State2D()
-            target_pos.x = 6.0
-            target_pos.y = 0.0
+            target_pos.x = x
+            target_pos.y = y
 
         self.kick_tactic.target_pos = target_pos
 
