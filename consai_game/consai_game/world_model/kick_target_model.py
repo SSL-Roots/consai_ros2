@@ -107,9 +107,9 @@ class KickTargetModel:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = self.robot_radius  # ロボット半径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
-        MAX_DISTANCE_SCORE = 20  # スコア計算時のシュートターゲットの最大スコア
-        MAX_ANGLE_SCORE = 30  # スコア計算時のシュートターゲットの最大角度スコア
-        MAX_GOALIE_LEAVE_SCORE = 50  # スコア計算時のシュートターゲットがgoalieからどれくらい離れているかの最大スコア
+        MAX_DISTANCE_SCORE = 60  # スコア計算時のシュートターゲットの最大スコア
+        MAX_ANGLE_SCORE = 20  # スコア計算時のシュートターゲットの最大角度スコア
+        MAX_GOALIE_LEAVE_SCORE = 20  # スコア計算時のシュートターゲットがgoalieからどれくらい離れているかの最大スコア
 
         # 相手のgoalieの位置でシュートターゲットのスコア計算
         goalie_pos = None
