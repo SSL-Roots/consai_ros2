@@ -128,7 +128,7 @@ class Kick(TacticBase):
         dist_robot_to_ball = tool.get_distance(robot_pos, ball_pos)
 
         self.machine.update(
-            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos),
+            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos, self.final_target_pos),
             robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos, self.final_target_pos),
         )
 
@@ -179,10 +179,10 @@ class Kick(TacticBase):
 
         return command
 
-    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D) -> bool:
+    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
         """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
         # ボールからターゲットへの座標系を作成
-        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
+        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
         tr_robot_pos = trans.transform(robot_pos)
 
         # ボールから見たロボットの位置の角度
@@ -204,13 +204,14 @@ class Kick(TacticBase):
         # ボールからターゲットへの座標系を作成
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
         tr_robot_pos = trans.transform(robot_pos)
+        tr_robot_theta = trans.transform_angle(robot_pos.theta)
 
         # ボールより前にロボットが居る場合
         if tr_robot_pos.x > 0.0:
             return False
 
         # ターゲットを向いていない
-        if abs(tr_robot_pos.theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
+        if abs(tr_robot_theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
             return False
 
         if abs(tr_robot_pos.y) > WIDTH_THRESHOLD:
