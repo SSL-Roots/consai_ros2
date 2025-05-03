@@ -142,19 +142,12 @@ class Kick(TacticBase):
                 command.desired_pose = self.move_to_pose_with_protecting_our_goal(
                     ball_pos=ball_pos, their_holder=world_model.ball_activity.ball_holder.robot.pos, distance=0.15
                 )
-            if self.is_setplay or 0.3 < dist_robot_to_ball:
-                command.desired_pose = self.move_to_backside_pose(
-                    ball_pos=ball_pos,
-                    robot_pos=robot_pos,
-                    target_pos=self.final_target_pos,
-                    their_holder=world_model.ball_activity.ball_holder.robot.pos,
-                    distance=0.15,
-                )
             else:
                 if self.is_setplay or 0.3 < dist_robot_to_ball:
                     command.desired_pose = self.move_to_backside_pose(
                         ball_pos=ball_pos,
                         robot_pos=robot_pos,
+                        target_pos=self.final_target_pos,
                         distance=0.3,
                     )
                 else:
