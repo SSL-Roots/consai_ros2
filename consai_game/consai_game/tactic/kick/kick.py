@@ -84,7 +84,7 @@ class Kick(TacticBase):
 
     ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
     ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
-    DRIBBLE_ON = 1.0 # ドリブルON時の出力
+    DRIBBLE_ON = 1.0  # ドリブルON時の出力
 
     def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=True):
         """
