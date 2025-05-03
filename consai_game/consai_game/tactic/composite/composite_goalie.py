@@ -29,6 +29,8 @@ from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tools
 from consai_msgs.msg import MotionCommand
 
+import math
+
 
 class CompositeGoalie(TacticBase):
     """ゴーリーの動作をまとめたTactic"""
@@ -76,13 +78,12 @@ class CompositeGoalie(TacticBase):
         ball_activity = world_model.ball_activity
         ball_is_moving = ball_activity.ball_is_moving
 
-        if self._isLikelyToScore(field, field_points, ball, ball_activity):
+        if self._is_likely_to_score(field, field_points, ball, ball_activity):
             # ボールがゴールに入りそうならブロック
             return avoid_goal(self.defend_goal.run(world_model))
         elif (
             world_model.ball_position.is_in_our_defense_area()
             and not world_model.ball_position.is_outside_with_margin()
-            and not ball_is_moving
         ):
             # ボールがディフェンスエリアにある場合かつボールが止まっている
             return avoid_goal(self.ball_clear.run(world_model))
@@ -90,7 +91,7 @@ class CompositeGoalie(TacticBase):
             # ゴーリーのポジショニングを実行
             return avoid_goal(self.positioning.run(world_model))
 
-    def _isLikelyToScore(
+    def _is_likely_to_score(
         self, field: Field, field_points: FieldPoints, ball: BallModel, ball_activity: BallActivityModel
     ) -> bool:
         """ボールがゴールに入りそうかどうかを判定する"""
