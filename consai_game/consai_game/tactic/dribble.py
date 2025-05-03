@@ -21,6 +21,7 @@ Dribble Tactic.
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
+from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
@@ -131,10 +132,11 @@ class Dribble(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
-        # ボールの位置を取得
-        ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+
+        # ボールが消えることを想定して、仮想的なボール位置を生成する
+        ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
 
         # ロボットとボールの距離を計算
         dist_robot_to_ball = tool.get_distance(ball_pos, robot_pos)
@@ -152,7 +154,7 @@ class Dribble(TacticBase):
             dist_robot_to_ball=dist_robot_to_ball,
             dist_ball_to_target=dist_ball_to_target,
             dribble_diff_angle=np.rad2deg(dribble_diff_angle),
-            ball_is_front=self.ball_is_front(world_model),
+            ball_is_front=self.ball_is_front(ball_pos=ball_pos, robot_pos=robot_pos),
         )
 
         command = MotionCommand()
@@ -173,13 +175,10 @@ class Dribble(TacticBase):
 
         return command
 
-    def ball_is_front(self, world_model: WorldModel) -> bool:
+    def ball_is_front(self, ball_pos: State2D, robot_pos: State2D) -> bool:
         """ボールがロボットの前にあるかどうかを判定する."""
         FRONT_DIST_THRESHOLD = 0.15  # 正面方向にどれだけ離れることを許容するか
         SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
-
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
-        ball_pos = world_model.ball.pos
 
         # ロボットを中心に、ターゲットを+x軸とした座標系を作る
         trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
