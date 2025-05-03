@@ -57,7 +57,10 @@ class BallHolder:
 class BallActivityModel:
     """ボールの活動状態を保持するクラス."""
 
-    HAS_BALL_DISTANCE_THRESHOLD = 0.2  # ボールとロボットの距離の閾値
+    # ボールが動いたと判断する距離
+    # ここが小さすぎると、ノイズによって動いた判定になってしまう
+    BALL_MOVING_DIST_THRESHOLD = 0.3
+    HAS_BALL_DISTANCE_THRESHOLD = BALL_MOVING_DIST_THRESHOLD + 0.05  # ボールとロボットの距離の閾値
     HAS_BALL_MARGIN = 0.1  # ヒステリシス処理に使用する
     MOVING_VELOCITY_THRESHOLD = 0.1  # ボールが動いているとみなす速度の閾値
     MOVING_VELOCITY_MARGIN = 0.05  # ヒステリシス処理に使用する
@@ -282,14 +285,10 @@ class BallActivityModel:
             if self.last_ball_pos_to_detect_moving is None:
                 return True
 
-        # ボールが動いたと判断する距離
-        # ここが小さすぎると、ノイズによって動いた判定になってしまう
-        BALL_MOVING_DIST_THRESHOLD = 0.3
-
         # 停止時のボール位置からの移動距離
         move_distance = tools.get_distance(ball.pos, self.last_ball_pos_to_detect_moving)
 
-        if move_distance > BALL_MOVING_DIST_THRESHOLD:
+        if move_distance > self.BALL_MOVING_DIST_THRESHOLD:
             # 一定距離以上離れたら、動いたと判定してキャプチャした位置をリセット
             self.last_ball_pos_to_detect_moving = None
             return True
