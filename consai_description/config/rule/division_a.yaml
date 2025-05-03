@@ -5,6 +5,7 @@
       length: 12.0
       width: 9.0
       goal_width: 1.8
+      goal_depth: 0.18
       penalty_depth: 1.8
       penalty_width: 3.6
 

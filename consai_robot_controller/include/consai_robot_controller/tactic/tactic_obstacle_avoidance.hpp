@@ -41,7 +41,9 @@ public:
   explicit ObstacleAvoidance(const std::shared_ptr<DetectionExtractor> & detection_extractor);
   void set_field_size(
     const double field_length, const double field_width,
-    const double penalty_depth, const double penalty_width);
+    const double penalty_depth, const double penalty_width,
+    const double goal_width, const double goal_depth
+  );
   bool avoid_obstacles(
     const TrackedRobot & my_robot, const State & goal_pose, const std::optional<TrackedBall> & ball,
     const bool & avoid_our_robots,
@@ -83,6 +85,8 @@ public:
     State & avoidance_pose) const;
   State avoid_defense_area(
     const TrackedRobot & my_robot, const State & goal_pose) const;
+  State avoid_goal(
+    const TrackedRobot & my_robot, const State & goal_pose) const;
 
 private:
   bool avoid_ball_around_impl(
@@ -100,6 +104,8 @@ private:
   double field_boundary_width_ = 0.3;
   double field_penalty_depth_ = 1.8;
   double field_penalty_width_ = 3.6;
+  double field_goal_width_ = 1.8;
+  double field_goal_depth_ = 0.18;
 };
 
 }  // namespace tactic
