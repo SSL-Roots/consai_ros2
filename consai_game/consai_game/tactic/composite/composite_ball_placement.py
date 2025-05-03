@@ -26,6 +26,7 @@ from consai_game.tactic.wrapper.with_avoid_ball_zone import WithAvoidBallZone
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tools
 from consai_game.tactic.back_dribble import BackDribble
+from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
@@ -130,8 +131,10 @@ class CompositeBallPlacement(TacticBase):
         # ボールがフィールド外にあるか
         target_pos = deepcopy(world_model.referee.placement_pos)
         need_back_dribble = False
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
-        ball_pos = world_model.ball.pos
+        # ボールが消えることを想定して、仮想的なボール位置を生成する
+        ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
         if world_model.ball_position.is_outside_of_top():
             # ボールがフィールドの上にあったら、ボールの下にドリブルする
             need_back_dribble = True

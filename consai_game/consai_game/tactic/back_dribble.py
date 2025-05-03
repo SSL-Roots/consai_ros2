@@ -21,6 +21,7 @@ Dribble Tactic.
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
+from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
@@ -137,10 +138,10 @@ class BackDribble(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
-        # ボールの位置を取得
-        ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # ボールが消えることを想定して、仮想的なボール位置を生成する
+        ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
         # ロボットとボールの距離を計算
         dist_robot_to_ball = tool.get_distance(ball_pos, robot_pos)
         # ボールと目標位置の距離を計算
@@ -153,8 +154,10 @@ class BackDribble(TacticBase):
         self.machine.update(
             dist_robot_to_ball=dist_robot_to_ball,
             dist_ball_to_target=dist_ball_to_target,
-            ball_is_front=self.ball_is_front(world_model, dist_threshold=APPROACH_DISTANCE + 0.1),  # マージンをもたせる
-            robot_has_ball=self.ball_is_front(world_model, dist_threshold=0.12),
+            ball_is_front=self.ball_is_front(
+                ball_pos=ball_pos, robot_pos=robot_pos, dist_threshold=APPROACH_DISTANCE + 0.1
+            ),  # マージンをもたせる
+            robot_has_ball=self.ball_is_front(ball_pos=ball_pos, robot_pos=robot_pos, dist_threshold=0.12),
             ball_is_far=ball_is_far,
         )
 
@@ -183,12 +186,9 @@ class BackDribble(TacticBase):
 
         return command
 
-    def ball_is_front(self, world_model: WorldModel, dist_threshold: float) -> bool:
+    def ball_is_front(self, ball_pos: State2D, robot_pos: State2D, dist_threshold: float) -> bool:
         SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
         THETA_THRESHOLD = 5  # 最低限守るべきロボットの姿勢 deg
-
-        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
-        ball_pos = world_model.ball.pos
 
         # ボールを中心に、ターゲットを+x軸とした座標系を作る
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, self.target_pos))
