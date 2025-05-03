@@ -19,11 +19,11 @@ BallClear Tactic.
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.tactic.kick.shoot import Shoot
+from consai_game.tactic.kick.kick import Kick
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
-
+from consai_msgs.msg import State2D
 
 class BallClear(TacticBase):
     """自ディフェンスエリアにあるボールをクリアするTactic."""
@@ -31,18 +31,38 @@ class BallClear(TacticBase):
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
-        self.shoot = Shoot()
+        self.kick_tactic = Kick(x=6.0, y=0.0, is_pass=True)
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
         self.robot_id = robot_id
-        self.shoot.reset(robot_id)
+        self.kick_tactic.reset(robot_id)
 
-    def run(self, world_model: WorldModel) -> MotionCommand:
+    def run(self, world_model: WorldModel, x=3.0, y=0.0) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
-        command = MotionCommand()
-        command.robot_id = self.robot_id
 
-        command = self.shoot.run(world_model)
+        # ロボットの位置を取得
+        robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
-        return command
+        # キックターゲットを取得
+        kick_target_model = world_model.kick_target
+        if (
+            kick_target_model.best_pass_target.success_rate > 30
+            and kick_target_model.best_pass_target.robot_id != -1
+        ):
+            print('pass')
+            # パスターゲットの位置を取得
+            target_pos = kick_target_model.best_pass_target.robot_pos
+        else:
+            print('clear')
+            # デフォルトのシュートターゲットの位置を設定
+            target_pos = State2D()
+            if robot_pos.y < 0.0:
+                target_pos.x = -x
+            else:
+                target_pos.x = x
+            target_pos.y = y
+
+        self.kick_tactic.target_pos = target_pos
+
+        return self.kick_tactic.run(world_model)

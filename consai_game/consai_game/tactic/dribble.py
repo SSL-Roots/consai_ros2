@@ -242,8 +242,7 @@ class Dribble(TacticBase):
 
             # 走行速度を落として、ボールを置く
             command.desired_velocity.x = PLACING_VELOCITY
-            # place後にボールをこぼさないように、ドリブルを止める
-            command.dribble_power = self.DRIBBLE_OFF
+            command.dribble_power = self.DRIBBLE_ON
 
         return command
 

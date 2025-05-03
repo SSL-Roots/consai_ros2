@@ -67,6 +67,8 @@ class KickTargetModel:
         # pass_targetの位置と成功率を保持するリスト
         self.pass_target_list: list[PassTarget] = []
 
+        self._half_width = 4.5
+
     def update_field_pos_list(self, field: Field) -> None:
         """フィールドの位置候補を更新する関数."""
         quarter_width = field.half_goal_width / 2
