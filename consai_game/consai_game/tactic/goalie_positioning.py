@@ -97,7 +97,7 @@ class GoaliePositioning(TacticBase):
         # y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
 
         # ボールを誰も保持していないとき、もしくは味方ロボットが保持しているとき
-        x, y = self.get_goalie_position_free_ball(field, ball)
+        x, y = self._get_goalie_position_free_ball(field, ball)
 
         command.desired_pose.x = x
         command.desired_pose.y = y
@@ -105,7 +105,7 @@ class GoaliePositioning(TacticBase):
 
         return command
 
-    def get_goalie_position_free_ball(self, field: Field, ball: BallModel):
+    def _get_goalie_position_free_ball(self, field: Field, ball: BallModel):
         """
         ボールを誰も保持していないとき、もしくは味方ロボットが保持しているときのゴーリーのポジションを生成する
         ボールの位置とゴール両端へのベクトルの長さを比較して、短い方のベクトルの方向にゴーリーを配置する
@@ -120,38 +120,47 @@ class GoaliePositioning(TacticBase):
         ball_x = ball.pos.x
         ball_y = ball.pos.y
 
-        # 3. BGt, BGbベクトルと長さ
-        vec_BGt = [goal_x - ball_x, goal_y_top - ball_y]
-        vec_BGb = [goal_x - ball_x, goal_y_bottom - ball_y]
-        len_BGt = math.hypot(vec_BGt[0], vec_BGt[1])
-        len_BGb = math.hypot(vec_BGb[0], vec_BGb[1])
+        # 3. ball_to_goal_top, ball_to_goal_bottomベクトルと長さ
+        vec_ball_to_goal_top = [goal_x - ball_x, goal_y_top - ball_y]
+        vec_ball_to_goal_bottom = [goal_x - ball_x, goal_y_bottom - ball_y]
+        len_ball_to_goal_top = math.hypot(vec_ball_to_goal_top[0], vec_ball_to_goal_top[1])
+        len_ball_to_goal_bottom = math.hypot(vec_ball_to_goal_bottom[0], vec_ball_to_goal_bottom[1])
 
-        if len_BGt < len_BGb:
-            # BGtが短い場合
-            base_len = len_BGt
-            # BGb方向の単位ベクトル
-            vec_BGb_n = [vec_BGb[0] / len_BGb, vec_BGb[1] / len_BGb]
-            # Gb'を計算
-            G_other_x = ball_x + vec_BGb_n[0] * base_len
-            G_other_y = ball_y + vec_BGb_n[1] * base_len
-            # 底辺はGt-Gb'
+        if len_ball_to_goal_top < len_ball_to_goal_bottom:
+            # ボールが上側にある
+            # 短い方に合わせた2等辺三角形を考える
+            isosceles_vertex_x, isosceles_vertex_y = self._project_point_by_length(
+                ball_x, ball_y, len_ball_to_goal_top, len_ball_to_goal_bottom, vec_ball_to_goal_bottom
+            )
+            # 底辺はゴール側
             base_goal_x = goal_x
             base_goal_y = goal_y_top
         else:
-            # BGbが短い場合
-            base_len = len_BGb
-            # BGt方向の単位ベクトル
-            vec_BGt_n = [vec_BGt[0] / len_BGt, vec_BGt[1] / len_BGt]
-            # Gt'を計算
-            G_other_x = ball_x + vec_BGt_n[0] * base_len
-            G_other_y = ball_y + vec_BGt_n[1] * base_len
-            # 底辺はGb-Gt'
+            # ボールが下側にある
+            # 短い方に合わせた2等辺三角形を考える
+            isosceles_vertex_x, isosceles_vertex_y = self._project_point_by_length(
+                ball_x, ball_y, len_ball_to_goal_bottom, len_ball_to_goal_top, vec_ball_to_goal_top
+            )
+            # 底辺はゴール側
             base_goal_x = goal_x
             base_goal_y = goal_y_bottom
 
         # 4. 底辺の中点
-        mid_x = (base_goal_x + G_other_x) / 2
-        mid_y = (base_goal_y + G_other_y) / 2
+        mid_x = (base_goal_x + isosceles_vertex_x) / 2
+        mid_y = (base_goal_y + isosceles_vertex_y) / 2
 
         # 5. ゴーリーの配置座標
         return mid_x, mid_y
+
+    def _project_point_by_length(self, ball_x, ball_y, base_len, longer_len, longer_vec):
+        """
+        ボールの位置とゴール両端へのベクトルの長さを比較して
+        短い方のベクトルの長さに応じて、長い方のベクトルの方向に投影した点を計算する
+        つまり短い方に合わせた2等辺三角形を考える
+        """
+        # 長い方のベクトルの単位ベクトル
+        vec_longer_n = [longer_vec[0] / longer_len, longer_vec[1] / longer_len]
+        # 2等辺三角形の長い方向側のx,y座標
+        isosceles_vertex_x = ball_x + vec_longer_n[0] * base_len
+        isosceles_vertex_y = ball_y + vec_longer_n[1] * base_len
+        return isosceles_vertex_x, isosceles_vertex_y
