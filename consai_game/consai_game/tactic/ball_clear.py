@@ -38,30 +38,28 @@ class BallClear(TacticBase):
         self.robot_id = robot_id
         self.kick_tactic.reset(robot_id)
 
-    def run(self, world_model: WorldModel, x=3.0, y=0.0) -> MotionCommand:
+    def run(self, world_model: WorldModel, x=3.5, y=0.0) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
 
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # キックターゲットを取得
-        kick_target_model = world_model.kick_target
-        if (
-            kick_target_model.best_pass_target.success_rate > 30
-            and kick_target_model.best_pass_target.robot_id != -1
-        ):
-            print('pass')
-            # パスターゲットの位置を取得
-            target_pos = kick_target_model.best_pass_target.robot_pos
+        # kick_target_model = world_model.kick_target
+        # if (
+        #     kick_target_model.best_pass_target.success_rate > 30
+        #     and kick_target_model.best_pass_target.robot_id != -1
+        # ):
+        #     print('pass')
+        #     # パスターゲットの位置を取得
+        #     target_pos = kick_target_model.best_pass_target.robot_pos
+        # デフォルトのシュートターゲットの位置を設定
+        target_pos = State2D()
+        if robot_pos.y < 0.0:
+            target_pos.x = -x
         else:
-            print('clear')
-            # デフォルトのシュートターゲットの位置を設定
-            target_pos = State2D()
-            if robot_pos.y < 0.0:
-                target_pos.x = -x
-            else:
-                target_pos.x = x
-            target_pos.y = y
+            target_pos.x = x
+        target_pos.y = y
 
         self.kick_tactic.target_pos = target_pos
 
