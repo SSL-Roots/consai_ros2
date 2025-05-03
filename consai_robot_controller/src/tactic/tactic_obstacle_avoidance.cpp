@@ -33,12 +33,15 @@ ObstacleAvoidance::ObstacleAvoidance(
 
 void ObstacleAvoidance::set_field_size(
   const double field_length, const double field_width,
-  const double penalty_depth, const double penalty_width)
+  const double penalty_depth, const double penalty_width,
+  const double goal_width, const double goal_depth)
 {
   field_half_length_ = field_length * 0.5;
   field_half_width_ = field_width * 0.5;
   field_penalty_depth_ = penalty_depth;
   field_penalty_width_ = penalty_width;
+  field_goal_width_ = goal_width;
+  field_goal_depth_ = goal_depth;
 }
 
 bool ObstacleAvoidance::avoid_obstacles(
@@ -454,6 +457,57 @@ State ObstacleAvoidance::avoid_defense_area(
 
   return new_pose;
 }
+
+State ObstacleAvoidance::avoid_goal(
+  const TrackedRobot & my_robot, const State & goal_pose) const
+{
+  // ゴールの横壁をロボットの直径分だけ伸ばした線分と
+  // my_robotとgoal_poseを結ぶ線分が交差した場合に、
+  // 回避位置を生成する
+  const double goal_left = -field_half_length_ - 1.0;  // フィールド外部まで伸ばす
+  const double goal_right = -field_half_length_ + ROBOT_RADIUS * 2.0;
+  const double goal_top = field_goal_width_ * 0.5;
+
+  const State goal_left_top = tools::gen_state(goal_left, goal_top, 0.0);
+  const State goal_right_top = tools::gen_state(goal_right, goal_top, 0.0);
+  const State goal_left_bottom = tools::gen_state(goal_left, -goal_top, 0.0);
+  const State goal_right_bottom = tools::gen_state(goal_right, -goal_top, 0.0);
+
+  const State robot_pose = tools::pose_state(my_robot);
+
+  State new_pose = goal_pose;
+
+  // my_robotとgoal_poseを結ぶ線分が
+  // 上の壁をまたいでいるか
+  const auto is_intersect_top = tools::is_lines_intersect(
+    robot_pose, goal_pose, goal_left_top, goal_right_top);
+  const auto is_intersect_bottom = tools::is_lines_intersect(
+    robot_pose, goal_pose, goal_left_bottom, goal_right_bottom);
+
+  auto avoid_y = goal_top - ROBOT_RADIUS * 2.0;
+
+  // ゴールの壁沿いにいる場合は、真横に回避する
+  if (robot_pose.x < -field_half_length_) {
+    avoid_y = std::fabs(robot_pose.y);
+  }
+
+  if (is_intersect_top && is_intersect_bottom) {
+    // 上下の壁をまたいでいるので、ロボットに近い側の壁に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = std::copysign(avoid_y, robot_pose.y);
+  } else if (is_intersect_top) {
+    // 上の壁をまたいでいるので、上の壁の外側に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = avoid_y;
+  } else if (is_intersect_bottom) {
+    // 下の壁をまたいでいるので、下の壁の外側に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = -avoid_y;
+  }
+
+  return new_pose;
+}
+
 
 bool ObstacleAvoidance::avoid_ball_around_impl(
   const TrackedRobot & my_robot,
