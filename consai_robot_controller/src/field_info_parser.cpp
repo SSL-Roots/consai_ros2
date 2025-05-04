@@ -58,7 +58,9 @@ void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
     param["field"]["length"],
     param["field"]["width"],
     param["field"]["penalty_depth"],
-    param["field"]["penalty_width"]
+    param["field"]["penalty_width"],
+    param["field"]["goal_width"],
+    param["field"]["goal_depth"]
   );
 }
 
@@ -221,6 +223,10 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   if (navi_options.avoid_ball) {
     new_pose = tactic_obstacle_avoidance_->avoid_ball_around(
       my_robot, new_pose, ball, navi_options.ball_avoid_radius);
+  }
+
+  if (navi_options.avoid_goal) {
+    new_pose = tactic_obstacle_avoidance_->avoid_goal(my_robot, new_pose);
   }
 
   if (navi_options.avoid_defense_area) {

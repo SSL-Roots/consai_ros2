@@ -15,11 +15,12 @@
 """
 条件に応じてキックやパスを切り替えるTactic
 """
-
+import copy
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
+from consai_game.tactic.steal_ball import StealBall
 
 
 from consai_msgs.msg import MotionCommand
@@ -30,12 +31,13 @@ from typing import Optional
 
 
 class CompositeOffense(TacticBase):
-    def __init__(self, tactic_default: TacticBase, is_setplay=True, kick_score_threshold=50):
+    def __init__(self, tactic_default: TacticBase, is_setplay=False, kick_score_threshold=30):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
         self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
         self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
         self.tactic_receive = Receive()
+        self.tactic_steal = StealBall()
         self.tactic_default = tactic_default
 
         self.kick_score_threshold = kick_score_threshold
@@ -50,6 +52,7 @@ class CompositeOffense(TacticBase):
         self.tactic_pass.reset(robot_id)
         self.tactic_tapping.reset(robot_id)
         self.tactic_receive.reset(robot_id)
+        self.tactic_steal.reset(robot_id)
         self.tactic_default.reset(robot_id)
 
     def exit(self):
@@ -60,6 +63,7 @@ class CompositeOffense(TacticBase):
         self.tactic_pass.exit()
         self.tactic_tapping.exit()
         self.tactic_receive.exit()
+        self.tactic_steal.exit()
         self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
@@ -141,6 +145,11 @@ class CompositeOffense(TacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
+        # 相手がボールを持ってる場合は奪いに行く
+        if world_model.ball_activity.is_their_team_ball_holder:
+            # ボールを奪う
+            return self.tactic_steal.run(world_model)
+
         if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN:
             # シュートできる場合
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
@@ -150,7 +159,7 @@ class CompositeOffense(TacticBase):
 
         elif world_model.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
-            self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
+            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
             return self.tactic_pass.run(world_model)
