@@ -89,9 +89,6 @@ class BallActivityModel:
         # ボール移動判定用の変数
         self.last_ball_pos_to_detect_moving: Optional[State2D] = None
 
-        # プレースメント位置
-        self.placement_pos = State2D()
-
     def update(
         self,
         ball: BallModel,
@@ -303,8 +300,6 @@ class BallActivityModel:
         """ボールがプレースメントエリアにあるかを更新するメソッド."""
         ON_AREA_THRESHOLD = 0.15  # Rule 5.2に基づく
         DISTANCE_MARGIN = 0.05  # ヒステリシス処理に使用する
-        # プレースメント位置を更新する
-        self.placement_pos = referee.placement_pos
 
         if not ball.is_visible:
             self.ball_is_on_placement_area = False
@@ -365,12 +360,3 @@ class BallActivityModel:
             return False
         else:
             return not self.ball_holder.is_our_team
-
-    def is_position_on_placement_area(self, pos: State2D) -> bool:
-        """指定座標がプレースメントエリアにあるかを判定する関数."""
-        ON_AREA_THRESHOLD = 0.10  # Rule 5.2に基づく
-
-        if tools.get_distance(pos, self.placement_pos) < ON_AREA_THRESHOLD:
-            return True
-        else:
-            return False

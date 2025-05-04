@@ -103,10 +103,11 @@ class CompositeBallPlacement(TacticBase):
             ball=world_model.ball, robot_pos=world_model.robots.our_robots[self.placer_id].pos
         )
         # ダミーボールがプレースメントエリアにあるか
-        dummy_ball_on_placement_area = world_model.ball_activity.is_position_on_placement_area(dummy_ball_pos)
+        dummy_ball_on_placement_area = world_model.referee.is_position_on_placement_area(dummy_ball_pos)
 
         # ボールがプレースメント位置についたら あるいは
         # ボールが見えていない＆ダミーボールがプレースメントエリアにある場合
+        # ボールが見えていないときだけゆるい判定にしたいため not world_model.ball.is_visible は必要
         if world_model.ball_activity.ball_is_on_placement_area or (
             dummy_ball_on_placement_area and not world_model.ball.is_visible
         ):
