@@ -20,6 +20,7 @@ from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
+from consai_game.tactic.steal_ball import StealBall
 
 
 from consai_msgs.msg import MotionCommand
@@ -36,6 +37,7 @@ class CompositeOffense(TacticBase):
         self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
         self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
         self.tactic_receive = Receive()
+        self.tactic_steal = StealBall()
         self.tactic_default = tactic_default
 
         self.kick_score_threshold = kick_score_threshold
@@ -50,6 +52,7 @@ class CompositeOffense(TacticBase):
         self.tactic_pass.reset(robot_id)
         self.tactic_tapping.reset(robot_id)
         self.tactic_receive.reset(robot_id)
+        self.tactic_steal.reset(robot_id)
         self.tactic_default.reset(robot_id)
 
     def exit(self):
@@ -60,6 +63,7 @@ class CompositeOffense(TacticBase):
         self.tactic_pass.exit()
         self.tactic_tapping.exit()
         self.tactic_receive.exit()
+        self.tactic_steal.exit()
         self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
@@ -140,6 +144,11 @@ class CompositeOffense(TacticBase):
 
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
+
+        # 相手がボールを持ってる場合は奪いに行く
+        if world_model.ball_activity.is_their_team_ball_holder:
+            # ボールを奪う
+            return self.tactic_steal.run(world_model)
 
         if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN:
             # シュートできる場合
