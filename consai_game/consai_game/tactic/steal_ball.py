@@ -60,7 +60,6 @@ class StealBall(TacticBase):
         self, command: MotionCommand, ball_pos: State2D, their_pos: State2D, robot_pos: State2D, distance: float
     ) -> MotionCommand:
         """ボールを奪うためのMotionCommandを生成する関数."""
-        print("steal_the_ball")
 
         # ボールと相手ロボットを結び座標系をつくり
         # 相手の正面に行く動作を作る
