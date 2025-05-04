@@ -45,7 +45,7 @@ class BallApproachStateMachine(GraphMachine):
         transitions = [
             {"trigger": "can_aim", "source": "chasing", "dest": "aiming"},
             {"trigger": "need_rechasing", "source": "aiming", "dest": "chasing"},
-            {"trigger": "can_kick", "source": "aiming", "dest": "receiving"},
+            {"trigger": "can_receive", "source": "aiming", "dest": "receiving"},
             {"trigger": "need_reaiming", "source": "receiving", "dest": "aiming"},
             {"trigger": "reset", "source": "*", "dest": "chasing"},
         ]
@@ -74,7 +74,7 @@ class BallApproachStateMachine(GraphMachine):
 
         elif self.state == "aiming" and robot_is_on_receive_line:
             # ロボットが狙いを定める直線上にいるか
-            self.can_kick()
+            self.can_receive()
 
         elif self.state == "receiving" and not robot_is_on_receive_line:
             self.need_reaiming()
@@ -135,7 +135,7 @@ class BallApproach(TacticBase):
                 ball_stop_pos=ball_stop_pos,
                 distance=0.3,
             )
-            command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+            command.desired_pose.theta = tool.get_angle(ball_stop_pos, ball_pos)
             command.navi_options.avoid_pushing = False
 
         elif self.machine.state == "aiming":
