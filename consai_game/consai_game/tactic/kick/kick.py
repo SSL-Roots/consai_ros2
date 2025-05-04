@@ -130,9 +130,16 @@ class Kick(TacticBase):
         # ロボットとボール間の距離を取得
         dist_robot_to_ball = tool.get_distance(robot_pos, ball_pos)
 
+        width_threshold = 0.1  # ボールからターゲットまでの直線上にロボットが居るかを判定するための幅の閾値
+        if self.is_setplay:
+            # セットプレイのときは厳しくする
+            width_threshold = 0.03
+
         self.machine.update(
             robot_is_backside=self.robot_is_backside(robot_pos, ball_pos, self.final_target_pos),
-            robot_is_on_kick_line=self.robot_is_on_kick_line(robot_pos, ball_pos, self.final_target_pos),
+            robot_is_on_kick_line=self.robot_is_on_kick_line(
+                robot_pos, ball_pos, self.final_target_pos, width_threshold=width_threshold
+            ),
         )
 
         # final_targetが設定されていなければ設定
@@ -147,6 +154,7 @@ class Kick(TacticBase):
                     target_pos=self.final_target_pos,
                     distance=0.3,
                 )
+                command.desired_pose.theta = tool.get_angle(ball_pos, self.final_target_pos)
             else:
                 command.desired_pose = self.move_to_backside_pose(
                     ball_pos=ball_pos,
@@ -154,7 +162,7 @@ class Kick(TacticBase):
                     target_pos=self.final_target_pos,
                     distance=0.15,
                 )
-            command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
+                command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
             command.navi_options.avoid_pushing = False
 
         elif self.machine.state == "aiming":
@@ -205,13 +213,14 @@ class Kick(TacticBase):
             return True
         return False
 
-    def robot_is_on_kick_line(self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
+    def robot_is_on_kick_line(
+        self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D, width_threshold: float
+    ) -> bool:
         """ボールからターゲットまでの直線上にロボットが居るかを判定する.
 
         ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
         """
         MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
-        WIDTH_THRESHOLD = 0.03  # 直線に乗っているかの距離
 
         # ボールからターゲットへの座標系を作成
         trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
@@ -226,7 +235,7 @@ class Kick(TacticBase):
         if abs(tr_robot_theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
             return False
 
-        if abs(tr_robot_pos.y) > WIDTH_THRESHOLD:
+        if abs(tr_robot_pos.y) > width_threshold:
             return False
 
         return True
