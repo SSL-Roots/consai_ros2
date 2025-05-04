@@ -72,7 +72,7 @@ class StealBall(TacticBase):
         command.dribble_power = self.DRIBBLE_ON
 
         # 相手と味方が近い場合はロボットを避けない
-        DISTANCE_THRESHOLD = 0.1
+        DISTANCE_THRESHOLD = 0.4
         if tool.get_distance(robot_pos, their_pos) < DISTANCE_THRESHOLD:
             command.navi_options.avoid_their_robots = False
             command.navi_options.avoid_pushing = False
