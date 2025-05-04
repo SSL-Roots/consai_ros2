@@ -157,7 +157,7 @@ class BackDribble(TacticBase):
             ball_is_front=self.ball_is_front(
                 ball_pos=ball_pos, robot_pos=robot_pos, dist_threshold=APPROACH_DISTANCE + 0.1
             ),  # マージンをもたせる
-            robot_has_ball=self.ball_is_front(ball_pos=ball_pos, robot_pos=robot_pos, dist_threshold=0.12),
+            robot_has_ball=self.ball_is_front(ball_pos=ball_pos, robot_pos=robot_pos, dist_threshold=0.11),
             ball_is_far=ball_is_far,
         )
 
