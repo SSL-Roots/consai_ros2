@@ -85,6 +85,8 @@ class BallActivityModel:
         self.ball_stop_position = State2D()
         # ボールが相手のゴールに入るか
         self.ball_will_enter_their_goal = False
+        # 相手ロボットが近づいてきても自チームのロボットがボールを持っている場合はヒステリシスを使用
+        self.OUR_HOLDING_MARGIN = 0.2
 
         # ボール移動判定用の変数
         self.last_ball_pos_to_detect_moving: Optional[State2D] = None
@@ -228,7 +230,7 @@ class BallActivityModel:
             return BallHolder(is_our_team=False, robot=nearest_their_robot)
 
         # 両方のチームにロボットがいる場合
-        if our_distance < their_distance:
+        if our_distance < (their_distance + self.OUR_HOLDING_MARGIN):
             return BallHolder(is_our_team=True, robot=nearest_our_robot)
         else:
             return BallHolder(is_our_team=False, robot=nearest_their_robot)
