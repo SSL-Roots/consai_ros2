@@ -53,6 +53,15 @@ class RefereeModel:
 
     stop_game_ball_pos: State2D = State2D(x=0.0, y=0.0)
 
+    def is_position_on_placement_area(self, pos: State2D) -> bool:
+        """指定座標がプレースメントエリアにあるかを判定する関数."""
+        ON_AREA_THRESHOLD = 0.10  # Rule 5.2に基づく + ちょっと厳しめ
+
+        if get_distance(pos, self.placement_pos) < ON_AREA_THRESHOLD:
+            return True
+        else:
+            return False
+
 
 def parse_referee_msg(
     msg: Referee,
