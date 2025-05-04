@@ -88,7 +88,7 @@ class Kick(TacticBase):
     DRIBBLE_ON = 1.0  # ドリブルON時の出力
     AIM_VELOCITY_FOR_SETPLAY = 0.2  # セットプレイ時の移動速度[m/s]
 
-    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=True):
+    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=False):
         """
         コンストラクタでキック目標位置と、キックの種類を設定する.
 
