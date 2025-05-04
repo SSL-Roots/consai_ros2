@@ -507,7 +507,7 @@ def our_ball_placement() -> Play:
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [CompositeBallPlacement()],
+            [AllowMoveInDefenseArea(CompositeBallPlacement())],
             [CompositeBallPlacement()],
             [CompositeBallPlacement()],
             [CompositeBallPlacement()],
