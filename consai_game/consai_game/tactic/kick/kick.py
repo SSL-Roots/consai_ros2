@@ -22,6 +22,7 @@ from consai_tools.geometry import geometry_tools as tool
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from transitions.extensions import GraphMachine
 
@@ -85,8 +86,9 @@ class Kick(TacticBase):
     ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
     ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
     DRIBBLE_ON = 1.0  # ドリブルON時の出力
+    AIM_VELOCITY_FOR_SETPLAY = 0.2  # セットプレイ時の移動速度[m/s]
 
-    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=True):
+    def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=False):
         """
         コンストラクタでキック目標位置と、キックの種類を設定する.
 
@@ -121,10 +123,10 @@ class Kick(TacticBase):
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
 
-        # ボールの位置を取得
-        ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # ボールが消えることを想定して、仮想的なボール位置を生成する
+        ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
         # ロボットとボール間の距離を取得
         dist_robot_to_ball = tool.get_distance(robot_pos, ball_pos)
 
@@ -171,6 +173,7 @@ class Kick(TacticBase):
                 command.desired_pose = self.kicking_pose(
                     ball_pos=ball_pos, distance=0.25, target_pos=self.final_target_pos
                 )
+                command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
             else:
                 command.desired_pose = self.kicking_pose(
                     ball_pos=ball_pos, distance=0.15, target_pos=self.final_target_pos
@@ -188,6 +191,9 @@ class Kick(TacticBase):
                 command.kick_power = self.pass_power(ball_pos, target_pos=self.final_target_pos)
             elif self.is_tapping:
                 command.kick_power = self.TAPPING_KICK_POWER
+
+            if self.is_setplay:
+                command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
 
         return command
 
