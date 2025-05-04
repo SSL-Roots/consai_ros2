@@ -30,8 +30,6 @@ class StealBall(TacticBase):
         """インスタンスを初期化する関数."""
         super().__init__()
 
-        self.target_pos = State2D()
-
     def run(self, world_model: WorldModel) -> MotionCommand:
         """指定した位置に移動するためのMotionCommandを生成する関数."""
         # ロボットの位置を取得
@@ -62,6 +60,7 @@ class StealBall(TacticBase):
         self, command: MotionCommand, ball_pos: State2D, their_pos: State2D, robot_pos: State2D, distance: float
     ) -> MotionCommand:
         """ボールを奪うためのMotionCommandを生成する関数."""
+        print("steal_the_ball")
 
         # ボールと相手ロボットを結び座標系をつくり
         # 相手の正面に行く動作を作る
@@ -74,9 +73,10 @@ class StealBall(TacticBase):
         command.dribble_power = self.DRIBBLE_ON
 
         # 相手と味方が近い場合はロボットを避けない
-        DISTANCE_THRESHOLD = 0.3
+        DISTANCE_THRESHOLD = 0.1
         if tool.get_distance(robot_pos, their_pos) < DISTANCE_THRESHOLD:
             command.navi_options.avoid_their_robots = False
+            command.navi_options.avoid_pushing = False
 
         # ボールを避けない
         command.navi_options.avoid_ball = False
