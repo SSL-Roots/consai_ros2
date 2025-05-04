@@ -22,6 +22,7 @@ from consai_tools.geometry import geometry_tools as tool
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from transitions.extensions import GraphMachine
 
@@ -121,10 +122,10 @@ class Kick(TacticBase):
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
 
-        # ボールの位置を取得
-        ball_pos = world_model.ball.pos
         # ロボットの位置を取得
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
+        # ボールが消えることを想定して、仮想的なボール位置を生成する
+        ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
         # ロボットとボール間の距離を取得
         dist_robot_to_ball = tool.get_distance(robot_pos, ball_pos)
 
