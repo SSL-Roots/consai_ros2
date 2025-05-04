@@ -30,7 +30,7 @@ from typing import Optional
 
 
 class CompositeOffense(TacticBase):
-    def __init__(self, tactic_default: TacticBase, is_setplay=True, kick_score_threshold=50):
+    def __init__(self, tactic_default: TacticBase, is_setplay=True, kick_score_threshold=30):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
         self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
