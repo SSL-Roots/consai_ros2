@@ -98,8 +98,18 @@ class CompositeBallPlacement(TacticBase):
                 # 2番目に近いロボットを担当者にする
                 self.supporter_id = world_model.robot_activity.our_robots_by_placement_distance[1]
 
-        # ボールがプレースメント位置についたら
-        if world_model.ball_activity.ball_is_on_placement_area:
+        # ボールが見えなくなることを考慮してダミーボール生成
+        dummy_ball_pos = generate_dummy_ball_position(
+            ball=world_model.ball, robot_pos=world_model.robots.our_robots[self.placer_id].pos
+        )
+        # ダミーボールがプレースメントエリアにあるか
+        dummy_ball_on_placement_area = world_model.ball_activity.is_position_on_placement_area(dummy_ball_pos)
+
+        # ボールがプレースメント位置についたら あるいは
+        # ボールが見えていない＆ダミーボールがプレースメントエリアにある場合
+        if world_model.ball_activity.ball_is_on_placement_area or (
+            dummy_ball_on_placement_area and not world_model.ball.is_visible
+        ):
             if self.robot_id == self.placer_id or self.robot_id == self.supporter_id:
                 # ボールを扱うロボットの場合は、ボールからまっすぐ離れる
                 return self.tactic_avoid_ball.run(world_model)
