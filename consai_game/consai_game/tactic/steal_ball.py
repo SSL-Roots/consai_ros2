@@ -25,6 +25,8 @@ class StealBall(TacticBase):
 
     # ドリブルON時の出力
     DRIBBLE_ON = 1.0
+    # 相手が持っているボールを奪うための角度
+    THEIR_BALL_STEAL_ANGLE = 0.5
 
     def __init__(self):
         """インスタンスを初期化する関数."""
@@ -71,11 +73,18 @@ class StealBall(TacticBase):
         # ドリブルを回す
         command.dribble_power = self.DRIBBLE_ON
 
-        # 相手と味方が近い場合はロボットを避けない
-        DISTANCE_THRESHOLD = 0.4
-        if tool.get_distance(robot_pos, their_pos) < DISTANCE_THRESHOLD:
-            command.navi_options.avoid_their_robots = False
+        # 相手とボールが近い場合はぶつかりに行く
+        DISTANCE_THRESHOLD = 0.15
+        if tool.get_distance(ball_pos, their_pos) < DISTANCE_THRESHOLD:
+            # ボールを奪うためにロボットを避ける
             command.navi_options.avoid_pushing = False
+
+            # ボールに対してアプローチする角度によってボールを奪うための角度を変える
+            trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, their_pos))
+            if tool.angle_normalize(trans.transform_angle(tool.get_angle(ball_pos, robot_pos))) > 0:
+                command.desired_pose.theta = trans.inverted_transform_angle(-self.THEIR_BALL_STEAL_ANGLE)
+            else:
+                command.desired_pose.theta = trans.inverted_transform_angle(self.THEIR_BALL_STEAL_ANGLE)
 
         # ボールを避けない
         command.navi_options.avoid_ball = False
