@@ -128,13 +128,22 @@ class CompositeBallPlacement(TacticBase):
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
         BACK_DRIBBLE_DISTANCE = 0.5
+        AREA_MARGIN = 0.4
         # ボールがフィールド外にあるか
         target_pos = deepcopy(world_model.referee.placement_pos)
         need_back_dribble = False
+        dummy_ball_in_field = False
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         # ボールが消えることを想定して、仮想的なボール位置を生成する
         ball_pos = generate_dummy_ball_position(ball=world_model.ball, robot_pos=robot_pos)
+
+        # ダミーボールがフィールド内に入った？
+        if (
+            abs(ball_pos.x) < world_model.field.length / 2 - AREA_MARGIN
+            and abs(ball_pos.y) < world_model.field.width / 2 - AREA_MARGIN
+        ):
+            dummy_ball_in_field = True
         if world_model.ball_position.is_outside_of_top():
             # ボールがフィールドの上にあったら、ボールの下にドリブルする
             need_back_dribble = True
@@ -156,7 +165,8 @@ class CompositeBallPlacement(TacticBase):
             target_pos.x = ball_pos.x - BACK_DRIBBLE_DISTANCE
             target_pos.y = ball_pos.y
 
-        if need_back_dribble:
+        # 実ボールがフィールド外、かつダミーボールもフィールド外
+        if need_back_dribble and not dummy_ball_in_field:
             # ボールがフィールド外にある場合は、バックドリブルする
             self.tactic_back_dribble.target_pos = target_pos
             command = self.tactic_back_dribble.run(world_model)
