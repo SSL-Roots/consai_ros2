@@ -86,6 +86,7 @@ class Kick(TacticBase):
     ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
     ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
     DRIBBLE_ON = 1.0  # ドリブルON時の出力
+    AIM_VELOCITY_FOR_SETPLAY = 0.2  # セットプレイ時の移動速度[m/s]
 
     def __init__(self, x=0.0, y=0.0, is_pass=False, is_tapping=False, is_setplay=True):
         """
@@ -172,6 +173,7 @@ class Kick(TacticBase):
                 command.desired_pose = self.kicking_pose(
                     ball_pos=ball_pos, distance=0.25, target_pos=self.final_target_pos
                 )
+                command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
             else:
                 command.desired_pose = self.kicking_pose(
                     ball_pos=ball_pos, distance=0.15, target_pos=self.final_target_pos
@@ -189,6 +191,9 @@ class Kick(TacticBase):
                 command.kick_power = self.pass_power(ball_pos, target_pos=self.final_target_pos)
             elif self.is_tapping:
                 command.kick_power = self.TAPPING_KICK_POWER
+
+            if self.is_setplay:
+                command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
 
         return command
 
