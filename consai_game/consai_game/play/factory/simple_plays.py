@@ -136,16 +136,56 @@ def our_free_kick() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(WrapperLookBall(Position(-6.0, 0.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, 2.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, 0.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, -2.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, 4.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, 2.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, -2.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, -4.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 3.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, -3.0)))],
-            [CompositeOffense(is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 0.0)))],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, 2.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, 0.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(-3.0, -2.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, 4.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, 2.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, -2.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(0.0, -4.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 3.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, -3.0))
+                )
+            ],
+            [
+                CompositeOffense(
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 0.0))
+                )
+            ],
         ],
     )
 

@@ -27,92 +27,57 @@ from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tools
 import math
-from typing import Optional
+from typing import Optional, Set
 
 
-class CompositeOffense(TacticBase):
-    def __init__(self, tactic_default: TacticBase, is_setplay=False, force_pass=False, kick_score_threshold=30):
-        super().__init__()
-        self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
-        self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
-        self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
-        self.tactic_receive = Receive()
-        self.tactic_steal = StealBall()
-        self.tactic_default = tactic_default
+class SharedInfo:
+    """CompositeOffenseの情報を共有するクラス"""
 
-        self.kick_score_threshold = kick_score_threshold
-        self.SHOOTING_MARGIN = 0
+    def __init__(self):
+        self.assigned_robot_ids: Set[int] = set()  # CompositeOffenseを担当しているロボットのID
+        self.update_conter: int = 0  # 内部用更新カウンター
+        self.can_control_ball_id: Optional[bool] = None  # ボールを操作できるロボットのID
+        self.can_receive_ball_id: Optional[bool] = None  # ボールをレシーブできるロボットのID
 
-        # 最初の動作を強制的にpassにするかの設定
-        self.force_pass = force_pass
+    def register_robot(self, robot_id: int):
+        """ロボットを登録する関数"""
+        if robot_id not in self.assigned_robot_ids:
+            self.assigned_robot_ids.add(robot_id)
 
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        super().reset(robot_id)
+    def unregister_robot(self, robot_id: int):
+        """ロボットを登録解除する関数"""
+        if robot_id in self.assigned_robot_ids:
+            self.assigned_robot_ids.discard(robot_id)
 
-        # 所有するTacticも初期化する
-        self.tactic_shoot.reset(robot_id)
-        self.tactic_pass.reset(robot_id)
-        self.tactic_tapping.reset(robot_id)
-        self.tactic_receive.reset(robot_id)
-        self.tactic_steal.reset(robot_id)
-        self.tactic_default.reset(robot_id)
+    def update(self, world_model: WorldModel):
+        """情報を更新する.
 
-    def exit(self):
-        super().exit()
-
-        # 所有するTacticもexitする
-        self.tactic_shoot.exit()
-        self.tactic_pass.exit()
-        self.tactic_tapping.exit()
-        self.tactic_receive.exit()
-        self.tactic_steal.exit()
-        self.tactic_default.exit()
-
-    def run(self, world_model: WorldModel) -> MotionCommand:
-        """状況に応じて実行するtacticを切り替えてrunする."""
-
-        can_control_ball = False
-        can_receive_ball = False
+        外部でcounterを使い、多重更新を防ぐこと
+        """
+        # リセット
+        self.can_control_ball_id = None
+        self.can_receive_ball_id = None
 
         # ダブルタッチルールによるボールをけれないロボットのIDを取得
         prohibited_kick_id = world_model.robot_activity.our_prohibited_kick_robot_id
 
-        if prohibited_kick_id == self.robot_id:
-            # ボールを操作できない場合はデフォルトのtacticを実行する
-            return self.tactic_default.run(world_model)
-
+        # ボールを操作できるロボットを決める
         nearest_robot_id, next_nearest_robot_id = self.ball_nearest_robots(world_model)
-
         if nearest_robot_id == prohibited_kick_id:
             # ボール禁止ロボットがボールに一番近い場合
-            if next_nearest_robot_id == self.robot_id:
-                # 2番目に近いロボットはボールを操作できる
-                can_control_ball = True
+            # 2番目に近いロボットがボールを操作できる
+            self.can_control_ball_id = next_nearest_robot_id
         else:
-            if nearest_robot_id == self.robot_id:
-                # ボールに一番近いロボットはボールを操作できる
-                can_control_ball = True
+            self.can_control_ball_id = nearest_robot_id
 
+        # ボールを受け取れるロボットを決める
         best_receiving_candidate, next_receiving_candidate = self.ball_receiving_candidates(world_model)
-
         if best_receiving_candidate == prohibited_kick_id:
             # ボール禁止ロボットがレシーブできる場合
-            if next_receiving_candidate == self.robot_id:
-                # 2番目にレシーブできるロボットはボールを操作できる
-                can_receive_ball = True
+            # 2番目にレシーブできるロボットがボールを扱う
+            self.can_receive_ball_id = next_receiving_candidate
         else:
-            if best_receiving_candidate == self.robot_id:
-                # ボールを一番レシーブできるロボットがレシーブする
-                can_receive_ball = True
-
-        if can_receive_ball:
-            return self.receive_the_ball(world_model)
-        elif can_control_ball:
-            # ボールに一番近い場合はボールを操作する
-            return self.control_the_ball(world_model)
-        # ボールを操作できない場合はデフォルトのtacticを実行する
-        return self.tactic_default.run(world_model)
+            self.can_receive_ball_id = best_receiving_candidate
 
     def ball_nearest_robots(self, world_model: WorldModel) -> tuple[int, Optional[int]]:
         """ボールに一番近いロボットと2番目に近いロボットを返す"""
@@ -145,6 +110,70 @@ class CompositeOffense(TacticBase):
 
         return nearest, next_nearest
 
+
+class CompositeOffense(TacticBase):
+    shared_info = SharedInfo()
+
+    def __init__(self, tactic_default: TacticBase, is_setplay=False, force_pass=False, kick_score_threshold=30):
+        super().__init__()
+        self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
+        self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
+        self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
+        self.tactic_receive = Receive()
+        self.tactic_steal = StealBall()
+        self.tactic_default = tactic_default
+
+        self.kick_score_threshold = kick_score_threshold
+        self.SHOOTING_MARGIN = 0
+
+        # 最初の動作を強制的にpassにするかの設定
+        self.force_pass = force_pass
+
+    def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
+        super().reset(robot_id)
+
+        # ロボットのIDを登録する
+        self.shared_info.register_robot(robot_id)
+
+        # 所有するTacticも初期化する
+        self.tactic_shoot.reset(robot_id)
+        self.tactic_pass.reset(robot_id)
+        self.tactic_tapping.reset(robot_id)
+        self.tactic_receive.reset(robot_id)
+        self.tactic_steal.reset(robot_id)
+        self.tactic_default.reset(robot_id)
+
+    def exit(self):
+        super().exit()
+
+        # ロボットのIDを登録解除する
+        self.shared_info.unregister_robot(self.robot_id)
+
+        # 所有するTacticもexitする
+        self.tactic_shoot.exit()
+        self.tactic_pass.exit()
+        self.tactic_tapping.exit()
+        self.tactic_receive.exit()
+        self.tactic_steal.exit()
+        self.tactic_default.exit()
+
+    def run(self, world_model: WorldModel) -> MotionCommand:
+        """状況に応じて実行するtacticを切り替えてrunする."""
+
+        # 共有情報の更新
+        if self.shared_info.update_conter != world_model.meta.update_counter:
+            self.shared_info.update_conter = world_model.meta.update_counter
+            self.shared_info.update(world_model)
+
+        if self.robot_id == self.shared_info.can_receive_ball_id:
+            return self.receive_the_ball(world_model)
+        elif self.robot_id == self.shared_info.can_control_ball_id:
+            # ボールに一番近い場合はボールを操作する
+            return self.control_the_ball(world_model)
+        # ボールを操作できない場合はデフォルトのtacticを実行する
+        return self.tactic_default.run(world_model)
+
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
@@ -163,10 +192,7 @@ class CompositeOffense(TacticBase):
             self.SHOOTING_MARGIN = 20
             return self.tactic_shoot.run(world_model)
 
-        elif (
-            world_model.kick_target.best_pass_target.success_rate > 30
-            or self.force_pass
-        ):
+        elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
             # パスできる場合 か force_passがTrueの場合
             self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
