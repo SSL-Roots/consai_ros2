@@ -66,6 +66,10 @@ class CenterBack(TacticBase):
         super().__init__()
         self.area_margin = 0.2  # ディフェンスエリアから離れる距離[m]
         self.robot_size = 0.2  # ロボット同士が離れる距離[m]
+        self.ball_move_threshold = 0.5  # ボールが動いているか判定する閾値
+        # ボールが速度を持っているときのディフェンスエリア拡張用
+        # TODO: 要調整
+        self.receive_defense_area_margin = 1.0
 
     def exit(self):
         super().exit()
@@ -120,8 +124,14 @@ class CenterBack(TacticBase):
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
+        ball_stop_position = world_model.ball_activity.ball_stop_position
+        # ボールの速度を取得
+        ball_vel = world_model.ball.vel
+        # ボール動いている判定
+        is_ball_moving = world_model.ball_activity.is_ball_moving(world_model.ball)
         # ゴール中央の位置
         goal_center = State2D(x=-field.half_length, y=0.0)
+        target_pos = goal_center
 
         # ディフェンスエリアの線分たち
         defense_line_top_right = State2D(x=defense_x_with_margin, y=defense_y_with_margin_top)
@@ -129,16 +139,38 @@ class CenterBack(TacticBase):
         defense_line_top_left = State2D(x=-field.half_length, y=defense_y_with_margin_top)
         defense_line_bottom_left = State2D(x=-field.half_length, y=defense_y_with_margin_bottom)
 
-        # ボールとゴール中央を結んだ線と、ディフェンスエリアの水平線の交点を計算
-        # ボールとゴール中央を結んだ線は線分ではなく直線で判定する
+        # ボールが速度を持っているときのディフェンスエリア拡張用
+        defense_line_top_left_with_margin = State2D(
+            x=-field.half_length, y=defense_y_with_margin_top + self.receive_defense_area_margin
+        )
+        defense_line_bottom_left_with_margin = State2D(
+            x=-field.half_length, y=defense_y_with_margin_bottom - self.receive_defense_area_margin
+        )
+
+        # ボールが速度を持っている＆ゴールへ向かっている
+        # ディフェンスエリア手前で止まる場合を除く
+        if is_ball_moving and ball_vel.x < -self.ball_move_threshold and ball_stop_position.x < defense_x_with_margin:
+            # ボールの行く先がディフェンスエリア + マージンにあるかどうかを判定
+            intersection_left = tools.get_line_intersection(
+                ball_pos,
+                ball_stop_position,
+                defense_line_top_left_with_margin,
+                defense_line_bottom_left_with_margin,
+                is_on_line1_check=False,
+            )
+            if intersection_left is not None:
+                target_pos = intersection_left
+
+        # ボールとターゲット（ゴール中央 or ボールの行く先）を結んだ線と、ディフェンスエリアの水平線の交点を計算
+        # ボールとターゲットを結んだ線は線分ではなく直線で判定する
         intersection_right = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_top_right, defense_line_bottom_right, is_on_line1_check=False
+            ball_pos, target_pos, defense_line_top_right, defense_line_bottom_right, is_on_line1_check=False
         )
         intersection_top = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_top_right, defense_line_top_left, is_on_line1_check=False
+            ball_pos, target_pos, defense_line_top_right, defense_line_top_left, is_on_line1_check=False
         )
         intersection_bottom = tools.get_line_intersection(
-            ball_pos, goal_center, defense_line_bottom_right, defense_line_bottom_left, is_on_line1_check=False
+            ball_pos, target_pos, defense_line_bottom_right, defense_line_bottom_left, is_on_line1_check=False
         )
 
         base_x = None

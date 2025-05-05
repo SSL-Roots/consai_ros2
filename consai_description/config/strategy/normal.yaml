@@ -8,4 +8,4 @@
       
     physics:
       gravity: 9.81  # 重力加速度
-      ball_friction_coeff: 0.065  # ボールの摩擦係数
+      ball_friction_coeff: 0.03  # ボールの摩擦係数

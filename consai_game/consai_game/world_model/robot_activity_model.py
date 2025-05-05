@@ -16,7 +16,7 @@
 
 from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_game.world_model.ball_model import BallModel
-from consai_game.world_model.ball_activity_model import BallActivityModel
+from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
 from consai_game.world_model.game_config_model import GameConfigModel
 from consai_game.world_model.referee_model import RefereeModel
 from consai_game.utils.geometry import Point
@@ -26,6 +26,7 @@ from consai_tools.geometry import geometry_tools as tools
 from consai_msgs.msg import MotionCommand
 
 from dataclasses import dataclass
+from enum import Enum, auto
 
 
 @dataclass
@@ -44,11 +45,19 @@ class OurRobotsArrived:
     arrived: bool = False
 
 
+class ProhibitedKickRobotSearchState(Enum):
+    BEFORE_SEARCH = 0
+    SHOULD_FIRST_SEARCH = auto()
+    SHOULD_SECOND_SEARCH = auto()
+    SEARCH_COMPLETED = auto()
+
+
 class RobotActivityModel:
     """ロボットの活動状態を保持するクラス."""
 
     # ロボットが目標位置に到着したと判定する距離[m]
     DIST_ROBOT_TO_DESIRED_THRESHOLD = 0.1
+    INVALID_ROBOT_ID = -1
 
     def __init__(self):
         """ロボットの可視状態と順序リストの初期化関数."""
@@ -60,7 +69,11 @@ class RobotActivityModel:
         self.their_robots_by_ball_distance: list[int] = []
         self.our_robots_by_placement_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
+        self.our_robots_by_ball_stop_distance: list[int] = []  # ボールの最終停止位置に近い順
         self.our_robots_arrived_list: list[OurRobotsArrived] = []
+        self.our_prohibited_kick_robot_id: int = self.INVALID_ROBOT_ID  # 直近のキック禁止ロボットID
+        self.prohibited_kick_robot_candidate_id: int = self.INVALID_ROBOT_ID  # キック禁止ロボット候補ID
+        self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
 
     def update(
         self,
@@ -108,6 +121,15 @@ class RobotActivityModel:
             )
         ]
 
+        # ボールの最終停止位置に近い順にリストを作る
+        self.our_robots_by_ball_stop_distance = [
+            robot_id
+            for robot_id, _ in self.robot_ball_stop_pos_distances(
+                robots.our_visible_robots,
+                ball_activity,
+            )
+        ]
+
         # ボールを受け取れるスコアを計算する
         self.our_ball_receive_score = self.calc_ball_receive_score_list(
             robots=robots.our_visible_robots,
@@ -115,6 +137,9 @@ class RobotActivityModel:
             ball_activity=ball_activity,
             game_config=game_config,
         )
+
+        # ダブルタッチ防止のために、キック禁止ロボット情報を更新する
+        self.update_prohibited_kick_robot(ball_activity, referee)
 
     def ordered_merge(self, prev_list: list[int], new_list: list[int]) -> list[int]:
         """過去の順序を保ちながら, 新しいリストでマージする関数."""
@@ -149,6 +174,12 @@ class RobotActivityModel:
     def robot_placement_distances(self, robots: dict[int, Robot], referee: RefereeModel) -> list[tuple[int, float]]:
         """ロボットとプレースメント位置の距離を計算し, 距離の昇順でソートしたリストを返す関数."""
         return self.robot_something_distances(robots, referee.placement_pos)
+
+    def robot_ball_stop_pos_distances(
+        self, robots: dict[int, Robot], ball_activity: BallActivityModel
+    ) -> list[tuple[int, float]]:
+        """ロボットとボールの最終停止位置の距離を計算し, 距離の昇順でソートしたリストを返す関数."""
+        return self.robot_something_distances(robots, ball_activity.ball_stop_position)
 
     def calc_ball_receive_score_list(
         self, robots: dict[int, Robot], ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
@@ -228,6 +259,49 @@ class RobotActivityModel:
                     arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
                 )
             )
+
+    def update_prohibited_kick_robot(self, ball_activity: BallActivityModel, referee: RefereeModel):
+        """レフェリー信号を見て、ダブルタッチをしてはいけないロボットを更新する関数."""
+        # ストップゲームで初期化する
+        if referee.stop:
+            self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
+            self.our_prohibited_kick_robot_id = self.INVALID_ROBOT_ID
+            return
+
+        # ボール保持者を候補としてセットする
+        if ball_activity.ball_holder:
+            if ball_activity.ball_holder.is_our_team:
+                self.prohibited_kick_robot_candidate_id = ball_activity.ball_holder.robot.robot_id
+
+        if self.prohibited_kick_robot_search_state == ProhibitedKickRobotSearchState.BEFORE_SEARCH:
+            # 探索開始前
+
+            # 自チームのセットプレイになったら探索を開始する
+            if referee.our_free_kick or referee.our_kick_off_start:
+                self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SHOULD_FIRST_SEARCH
+
+        elif self.prohibited_kick_robot_search_state == ProhibitedKickRobotSearchState.SHOULD_FIRST_SEARCH:
+            # 一番はじめにボールをけるロボットを探す
+
+            if ball_activity.ball_state == BallState.OURS_KICKED:
+                # 自チームがボールを蹴ったらIDをセットする
+                self.our_prohibited_kick_robot_id = self.prohibited_kick_robot_candidate_id
+                self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SHOULD_SECOND_SEARCH
+            elif ball_activity.ball_state == BallState.THEIRS_KICKED:
+                # 相手がボールを蹴ったら探索終了
+                self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SEARCH_COMPLETED
+
+        elif self.prohibited_kick_robot_search_state == ProhibitedKickRobotSearchState.SHOULD_SECOND_SEARCH:
+            # 二回目にボールに触ったロボット探す
+            if ball_activity.ball_state == BallState.THEIRS_KICKED:
+                # 相手がボールを蹴ったら探索終了
+                self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SEARCH_COMPLETED
+                self.our_prohibited_kick_robot_id = self.INVALID_ROBOT_ID
+            elif ball_activity.ball_state == BallState.OURS_KICKED:
+                if self.our_prohibited_kick_robot_id != self.prohibited_kick_robot_candidate_id:
+                    # 違うロボットがボールを蹴ったら探索終了
+                    self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.SEARCH_COMPLETED
+                    self.our_prohibited_kick_robot_id = self.INVALID_ROBOT_ID
 
     @property
     def our_robots_arrived(self) -> bool:

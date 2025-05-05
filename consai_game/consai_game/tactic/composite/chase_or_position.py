@@ -51,6 +51,13 @@ class ChaseOrPosition(TacticBase):
         self.tactic_chase.reset(robot_id)
         self.tactic_position.reset(robot_id)
 
+    def exit(self):
+        super().exit()
+
+        # 所有するTacticもexitする
+        self.tactic_chase.exit()
+        self.tactic_position.exit()
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         if world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id:

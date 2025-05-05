@@ -196,6 +196,8 @@ class VisualizeMsgPublisherNode(Node):
                 return vis_obj
 
             # ロボットの周りに円を描いて、レシーブ可能なことを描画する
+            if score.robot_id not in robots.our_visible_robots:
+                continue
             robot_pos = robots.our_visible_robots[score.robot_id].pos
 
             circle = ShapeCircle()

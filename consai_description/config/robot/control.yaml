@@ -8,7 +8,7 @@
 
     soft_limits:
       acceleration_xy: 2.5  # m/s^2
-      acceleration_theta: 4.0  # rad/s^2
+      acceleration_theta: 2.0  # rad/s^2
       velocity_xy: 2.5  # m/s
       velocity_theta: 4.0  # rad/s
 

@@ -23,6 +23,7 @@ from operator import attrgetter
 
 from dataclasses import dataclass, field
 
+
 from consai_msgs.msg import State2D
 
 from consai_tools.geometry import geometry_tools as tool
@@ -67,6 +68,8 @@ class KickTargetModel:
         # pass_targetの位置と成功率を保持するリスト
         self.pass_target_list: list[PassTarget] = []
 
+        self._half_width = 4.5
+
     def update_field_pos_list(self, field: Field) -> None:
         """フィールドの位置候補を更新する関数."""
         quarter_width = field.half_goal_width / 2
@@ -83,6 +86,7 @@ class KickTargetModel:
         ]
 
         self._half_width = field.half_width
+        self._defense_area = Point(field.half_length - field.penalty_depth, field.half_width - field.half_penalty_width)
 
     def update(
         self,
@@ -106,8 +110,16 @@ class KickTargetModel:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = self.robot_radius  # ロボット半径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
-        MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
-        MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
+        MAX_DISTANCE_SCORE = 60  # スコア計算時のシュートターゲットの最大スコア
+        MAX_ANGLE_SCORE = 20  # スコア計算時のシュートターゲットの最大角度スコア
+        MAX_GOALIE_LEAVE_SCORE = 20  # スコア計算時のシュートターゲットがgoalieからどれくらい離れているかの最大スコア
+
+        # 相手のgoalieの位置でシュートターゲットのスコア計算
+        goalie_pos = None
+        for their in robots.their_visible_robots.values():
+            if their.pos.x > self._defense_area.x and abs(their.pos.y) < self._defense_area.y:
+                # 相手のgoalieの位置を取得
+                goalie_pos = their.pos
 
         for target in self._goal_pos_list:
             score = 0
@@ -125,20 +137,34 @@ class KickTargetModel:
             else:
                 # ボールからの角度（目標方向がゴール方向と合っているか）
                 angle = abs(tool.get_angle(ball.pos, target.pos))
-                score += max(0, MAX_ANGLE_SCORE - np.rad2deg(angle) * 0.5)  # 小さい角度（正面）ほど高得点
+                score += max(
+                    0, MAX_ANGLE_SCORE - np.rad2deg(angle) * MAX_ANGLE_SCORE / 60
+                )  # 小さい角度（正面）ほど高得点とし、60度以上角度がついていれば0点
 
                 # 距離（近いほうが成功率が高そう）
                 distance = tool.get_distance(ball.pos, target.pos)
                 score += max(
                     0, MAX_DISTANCE_SCORE - (distance - MARGIN) * MAX_DISTANCE_SCORE / 6
                 )  # ディフェンスエリア外から6m以内ならOK
+
+                if goalie_pos is None:
+                    score += MAX_GOALIE_LEAVE_SCORE
+                else:
+                    # 相手のgoalieから離れていればスコアを加算（ロボット直径3台分以上離れて入れば満点）
+                    trans = tool.Trans(ball.pos, tool.get_angle(ball.pos, target.pos))
+                    tr_goalie_pos = trans.transform(goalie_pos)
+                    score += (
+                        min(abs(tr_goalie_pos.y), self.robot_radius * 6)
+                        * MAX_GOALIE_LEAVE_SCORE
+                        / (self.robot_radius * 6)
+                    )
                 target.success_rate = int(score)
 
     def _sort_kick_targets_by_success_rate(self, targets: list[ShootTarget]) -> list[ShootTarget]:
         """スコアの高いターゲット順にソートする関数."""
         return sorted(targets, key=attrgetter("success_rate"), reverse=True)
 
-    def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=True) -> ShootTarget:
+    def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=False) -> ShootTarget:
         """ボールからの直線上にロボットがいないシュート位置を返す関数."""
         RATE_MARGIN = 50  # ヒステリシスのためのマージン
         last_shoot_target_list = self.shoot_target_list.copy()
@@ -230,7 +256,7 @@ class KickTargetModel:
 
         内部でpass_target_listを更新する.
         """
-        RATE_MARGIN = 50
+        # RATE_MARGIN = 50
 
         # 前回のターゲットを保存する
         last_pass_target_list = deepcopy(self.pass_target_list)
@@ -249,9 +275,10 @@ class KickTargetModel:
         if last_pass_target_list[0].robot_pos == self.pass_target_list[0].robot_pos:
             return self.pass_target_list[0]
 
+        # TODO: 本来いれるべきだが、これによりターゲットが切り替わり続けるため一旦無効化
         # ベストターゲットが変わった場合、
         # 前回のターゲットより十分にスコアが大きければ、新しいターゲットを返す
-        if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
-            return self.pass_target_list[0]
+        # if self.pass_target_list[0].success_rate > last_pass_target_list[0].success_rate + RATE_MARGIN:
+        #     return self.pass_target_list[0]
 
         return last_pass_target_list[0]

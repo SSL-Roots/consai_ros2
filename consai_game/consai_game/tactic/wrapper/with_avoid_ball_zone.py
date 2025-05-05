@@ -24,7 +24,7 @@ class WithAvoidBallZone(TacticBase):
     WithAvoidBallZone(tactic=Position()) のように使用する
     """
 
-    AVOID_RADIUS = 0.6  # ボールを避ける半径 [m]
+    AVOID_RADIUS = 0.7  # ボールを避ける半径 [m]
 
     def __init__(self, tactic=TacticBase):
         """inner_tacticを初期化する関数."""
@@ -35,6 +35,11 @@ class WithAvoidBallZone(TacticBase):
         """inner_tacticをリセットする関数."""
         super().reset(robot_id)
         self.inner_tactic.reset(robot_id)
+
+    def exit(self):
+        """inner_tacticをexitする関数."""
+        super().exit()
+        self.inner_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ボールの周囲を避ける."""
