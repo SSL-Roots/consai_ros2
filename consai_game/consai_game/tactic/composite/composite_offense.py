@@ -114,7 +114,7 @@ class SharedInfo:
 class CompositeOffense(TacticBase):
     shared_info = SharedInfo()
 
-    def __init__(self, tactic_default: TacticBase, is_setplay=False, kick_score_threshold=30):
+    def __init__(self, tactic_default: TacticBase, is_setplay=False, force_pass=False, kick_score_threshold=30):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
         self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
@@ -125,6 +125,9 @@ class CompositeOffense(TacticBase):
 
         self.kick_score_threshold = kick_score_threshold
         self.SHOOTING_MARGIN = 0
+
+        # 最初の動作を強制的にpassにするかの設定
+        self.force_pass = force_pass
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
@@ -179,18 +182,22 @@ class CompositeOffense(TacticBase):
             # ボールを奪う
             return self.tactic_steal.run(world_model)
 
-        if world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN:
-            # シュートできる場合
+        if (
+            world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
+            and self.force_pass is False
+        ):
+            # シュートできる場合かつforce_passがFalseの場合
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
             # シュート相手がコロコロ切り替わらないようにマージンを設定
             self.SHOOTING_MARGIN = 20
             return self.tactic_shoot.run(world_model)
 
-        elif world_model.kick_target.best_pass_target.success_rate > 30:
-            # パスできる場合
+        elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
+            # パスできる場合 か force_passがTrueの場合
             self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
+
             return self.tactic_pass.run(world_model)
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい

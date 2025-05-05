@@ -142,24 +142,23 @@ class Kick(TacticBase):
             ),
         )
 
-        # final_targetが設定されていなければ設定
-        if self.final_target_pos.x == 0.0 and self.final_target_pos.y == 0.0:
+        if self.machine.state == "chasing":
+            # aiming以降で動作がぶれないように、target_posを保存しておく
             self.final_target_pos = copy.deepcopy(self.target_pos)
 
-        if self.machine.state == "chasing":
             if self.is_setplay or 0.3 < dist_robot_to_ball:
                 command.desired_pose = self.move_to_backside_pose(
                     ball_pos=ball_pos,
                     robot_pos=robot_pos,
-                    target_pos=self.final_target_pos,
+                    target_pos=self.target_pos,
                     distance=0.3,
                 )
-                command.desired_pose.theta = tool.get_angle(ball_pos, self.final_target_pos)
+                command.desired_pose.theta = tool.get_angle(ball_pos, self.target_pos)
             else:
                 command.desired_pose = self.move_to_backside_pose(
                     ball_pos=ball_pos,
                     robot_pos=robot_pos,
-                    target_pos=self.final_target_pos,
+                    target_pos=self.target_pos,
                     distance=0.15,
                 )
                 command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
