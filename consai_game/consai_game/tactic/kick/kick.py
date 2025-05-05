@@ -151,15 +151,15 @@ class Kick(TacticBase):
                 command.desired_pose = self.move_to_backside_pose(
                     ball_pos=ball_pos,
                     robot_pos=robot_pos,
-                    target_pos=self.final_target_pos,
+                    target_pos=self.target_pos,
                     distance=0.3,
                 )
-                command.desired_pose.theta = tool.get_angle(ball_pos, self.final_target_pos)
+                command.desired_pose.theta = tool.get_angle(ball_pos, self.target_pos)
             else:
                 command.desired_pose = self.move_to_backside_pose(
                     ball_pos=ball_pos,
                     robot_pos=robot_pos,
-                    target_pos=self.final_target_pos,
+                    target_pos=self.target_pos,
                     distance=0.15,
                 )
                 command.desired_pose.theta = tool.get_angle(robot_pos, ball_pos)
