@@ -27,10 +27,37 @@ from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 from consai_tools.geometry import geometry_tools as tools
 import math
-from typing import Optional
+from typing import Optional, Set
+
+
+class SharedInfo:
+    """CompositeOffenseの情報を共有するクラス"""
+
+    def __init__(self):
+        self.assigned_robot_ids: Set[int] = set()  # CompositeOffenseを担当しているロボットのID
+        self.update_conter: int = 0  # 内部用更新カウンター
+
+    def register_robot(self, robot_id: int):
+        """ロボットを登録する関数"""
+        if robot_id not in self.assigned_robot_ids:
+            self.assigned_robot_ids.add(robot_id)
+
+    def unregister_robot(self, robot_id: int):
+        """ロボットを登録解除する関数"""
+        if robot_id in self.assigned_robot_ids:
+            self.assigned_robot_ids.discard(robot_id)
+
+    def update(self, world_model: WorldModel):
+        """情報を更新する.
+
+        外部でcounterを使い、多重更新を防ぐこと
+        """
+        pass
 
 
 class CompositeOffense(TacticBase):
+    shared_info = SharedInfo()
+
     def __init__(self, tactic_default: TacticBase, is_setplay=False, kick_score_threshold=30):
         super().__init__()
         self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
@@ -47,6 +74,9 @@ class CompositeOffense(TacticBase):
         """Reset the tactic state for the specified robot."""
         super().reset(robot_id)
 
+        # ロボットのIDを登録する
+        self.shared_info.register_robot(robot_id)
+
         # 所有するTacticも初期化する
         self.tactic_shoot.reset(robot_id)
         self.tactic_pass.reset(robot_id)
@@ -58,6 +88,9 @@ class CompositeOffense(TacticBase):
     def exit(self):
         super().exit()
 
+        # ロボットのIDを登録解除する
+        self.shared_info.unregister_robot(self.robot_id)
+
         # 所有するTacticもexitする
         self.tactic_shoot.exit()
         self.tactic_pass.exit()
@@ -68,6 +101,11 @@ class CompositeOffense(TacticBase):
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
+
+        # 共有情報の更新
+        if self.shared_info.update_conter != world_model.meta.update_counter:
+            self.shared_info.update_conter = world_model.meta.update_counter
+            self.shared_info.update()
 
         can_control_ball = False
         can_receive_ball = False
