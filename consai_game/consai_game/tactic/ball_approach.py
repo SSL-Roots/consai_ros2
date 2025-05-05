@@ -39,7 +39,7 @@ class BallApproachStateMachine(GraphMachine):
         self.name = name
 
         # 状態定義
-        states = ["chasing", "aiming", "kicking"]
+        states = ["chasing", "aiming", "receiving"]
 
         # 遷移定義
         transitions = [
@@ -122,10 +122,8 @@ class BallApproach(TacticBase):
         robot_pos = world_model.robots.our_robots.get(self.robot_id).pos
 
         self.machine.update(
-            robot_is_backside=self.robot_is_backside(
-                robot_pos, ball_pos, ball_stop_pos),
-            robot_is_on_receive_line=self.robot_is_on_receiving_line(
-                robot_pos, ball_pos, ball_stop_pos),
+            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos, ball_stop_pos),
+            robot_is_on_receive_line=self.robot_is_on_receiving_line(robot_pos, ball_pos, ball_stop_pos),
         )
 
         if self.machine.state == "chasing":
@@ -152,8 +150,7 @@ class BallApproach(TacticBase):
 
         return command
 
-    def robot_is_backside(
-            self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
+    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
         """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
         # ボール最終目標地点からボールへの座標系を作成
         trans = tool.Trans(ball_stop_pos, tool.get_angle(ball_stop_pos, ball_pos))
@@ -167,8 +164,7 @@ class BallApproach(TacticBase):
             return True
         return False
 
-    def robot_is_on_receiving_line(
-            self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
+    def robot_is_on_receiving_line(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
         """ボールからターゲットまでの直線上にロボットが居るかを判定する.
 
         ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
@@ -194,7 +190,8 @@ class BallApproach(TacticBase):
         return True
 
     def move_to_backside_pose(
-            self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D, distance: float) -> State2D:
+        self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D, distance: float
+    ) -> State2D:
         """ボールの後側に移動するための目標位置を生成"""
         # 座標変換クラスのインスタンスの生成
         # ボール中心にボールから目標位置までの角度で変換
@@ -212,8 +209,7 @@ class BallApproach(TacticBase):
         pose.theta = tool.get_angle(ball_stop_pos, ball_pos)
         return pose
 
-    def receiving_pose(
-            self, ball_pos: State2D, ball_stop_pos: State2D, distance: float = 0.1) -> State2D:
+    def receiving_pose(self, ball_pos: State2D, ball_stop_pos: State2D, distance: float = 0.1) -> State2D:
         """ボールを受け取るための目標位置を生成"""
 
         # ボールの中心からターゲットへの座標系を作成
