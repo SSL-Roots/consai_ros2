@@ -21,6 +21,7 @@ from consai_game.tactic.kick.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
 from consai_game.tactic.steal_ball import StealBall
+from consai_game.tactic.ball_approach import BallApproach
 
 
 from consai_msgs.msg import MotionCommand
@@ -38,6 +39,7 @@ class SharedInfo:
         self.update_conter: int = 0  # 内部用更新カウンター
         self.can_control_ball_id: Optional[bool] = None  # ボールを操作できるロボットのID
         self.can_receive_ball_id: Optional[bool] = None  # ボールをレシーブできるロボットのID
+        self.can_chase_and_receive_ball_id: Optional[bool] = None  # ボールを追いかけてレシーブできるロボットのID
 
     def register_robot(self, robot_id: int):
         """ロボットを登録する関数"""
@@ -57,6 +59,7 @@ class SharedInfo:
         # リセット
         self.can_control_ball_id = None
         self.can_receive_ball_id = None
+        self.can_chase_and_receive_ball_id = None
 
         # ダブルタッチルールによるボールをけれないロボットのIDを取得
         prohibited_kick_id = world_model.robot_activity.our_prohibited_kick_robot_id
@@ -78,6 +81,17 @@ class SharedInfo:
             self.can_receive_ball_id = next_receiving_candidate
         else:
             self.can_receive_ball_id = best_receiving_candidate
+
+        # ボールを追いかけてレシーブできるロボットを決める
+        best_chase_and_receive_candidate, next_chase_and_receive_candidate = self.ball_chase_and_receive_candidates(
+            world_model
+        )
+        if best_chase_and_receive_candidate == prohibited_kick_id:
+            # ボール禁止ロボットがレシーブできる場合
+            # 2番目にレシーブできるロボットがボールを扱う
+            self.can_chase_and_receive_ball_id = next_chase_and_receive_candidate
+        else:
+            self.can_chase_and_receive_ball_id = best_chase_and_receive_candidate
 
     def ball_nearest_robots(self, world_model: WorldModel) -> tuple[int, Optional[int]]:
         """ボールに一番近いロボットと2番目に近いロボットを返す"""
@@ -110,6 +124,28 @@ class SharedInfo:
 
         return nearest, next_nearest
 
+    def ball_chase_and_receive_candidates(self, world_model: WorldModel) -> tuple[Optional[int], Optional[int]]:
+        """転がってるボールを追いかけてレシーブできるロボットと2番目にレシーブできるロボットを返す"""
+        nearest = None
+        next_nearest = None
+        if not world_model.ball_activity.ball_is_moving:
+            # ボールが止まっている場合はレシーブできない
+            return nearest, next_nearest
+
+        # 止まっているボールに近いロボットを探索
+        for robot_id in world_model.robot_activity.our_robots_by_ball_stop_distance:
+            # CompositeOffenseを担当しているロボットからアサインする
+            if robot_id not in self.assigned_robot_ids:
+                continue
+
+            if nearest is None:
+                nearest = robot_id
+
+            if next_nearest is None:
+                next_nearest = robot_id
+
+        return nearest, next_nearest
+
 
 class CompositeOffense(TacticBase):
     shared_info = SharedInfo()
@@ -121,6 +157,7 @@ class CompositeOffense(TacticBase):
         self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
         self.tactic_receive = Receive()
         self.tactic_steal = StealBall()
+        self.tactic_chase_and_receive = BallApproach()
         self.tactic_default = tactic_default
 
         self.kick_score_threshold = kick_score_threshold
@@ -142,6 +179,7 @@ class CompositeOffense(TacticBase):
         self.tactic_tapping.reset(robot_id)
         self.tactic_receive.reset(robot_id)
         self.tactic_steal.reset(robot_id)
+        self.tactic_chase_and_receive.reset(robot_id)
         self.tactic_default.reset(robot_id)
 
     def exit(self):
@@ -156,6 +194,7 @@ class CompositeOffense(TacticBase):
         self.tactic_tapping.exit()
         self.tactic_receive.exit()
         self.tactic_steal.exit()
+        self.tactic_chase_and_receive.exit()
         self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
@@ -166,8 +205,11 @@ class CompositeOffense(TacticBase):
             self.shared_info.update_conter = world_model.meta.update_counter
             self.shared_info.update(world_model)
 
+        if self.robot_id == self.shared_info.can_chase_and_receive_ball_id:
+            # ボールを追いかけてレシーブできる場合はボールを追いかける
+            return self.receive_the_ball(world_model, chase=True)
         if self.robot_id == self.shared_info.can_receive_ball_id:
-            return self.receive_the_ball(world_model)
+            return self.receive_the_ball(world_model, chase=False)
         elif self.robot_id == self.shared_info.can_control_ball_id:
             # ボールに一番近い場合はボールを操作する
             return self.control_the_ball(world_model)
@@ -205,9 +247,12 @@ class CompositeOffense(TacticBase):
         self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
         return self.tactic_tapping.run(world_model)
 
-    def receive_the_ball(self, world_model: WorldModel) -> MotionCommand:
+    def receive_the_ball(self, world_model: WorldModel, chase: bool) -> MotionCommand:
         """ボールをレシーブするためのTacticを実行する関数."""
-        command = self.tactic_receive.run(world_model)
+        if chase:
+            command = self.tactic_chase_and_receive.run(world_model)
+        else:
+            command = self.tactic_receive.run(world_model)
 
         if world_model.ball_activity.ball_will_enter_their_goal:
             # ボールがゴールに入る場合は目標位置をシュートラインから外す
