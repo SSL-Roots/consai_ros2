@@ -36,6 +36,8 @@ class SharedInfo:
     def __init__(self):
         self.assigned_robot_ids: Set[int] = set()  # CompositeOffenseを担当しているロボットのID
         self.update_conter: int = 0  # 内部用更新カウンター
+        self.can_control_ball_id: Optional[bool] = None  # ボールを操作できるロボットのID
+        self.can_receive_ball_id: Optional[bool] = None  # ボールをレシーブできるロボットのID
 
     def register_robot(self, robot_id: int):
         """ロボットを登録する関数"""
@@ -52,7 +54,61 @@ class SharedInfo:
 
         外部でcounterを使い、多重更新を防ぐこと
         """
-        pass
+        # リセット
+        self.can_control_ball_id = None
+        self.can_receive_ball_id = None
+
+        # ダブルタッチルールによるボールをけれないロボットのIDを取得
+        prohibited_kick_id = world_model.robot_activity.our_prohibited_kick_robot_id
+
+        # ボールを操作できるロボットを決める
+        nearest_robot_id, next_nearest_robot_id = self.ball_nearest_robots(world_model)
+        if nearest_robot_id == prohibited_kick_id:
+            # ボール禁止ロボットがボールに一番近い場合
+            # 2番目に近いロボットがボールを操作できる
+            self.can_control_ball_id = next_nearest_robot_id
+        else:
+            self.can_control_ball_id = nearest_robot_id
+
+        # ボールを受け取れるロボットを決める
+        best_receiving_candidate, next_receiving_candidate = self.ball_receiving_candidates(world_model)
+        if best_receiving_candidate == prohibited_kick_id:
+            # ボール禁止ロボットがレシーブできる場合
+            # 2番目にレシーブできるロボットがボールを扱う
+            self.can_receive_ball_id = next_receiving_candidate
+        else:
+            self.can_receive_ball_id = best_receiving_candidate
+
+    def ball_nearest_robots(self, world_model: WorldModel) -> tuple[int, Optional[int]]:
+        """ボールに一番近いロボットと2番目に近いロボットを返す"""
+        nearest = world_model.robot_activity.our_robots_by_ball_distance[0]
+        next_nearest = None
+        if len(world_model.robot_activity.our_robots_by_ball_distance) >= 2:
+            next_nearest = world_model.robot_activity.our_robots_by_ball_distance[1]
+        return nearest, next_nearest
+
+    def ball_receiving_candidates(self, world_model: WorldModel) -> tuple[Optional[int], Optional[int]]:
+        """ボールをレシーブできるロボットと2番目にレシーブできるロボットを返す"""
+        nearest = None
+        next_nearest = None
+        if not world_model.ball_activity.ball_is_moving:
+            # ボールが止まっている場合はレシーブできない
+            return nearest, next_nearest
+
+        best_receive_score = world_model.robot_activity.our_ball_receive_score[0]
+
+        if best_receive_score.intercept_time == float("inf"):
+            # ボールと交差しない場合はレシーブできない
+            return nearest, next_nearest
+        else:
+            nearest = best_receive_score.robot_id
+
+        if len(world_model.robot_activity.our_ball_receive_score) >= 2:
+            next_best_receive_score = world_model.robot_activity.our_ball_receive_score[1]
+            if next_best_receive_score.intercept_time != float("inf"):
+                next_nearest = next_best_receive_score.robot_id
+
+        return nearest, next_nearest
 
 
 class CompositeOffense(TacticBase):
@@ -105,80 +161,15 @@ class CompositeOffense(TacticBase):
         # 共有情報の更新
         if self.shared_info.update_conter != world_model.meta.update_counter:
             self.shared_info.update_conter = world_model.meta.update_counter
-            self.shared_info.update()
+            self.shared_info.update(world_model)
 
-        can_control_ball = False
-        can_receive_ball = False
-
-        # ダブルタッチルールによるボールをけれないロボットのIDを取得
-        prohibited_kick_id = world_model.robot_activity.our_prohibited_kick_robot_id
-
-        if prohibited_kick_id == self.robot_id:
-            # ボールを操作できない場合はデフォルトのtacticを実行する
-            return self.tactic_default.run(world_model)
-
-        nearest_robot_id, next_nearest_robot_id = self.ball_nearest_robots(world_model)
-
-        if nearest_robot_id == prohibited_kick_id:
-            # ボール禁止ロボットがボールに一番近い場合
-            if next_nearest_robot_id == self.robot_id:
-                # 2番目に近いロボットはボールを操作できる
-                can_control_ball = True
-        else:
-            if nearest_robot_id == self.robot_id:
-                # ボールに一番近いロボットはボールを操作できる
-                can_control_ball = True
-
-        best_receiving_candidate, next_receiving_candidate = self.ball_receiving_candidates(world_model)
-
-        if best_receiving_candidate == prohibited_kick_id:
-            # ボール禁止ロボットがレシーブできる場合
-            if next_receiving_candidate == self.robot_id:
-                # 2番目にレシーブできるロボットはボールを操作できる
-                can_receive_ball = True
-        else:
-            if best_receiving_candidate == self.robot_id:
-                # ボールを一番レシーブできるロボットがレシーブする
-                can_receive_ball = True
-
-        if can_receive_ball:
+        if self.robot_id == self.shared_info.can_receive_ball_id:
             return self.receive_the_ball(world_model)
-        elif can_control_ball:
+        elif self.robot_id == self.shared_info.can_control_ball_id:
             # ボールに一番近い場合はボールを操作する
             return self.control_the_ball(world_model)
         # ボールを操作できない場合はデフォルトのtacticを実行する
         return self.tactic_default.run(world_model)
-
-    def ball_nearest_robots(self, world_model: WorldModel) -> tuple[int, Optional[int]]:
-        """ボールに一番近いロボットと2番目に近いロボットを返す"""
-        nearest = world_model.robot_activity.our_robots_by_ball_distance[0]
-        next_nearest = None
-        if len(world_model.robot_activity.our_robots_by_ball_distance) >= 2:
-            next_nearest = world_model.robot_activity.our_robots_by_ball_distance[1]
-        return nearest, next_nearest
-
-    def ball_receiving_candidates(self, world_model: WorldModel) -> tuple[Optional[int], Optional[int]]:
-        """ボールをレシーブできるロボットと2番目にレシーブできるロボットを返す"""
-        nearest = None
-        next_nearest = None
-        if not world_model.ball_activity.ball_is_moving:
-            # ボールが止まっている場合はレシーブできない
-            return nearest, next_nearest
-
-        best_receive_score = world_model.robot_activity.our_ball_receive_score[0]
-
-        if best_receive_score.intercept_time == float("inf"):
-            # ボールと交差しない場合はレシーブできない
-            return nearest, next_nearest
-        else:
-            nearest = best_receive_score.robot_id
-
-        if len(world_model.robot_activity.our_ball_receive_score) >= 2:
-            next_best_receive_score = world_model.robot_activity.our_ball_receive_score[1]
-            if next_best_receive_score.intercept_time != float("inf"):
-                next_nearest = next_best_receive_score.robot_id
-
-        return nearest, next_nearest
 
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
