@@ -15,22 +15,22 @@
 import time
 
 
-def init_our_placement(rcst_comm, target_x: float, target_y: float,
-                       num_of_robots: int = 11,
-                       ball_x: float = 0.0, ball_y: float = 0.0):
+def init_our_placement(
+    rcst_comm, target_x: float, target_y: float, num_of_robots: int = 11, ball_x: float = 0.0, ball_y: float = 0.0
+):
     rcst_comm.send_empty_world()
-    rcst_comm.send_ball(ball_x, ball_y)
 
     for i in range(num_of_robots):
-        rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5*i, 0.0)
+        rcst_comm.send_blue_robot(i, -1.0, 3.0 - 0.5 * i, 0.0)
 
-    rcst_comm.observer.ball_placement().set_targets(
-        target_x, target_y, for_blue_team=True)
+    rcst_comm.observer.ball_placement().set_targets(target_x, target_y, for_blue_team=True)
     rcst_comm.set_ball_placement_position(target_x, target_y)
 
-    rcst_comm.change_referee_command('STOP', 1.0)
+    rcst_comm.change_referee_command("HALT", 1.0)
+    rcst_comm.send_ball(ball_x, ball_y)  # grsimによってボールが弾けることがあるので、ボールは最後に移動する
+    rcst_comm.change_referee_command("STOP", 1.0)
     time.sleep(1)
-    rcst_comm.change_referee_command('BALL_PLACEMENT_BLUE', 0.0)
+    rcst_comm.change_referee_command("BALL_PLACEMENT_BLUE", 0.0)
 
 
 def wait_for_placement(rcst_comm, timeout=30):
