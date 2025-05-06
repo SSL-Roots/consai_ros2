@@ -66,6 +66,7 @@ jobs:
       matrix:
         env:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement2.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_force_start.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_free_kick.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_halt.py"}
