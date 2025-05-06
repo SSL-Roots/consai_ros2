@@ -69,7 +69,6 @@ class RobotActivityModel:
         self.their_robots_by_ball_distance: list[int] = []
         self.our_robots_by_placement_distance: list[int] = []
         self.our_ball_receive_score: list[ReceiveScore] = []
-        self.our_robots_by_ball_stop_distance: list[int] = []  # ボールの最終停止位置に近い順
         self.our_robots_arrived_list: list[OurRobotsArrived] = []
         self.our_prohibited_kick_robot_id: int = self.INVALID_ROBOT_ID  # 直近のキック禁止ロボットID
         self.prohibited_kick_robot_candidate_id: int = self.INVALID_ROBOT_ID  # キック禁止ロボット候補ID
@@ -121,15 +120,6 @@ class RobotActivityModel:
             )
         ]
 
-        # ボールの最終停止位置に近い順にリストを作る
-        self.our_robots_by_ball_stop_distance = [
-            robot_id
-            for robot_id, _ in self.robot_ball_stop_pos_distances(
-                robots.our_visible_robots,
-                ball_activity,
-            )
-        ]
-
         # ボールを受け取れるスコアを計算する
         self.our_ball_receive_score = self.calc_ball_receive_score_list(
             robots=robots.our_visible_robots,
@@ -174,12 +164,6 @@ class RobotActivityModel:
     def robot_placement_distances(self, robots: dict[int, Robot], referee: RefereeModel) -> list[tuple[int, float]]:
         """ロボットとプレースメント位置の距離を計算し, 距離の昇順でソートしたリストを返す関数."""
         return self.robot_something_distances(robots, referee.placement_pos)
-
-    def robot_ball_stop_pos_distances(
-        self, robots: dict[int, Robot], ball_activity: BallActivityModel
-    ) -> list[tuple[int, float]]:
-        """ロボットとボールの最終停止位置の距離を計算し, 距離の昇順でソートしたリストを返す関数."""
-        return self.robot_something_distances(robots, ball_activity.ball_stop_position)
 
     def calc_ball_receive_score_list(
         self, robots: dict[int, Robot], ball: BallModel, ball_activity: BallActivityModel, game_config: GameConfigModel
