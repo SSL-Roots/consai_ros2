@@ -183,7 +183,7 @@ def our_free_kick() -> Play:
             ],
             [
                 CompositeOffense(
-                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 0.0))
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 1.0))
                 )
             ],
         ],
