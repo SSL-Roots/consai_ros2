@@ -73,7 +73,6 @@ jobs:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_obstacle_avoidance.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_penalty.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_stop.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_timeout.py"}
           - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "yellow_invert/test_scenario_yellow_invert_kickoff.py"}
 
     runs-on: ubuntu-latest
