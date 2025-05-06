@@ -15,16 +15,16 @@
 from utils_for_placement import init_placement, wait_for_placement
 
 
-def test_near_position(rcst_comm):
-    init_placement(rcst_comm=rcst_comm, color="blue", target_x=1.0, target_y=1.0)
+def test_around_our_defense_area(rcst_comm):
+    init_placement(rcst_comm=rcst_comm, color="blue", target_x=-4.1, target_y=4.4, ball_x=-4.1, ball_y=-4.4)
     assert wait_for_placement(rcst_comm) is True
 
 
-def test_far_position(rcst_comm):
-    init_placement(rcst_comm=rcst_comm, color="blue", target_x=5.8, target_y=4.3)
+def test_ball_is_in_our_defense_area(rcst_comm):
+    init_placement(rcst_comm=rcst_comm, color="blue", target_x=0.0, target_y=0.0, ball_x=-5.0, ball_y=0.0)
     assert wait_for_placement(rcst_comm) is True
 
 
-def test_so_far_position(rcst_comm):
-    init_placement(rcst_comm=rcst_comm, color="blue", target_x=-5.8, target_y=-4.3, ball_x=5.9, ball_y=4.4)
+def test_ball_is_in_their_defense_area(rcst_comm):
+    init_placement(rcst_comm=rcst_comm, color="blue", target_x=0.0, target_y=0.0, ball_x=5.0, ball_y=0.0)
     assert wait_for_placement(rcst_comm) is True

@@ -183,7 +183,7 @@ def our_free_kick() -> Play:
             ],
             [
                 CompositeOffense(
-                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 0.0))
+                    is_setplay=True, kick_score_threshold=50, tactic_default=WrapperLookBall(Position(3.0, 1.0))
                 )
             ],
         ],
@@ -286,16 +286,16 @@ def our_kick_off_start() -> Play:
         timeout_ms=0,
         roles=[
             [AllowMoveInDefenseArea(WrapperLookBall(Position(-6.0, 0.0)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-3.5, 1.5)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-3.5, 0.5)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-3.5, -0.5)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-3.5, -1.5)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-2.5, 1.1)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-2.5, 0.0)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-2.5, -1.1)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-0.5, 1.0)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-0.5, 0.0)))],
-            [CompositeOffense(is_setplay=True, force_pass=True, tactic_default=WrapperLookBall(Position(-0.5, -1.0)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-3.5, 1.5)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-3.5, 0.5)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-3.5, -0.5)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-3.5, -1.5)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-2.5, 1.1)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-2.5, 0.0)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-2.5, -1.1)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-0.5, 1.0)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-0.5, 0.0)))],
+            [CompositeOffense(is_setplay=True, force_pass=False, tactic_default=WrapperLookBall(Position(-0.5, -1.0)))],
         ],
     )
 
