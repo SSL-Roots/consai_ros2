@@ -34,11 +34,27 @@ cleanup() {
 
 trap cleanup SIGINT
 
+if [ -z ${CONSAI_COLOR} ]; then
+    YELLOW="false"
+elif [ ${CONSAI_COLOR} = "yellow" ]; then
+    YELLOW="true"
+elif [ ${CONSAI_COLOR} = "blue" ]; then
+    YELLOW="false"
+fi
+
+if [ -z ${CONSAI_SIDE} ]; then
+    INVERT="false"
+elif [ ${CONSAI_SIDE} = "right" ]; then
+    INVERT="true"
+elif [ ${CONSAI_SIDE} = "left" ]; then
+    INVERT="false"
+fi
+
 while true; do
   echo "Starting CONSAI ROS2..."
 
   # launch起動＋リアルタイム出力
-  setsid bash -c 'ros2 launch consai_game start.launch 2>&1 | tee ros2_output.log' &
+  setsid bash -c "ros2 launch consai_game start.launch yellow:=${YELLOW} invert:=${INVERT} 2>&1 | tee ros2_output.log" &
   LAUNCH_PID=$!
   echo "ROS2 leader PID: $LAUNCH_PID"
 
