@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""__"""
+"""circular_playsからPlayを登録するモジュール."""
 
 from consai_game.play.factory import circular_plays
 
