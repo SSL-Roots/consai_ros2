@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-"""円運動のPlayを定義するモジュール."""
+"""円軌道で移動するPlayを定義するモジュール."""
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.debug_conditions import DebugConditions
@@ -26,7 +26,7 @@ from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
 
 
 def circular_move() -> Play:
-    """円運動をするPlayを作成する関数."""
+    """円軌道で移動するPlayを作成する関数."""
     applicable = [
         DebugConditions.debug_ture,
     ]
