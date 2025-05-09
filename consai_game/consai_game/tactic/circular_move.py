@@ -41,16 +41,23 @@ class CircularMove(TacticBase):
         command = MotionCommand()
         command.robot_id = self.robot_id
         command.mode = MotionCommand.MODE_NAVI
+
+        # 1周に必要なステップ数
         total_count = world_model.meta.update_rate * self.seconds
+
+        # 現在のステップに応じて角度を算出
         dtheta = numpy.deg2rad(360) * self.counter / total_count
         self.counter += 1
 
+        # 一周したらカウンタをリセット
         if self.counter == total_count:
             self.counter = 0
 
+        # 回転方向の決定
         if self.cw is True:
             dtheta = -dtheta
 
+        # 円軌道上の次の目標位置を計算
         command.desired_pose.x = numpy.cos(dtheta) * self.radius + self.center_x
         command.desired_pose.y = numpy.sin(dtheta) * self.radius + self.center_y
 
