@@ -17,28 +17,28 @@
 
 """ゲーム内で使用するプレイのリストを定義するモジュール."""
 
-from consai_game.play.factory import simple_plays
+from consai_game.play.factory import set_plays
 from consai_game.play.factory import running_plays
 
 plays = [
-    simple_plays.halt(),
-    simple_plays.stop(),
-    simple_plays.stop_ball_in_defence_area(),
+    set_plays.halt(),
+    set_plays.stop(),
+    set_plays.stop_ball_in_defence_area(),
     running_plays.outside_defense_area(),
     running_plays.in_our_defense_area(),
     running_plays.in_their_defense_area(),
-    simple_plays.our_free_kick(),
-    simple_plays.their_free_kick(),
-    simple_plays.our_kick_off(),
-    simple_plays.their_kick_off(),
-    simple_plays.our_kick_off_start(),
-    simple_plays.their_kick_off_start(),
-    simple_plays.our_penalty_kick(),
-    simple_plays.their_penalty_kick(),
-    simple_plays.our_penalty_kick_start(),
-    simple_plays.their_penalty_kick_start(),
-    simple_plays.our_timeout(),
-    simple_plays.their_timeout(),
-    simple_plays.our_ball_placement(),
-    simple_plays.their_ball_placement(),
+    set_plays.our_free_kick(),
+    set_plays.their_free_kick(),
+    set_plays.our_kick_off(),
+    set_plays.their_kick_off(),
+    set_plays.our_kick_off_start(),
+    set_plays.their_kick_off_start(),
+    set_plays.our_penalty_kick(),
+    set_plays.their_penalty_kick(),
+    set_plays.our_penalty_kick_start(),
+    set_plays.their_penalty_kick_start(),
+    set_plays.our_timeout(),
+    set_plays.their_timeout(),
+    set_plays.our_ball_placement(),
+    set_plays.their_ball_placement(),
 ]
