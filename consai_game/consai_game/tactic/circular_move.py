@@ -18,7 +18,6 @@ from consai_msgs.msg import MotionCommand
 
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.utils.adjust_position_to_field import AdjustPosition
 
 import numpy
 
@@ -26,17 +25,22 @@ import numpy
 class CircularMove(TacticBase):
     """円軌道で移動するTactic."""
 
-    def __init__(self, center_x=0.0, center_y=0.0, radius=0.0, seconds=10, cw=True):
+    def __init__(self, radius=0.0, seconds=10, cw=True):
         """インスタンスを初期化する関数."""
         super().__init__()
-        self.center_x = center_x
-        self.center_y = center_y
         self.radius = radius
         self.counter = 0
         self.seconds = seconds
         self.cw = cw
 
-    def run(self, world_model: WorldModel) -> MotionCommand:
+    def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
+        super().reset(robot_id)
+
+    def exit(self):
+        super().exit()
+
+    def run(self, world_model: WorldModel, x=0.0, y=0.0) -> MotionCommand:
         """円軌道上の目標位置に移動するためのMotionCommandを生成する関数."""
         command = MotionCommand()
         command.robot_id = self.robot_id
@@ -58,8 +62,8 @@ class CircularMove(TacticBase):
             dtheta = -dtheta
 
         # 円軌道上の次の目標位置を計算
-        command.desired_pose.x = numpy.cos(dtheta) * self.radius + self.center_x
-        command.desired_pose.y = numpy.sin(dtheta) * self.radius + self.center_y
+        command.desired_pose.x = numpy.cos(dtheta) * self.radius + x
+        command.desired_pose.y = numpy.sin(dtheta) * self.radius + y
 
         command.navi_options.avoid_our_robots = False
         command.navi_options.avoid_pushing = False

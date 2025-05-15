@@ -20,9 +20,8 @@
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.debug_conditions import DebugConditions
-from consai_game.tactic.circular_move import CircularMove
-from consai_game.tactic.stop import Stop
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
+from consai_game.tactic.composite.composite_circular import BallCentricMover
 
 
 def circular_move() -> Play:
@@ -32,21 +31,21 @@ def circular_move() -> Play:
     ]
     return Play(
         name="circular_move",
-        description="原点中心に円運動をするPlay",
+        description="ボール中心に円運動をするPlay",
         applicable=applicable,
         aborted=invert_conditions(applicable),
         timeout_ms=0,
         roles=[
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=0.3, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=0.6, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=0.9, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=1.2, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=1.5, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=1.8, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=2.1, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=2.4, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=2.7, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=3.0, seconds=20, cw=True))],
-            [WrapperLookBall(CircularMove(center_x=0.0, center_y=0.0, radius=3.3, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=0.3, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=0.6, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=0.9, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=1.2, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=1.5, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=1.8, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=2.1, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=2.4, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=2.7, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=3.0, seconds=20, cw=True))],
+            [WrapperLookBall(BallCentricMover(radius=3.3, seconds=20, cw=True))],
         ],
     )
