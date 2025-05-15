@@ -21,7 +21,7 @@
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.debug_conditions import DebugConditions
 from consai_game.tactic.wrapper.wrapper_look_ball import WrapperLookBall
-from consai_game.tactic.composite.composite_circular import BallCentricMover
+from consai_game.tactic.composite.composite_ball_centric_mover import BallCentricMover
 
 
 def circular_move() -> Play:
