@@ -17,7 +17,7 @@
 import os
 
 from consai_game.tactic.dribble import DribbleStateMachine
-from consai_game.tactic.kick.kick import KickStateMachine
+from consai_game.tactic.kick import KickStateMachine
 from consai_game.tactic.swab import SwabStateMachine
 from consai_game.tactic.back_dribble import BackDribbleStateMachine
 

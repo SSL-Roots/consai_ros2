@@ -17,7 +17,7 @@
 """
 import copy
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.tactic.kick.kick import Kick
+from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
 from consai_game.tactic.steal_ball import StealBall
