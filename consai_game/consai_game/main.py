@@ -40,6 +40,8 @@ def main():
         world_model = world_model_provider_node.world_model
         play_node.set_world_model(world_model)
         agent_scheduler_node.set_world_model(world_model)
+
+        vis_msg_publisher_node.set_robot_tactic_status_list(agent_scheduler_node.get_robot_tactic_status_list())
         vis_msg_publisher_node.publish(world_model)
 
         time.sleep(1 / UPDATE_HZ)

@@ -80,7 +80,7 @@ class AgentSchedulerNode(Node):
             for role, agent in zip(roles, self.agents):
                 agent.set_role(role)
 
-    def get_robot_tactic_status(self) -> list[RobotTacticStatus]:
+    def get_robot_tactic_status_list(self) -> list[RobotTacticStatus]:
         """各エージェントのロボットID, 戦術名, 戦術状態を取得する関数."""
         status_list = []
 
