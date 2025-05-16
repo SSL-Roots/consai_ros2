@@ -82,14 +82,14 @@ class DribbleStateMachine(GraphMachine):
         dist_robot_to_ball: float,
         dist_ball_to_target: float,
         dribble_diff_angle: float,
-        ball_is_front: bool,
+        is_ball_ahead: bool,
     ):
         """状態遷移."""
         if self.state == "arrived" and self.DIST_TARGET_TO_BALL_THRESHOLD < dist_ball_to_target:
             # ボールがロボットから離れすぎている
             self.approach()
 
-        elif self.state == "approaching" and ball_is_front:
+        elif self.state == "approaching" and is_ball_ahead:
             # ボールがロボットの正面にある
             self.dribble()
 
@@ -155,7 +155,7 @@ class Dribble(TacticBase):
             dist_robot_to_ball=dist_robot_to_ball,
             dist_ball_to_target=dist_ball_to_target,
             dribble_diff_angle=np.rad2deg(dribble_diff_angle),
-            ball_is_front=is_ball_ahead(ball_pos=ball_pos, robot_pos=robot_pos, target_pos=self.target_pos),
+            is_ball_ahead=is_ball_ahead(ball_pos=ball_pos, robot_pos=robot_pos, target_pos=self.target_pos),
         )
 
         command = MotionCommand()
