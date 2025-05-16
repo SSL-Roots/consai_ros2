@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-条件に応じてディフェンス動作やキックやパスを切り替えるTactic
+ボールを中心に回転するTactic
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
