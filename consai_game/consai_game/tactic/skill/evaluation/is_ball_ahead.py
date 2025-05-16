@@ -18,7 +18,7 @@ from consai_tools.geometry import geometry_tools as tool
 
 
 def is_ball_ahead(ball_pos: State2D, robot_pos: State2D, target_pos: State2D) -> bool:
-    """ボールがロボットの前にあるかどうかを判定する."""
+    """ロボットからターゲットへの直線上で、ボールがロボットの前にあるかどうかを判定する."""
     FRONT_DIST_THRESHOLD = 0.15  # 正面方向にどれだけ離れることを許容するか
     SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
 
