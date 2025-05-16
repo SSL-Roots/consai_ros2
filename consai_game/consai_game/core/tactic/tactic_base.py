@@ -41,6 +41,7 @@ class TacticBase(ABC):
         """TacticBaseの初期化を行う関数."""
         self._robot_id = -1
         self._state = TacticState.BEFORE_INIT
+        self._name = self.__class__.__name__
 
     @abstractmethod
     def run(self, world_model: WorldModel) -> MotionCommand:
@@ -75,3 +76,8 @@ class TacticBase(ABC):
     def state(self, value: TacticState) -> None:
         """戦術の状態を設定する関数."""
         self._state = value
+
+    @property
+    def name(self) -> str:
+        """戦術の名前を取得する関数."""
+        return self._name
