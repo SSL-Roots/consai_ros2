@@ -30,7 +30,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 from consai_game.core.play.play_node import PlayNode
 from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
-from consai_game.world_model.visualize_msg_publisher_node import VisualizeMsgPublisherNode
+from consai_game.visualization.visualize_msg_publisher_node import VisualizeMsgPublisherNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 
 
