@@ -27,6 +27,7 @@ from consai_msgs.msg import MotionCommand
 
 from consai_game.core.tactic.role import Role, RoleConst
 from consai_game.core.tactic.tactic_base import TacticState
+from consai_game.core.tactic.robot_tactic_status import RobotTacticStatus
 from consai_game.world_model.world_model import WorldModel
 
 
@@ -88,3 +89,21 @@ class Agent:
 
         self.present_tactic = self.role.tactics[self.present_tactic_index]
         self.present_tactic.reset(self.role.robot_id)
+
+    def get_robot_tactic_status(self) -> Optional[RobotTacticStatus]:
+        """ロボットが実行しているTacticの状態を取得する関数.
+
+        TacticかロボットIDが無効な場合はNoneを返す.
+        """
+
+        if self.present_tactic is None:
+            return None
+
+        if self.role.robot_id == RoleConst.INVALID_ROLE_ID:
+            return None
+
+        return RobotTacticStatus(
+            robot_id=self.role.robot_id,
+            tactic_name=self.present_tactic.name,
+            tactic_state="none",  # TODO: tacticが状態遷移器を持っていたら、状態をセットする
+        )
