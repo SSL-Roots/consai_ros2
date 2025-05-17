@@ -14,31 +14,16 @@
 
 from consai_msgs.msg import MotionCommand
 
+from consai_game.core.tactic.wrapper_tactic_base import WrapperTacticBase
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase
 from consai_tools.geometry import geometry_tools as tool
 
 
-class WrapperLookBall(TacticBase):
+class WrapperLookBall(WrapperTacticBase):
     """ボールを見るようにthetaを上書きするWrapperTactic.
 
     WrapperLookBall(tactic=Position()) のように使用する
     """
-
-    def __init__(self, tactic=TacticBase):
-        """内部tacticを初期化する関数."""
-        super().__init__()
-        self.inner_tactic = tactic
-
-    def reset(self, robot_id: int) -> None:
-        """inner_tacticをリセットする関数."""
-        super().reset(robot_id)
-        self.inner_tactic.reset(robot_id)
-
-    def exit(self):
-        """inner_tacticをexitする関数."""
-        super().exit()
-        self.inner_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ボールを見るようにdesired_poseを上書きする.`"""
