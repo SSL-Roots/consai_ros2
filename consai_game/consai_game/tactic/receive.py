@@ -19,7 +19,6 @@ Receive Tactic.
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
@@ -42,11 +41,6 @@ class Receive(TacticBase):
         """Initialize the DefendGoal tactic."""
         super().__init__()
         self.receive_pos = State2D()
-
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel, diff_angle_threshold: int = 20) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""

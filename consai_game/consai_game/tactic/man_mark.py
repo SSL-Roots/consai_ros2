@@ -1,4 +1,4 @@
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
 from consai_game.world_model.world_model import WorldModel
@@ -20,10 +20,6 @@ class ManMark(TacticBase):
         self.mark_distance = mark_distance
         # ペナルティエリア際に移動するためのマージン
         self.area_margin = 0.15
-
-    def reset(self, robot_id: int):
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         command = MotionCommand()

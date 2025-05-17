@@ -14,34 +14,19 @@
 
 from consai_msgs.msg import MotionCommand
 
+from consai_game.core.tactic.wrapper_tactic_base import WrapperTacticBase
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase
 
 from consai_tools.geometry import geometry_tools as tool
 
 
-class MoveToReceivePass(TacticBase):
+class MoveToReceivePass(WrapperTacticBase):
     """パスラインが相手ロボットとかぶっていたらパスをもらえる位置に移動するWrapperTactic.
 
     MoveToReceivePass(tactic=Position()) のように使用する
     """
 
     THRESHOULD_RADIUS = 0.5  # パスラインに対して相手ロボットが干渉するとみなす半径[m]
-
-    def __init__(self, tactic=TacticBase):
-        """inner_tacticを初期化する関数."""
-        super().__init__()
-        self.inner_tactic = tactic
-
-    def reset(self, robot_id: int) -> None:
-        """inner_tacticをリセットする関数."""
-        super().reset(robot_id)
-        self.inner_tactic.reset(robot_id)
-
-    def exit(self):
-        """inner_tacticをexitする関数."""
-        super().exit()
-        self.inner_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """パスラインを開くようにdesired_poseを上書きする."""

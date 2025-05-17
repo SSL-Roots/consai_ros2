@@ -27,6 +27,7 @@ from rclpy.node import Node
 
 from consai_game.core.tactic.agent import Agent
 from consai_game.core.tactic.role import Role
+from consai_game.core.tactic.robot_tactic_status import RobotTacticStatus
 from consai_game.utils.process_info import process_info
 from consai_game.world_model.world_model import WorldModel
 
@@ -78,3 +79,13 @@ class AgentSchedulerNode(Node):
         with self.lock:
             for role, agent in zip(roles, self.agents):
                 agent.set_role(role)
+
+    def get_robot_tactic_status_list(self) -> list[RobotTacticStatus]:
+        """各エージェントのロボットID, 戦術名, 戦術状態を取得する関数."""
+        status_list = []
+
+        for agent in self.agents:
+            if status := agent.get_robot_tactic_status():
+                status_list.append(status)
+
+        return status_list
