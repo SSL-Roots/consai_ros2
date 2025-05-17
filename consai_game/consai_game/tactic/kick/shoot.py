@@ -15,7 +15,7 @@
 """シュート動作に関するTacticを定義するモジュール."""
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.tactic.kick.kick import Kick
 from consai_msgs.msg import MotionCommand, State2D
 
@@ -31,8 +31,7 @@ class Shoot(TacticBase):
 
     def reset(self, robot_id: int) -> None:
         """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        super().reset(robot_id)
         self.kick_tactic.reset(robot_id)
 
     def run(self, world_model: WorldModel, x=6.0, y=0.0) -> MotionCommand:

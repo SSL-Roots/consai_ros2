@@ -19,19 +19,11 @@
 """
 
 from abc import ABC, abstractmethod
-from enum import Enum, auto
 
+from consai_game.core.tactic.tactic_state import TacticState
 from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
-
-
-class TacticState(Enum):
-    """戦術の状態を表す列挙型."""
-
-    BEFORE_INIT = 0
-    RUNNING = auto()
-    FINISHED = auto()
 
 
 class TacticBase(ABC):

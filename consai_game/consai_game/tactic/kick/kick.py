@@ -21,7 +21,7 @@ from consai_msgs.msg import MotionCommand, State2D
 from consai_tools.geometry import geometry_tools as tool
 
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase, TacticState
+from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
 from transitions.extensions import GraphMachine
@@ -113,8 +113,7 @@ class Kick(TacticBase):
 
     def reset(self, robot_id: int) -> None:
         """ロボットIDを設定し, Tacticの状態をRUNNINGにリセットする関数."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        super().reset(robot_id)
         self.machine.reset()
 
     def run(self, world_model: WorldModel) -> MotionCommand:

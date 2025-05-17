@@ -26,7 +26,7 @@ from typing import Optional
 from consai_msgs.msg import MotionCommand
 
 from consai_game.core.tactic.role import Role, RoleConst
-from consai_game.core.tactic.tactic_base import TacticState
+from consai_game.core.tactic.tactic_state import TacticState
 from consai_game.core.tactic.robot_tactic_status import RobotTacticStatus
 from consai_game.world_model.world_model import WorldModel
 
