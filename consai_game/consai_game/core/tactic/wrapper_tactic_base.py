@@ -25,6 +25,7 @@ class WrapperTacticBase(TacticBase):
         """内部tacticを初期化する関数."""
         super().__init__()
         self.inner_tactic = tactic
+        self.name += f"({self.inner_tactic.name})"
 
     def reset(self, robot_id: int) -> None:
         """inner_tacticをリセットする関数."""

@@ -73,3 +73,8 @@ class TacticBase(ABC):
     def name(self) -> str:
         """戦術の名前を取得する関数."""
         return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """戦術の名前を設定する関数."""
+        self._name = value
