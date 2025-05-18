@@ -19,7 +19,7 @@ BallClear Tactic.
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.tactic.kick.kick import Kick
+from consai_game.tactic.kick import Kick
 from consai_game.world_model.world_model import WorldModel
 
 from consai_tools.hysteresis.hysteresis import Hysteresis
