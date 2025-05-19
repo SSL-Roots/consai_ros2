@@ -14,11 +14,11 @@
 
 from consai_msgs.msg import MotionCommand
 
+from consai_game.core.tactic.wrapper_tactic_base import WrapperTacticBase
 from consai_game.world_model.world_model import WorldModel
-from consai_game.core.tactic.tactic_base import TacticBase
 
 
-class SlowSafe(TacticBase):
+class SlowSafe(WrapperTacticBase):
     """ボールを避けながら低速で移動するWrapperTactic."
 
     SlowSafe(tactic=Position()) のように使用する
@@ -26,21 +26,6 @@ class SlowSafe(TacticBase):
 
     MAX_VELOCITY = 1.0  # 最大速度の制限値 [m/s]
     AVOID_RADIUS = 0.6  # ボールを避ける半径 [m]
-
-    def __init__(self, tactic=TacticBase):
-        """inner_tacticを初期化する関数."""
-        super().__init__()
-        self.inner_tactic = tactic
-
-    def reset(self, robot_id: int) -> None:
-        """inner_tacticをリセットする関数."""
-        super().reset(robot_id)
-        self.inner_tactic.reset(robot_id)
-
-    def exit(self):
-        """inner_tacticをexitする関数."""
-        super().exit()
-        self.inner_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ディフェンスエリア内での移動と、ボールとの接触を許可する."""

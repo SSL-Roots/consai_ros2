@@ -19,7 +19,6 @@ Dribble Tactic.
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
-from consai_game.core.tactic.tactic_base import TacticState
 from consai_game.world_model.world_model import WorldModel
 from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_position
 
@@ -126,8 +125,7 @@ class Dribble(TacticBase):
 
     def reset(self, robot_id: int) -> None:
         """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-        self.state = TacticState.RUNNING
+        super().reset(robot_id)
         self.machine.reset()
 
     def run(self, world_model: WorldModel) -> MotionCommand:

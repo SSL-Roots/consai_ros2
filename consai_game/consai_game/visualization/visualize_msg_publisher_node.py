@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-WorldModelの情報を可視化トピックとしてpublishするノードの定義.
+consai_gameの情報を可視化トピックとしてpublishするノードの定義.
 
 キックターゲットやボールの状態をObjectsメッセージとしてGUIに送信する.
 """
@@ -23,6 +23,7 @@ from rclpy.node import Node
 
 from consai_visualizer_msgs.msg import Objects, ShapeCircle, ShapeLine, ShapeText
 
+from consai_game.core.tactic.robot_tactic_status import RobotTacticStatus
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
 from consai_game.world_model.robot_activity_model import RobotActivityModel
@@ -32,12 +33,13 @@ from consai_game.world_model.world_model import WorldModel
 
 
 class VisualizeMsgPublisherNode(Node):
-    """WorldModelをGUIに描画するためのトピックをpublishするノード."""
+    """consai_gameの情報をGUIに描画するためのトピックをpublishするノード."""
 
     def __init__(self):
         """ノードの初期化関数."""
         super().__init__("vis_msg_publisher_node")
         self.pub_visualizer_objects = self.create_publisher(Objects, "visualizer_objects", qos.qos_profile_sensor_data)
+        self.robot_tactic_status_list: list[RobotTacticStatus] = None
 
     def publish(self, world_model: WorldModel):
         """WorldModelをGUIに描画するためのトピックをpublishする."""
@@ -55,6 +57,11 @@ class VisualizeMsgPublisherNode(Node):
         self.pub_visualizer_objects.publish(
             self.robot_activity_to_vis_msg(robot_activity=world_model.robot_activity, robots=world_model.robots)
         )
+        self.pub_visualizer_objects.publish(self.robot_tactic_status_to_vis_msg(robots=world_model.robots))
+
+    def set_robot_tactic_status_list(self, robot_tactic_status_list: list[RobotTacticStatus]):
+        """ロボットの戦術状態をセットすする関数"""
+        self.robot_tactic_status_list = robot_tactic_status_list
 
     def kick_target_to_vis_msg(self, kick_target: KickTargetModel, ball: BallModel) -> Objects:
         """kick_targetをObjectsメッセージに変換する."""
@@ -213,5 +220,33 @@ class VisualizeMsgPublisherNode(Node):
                 circle.fill_color.name = COLOR_BEST_RECEIVE
 
             vis_obj.circles.append(circle)
+
+        return vis_obj
+
+    def robot_tactic_status_to_vis_msg(self, robots: RobotsModel) -> Objects:
+        """ロボットの戦術状態をObjectsメッセージに変換する."""
+        vis_obj = Objects()
+        vis_obj.layer = "game"
+        vis_obj.sub_layer = "tactic"
+        vis_obj.z_order = 4
+
+        if self.robot_tactic_status_list is None:
+            return vis_obj
+
+        for status in self.robot_tactic_status_list:
+
+            if status.robot_id not in robots.our_visible_robots:
+                continue
+
+            robot_pos = robots.our_visible_robots[status.robot_id].pos
+
+            text = ShapeText()
+            text.text = status.tactic_name
+            text.x = robot_pos.x
+            text.x = robot_pos.x
+            text.y = robot_pos.y + 0.2
+            text.size = 10
+            text.color.name = "violet"
+            vis_obj.texts.append(text)
 
         return vis_obj

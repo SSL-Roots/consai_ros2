@@ -30,7 +30,7 @@ from rclpy.executors import MultiThreadedExecutor
 
 from consai_game.core.play.play_node import PlayNode
 from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
-from consai_game.world_model.visualize_msg_publisher_node import VisualizeMsgPublisherNode
+from consai_game.visualization.visualize_msg_publisher_node import VisualizeMsgPublisherNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 
 
@@ -40,6 +40,8 @@ def main():
         world_model = world_model_provider_node.world_model
         play_node.set_world_model(world_model)
         agent_scheduler_node.set_world_model(world_model)
+
+        vis_msg_publisher_node.set_robot_tactic_status_list(agent_scheduler_node.get_robot_tactic_status_list())
         vis_msg_publisher_node.publish(world_model)
 
         time.sleep(1 / UPDATE_HZ)
