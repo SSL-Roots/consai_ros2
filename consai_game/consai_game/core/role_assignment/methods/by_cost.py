@@ -71,6 +71,8 @@ class ByCost(RoleAssignmentBase):
         # NOTE:ロボットの台数が少ない場合、末端のroleは切り捨てられる
         cost_matrix = np.zeros((len(robots_without_goalie), len(play_roles_without_goalie)))
 
+        print("Assign start")
+
         for i, robot_id in enumerate(robots_without_goalie):
             # ロボットの位置
             robot_pos = world_model.robots.our_visible_robots[robot_id].pos
@@ -82,10 +84,12 @@ class ByCost(RoleAssignmentBase):
                     continue
 
                 # tacticを実行する
+                print(f"assignor robot_id: {robot_id}, tactic: {tactic[0].name}")
                 tactic[0].reset(robot_id)
                 command = tactic[0].run(world_model)
                 # 終了処理を確実に実行
                 tactic[0].exit()
+                print(f"End checking cost robot_id: {robot_id}, tactic: {tactic[0].name}")
 
                 if command.mode == MotionCommand.MODE_DIRECT_VELOCITY:
                     # 速度制御の場合は、コストを0にする
@@ -95,6 +99,8 @@ class ByCost(RoleAssignmentBase):
                     cost_target = self.GAIN_TARGET_POSE * get_distance(robot_pos, command.desired_pose)
 
                 cost_matrix[i, j] = cost_target
+
+        print("Assign end")
 
         # 最適化問題を解く
         robot_index, role_index = linear_sum_assignment(cost_matrix)

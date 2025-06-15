@@ -61,6 +61,7 @@ class Agent:
                 self.present_tactic_index = 0
             self.reset_tactic()
 
+        print(f"agent robot_id: {self.role.robot_id}, tactic: {self.present_tactic.name}")
         return self.present_tactic.run(world_model=world_model)
 
     def set_role(self, role: Role) -> None:
