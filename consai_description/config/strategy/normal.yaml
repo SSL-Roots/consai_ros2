@@ -5,11 +5,11 @@
       width: 9.0
       robot_diameter: 0.18
       ball_diameter: 0.043
-      
+
     physics:
       gravity: 9.81  # 重力加速度
       ball_friction_coeff: 0.03  # ボールの摩擦係数
-      
+
     kick_power:
       max_kick_power: 6.0  # 最大キック力 [m/s] (6.5 m/sを越えてはいけない)
       min_pass_power: 2.0  # パス時の最小パワー [m/s]
