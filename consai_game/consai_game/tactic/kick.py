@@ -79,10 +79,7 @@ class KickStateMachine(GraphMachine):
 class Kick(TacticBase):
     """指定した位置にボールを蹴るTactic."""
 
-    MAX_KICK_POWER = 6.0  # 6.5 m/sを越えてはいけない
-    # 1m 以上ボールを持って移動すると、Excessive Dribbling違反になる
-    TAPPING_KICK_POWER = 2.0  # ボールをコツコツ蹴ってドリブルするためのキックパワー
-
+    # 定数として残すもの（設定ファイルで制御されないもの）
     ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
     ANGLE_FOR_PIVOT_POS = ANGLE_BALL_TO_ROBOT_THRESHOLD + 10  # ボールの後側に移動するための角度[degree]
     DRIBBLE_ON = 1.0  # ドリブルON時の出力
@@ -186,11 +183,13 @@ class Kick(TacticBase):
             # ドリブラーON
             command.dribble_power = self.DRIBBLE_ON
             # キックパワーの設定
-            command.kick_power = self.MAX_KICK_POWER
+            command.kick_power = world_model.game_config.max_kick_power
             if self.is_pass:
-                command.kick_power = self.pass_power(ball_pos, target_pos=self.final_target_pos)
+                command.kick_power = self.pass_power(
+                    ball_pos, target_pos=self.final_target_pos, world_model=world_model
+                )
             elif self.is_tapping:
-                command.kick_power = self.TAPPING_KICK_POWER
+                command.kick_power = world_model.game_config.tapping_kick_power
 
             if self.is_setplay:
                 command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
@@ -268,21 +267,24 @@ class Kick(TacticBase):
         pose.theta = tool.get_angle(ball_pos, target_pos)
         return pose
 
-    def pass_power(self, ball_pos: State2D, target_pos: State2D) -> float:
+    def pass_power(self, ball_pos: State2D, target_pos: State2D, world_model: WorldModel) -> float:
         """ボールからkick_targetまでの距離をもとにキック速度を計算する"""
 
-        MIN_PASS_POWER = 2.0  # ある程度の距離までボールが届き、ロボットがキャッチできる最低速度
         MIN_PASS_DISTANCE = 0.5  # MIN_PASS_POWERで届く最大距離
         MAX_PASS_DISTANCE = 5.0  # MAX_KICK_POWERで届く最大距離
+
+        # 設定ファイルから取得
+        MIN_PASS_POWER = world_model.game_config.min_pass_power
+        MAX_KICK_POWER = world_model.game_config.max_kick_power
 
         distance_to_target = tool.get_distance(ball_pos, target_pos)
 
         if distance_to_target < MIN_PASS_DISTANCE:
             return MIN_PASS_POWER
         elif distance_to_target > MAX_PASS_DISTANCE:
-            return self.MAX_KICK_POWER
+            return MAX_KICK_POWER
         else:
             # 線形補間
-            return MIN_PASS_POWER + (self.MAX_KICK_POWER - MIN_PASS_POWER) * (
+            return MIN_PASS_POWER + (MAX_KICK_POWER - MIN_PASS_POWER) * (
                 distance_to_target - MIN_PASS_DISTANCE
             ) / (MAX_PASS_DISTANCE - MIN_PASS_DISTANCE)
