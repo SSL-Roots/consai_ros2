@@ -185,7 +185,9 @@ class Kick(TacticBase):
             # キックパワーの設定
             command.kick_power = world_model.game_config.max_kick_power
             if self.is_pass:
-                command.kick_power = self.pass_power(ball_pos, target_pos=self.final_target_pos, world_model=world_model)
+                command.kick_power = self.pass_power(
+                    ball_pos, target_pos=self.final_target_pos, world_model=world_model
+                )
             elif self.is_tapping:
                 command.kick_power = world_model.game_config.tapping_kick_power
 
@@ -272,7 +274,7 @@ class Kick(TacticBase):
         MAX_PASS_DISTANCE = 5.0  # MAX_KICK_POWERで届く最大距離
 
         # 設定ファイルから取得
-        MIN_PASS_POWER = world_model.game_config.min_pass_speed
+        MIN_PASS_POWER = world_model.game_config.min_pass_power
         MAX_KICK_POWER = world_model.game_config.max_kick_power
 
         distance_to_target = tool.get_distance(ball_pos, target_pos)

@@ -248,12 +248,10 @@ class WorldModelProviderNode(Node):
             param_dict = json.loads(self.msg_param_strategy.data)
             self.world_model.game_config.gravity = param_dict["physics"]["gravity"]
             self.world_model.game_config.ball_friction_coeff = param_dict["physics"]["ball_friction_coeff"]
-            
+
             # キック力パラメータの設定
             if "kick_power" in param_dict:
                 kick_power = param_dict["kick_power"]
                 self.world_model.game_config.max_kick_power = kick_power.get("max_kick_power", 6.0)
-                self.world_model.game_config.max_shoot_speed = kick_power.get("max_shoot_speed", 5.5)
-                self.world_model.game_config.max_pass_speed = kick_power.get("max_pass_speed", 4.0)
-                self.world_model.game_config.min_pass_speed = kick_power.get("min_pass_speed", 2.0)
+                self.world_model.game_config.min_pass_power = kick_power.get("min_pass_power", 2.0)
                 self.world_model.game_config.tapping_kick_power = kick_power.get("tapping_kick_power", 2.0)

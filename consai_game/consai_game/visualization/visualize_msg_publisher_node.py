@@ -179,7 +179,7 @@ class VisualizeMsgPublisherNode(Node):
         for i, threat in enumerate(threats.threats):
             robot = robots.their_robots[threat.robot_id]
             text = ShapeText()
-            text.text = f"{i+1}: [{threat.score}]"
+            text.text = f"{i + 1}: [{threat.score}]"
             text.x = robot.pos.x - 0.2
             text.y = robot.pos.y + 0.2  # ロボットの上に表示
             text.size = 12
@@ -214,7 +214,7 @@ class VisualizeMsgPublisherNode(Node):
             circle.line_size = 1
             circle.line_color.name = COLOR_RECEIVE
             circle.fill_color.name = COLOR_RECEIVE
-            circle.caption = f"{i+1}: {score.intercept_time:.2f}"
+            circle.caption = f"{i + 1}: {score.intercept_time:.2f}"
             if i == 0:
                 circle.line_color.name = COLOR_BEST_RECEIVE
                 circle.fill_color.name = COLOR_BEST_RECEIVE
