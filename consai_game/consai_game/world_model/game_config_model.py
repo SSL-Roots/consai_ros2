@@ -33,3 +33,10 @@ class GameConfigModel:
 
     gravity: float = 9.81  # 重力加速度
     ball_friction_coeff: float = 0.065  # ボールの摩擦係数
+
+    # キック力パラメータ
+    max_kick_power: float = 6.0  # 最大キック力 [m/s]
+    max_shoot_speed: float = 5.5  # シュート時の最大速度 [m/s]
+    max_pass_speed: float = 4.0  # パス時の最大速度 [m/s]
+    min_pass_speed: float = 2.0  # パス時の最小速度 [m/s]
+    tapping_kick_power: float = 2.0  # タップキック用のパワー [m/s]

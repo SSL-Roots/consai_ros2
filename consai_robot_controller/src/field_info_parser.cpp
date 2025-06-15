@@ -64,6 +64,11 @@ void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
   );
 }
 
+void FieldInfoParser::set_kick_power_params(double max_shoot_speed, double max_pass_speed, double min_pass_speed)
+{
+  tactic_control_ball_->set_kick_power_params(max_shoot_speed, max_pass_speed, min_pass_speed);
+}
+
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
   detection_extractor_->set_detection_tracked(detection_tracked);

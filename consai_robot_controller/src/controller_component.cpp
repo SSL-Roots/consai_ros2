@@ -108,6 +108,28 @@ Controller::Controller(const rclcpp::NodeOptions & options)
   sub_consai_param_control_ = create_subscription<std_msgs::msg::String>(
     "consai_param/control", qos, callback_param_control);
 
+  auto callback_param_strategy = [this](const std_msgs::msg::String::SharedPtr msg)
+    {
+      try {
+        nlohmann::json json_data = nlohmann::json::parse(msg->data);
+        if (json_data.contains("kick_power")) {
+          const auto & kick_power = json_data["kick_power"];
+          double max_shoot_speed = kick_power.value("max_shoot_speed", 5.5);
+          double max_pass_speed = kick_power.value("max_pass_speed", 4.0);
+          double min_pass_speed = kick_power.value("min_pass_speed", 2.0);
+          
+          parser_->set_kick_power_params(max_shoot_speed, max_pass_speed, min_pass_speed);
+          RCLCPP_INFO(get_logger(), "Update kick power parameters: shoot=%.1f, pass=%.1f, min_pass=%.1f", 
+                      max_shoot_speed, max_pass_speed, min_pass_speed);
+        }
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Param strategy callback error: %s", e.what());
+      }
+    };
+
+  sub_consai_param_strategy_ = create_subscription<std_msgs::msg::String>(
+    "consai_param/strategy", qos, callback_param_strategy);
+
   auto callback_motion_command_array = [this](const MotionCommandArray::SharedPtr msg)
     {
       for (const auto & command : msg->commands) {

@@ -21,6 +21,16 @@ namespace tactic
 
 namespace tools = geometry_tools;
 
+void ControlBall::set_kick_power_params(
+  double max_shoot_speed,
+  double max_pass_speed,
+  double min_pass_speed)
+{
+  max_shoot_speed_ = max_shoot_speed;
+  max_pass_speed_ = max_pass_speed;
+  min_pass_speed_ = min_pass_speed;
+}
+
 bool ControlBall::kick_ball(
   const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
   const bool is_pass, State & parsed_pose,
