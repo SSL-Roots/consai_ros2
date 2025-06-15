@@ -88,7 +88,6 @@ private:
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_rule_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_control_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_consai_param_strategy_;
 
   RobotControlMap robot_control_map_;
   MotionCommandMap motion_command_map_;

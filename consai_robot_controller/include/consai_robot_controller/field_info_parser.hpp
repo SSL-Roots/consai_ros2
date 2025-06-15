@@ -57,7 +57,6 @@ public:
     const std::shared_ptr<parser::DetectionExtractor> & detection_extractor);
   void set_subscriptions(rclcpp::Node * node);
   void set_consai_param_rule(const nlohmann::json & param);
-  void set_kick_power_params(double max_shoot_speed, double max_pass_speed, double min_pass_speed);
   void set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked);
   void set_named_targets(const NamedTargets::SharedPtr msg);
   void set_designated_position(const State::SharedPtr msg);

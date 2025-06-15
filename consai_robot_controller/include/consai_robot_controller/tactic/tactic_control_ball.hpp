@@ -33,12 +33,6 @@ class ControlBall
 public:
   ControlBall() = default;
 
-  // キック力パラメータを設定するメソッド
-  void set_kick_power_params(
-    double max_shoot_speed,
-    double max_pass_speed,
-    double min_pass_speed);
-
   bool kick_ball(
     const State & target, const TrackedRobot & my_robot, const TrackedBall & ball,
     const bool is_pass, State & parsed_pose,
