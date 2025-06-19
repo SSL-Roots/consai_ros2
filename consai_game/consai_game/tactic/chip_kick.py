@@ -51,5 +51,5 @@ class ChipKick(TacticBase):
 
         # チップキックを行うよう設定
         command.chip_kick = True
-        
-        return command 
+
+        return command
