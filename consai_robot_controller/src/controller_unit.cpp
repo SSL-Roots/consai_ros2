@@ -50,6 +50,7 @@ void ControllerUnit::move_to_desired_pose(
   const Pose2D & goal_pose,
   const TrackedRobot & my_robot,
   const double kick_power, const double dribble_power,
+  const bool is_chip_kick,
   const std::optional<double> & limit_vel_xy
 )
 {
@@ -104,13 +105,16 @@ void ControllerUnit::move_to_desired_pose(
   // キックパワー、ドリブルパワーをセット
   command_msg->kick_power = kick_power;
   command_msg->dribble_power = dribble_power;
+  command_msg->chip_kick = is_chip_kick;
 
   pub_command_->publish(std::move(command_msg));
 }
 
 void ControllerUnit::publish_velocity_command(
   const State & desired_velocity,
-  const double kick_power, const double dribble_power)
+  const double kick_power, const double dribble_power,
+  const bool is_chip_kick
+)
 {
   auto command_msg = std::make_unique<RobotCommand>();
   command_msg->robot_id = robot_id_;
@@ -122,6 +126,7 @@ void ControllerUnit::publish_velocity_command(
 
   command_msg->kick_power = kick_power;
   command_msg->dribble_power = dribble_power;
+  command_msg->chip_kick = is_chip_kick;
 
   pub_command_->publish(std::move(command_msg));
 }

@@ -74,6 +74,12 @@ void GrSimCommandConverter::on_timer()
 
     robot_command.kickspeedx = (*it)->kick_power;
 
+    if ((*it)->chip_kick) {
+      robot_command.kickspeedz = (*it)->kick_power;
+    } else {
+      robot_command.kickspeedz = 0.0f;
+    }
+
     commands_msg->robot_commands.push_back(robot_command);
     it = consai_commands_.erase(it);
   }
