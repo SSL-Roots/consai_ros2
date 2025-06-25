@@ -166,6 +166,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       my_robot,
       command.kick_power,
       command.dribble_power,
+      command.chip_kick,
       limit_vel_xy);
 
     destinations_map_[robot_id].pose = navi->destination;  // デバッグ用
@@ -199,6 +200,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot,
         command.kick_power,
         command.dribble_power,
+        command.chip_kick,
         limit_vel_xy);
 
       goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
@@ -218,6 +220,7 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
         my_robot,
         command.kick_power,
         command.dribble_power,
+        command.chip_kick,
         limit_vel_xy);
 
       goal_poses_map_[robot_id].pose = command.desired_pose;  // デバッグ用
@@ -226,7 +229,8 @@ void Controller::on_timer_pub_control_command(const unsigned int robot_id)
       controller_unit_[robot_id].publish_velocity_command(
         command.desired_velocity,
         command.kick_power,
-        command.dribble_power);
+        command.dribble_power,
+        command.chip_kick);
 
       // 描画が分かりにくくならないように、ロボットの位置で上書きする
       State robot_pos;
