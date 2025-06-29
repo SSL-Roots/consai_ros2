@@ -116,6 +116,10 @@ class Kick(TacticBase):
         super().reset(robot_id)
         self.machine.reset()
 
+    def append_machine_state_to_name(self) -> None:
+        """状態遷移マシンの状態を名前に追加する関数."""
+        self.name = f"{self.__class__.__name__}.{self.machine.state}"
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """ボールを蹴るためのMotionCommandを生成する関数."""
         command = MotionCommand()
@@ -195,6 +199,7 @@ class Kick(TacticBase):
             if self.is_setplay:
                 command.desired_velocity.x = self.AIM_VELOCITY_FOR_SETPLAY  # ゆっくりボールに近づく
 
+        self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
 
     def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
