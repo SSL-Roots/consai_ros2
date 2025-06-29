@@ -134,6 +134,10 @@ class BackDribble(TacticBase):
         super().reset(robot_id)
         self.machine.reset()
 
+    def append_machine_state_to_name(self) -> None:
+        """状態遷移マシンの状態を名前に追加する関数."""
+        self.name = f"{self.__class__.__name__}.{self.machine.state}"
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         # ロボットの位置を取得
@@ -182,6 +186,7 @@ class BackDribble(TacticBase):
             # ドリブルOFF
             command.dribble_power = self.DRIBBLE_OFF
 
+        self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
 
     def ball_is_front(self, ball_pos: State2D, robot_pos: State2D, dist_threshold: float) -> bool:

@@ -76,6 +76,10 @@ class Swab(TacticBase):
         super().reset(robot_id)
         self.machine.reset()
 
+    def append_machine_state_to_name(self) -> None:
+        """状態遷移マシンの状態を名前に追加する関数."""
+        self.name = f"{self.__class__.__name__}.{self.machine.state}"
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """指定した位置に移動するためのMotionCommandを生成する関数."""
         command = MotionCommand()
@@ -104,4 +108,5 @@ class Swab(TacticBase):
         command.desired_pose.y = self.target_pos.y
         command.desired_pose.theta = self.target_pos.theta
 
+        self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
