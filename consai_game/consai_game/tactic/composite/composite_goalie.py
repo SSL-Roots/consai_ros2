@@ -16,7 +16,7 @@
 ゴーリーの動作をまとめたTactic
 """
 
-from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.ball_clear import BallClear
 from consai_game.tactic.defend_goal import DefendGoal
 from consai_game.tactic.goalie_positioning import GoaliePositioning
@@ -30,7 +30,7 @@ from consai_tools.geometry import geometry_tools as tools
 from consai_msgs.msg import MotionCommand
 
 
-class CompositeGoalie(TacticBase):
+class CompositeGoalie(CompositeTacticBase):
     """ゴーリーの動作をまとめたTactic"""
 
     # ロボットの半径[m]
@@ -38,19 +38,10 @@ class CompositeGoalie(TacticBase):
 
     def __init__(self):
         """Initialize the DefendGoal tactic."""
-        super().__init__()
-        self.positioning = GoaliePositioning()
-        self.defend_goal = DefendGoal()
-        self.ball_clear = BallClear()
+        super().__init__(
+            tactic_positioning=GoaliePositioning(), tactic_defend_goal=DefendGoal(), tactic_ball_clear=BallClear()
+        )
         self.goal_with_margin = 0.5
-
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        super().reset(robot_id)
-        # 所有するTacticも初期化する
-        self.positioning.reset(robot_id)
-        self.defend_goal.reset(robot_id)
-        self.ball_clear.reset(robot_id)
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替える関数"""
@@ -62,16 +53,16 @@ class CompositeGoalie(TacticBase):
 
         if self._is_likely_to_score(field, field_points, ball, ball_activity):
             # ボールがゴールに入りそうならブロック
-            return self.defend_goal.run(world_model)
+            return self.run_sub_tactic(self.tactic_defend_goal, world_model)
         elif (
             world_model.ball_position.is_in_our_defense_area()
             and not world_model.ball_position.is_outside_with_margin()
         ):
             # ボールがディフェンスエリアにある場合はボールクリア
-            return self.ball_clear.run(world_model)
+            return self.run_sub_tactic(self.tactic_ball_clear, world_model)
         else:
             # ゴーリーのポジショニングを実行
-            return self.positioning.run(world_model)
+            return self.run_sub_tactic(self.tactic_positioning, world_model)
 
     def _is_likely_to_score(
         self, field: Field, field_points: FieldPoints, ball: BallModel, ball_activity: BallActivityModel
