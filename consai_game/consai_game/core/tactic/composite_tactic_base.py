@@ -15,11 +15,37 @@
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.world_model.world_model import WorldModel
 from consai_msgs.msg import MotionCommand
+from typing import Mapping
 
 
 class CompositeTacticBase(TacticBase):
-    def __init__(self):
+    """CompositeTacticの基底クラス.
+
+    CompositeTacticは、複数のTacticを切り替えて実行する.
+    """
+
+    def __init__(self, **tactics: Mapping[str, TacticBase]):
         super().__init__()
+
+        self._sub_tactics_map = {}
+        for name, tactic in tactics.items():
+            self._sub_tactics_map[name] = tactic
+            setattr(self, name, tactic)
+
+    def reset(self, robot_id: int) -> None:
+        """Reset the tactic state for the specified robot."""
+        super().reset(robot_id)
+
+        # 所有するTacticも初期化する
+        for tactic in self._sub_tactics_map.values():
+            tactic.reset(robot_id)
+
+    def exit(self):
+        super().exit()
+
+        # 所有するTacticもexitする
+        for tactic in self._sub_tactics_map.values():
+            tactic.exit()
 
     def run_sub_tactic(self, tactic: TacticBase, world_model: WorldModel) -> MotionCommand:
         """サブTacticを実行し、nameを自動更新する"""

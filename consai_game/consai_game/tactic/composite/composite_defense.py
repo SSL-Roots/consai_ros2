@@ -17,44 +17,27 @@
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
 from consai_tools.geometry import geometry_tools as tool
-from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 
 from consai_msgs.msg import MotionCommand
 
 
 class CompositeDefense(CompositeTacticBase):
     def __init__(self, tactic_default: TacticBase, do_receive: bool = True):
-        super().__init__()
-        self.tactic_shoot = Kick(is_pass=False)
-        self.tactic_pass = Kick(is_pass=True)
-        self.tactic_receive = Receive()
-        self.tactic_default = tactic_default
+        super().__init__(
+            tactic_shoot=Kick(is_pass=False),
+            tactic_pass=Kick(is_pass=True),
+            tactic_receive=Receive(),
+            tactic_default=tactic_default,
+        )
+
         self.diff_goal_threshold = 2.5
         self.very_close_to_ball_threshold = 0.3
         self.do_receive = do_receive
-
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        super().reset(robot_id)
-
-        # 所有するTacticも初期化する
-        self.tactic_shoot.reset(robot_id)
-        self.tactic_pass.reset(robot_id)
-        self.tactic_receive.reset(robot_id)
-        self.tactic_default.reset(robot_id)
-
-    def exit(self):
-        super().exit()
-
-        # 所有するTacticもexitする
-        self.tactic_shoot.exit()
-        self.tactic_pass.exit()
-        self.tactic_receive.exit()
-        self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
