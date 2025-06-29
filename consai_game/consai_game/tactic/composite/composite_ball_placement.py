@@ -16,7 +16,7 @@
 条件に応じてキックやパスを切り替えるTactic
 """
 
-from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.dribble import Dribble
 from consai_game.tactic.stay import Stay
 from consai_game.tactic.chase_ball import ChaseBall
@@ -34,15 +34,16 @@ from consai_msgs.msg import State2D
 from copy import deepcopy
 
 
-class CompositeBallPlacement(TacticBase):
+class CompositeBallPlacement(CompositeTacticBase):
     def __init__(self):
-        super().__init__()
-        self.tactic_dribble = Dribble()
-        self.tactic_avoid_area_and_stay = ForbidMovingInPlacementArea(tactic=Stay())
-        self.tactic_chase_ball = WithAvoidBallZone(ChaseBall())
-        self.tactic_approach_to_ball = MoveToBall(distance=0.15)
-        self.tactic_avoid_ball = MoveToBall(distance=0.6, avoid_ball=True)
-        self.tactic_back_dribble = BackDribble()
+        super().__init__(
+            tactic_dribble=Dribble(),
+            tactic_avoid_area_and_stay=ForbidMovingInPlacementArea(tactic=Stay()),
+            tactic_chase_ball=WithAvoidBallZone(ChaseBall()),
+            tactic_approach_to_ball=MoveToBall(distance=0.15),
+            tactic_avoid_ball=MoveToBall(distance=0.6, avoid_ball=True),
+            tactic_back_dribble=BackDribble(),
+        )
 
         self.placer_id = None
         self.supporter_id = None
@@ -51,34 +52,15 @@ class CompositeBallPlacement(TacticBase):
         """Reset the tactic state for the specified robot."""
         super().reset(robot_id)
 
-        # 所有するTacticも初期化する
-        self.tactic_dribble.reset(robot_id)
-        self.tactic_avoid_area_and_stay.reset(robot_id)
-        self.tactic_chase_ball.reset(robot_id)
-        self.tactic_approach_to_ball.reset(robot_id)
-        self.tactic_avoid_ball.reset(robot_id)
-        self.tactic_back_dribble.reset(robot_id)
-
         self.placer_id = None
         self.supporter_id = None
-
-    def exit(self):
-        super().exit()
-
-        # 所有するTacticもexitする
-        self.tactic_dribble.exit()
-        self.tactic_avoid_area_and_stay.exit()
-        self.tactic_chase_ball.exit()
-        self.tactic_approach_to_ball.exit()
-        self.tactic_avoid_ball.exit()
-        self.tactic_back_dribble.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
 
         # ロボットの台数が2台未満の場合はplacementを諦める
         if len(world_model.robots.our_visible_robots) < 2:
-            return self.tactic_avoid_area_and_stay.run(world_model)
+            return self.run_sub_tactic(self.tactic_avoid_area_and_stay, world_model)
 
         # 担当者のリセット処理
         if self.placer_id not in world_model.robots.our_visible_robots.keys():
@@ -113,17 +95,17 @@ class CompositeBallPlacement(TacticBase):
         ):
             if self.robot_id == self.placer_id or self.robot_id == self.supporter_id:
                 # ボールを扱うロボットの場合は、ボールからまっすぐ離れる
-                return self.tactic_avoid_ball.run(world_model)
+                return self.run_sub_tactic(self.tactic_avoid_ball, world_model)
             else:
                 # それ以外のロボットはプレースメントエリアから離れる
-                return self.tactic_avoid_area_and_stay.run(world_model)
+                return self.run_sub_tactic(self.tactic_avoid_area_and_stay, world_model)
 
         # ボールに一番近かったら
         if self.placer_id == self.robot_id:
             # サポートロボットが目的地に到着してない場合
             if not world_model.robot_activity.our_robot_arrived(self.supporter_id):
                 # ボールに近づく
-                return self.tactic_approach_to_ball.run(world_model)
+                return self.run_sub_tactic(self.tactic_approach_to_ball, world_model)
 
             # サポートロボットが到着したら、ボールをドリブルする
             return self.dribble_ball(world_model)
@@ -134,7 +116,7 @@ class CompositeBallPlacement(TacticBase):
 
         # それ以外の場合は
         # プレースメントエリア回避ONで、その場にとどまる
-        return self.tactic_avoid_area_and_stay.run(world_model)
+        return self.run_sub_tactic(self.tactic_avoid_area_and_stay, world_model)
 
     def dribble_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをドリブルするコマンドを返す."""
@@ -180,11 +162,11 @@ class CompositeBallPlacement(TacticBase):
         if need_back_dribble and not dummy_ball_in_field:
             # ボールがフィールド外にある場合は、バックドリブルする
             self.tactic_back_dribble.target_pos = target_pos
-            command = self.tactic_back_dribble.run(world_model)
+            command = self.run_sub_tactic(self.tactic_back_dribble, world_model)
         else:
             # ボールがフィールド内にある場合は、ドリブルする
             self.tactic_dribble.target_pos = target_pos
-            command = self.tactic_dribble.run(world_model)
+            command = self.run_sub_tactic(self.tactic_dribble, world_model)
 
         # ディフェンスエリア内の移動を許可する
         command.navi_options.avoid_defense_area = False
