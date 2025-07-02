@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from consai_msgs.msg import MotionCommand
 from consai_game.world_model.world_model import WorldModel
 from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.man_mark import ManMark
 from consai_game.world_model.threats_model import Threat
 
@@ -109,29 +110,17 @@ class ManMarkAssignment:
         return {pair.assigned_id: pair.target_id for pair in new_mark_pairs}
 
 
-class CompositeManMark(TacticBase):
+class CompositeManMark(CompositeTacticBase):
     assignment_module = ManMarkAssignment()
 
     def __init__(self, tactic_default: TacticBase):
-        super().__init__()
-        self.tactic_default = tactic_default
-        self.man_mark_tactic = ManMark(-1)
+        super().__init__(tactic_man_mark=ManMark(-1), tactic_default=tactic_default)
         self.mark_target_id = -1
-
-    def reset(self, robot_id: int):
-        super().reset(robot_id)
-
-        self.tactic_default.reset(robot_id)
-        self.man_mark_tactic.reset(robot_id)
 
     def exit(self):
         super().exit()
         # 登録から削除
         self.assignment_module.unregister_robot(self.robot_id)
-
-        # 所有するTacticもexitする
-        self.tactic_default.exit()
-        self.man_mark_tactic.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         threats = world_model.threats.threats
@@ -149,10 +138,11 @@ class CompositeManMark(TacticBase):
         new_target_id = current_pair.target_id if current_pair else None
         if new_target_id is None:
             # 担当がない場合はデフォルトのtacticを実行
-            return self.tactic_default.run(world_model)
+            return self.run_sub_tactic(self.tactic_default, world_model)
+
         if new_target_id is not None and new_target_id != self.mark_target_id:
             # ターゲットが変わったら更新
             self.mark_target_id = new_target_id
-            self.man_mark_tactic.target_robot_id = new_target_id
+            self.tactic_man_mark.target_robot_id = new_target_id
 
-        return self.man_mark_tactic.run(world_model)
+        return self.run_sub_tactic(self.tactic_man_mark, world_model)

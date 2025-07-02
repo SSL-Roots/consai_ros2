@@ -17,6 +17,7 @@
 """
 import copy
 from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
@@ -111,17 +112,18 @@ class SharedInfo:
         return nearest, next_nearest
 
 
-class CompositeOffense(TacticBase):
+class CompositeOffense(CompositeTacticBase):
     shared_info = SharedInfo()
 
     def __init__(self, tactic_default: TacticBase, is_setplay=False, force_pass=False, kick_score_threshold=30):
-        super().__init__()
-        self.tactic_shoot = Kick(is_pass=False, is_setplay=is_setplay)
-        self.tactic_pass = Kick(is_pass=True, is_setplay=is_setplay)
-        self.tactic_tapping = Kick(is_tapping=True, is_setplay=is_setplay)
-        self.tactic_receive = Receive()
-        self.tactic_steal = StealBall()
-        self.tactic_default = tactic_default
+        super().__init__(
+            tactic_shoot=Kick(is_pass=False, is_setplay=is_setplay),
+            tactic_pass=Kick(is_pass=True, is_setplay=is_setplay),
+            tactic_tapping=Kick(is_tapping=True, is_setplay=is_setplay),
+            tactic_receive=Receive(),
+            tactic_steal=StealBall(),
+            tactic_default=tactic_default,
+        )
 
         self.kick_score_threshold = kick_score_threshold
         self.SHOOTING_MARGIN = 0
@@ -136,27 +138,11 @@ class CompositeOffense(TacticBase):
         # ロボットのIDを登録する
         self.shared_info.register_robot(robot_id)
 
-        # 所有するTacticも初期化する
-        self.tactic_shoot.reset(robot_id)
-        self.tactic_pass.reset(robot_id)
-        self.tactic_tapping.reset(robot_id)
-        self.tactic_receive.reset(robot_id)
-        self.tactic_steal.reset(robot_id)
-        self.tactic_default.reset(robot_id)
-
     def exit(self):
         super().exit()
 
         # ロボットのIDを登録解除する
         self.shared_info.unregister_robot(self.robot_id)
-
-        # 所有するTacticもexitする
-        self.tactic_shoot.exit()
-        self.tactic_pass.exit()
-        self.tactic_tapping.exit()
-        self.tactic_receive.exit()
-        self.tactic_steal.exit()
-        self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -172,7 +158,7 @@ class CompositeOffense(TacticBase):
             # ボールに一番近い場合はボールを操作する
             return self.control_the_ball(world_model)
         # ボールを操作できない場合はデフォルトのtacticを実行する
-        return self.tactic_default.run(world_model)
+        return self.run_sub_tactic(self.tactic_default, world_model)
 
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
@@ -180,7 +166,7 @@ class CompositeOffense(TacticBase):
         # 相手がボールを持ってる場合は奪いに行く
         if world_model.ball_activity.is_their_team_ball_holder:
             # ボールを奪う
-            return self.tactic_steal.run(world_model)
+            return self.run_sub_tactic(self.tactic_steal, world_model)
 
         if (
             world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
@@ -190,7 +176,7 @@ class CompositeOffense(TacticBase):
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
             # シュート相手がコロコロ切り替わらないようにマージンを設定
             self.SHOOTING_MARGIN = 20
-            return self.tactic_shoot.run(world_model)
+            return self.run_sub_tactic(self.tactic_shoot, world_model)
 
         elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
             # パスできる場合 か force_passがTrueの場合
@@ -198,16 +184,16 @@ class CompositeOffense(TacticBase):
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
 
-            return self.tactic_pass.run(world_model)
+            return self.run_sub_tactic(self.tactic_pass, world_model)
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい
         # シュート成功率が一番高いところに向かってドリブルする
         self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
-        return self.tactic_tapping.run(world_model)
+        return self.run_sub_tactic(self.tactic_tapping, world_model)
 
     def receive_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールをレシーブするためのTacticを実行する関数."""
-        command = self.tactic_receive.run(world_model)
+        command = self.run_sub_tactic(self.tactic_receive, world_model)
 
         if world_model.ball_activity.ball_will_enter_their_goal:
             # ボールがゴールに入る場合は目標位置をシュートラインから外す

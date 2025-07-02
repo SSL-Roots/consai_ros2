@@ -102,6 +102,10 @@ class BallApproach(TacticBase):
         self.robot_id = robot_id
         self.machine.reset()
 
+    def append_machine_state_to_name(self) -> None:
+        """状態遷移マシンの状態を名前に追加する関数."""
+        self.name = f"{self.__class__.__name__}.{self.machine.state}"
+
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement"""
         command = MotionCommand()
@@ -148,6 +152,7 @@ class BallApproach(TacticBase):
             command.desired_pose = self.receiving_pose(ball_pos, ball_stop_pos, distance=0.04)
             command.dribble_power = self.DRIBBLE_ON
 
+        self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
 
     def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:

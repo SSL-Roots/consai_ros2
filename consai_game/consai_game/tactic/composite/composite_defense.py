@@ -17,6 +17,7 @@
 """
 
 from consai_game.core.tactic.tactic_base import TacticBase
+from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
@@ -25,35 +26,18 @@ from consai_tools.geometry import geometry_tools as tool
 from consai_msgs.msg import MotionCommand
 
 
-class CompositeDefense(TacticBase):
+class CompositeDefense(CompositeTacticBase):
     def __init__(self, tactic_default: TacticBase, do_receive: bool = True):
-        super().__init__()
-        self.tactic_shoot = Kick(is_pass=False)
-        self.tactic_pass = Kick(is_pass=True)
-        self.tactic_receive = Receive()
-        self.tactic_default = tactic_default
+        super().__init__(
+            tactic_shoot=Kick(is_pass=False),
+            tactic_pass=Kick(is_pass=True),
+            tactic_receive=Receive(),
+            tactic_default=tactic_default,
+        )
+
         self.diff_goal_threshold = 2.5
         self.very_close_to_ball_threshold = 0.3
         self.do_receive = do_receive
-
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        super().reset(robot_id)
-
-        # 所有するTacticも初期化する
-        self.tactic_shoot.reset(robot_id)
-        self.tactic_pass.reset(robot_id)
-        self.tactic_receive.reset(robot_id)
-        self.tactic_default.reset(robot_id)
-
-    def exit(self):
-        super().exit()
-
-        # 所有するTacticもexitする
-        self.tactic_shoot.exit()
-        self.tactic_pass.exit()
-        self.tactic_receive.exit()
-        self.tactic_default.exit()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -70,7 +54,7 @@ class CompositeDefense(TacticBase):
             and best_receive_score.intercept_time != float("inf")
         ):
             # 自分がレシーブできる場合
-            return self.tactic_receive.run(world_model)
+            return self.run_sub_tactic(self.tactic_receive, world_model)
 
         elif world_model.robot_activity.our_robots_by_ball_distance[0] == self.robot_id and (
             diff_boll_to_goal > self.diff_goal_threshold or diff_boll_to_robot < self.very_close_to_ball_threshold
@@ -80,7 +64,7 @@ class CompositeDefense(TacticBase):
             return self.control_the_ball(world_model)
 
         # ボールに近くない場合はデフォルトのtacticを実行する
-        return self.tactic_default.run(world_model)
+        return self.run_sub_tactic(self.tactic_default, world_model)
 
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
@@ -88,13 +72,13 @@ class CompositeDefense(TacticBase):
         if world_model.kick_target.best_shoot_target.success_rate > 50:
             # シュートできる場合
             self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
-            return self.tactic_shoot.run(world_model)
+            return self.run_sub_tactic(self.tactic_shoot, world_model)
 
         elif world_model.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
             self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
-            return self.tactic_pass.run(world_model)
+            return self.run_sub_tactic(self.tactic_pass, world_model)
 
         # シュート成功率が一番高いところに向かってパスする(クリア)
         self.tactic_pass.target_pos = world_model.kick_target.best_shoot_target.pos
-        return self.tactic_pass.run(world_model)
+        return self.run_sub_tactic(self.tactic_pass, world_model)

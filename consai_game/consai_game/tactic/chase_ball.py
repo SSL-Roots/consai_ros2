@@ -36,10 +36,6 @@ class ChaseBall(TacticBase):
         self.move_pos = State2D()
         self.chase_distance = chase_distance
 
-    def reset(self, robot_id: int) -> None:
-        """Reset the tactic state for the specified robot."""
-        self.robot_id = robot_id
-
     def run(self, world_model: WorldModel) -> MotionCommand:
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         command = MotionCommand()
