@@ -20,6 +20,7 @@ from consai_visualizer.field_widget import FieldWidget
 from consai_visualizer_msgs.msg import Objects
 from frootspi_msgs.msg import BatteryVoltage
 from functools import partial
+import json
 import math
 import os
 from python_qt_binding import loadUi
@@ -32,7 +33,6 @@ import rclpy
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotReplacement
-from rqt_py_common.ini_helper import pack, unpack
 import time
 
 
@@ -43,6 +43,7 @@ class Visualizer(Plugin):
 
         self._node = context.node
         self._logger = self._node.get_logger()
+        self._context = context
 
         self._widget = QWidget()
 
@@ -120,28 +121,121 @@ class Visualizer(Plugin):
         self.latest_battery_voltage = [0] * 16
         self.latest_kicker_voltage = [0] * 16
 
-    def save_settings(self, plugin_settings, instance_settings):
-        # UIを終了するときに実行される関数
+        # 独自設定ファイル（installディレクトリからsrc/consai_ros2に移動）
+        pkg_name = "consai_visualizer"
+        _, package_path = get_resource("packages", pkg_name)
+        # /home/shuta/ros2_ws/install/consai_visualizer -> /home/shuta/ros2_ws/src/consai_ros2
+        base_path = package_path.replace("install/consai_visualizer", "src/consai_ros2")
+        self._custom_settings_file = os.path.join(base_path, "consai_visualizer_settings.json")
 
-        # layerとsub layerをカンマで結合して保存
-        active_layers = self._extract_active_layers()
-        combined_layers = list(map(lambda x: x[0] + "," + x[1], active_layers))
-        instance_settings.set_value("active_layers", pack(combined_layers))
+        # 起動時の復元処理中は保存を無効にするフラグ
+        self._is_loading_settings = False
+        # 初期化完了フラグ（新しいレイヤー追加時の保存を防ぐ）
+        self._initialization_complete = False
+
+    def save_settings(self, plugin_settings, instance_settings):
+        # RQT標準の保存（何もしない）
+        pass
+
+    def _save_settings_to_file(self):
+        # 独自設定ファイルに保存
+        try:
+            active_layers = self._extract_active_layers()
+            if not active_layers:
+                self._logger.info("No active layers to save")
+                return
+
+            # レイヤー情報を準備
+            layer_data = [{"layer": layer, "sub_layer": sub_layer} for layer, sub_layer in active_layers]
+
+            settings = {"active_layers": layer_data, "timestamp": time.time()}
+
+            # ディレクトリが存在することを確認
+            settings_dir = os.path.dirname(self._custom_settings_file)
+            if not os.path.exists(settings_dir):
+                os.makedirs(settings_dir)
+                self._logger.info(f"Created directory: {settings_dir}")
+
+            # JSONファイルに保存
+            self._logger.info(f"Attempting to save to: {self._custom_settings_file}")
+            with open(self._custom_settings_file, "w") as f:
+                json.dump(settings, f, indent=2)
+
+            # ファイルが実際に作成されたか確認
+            if os.path.exists(self._custom_settings_file):
+                self._logger.info(f"Successfully saved {len(layer_data)} layers to {self._custom_settings_file}")
+            else:
+                self._logger.error(f"File was not created: {self._custom_settings_file}")
+
+        except Exception as e:
+            self._logger.error(f"Failed to save custom settings to {self._custom_settings_file}: {e}")
+            import traceback
+
+            self._logger.error(f"Traceback: {traceback.format_exc()}")
 
     def restore_settings(self, plugin_settings, instance_settings):
         # UIが起動したときに実行される関数
+        self._load_custom_settings()
 
-        # カンマ結合されたlayerを復元してセット
-        combined_layers = unpack(instance_settings.value("active_layers", []))
-        active_layers = list(map(lambda x: x.split(","), combined_layers))
-        for (layer, sub_layer) in active_layers:
+    def _load_custom_settings(self):
+        # 独自設定ファイルから読み込み
+        self._is_loading_settings = True  # 読み込み中フラグをON
+        try:
+            if not os.path.exists(self._custom_settings_file):
+                self._logger.info("No custom settings file found, using defaults")
+                self._load_default_settings()
+                return
+
+            with open(self._custom_settings_file, "r") as f:
+                settings = json.load(f)
+
+            layer_data = settings.get("active_layers", [])
+            if not layer_data:
+                self._logger.info("No layers in custom settings, using defaults")
+                self._load_default_settings()
+                return
+
+            # レイヤーを復元
+            for item in layer_data:
+                if isinstance(item, dict) and "layer" in item and "sub_layer" in item:
+                    layer = item["layer"].strip()
+                    sub_layer = item["sub_layer"].strip()
+                    if layer and sub_layer:
+                        self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
+
+            self._logger.info(f"Restored {len(layer_data)} layers from custom settings")
+
+        except Exception as e:
+            self._logger.error(f"Failed to load custom settings: {e}")
+            self._load_default_settings()
+        finally:
+            self._is_loading_settings = False  # 読み込み完了、フラグをOFF
+            # 起動から少し時間をおいて初期化完了とする（動的レイヤー追加を待つ）
+            QTimer.singleShot(3000, self._complete_initialization)
+
+    def _load_default_settings(self):
+        # デフォルト設定をロードする
+        default_layers = [("caption", "caption")]
+
+        for (layer, sub_layer) in default_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
+
+        self._logger.info("Loaded default layer settings")
+
+    def _complete_initialization(self):
+        # 初期化完了、これ以降は保存を有効にする
+        self._initialization_complete = True
+        self._logger.info("Initialization complete, settings saving enabled")
 
     def _layer_state_changed(self):
         # レイヤーのチェックボックスが変更されたときに呼ばれる
         # 一括でON/OFFすると項目の数だけ実行される
         active_layers = self._extract_active_layers()
         self._widget.field_widget.set_active_layers(active_layers)
+
+        # 設定読み込み中でなく、かつ初期化完了後なら保存
+        if not self._is_loading_settings and self._initialization_complete:
+            self._save_settings_to_file()
 
     def _callback_battery_voltage(self, msg, robot_id):
         self.latest_battery_voltage[robot_id] = msg.voltage
