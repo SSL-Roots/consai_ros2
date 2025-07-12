@@ -121,17 +121,22 @@ class Visualizer(Plugin):
         self.latest_battery_voltage = [0] * 16
         self.latest_kicker_voltage = [0] * 16
 
-        # 独自設定ファイル（installディレクトリからsrc/consai_ros2に移動）
+        # 設定保存ファイル（installディレクトリからsrc/consai_ros2に移動）
         pkg_name = "consai_visualizer"
         _, package_path = get_resource("packages", pkg_name)
-        # /home/shuta/ros2_ws/install/consai_visualizer -> /home/shuta/ros2_ws/src/consai_ros2
+        # /install/consai_visualizer -> /src/consai_ros2
         base_path = package_path.replace("install/consai_visualizer", "src/consai_ros2")
-        self._custom_settings_file = os.path.join(base_path, "consai_visualizer_settings.json")
+        self._custom_settings_file = os.path.join(base_path, "consai_visualizer/consai_visualizer_settings.json")
+        self._default_settings_file = os.path.join(
+            base_path, "consai_visualizer/default_consai_visualizer_settings.json"
+        )
 
         # 起動時の復元処理中は保存を無効にするフラグ
         self._is_loading_settings = False
         # 初期化完了フラグ（新しいレイヤー追加時の保存を防ぐ）
         self._initialization_complete = False
+        # 復元待ちの設定データ
+        self._pending_settings = None
 
     def save_settings(self, plugin_settings, instance_settings):
         # RQT標準の保存（何もしない）
@@ -179,48 +184,87 @@ class Visualizer(Plugin):
 
     def _load_custom_settings(self):
         # 独自設定ファイルから読み込み
-        self._is_loading_settings = True  # 読み込み中フラグをON
         try:
-            if not os.path.exists(self._custom_settings_file):
-                self._logger.info("No custom settings file found, using defaults")
-                self._load_default_settings()
+            settings_file = None
+
+            # まずカスタム設定ファイルを確認
+            if os.path.exists(self._custom_settings_file):
+                settings_file = self._custom_settings_file
+                self._logger.info("Loading from custom settings file")
+            # カスタム設定がなければデフォルト設定ファイルを確認
+            elif os.path.exists(self._default_settings_file):
+                settings_file = self._default_settings_file
+                self._logger.info("Loading from default settings file")
+            else:
+                self._logger.info("No settings file found, using hardcoded defaults")
+                self._load_hardcoded_default_settings()
                 return
 
-            with open(self._custom_settings_file, "r") as f:
+            with open(settings_file, "r") as f:
                 settings = json.load(f)
 
             layer_data = settings.get("active_layers", [])
             if not layer_data:
-                self._logger.info("No layers in custom settings, using defaults")
-                self._load_default_settings()
+                self._logger.info("No layers in settings file, using hardcoded defaults")
+                self._load_hardcoded_default_settings()
                 return
 
-            # レイヤーを復元
-            for item in layer_data:
-                if isinstance(item, dict) and "layer" in item and "sub_layer" in item:
-                    layer = item["layer"].strip()
-                    sub_layer = item["sub_layer"].strip()
-                    if layer and sub_layer:
-                        self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
+            # 設定データを保存し、後で復元する
+            self._pending_settings = layer_data
+            self._logger.info(
+                f"Loaded {len(layer_data)} layers from {settings_file}, will restore after initialization"
+            )
 
-            self._logger.info(f"Restored {len(layer_data)} layers from custom settings")
+            # 3秒後に復元処理を実行（動的レイヤーが追加されるのを待つ）
+            QTimer.singleShot(3000, self._restore_pending_settings)
 
         except Exception as e:
-            self._logger.error(f"Failed to load custom settings: {e}")
-            self._load_default_settings()
+            self._logger.error(f"Failed to load settings: {e}")
+            self._load_hardcoded_default_settings()
         finally:
-            self._is_loading_settings = False  # 読み込み完了、フラグをOFF
             # 起動から少し時間をおいて初期化完了とする（動的レイヤー追加を待つ）
-            QTimer.singleShot(3000, self._complete_initialization)
+            QTimer.singleShot(500, self._complete_initialization)
 
-    def _load_default_settings(self):
-        # デフォルト設定をロードする
+    def _load_hardcoded_default_settings(self):
+        # ハードコードされたデフォルト設定をロードする
         default_layers = [("caption", "caption")]
 
         for (layer, sub_layer) in default_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
 
-        self._logger.info("Loaded default layer settings")
+        self._logger.info("Loaded hardcoded default layer settings")
+
+    def _restore_pending_settings(self):
+        # 遅延実行：保存された設定を復元
+        if not self._pending_settings:
+            return
+
+        self._is_loading_settings = True  # 復元中は保存を無効
+        try:
+            restored_count = 0
+            for item in self._pending_settings:
+                if isinstance(item, dict) and "layer" in item and "sub_layer" in item:
+                    layer = item["layer"].strip()
+                    sub_layer = item["sub_layer"].strip()
+                    if layer and sub_layer:
+                        # レイヤーが存在するかチェック
+                        if self._layer_exists(layer, sub_layer):
+                            self._set_layer_checked(layer, sub_layer, True)
+                            restored_count += 1
+                        else:
+                            self._logger.warning(f"Layer not found: {layer}/{sub_layer}")
+
+            self._logger.info(f"Restored {restored_count} layers from saved settings")
+
+            # レイヤー状態を更新
+            active_layers = self._extract_active_layers()
+            self._widget.field_widget.set_active_layers(active_layers)
+
+        except Exception as e:
+            self._logger.error(f"Failed to restore pending settings: {e}")
+        finally:
+            self._is_loading_settings = False
+            self._pending_settings = None
 
     def _complete_initialization(self):
         # 初期化完了、これ以降は保存を有効にする
@@ -289,6 +333,28 @@ class Visualizer(Plugin):
                 active_layers.append((parent.text(0), child.text(0)))
 
         return active_layers
+
+    def _layer_exists(self, layer_name: str, sub_layer_name: str) -> bool:
+        # 指定されたレイヤーが存在するかチェック
+        for index in range(self._widget.layer_widget.topLevelItemCount()):
+            parent = self._widget.layer_widget.topLevelItem(index)
+            if parent.text(0) == layer_name:
+                for child_index in range(parent.childCount()):
+                    child = parent.child(child_index)
+                    if child.text(0) == sub_layer_name:
+                        return True
+        return False
+
+    def _set_layer_checked(self, layer_name: str, sub_layer_name: str, checked: bool):
+        # 指定されたレイヤーのチェック状態を設定
+        for index in range(self._widget.layer_widget.topLevelItemCount()):
+            parent = self._widget.layer_widget.topLevelItem(index)
+            if parent.text(0) == layer_name:
+                for child_index in range(parent.childCount()):
+                    child = parent.child(child_index)
+                    if child.text(0) == sub_layer_name:
+                        child.setCheckState(0, Qt.Checked if checked else Qt.Unchecked)
+                        return
 
     def _publish_replacement(self) -> None:
         # 描画領域のダブルクリック操作が完了したら、grSimのReplacement情報をpublishする
