@@ -30,9 +30,6 @@ from consai_tools.geometry import geometry_tools as tool
 class DefendGoal(TacticBase):
     """自ゴールを守るTactic."""
 
-    # ロボットの半径[m]
-    ROBOT_RADIUS = 0.1
-
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
@@ -47,6 +44,7 @@ class DefendGoal(TacticBase):
         """Run the tactic and return a MotionCommand based on the ball's position and movement."""
         command = MotionCommand()
         command.robot_id = self.robot_id
+        robot = world_model.robots
 
         # ボールの位置を取得
         ball_pos = world_model.ball.pos
@@ -56,7 +54,7 @@ class DefendGoal(TacticBase):
         # ボールの進行方向の直線に関する傾きと切片を計算
         slope, intercept, flag = tool.get_line_parameter(ball_pos, next_ball_pos)
 
-        x = -world_model.field.half_length + self.ROBOT_RADIUS
+        x = -world_model.field.half_length + robot.robot_radius
         y = slope * x + intercept
 
         if abs(y) < world_model.field.half_goal_width:

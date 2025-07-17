@@ -51,6 +51,7 @@ class RobotsModel:
         self.their_visible_robots: dict[int, Robot] = {}
 
         self.visibility_threshold = 0.2
+        self.robot_radius = 0.1
 
     def parse_frame(self, msg: TrackedFrame):
         """フレームデータを解析し, ロボット情報をour/theirに分類して格納する関数."""
