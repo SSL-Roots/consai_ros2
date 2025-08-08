@@ -21,6 +21,7 @@
 
 from consai_game.core.play.play import Play, invert_conditions
 from consai_game.play.conditions.ball_conditions import BallConditions
+from consai_game.play.conditions.robot_conditions import RobotConditions
 from consai_game.play.conditions.referee_conditions import RefereeConditions
 from consai_game.tactic.position import Position
 from consai_game.tactic.wrapper.allow_move_in_defense_area import AllowMoveInDefenseArea
@@ -33,16 +34,47 @@ from consai_game.tactic.composite.composite_man_mark import CompositeManMark
 from consai_game.tactic.wrapper.move_to_receive_pass import MoveToReceivePass
 
 
-def outside_defense_area() -> Play:
-    """ボールがディフェンスエリアの外にあるときのPlayを生成する関数."""
+def outside_defense_area_their_in() -> Play:
+    """自陣内相手ロボットが閾値以上の場合のPlayを生成する関数."""
     applicable = [
         RefereeConditions.running,
         BallConditions.is_in_our_defense_area.invert(),
         BallConditions.is_in_their_defense_area.invert(),
+        RobotConditions.their_robots_in_our_area(),
     ]
     return Play(
-        name="Running. Ball is outside defense area",
-        description="ボールがディフェンスエリアの外にあるときのPlay",
+        name="Running. Ball is outside defense area. Their robots in our area",
+        description="自陣内相手ロボットが閾値以上の場合のPlay.",
+        applicable=applicable,
+        aborted=invert_conditions(applicable),
+        timeout_ms=0,
+        roles=[
+            [AllowMoveInDefenseArea(WrapperLookBall(CompositeGoalie()))],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(-3.0, 2.0)), is_setplay=False)],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(-3.0, 0.0)), is_setplay=False)],
+            [CompositeOffense(tactic_default=MoveToReceivePass(Position(-3.0, -2.0)), is_setplay=False)],
+            [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
+            [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
+            [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-2.0, -2.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-2.0, 2.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-3.0, -4.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-3.0, 4.0))))],
+        ],
+    )
+
+
+def outside_defense_area_their_out() -> Play:
+    """自陣内相手ロボットが閾値未満の場合のPlayを生成する関数."""
+    applicable = [
+        RefereeConditions.running,
+        BallConditions.is_in_our_defense_area.invert(),
+        BallConditions.is_in_their_defense_area.invert(),
+        RobotConditions.their_robots_in_our_area().invert(),
+    ]
+    return Play(
+        name="Running. Ball is outside defense area. Their robots not in our area",
+        description="自陣内相手ロボットが閾値未満の場合のPlay.",
         applicable=applicable,
         aborted=invert_conditions(applicable),
         timeout_ms=0,
@@ -54,10 +86,10 @@ def outside_defense_area() -> Play:
             [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
             [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
             [CompositeDefense(tactic_default=CenterBack(), do_receive=True)],
-            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-2.0, -2.0))))],
-            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-2.0, 2.0))))],
-            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-3.0, -4.0))))],
-            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(-3.0, 4.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(2.0, -2.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(2.0, 2.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(3.0, -4.0))))],
+            [CompositeDefense(tactic_default=CompositeManMark(tactic_default=WrapperLookBall(Position(3.0, 4.0))))],
         ],
     )
 
