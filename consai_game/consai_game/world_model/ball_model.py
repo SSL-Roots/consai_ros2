@@ -36,6 +36,7 @@ class BallModel:
         self.vel = State2D()
         self.is_visible = False
         self.visibility_threshold = 0.2
+        self.ball_radius = 0.02
 
     def parse_frame(self, msg: TrackedFrame):
         """フレームメッセージからボール情報を抽出して内部状態を更新."""

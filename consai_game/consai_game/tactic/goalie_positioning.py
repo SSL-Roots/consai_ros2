@@ -33,9 +33,6 @@ import math
 class GoaliePositioning(TacticBase):
     """ゴーリーのポジションを生成するTactic"""
 
-    # ロボットの半径[m]
-    ROBOT_RADIUS = 0.1
-
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__()
@@ -97,7 +94,7 @@ class GoaliePositioning(TacticBase):
         # y = max(min(y, world_model.field.half_goal_width), -world_model.field.half_goal_width)
 
         # ボールを誰も保持していないとき、もしくは味方ロボットが保持しているとき
-        x, y = self._get_goalie_position_free_ball(field, ball)
+        x, y = self._get_goalie_position_free_ball(field, ball, world_model)
 
         command.desired_pose.x = x
         command.desired_pose.y = y
@@ -105,14 +102,16 @@ class GoaliePositioning(TacticBase):
 
         return command
 
-    def _get_goalie_position_free_ball(self, field: Field, ball: BallModel):
+    def _get_goalie_position_free_ball(self, field: Field, ball: BallModel, world_model: WorldModel):
         """
         ボールを誰も保持していないとき、もしくは味方ロボットが保持しているときのゴーリーのポジションを生成する
         ボールの位置とゴール両端へのベクトルの長さを比較して、短い方のベクトルの方向にゴーリーを配置する
         """
 
+        robot = world_model.robots
+
         # 1. ゴールの上端・下端
-        goal_x = -field.half_length + self.ROBOT_RADIUS
+        goal_x = -field.half_length + robot.robot_radius
         goal_y_top = field.half_goal_width
         goal_y_bottom = -field.half_goal_width
 

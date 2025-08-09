@@ -33,9 +33,6 @@ from consai_msgs.msg import MotionCommand
 class CompositeGoalie(CompositeTacticBase):
     """ゴーリーの動作をまとめたTactic"""
 
-    # ロボットの半径[m]
-    ROBOT_RADIUS = 0.1
-
     def __init__(self):
         """Initialize the DefendGoal tactic."""
         super().__init__(
