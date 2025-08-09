@@ -165,3 +165,4 @@ jobs:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
           ${{ matrix.env.TEST_NAME }} failed. Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+          How to replay the logs: [README_play_logfile](https://github.com/SSL-Roots/consai_ros2/blob/main/README_play_logfile.md)
