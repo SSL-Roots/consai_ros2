@@ -61,3 +61,6 @@ target/
 .pytest_cache
 
 .vscode
+
+# GUI setting
+consai_visualizer/consai_visualizer_settings.json

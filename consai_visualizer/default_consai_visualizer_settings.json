@@ -1,0 +1,40 @@
+{
+  "active_layers": [
+    {
+      "layer": "vision",
+      "sub_layer": "tracked"
+    },
+    {
+      "layer": "vision",
+      "sub_layer": "detection_cam0"
+    },
+    {
+      "layer": "vision",
+      "sub_layer": "detection_cam1"
+    },
+    {
+      "layer": "vision",
+      "sub_layer": "detection_cam2"
+    },
+    {
+      "layer": "vision",
+      "sub_layer": "detection_cam3"
+    },
+    {
+      "layer": "vision",
+      "sub_layer": "geometry"
+    },
+    {
+      "layer": "referee",
+      "sub_layer": "info"
+    },
+    {
+      "layer": "referee",
+      "sub_layer": "prohibited_area"
+    },
+    {
+      "layer": "controller",
+      "sub_layer": "goal"
+    }
+  ]
+}
