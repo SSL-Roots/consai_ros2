@@ -162,7 +162,7 @@ class Visualizer(Plugin):
                 self._logger.info(f"Created directory: {settings_dir}")
 
             # JSONファイルに保存
-            self._logger.info(f"Attempting to save to: {self._custom_settings_file}")
+            self._logger.debug(f"Attempting to save to: {self._custom_settings_file}")
             with open(self._custom_settings_file, "w") as f:
                 json.dump(settings, f, indent=2)
 
