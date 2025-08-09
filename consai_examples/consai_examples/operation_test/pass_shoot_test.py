@@ -15,21 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットを移動させパスやリフレクトシュートを行うモジュール."""
+
 import argparse
-import threading
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import Operation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
 
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
-from consai_examples.robot_operator import RobotOperator
-
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def pass_shoot(robot_id0: int, x0: float, y0: float, robot_id1: int, x1: float, y1: float):
-    # ロボットを目標位置に動かしてリフレクトシュートかパスをパス相手の味方ロボットに行う
-
+    """ロボットを目標位置に動かしてリフレクトシュートかパスをパス相手の味方ロボットに行う関数."""
     # robot_id0に設定しているロボットを指定した目標位置に移動
     pass_shoot0 = Operation().move_to_pose(TargetXY.value(x0, y0), TargetTheta.look_ball())
     # robot_id1に指定したロボットに対してリフレクトシュートをする

@@ -19,6 +19,8 @@
 namespace consai_robot_controller
 {
 
+using std::placeholders::_1;
+
 FieldInfoParser::FieldInfoParser(
   const bool team_is_yellow, const bool invert,
   const std::shared_ptr<parser::DetectionExtractor> & detection_extractor)
@@ -30,28 +32,51 @@ FieldInfoParser::FieldInfoParser(
   tactic_obstacle_avoidance_ = std::make_shared<tactic::ObstacleAvoidance>(detection_extractor);
 }
 
+void FieldInfoParser::set_subscriptions(rclcpp::Node * node)
+{
+  // 別クラスのコンストラクタから呼び出されるため、Node::SharedPtrが使えない
+  // 変わりにNode*を使用する。生ポインタを使用するため、所有権を持たないように実装すること
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    // .best_effort()  // データの損失を許容する
+    .durability_volatile();  // データの保存を行わない
+
+  sub_detection_tracked_ = node->create_subscription<TrackedFrame>(
+    "detection_tracked", qos, std::bind(&FieldInfoParser::set_detection_tracked, this, _1));
+
+  sub_named_targets_ = node->create_subscription<NamedTargets>(
+    "named_targets", qos, std::bind(&FieldInfoParser::set_named_targets, this, _1));
+
+  sub_designated_position_ = node->create_subscription<State>(
+    "parsed_referee/designated_position", qos,
+    std::bind(&FieldInfoParser::set_designated_position, this, _1));
+}
+
+void FieldInfoParser::set_consai_param_rule(const nlohmann::json & param)
+{
+  constraint_parser_->set_field_size(param["field"]["length"], param["field"]["width"]);
+  tactic_obstacle_avoidance_->set_field_size(
+    param["field"]["length"],
+    param["field"]["width"],
+    param["field"]["penalty_depth"],
+    param["field"]["penalty_width"],
+    param["field"]["goal_width"],
+    param["field"]["goal_depth"]
+  );
+}
+
 void FieldInfoParser::set_detection_tracked(const TrackedFrame::SharedPtr detection_tracked)
 {
   detection_extractor_->set_detection_tracked(detection_tracked);
 }
 
-void FieldInfoParser::set_geometry(const GeometryData::SharedPtr geometry)
-{
-}
-
-void FieldInfoParser::set_referee(const Referee::SharedPtr referee)
-{
-  referee_ = referee;
-}
-
-void FieldInfoParser::set_parsed_referee(const ParsedReferee::SharedPtr parsed_referee)
-{
-  parsed_referee_ = parsed_referee;
-}
-
 void FieldInfoParser::set_named_targets(const NamedTargets::SharedPtr msg)
 {
   constraint_parser_->set_named_targets(msg);
+}
+
+void FieldInfoParser::set_designated_position(const State::SharedPtr msg)
+{
+  designated_position_ = *msg;
 }
 
 bool FieldInfoParser::is_parsable(const RobotControlMsg::SharedPtr goal) const
@@ -174,6 +199,46 @@ State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
   }
 
   return avoidance_pose;
+}
+
+State FieldInfoParser::modify_goal_pose_to_avoid_obstacles(
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const NaviOptions & navi_options) const
+{
+  const auto ball = detection_extractor_->extract_ball();
+
+  State new_pose = tactic_obstacle_avoidance_->avoid_obstacles(
+    my_robot,
+    goal_pose,
+    ball,
+    navi_options.avoid_our_robots,
+    navi_options.avoid_their_robots,
+    navi_options.avoid_ball);
+
+  if (navi_options.avoid_pushing) {
+    new_pose = tactic_obstacle_avoidance_->avoid_pushing_robots(my_robot, new_pose);
+  }
+
+  if (navi_options.avoid_ball) {
+    new_pose = tactic_obstacle_avoidance_->avoid_ball_around(
+      my_robot, new_pose, ball, navi_options.ball_avoid_radius);
+  }
+
+  if (navi_options.avoid_goal) {
+    new_pose = tactic_obstacle_avoidance_->avoid_goal(my_robot, new_pose);
+  }
+
+  if (navi_options.avoid_defense_area) {
+    new_pose = tactic_obstacle_avoidance_->avoid_defense_area(my_robot, new_pose);
+  }
+
+  if (navi_options.avoid_placement_area) {
+    new_pose = tactic_obstacle_avoidance_->avoid_placement_area(
+      my_robot, new_pose, ball, designated_position_);
+  }
+
+  return new_pose;
 }
 
 bool FieldInfoParser::parse_constraints(

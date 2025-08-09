@@ -31,8 +31,21 @@ ObstacleAvoidance::ObstacleAvoidance(
   detection_ = detection_extractor;
 }
 
+void ObstacleAvoidance::set_field_size(
+  const double field_length, const double field_width,
+  const double penalty_depth, const double penalty_width,
+  const double goal_width, const double goal_depth)
+{
+  field_half_length_ = field_length * 0.5;
+  field_half_width_ = field_width * 0.5;
+  field_penalty_depth_ = penalty_depth;
+  field_penalty_width_ = penalty_width;
+  field_goal_width_ = goal_width;
+  field_goal_depth_ = goal_depth;
+}
+
 bool ObstacleAvoidance::avoid_obstacles(
-  const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
+  const TrackedRobot & my_robot, const State & goal_pose, const std::optional<TrackedBall> & ball,
   const bool & avoid_our_robots,
   const bool & avoid_their_robots,
   const bool & avoid_ball,
@@ -90,8 +103,8 @@ bool ObstacleAvoidance::avoid_obstacles(
     candidate_poses.push_back(tools::pose_state(robot));
   }
 
-  if (avoid_ball) {
-    candidate_poses.push_back(tools::pose_state(ball));
+  if (ball && avoid_ball) {
+    candidate_poses.push_back(tools::pose_state(*ball));
   }
 
   std::shared_ptr<State> obstacle_pose_MtoA;
@@ -150,6 +163,22 @@ bool ObstacleAvoidance::avoid_obstacles(
   return true;
 }
 
+State ObstacleAvoidance::avoid_obstacles(
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const std::optional<TrackedBall> & ball,
+  const bool & avoid_our_robots,
+  const bool & avoid_their_robots,
+  const bool & avoid_ball) const
+{
+  State new_pose = goal_pose;
+
+  avoid_obstacles(
+    my_robot, new_pose, ball, avoid_our_robots, avoid_their_robots, avoid_ball, new_pose);
+
+  return new_pose;
+}
+
 bool ObstacleAvoidance::avoid_placement_area(
   const TrackedRobot & my_robot, const State & goal_pose, const TrackedBall & ball,
   const State & designated_position, State & avoidance_pose) const
@@ -183,10 +212,10 @@ bool ObstacleAvoidance::avoid_placement_area(
     avoidance_pose = trans_BtoD.inverted_transform(robot_pose_BtoD.x, avoid_y, 0.0);
 
     // デッドロック回避
-    const double FIELD_HALF_X = 6.0;
-    const double FIELD_HALF_Y = 4.5;
-    const double FIELD_WALL_X = 6.3;
-    const double FIELD_WALL_Y = 4.8;
+    const double FIELD_HALF_X = field_half_length_;
+    const double FIELD_HALF_Y = field_half_width_;
+    const double FIELD_WALL_X = field_half_length_ + field_boundary_width_;
+    const double FIELD_WALL_Y = field_half_width_ + field_boundary_width_;
 
     const double FIELD_NEAR_WALL_X = FIELD_HALF_X - 0.0;
     const double FIELD_NEAR_WALL_Y = FIELD_HALF_Y - 0.0;
@@ -215,6 +244,24 @@ bool ObstacleAvoidance::avoid_placement_area(
   }
 
   return true;
+}
+
+State ObstacleAvoidance::avoid_placement_area(
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const std::optional<TrackedBall> & ball,
+  const State & designated_position) const
+{
+  State new_pose = goal_pose;
+
+  if (!ball) {
+    return new_pose;
+  }
+
+  avoid_placement_area(
+    my_robot, new_pose, *ball, designated_position, new_pose);
+
+  return new_pose;
 }
 
 bool ObstacleAvoidance::avoid_pushing_robots(
@@ -255,101 +302,43 @@ bool ObstacleAvoidance::avoid_pushing_robots(
   return true;
 }
 
+State ObstacleAvoidance::avoid_pushing_robots(
+  const TrackedRobot & my_robot, const State & goal_pose) const
+{
+  State new_pose = goal_pose;
+
+  avoid_pushing_robots(my_robot, new_pose, new_pose);
+
+  return new_pose;
+}
+
 bool ObstacleAvoidance::avoid_ball_500mm(
   const TrackedRobot & my_robot,
   const State & final_goal_pose,
   const State & goal_pose, const TrackedBall & ball,
   State & avoidance_pose) const
 {
-  // ボールから500 mm以上離れるために、回避処理を実行する
-  // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
-  // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
-  const double DISTANCE_TO_AVOID_THRESHOLD = 0.60;
-  const double AVOID_MARGIN = 0.09;
-  const double DISTANCE_TO_AVOID = DISTANCE_TO_AVOID_THRESHOLD + AVOID_MARGIN;
+  const double RADIUS_THRESHOLD = 0.6;
 
-  const auto robot_pose = tools::pose_state(my_robot);
-  const auto ball_pose = tools::pose_state(ball);
+  return avoid_ball_around_impl(
+    my_robot, final_goal_pose, goal_pose, ball, RADIUS_THRESHOLD, avoidance_pose);
+}
 
-  auto avoidance_on_line_robot_to_goal = [&]() {
-      // 自分と目標位置を結ぶ座標系を生成
-      const auto trans_RtoG = tools::Trans(robot_pose, tools::calc_angle(robot_pose, goal_pose));
-      const auto ball_pose_RtoG = trans_RtoG.transform(ball_pose);
-      const auto goal_pose_RtoG = trans_RtoG.transform(goal_pose);
+State ObstacleAvoidance::avoid_ball_around(
+  const TrackedRobot & my_robot,
+  const State & goal_pose,
+  const std::optional<TrackedBall> & ball,
+  const double & around_radius) const
+{
+  State new_pose = goal_pose;
 
-      // 自分と目標位置間にボールがなければ終了
-      if (ball_pose_RtoG.x < 0.0 || ball_pose_RtoG.x > goal_pose_RtoG.x) {
-        return false;
-      }
-
-      // ボールが離れていれば終了
-      if (std::fabs(ball_pose_RtoG.y) > DISTANCE_TO_AVOID_THRESHOLD) {
-        return false;
-      }
-
-      // 回避位置を生成
-      const auto avoid_x = ball_pose_RtoG.x;
-      const auto avoid_y = ball_pose_RtoG.y - std::copysign(DISTANCE_TO_AVOID, ball_pose_RtoG.y);
-      avoidance_pose = trans_RtoG.inverted_transform(avoid_x, avoid_y, 0.0);
-      return true;
-    };
-
-  auto make_a_gap_from_ball = [&]() {
-      const auto distance_BtoA = tools::distance(ball_pose, avoidance_pose);
-      // 目標位置がボールから離れていれば終了
-      if (distance_BtoA > DISTANCE_TO_AVOID_THRESHOLD) {
-        return false;
-      }
-
-      // 目標位置とボールを結ぶ直線上で、目標位置をボールから離す
-      // このとき、最終目標位置側に回避位置を置く
-      const auto trans_BtoA = tools::Trans(
-        ball_pose, tools::calc_angle(ball_pose, avoidance_pose));
-      const auto final_goal_pose_BtoA = trans_BtoA.transform(final_goal_pose);
-
-      avoidance_pose = trans_BtoA.inverted_transform(
-        std::copysign(DISTANCE_TO_AVOID, final_goal_pose_BtoA.x), 0.0, 0.0);
-      return true;
-    };
-
-  auto avoid_outside_of_field = [&]() {
-      // フィールド外に目標位置が置かれた場合の処理
-      // どれだけフィールドからはみ出たかを、0.0 ~ 1.0に変換する
-      // はみ出た分だけ目標位置をボール周囲でずらす
-      const auto trans_BtoA = tools::Trans(
-        ball_pose, tools::calc_angle(ball_pose, avoidance_pose));
-      const auto gain_x =
-        std::clamp(
-        (std::fabs(avoidance_pose.x) - field_half_length_) / field_boundary_width_, 0.0, 1.0);
-      const auto gain_y =
-        std::clamp(
-        (std::fabs(avoidance_pose.y) - field_half_width_) / field_boundary_width_, 0.0, 1.0);
-
-      if (gain_x > 0.0) {
-        auto add_angle = std::copysign(gain_x * M_PI * 0.5, avoidance_pose.y);
-        avoidance_pose = trans_BtoA.inverted_transform(
-          DISTANCE_TO_AVOID * std::cos(add_angle),
-          DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
-      }
-      if (gain_y > 0.0) {
-        auto add_angle = std::copysign(gain_y * M_PI * 0.5, avoidance_pose.x);
-        avoidance_pose = trans_BtoA.inverted_transform(
-          DISTANCE_TO_AVOID * std::cos(add_angle),
-          DISTANCE_TO_AVOID * std::sin(add_angle), 0.0);
-      }
-      return true;
-    };
-
-  // 障害物がなければ、目標位置を回避位置とする
-  avoidance_pose = goal_pose;
-
-  if (avoidance_on_line_robot_to_goal() || make_a_gap_from_ball()) {
-    avoid_outside_of_field();
+  if (!ball) {
+    return new_pose;
   }
 
-  avoidance_pose.theta = final_goal_pose.theta;
+  avoid_ball_around_impl(my_robot, goal_pose, goal_pose, *ball, around_radius, new_pose);
 
-  return true;
+  return new_pose;
 }
 
 bool ObstacleAvoidance::avoid_defense_area(
@@ -359,18 +348,18 @@ bool ObstacleAvoidance::avoid_defense_area(
   const auto robot_pose = tools::pose_state(my_robot);
 
   // ロボットと目標位置を結ぶ直線が、ディフェンスラインのどこを交差するかで回避位置を決定
-  constexpr double FIELD_HALF_LENGTH = 6.0;
-  constexpr double DEFENSE_AREA_LENGTH = 1.8;
-  constexpr double DEFENSE_AREA_HALF_WIDTH = 1.8;
-  constexpr double FIELD_MARGIN = 0.3;
+  const double FIELD_HALF_LENGTH = field_half_length_;
+  const double DEFENSE_AREA_X = field_penalty_depth_;
+  const double DEFENSE_AREA_Y = field_penalty_width_ * 0.5;
+  const double FIELD_MARGIN = field_boundary_width_;
 
   auto is_in_defense_area = [&](const bool is_ourside, const State & state) {
       if (is_ourside) {
-        return state.x < -FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH &&
-               std::fabs(state.y) < DEFENSE_AREA_HALF_WIDTH;
+        return state.x < -FIELD_HALF_LENGTH + DEFENSE_AREA_X &&
+               std::fabs(state.y) < DEFENSE_AREA_Y;
       } else {
-        return state.x > FIELD_HALF_LENGTH - DEFENSE_AREA_LENGTH &&
-               std::fabs(state.y) < DEFENSE_AREA_HALF_WIDTH;
+        return state.x > FIELD_HALF_LENGTH - DEFENSE_AREA_X &&
+               std::fabs(state.y) < DEFENSE_AREA_Y;
       }
     };
 
@@ -379,16 +368,16 @@ bool ObstacleAvoidance::avoid_defense_area(
       const auto sign = is_ourside ? 1.0 : -1.0;
       const auto TOP_OUTSIDE = tools::gen_state(
         -(FIELD_HALF_LENGTH + FIELD_MARGIN) * sign,
-        DEFENSE_AREA_HALF_WIDTH + ROBOT_RADIUS);
+        DEFENSE_AREA_Y + ROBOT_RADIUS);
       const auto TOP_INSIDE = tools::gen_state(
-        (-FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH + ROBOT_RADIUS) * sign,
-        DEFENSE_AREA_HALF_WIDTH + ROBOT_RADIUS);
+        (-FIELD_HALF_LENGTH + DEFENSE_AREA_X + ROBOT_RADIUS) * sign,
+        DEFENSE_AREA_Y + ROBOT_RADIUS);
       const auto BOTTOM_OUTSIDE = tools::gen_state(
         -(FIELD_HALF_LENGTH + FIELD_MARGIN) * sign,
-        -DEFENSE_AREA_HALF_WIDTH - ROBOT_RADIUS);
+        -DEFENSE_AREA_Y - ROBOT_RADIUS);
       const auto BOTTOM_INSIDE = tools::gen_state(
-        (-FIELD_HALF_LENGTH + DEFENSE_AREA_LENGTH + ROBOT_RADIUS) * sign,
-        -DEFENSE_AREA_HALF_WIDTH - ROBOT_RADIUS);
+        (-FIELD_HALF_LENGTH + DEFENSE_AREA_X + ROBOT_RADIUS) * sign,
+        -DEFENSE_AREA_Y - ROBOT_RADIUS);
 
       const auto is_intersect_top = tools::is_lines_intersect(
         robot_pose, goal, TOP_OUTSIDE, TOP_INSIDE);
@@ -400,9 +389,9 @@ bool ObstacleAvoidance::avoid_defense_area(
         is_intersect_inside;
 
       constexpr double AVOID_DISTANCE = ROBOT_RADIUS * 2.0;
-      const auto AVOID_POS_X = (-FIELD_HALF_LENGTH + DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE) *
+      const auto AVOID_POS_X = (-FIELD_HALF_LENGTH + DEFENSE_AREA_X + AVOID_DISTANCE) *
         sign;
-      constexpr auto AVOID_POS_Y = DEFENSE_AREA_HALF_WIDTH + AVOID_DISTANCE;
+      const auto AVOID_POS_Y = DEFENSE_AREA_Y + AVOID_DISTANCE;
 
       const auto goal_is_in_defense = is_in_defense_area(is_ourside, goal);
       const auto robot_is_in_defense = is_in_defense_area(is_ourside, robot_pose);
@@ -455,6 +444,163 @@ bool ObstacleAvoidance::avoid_defense_area(
   if (need_avoidance_their) {
     avoidance_pose = result_pose_their;
   }
+
+  return true;
+}
+
+State ObstacleAvoidance::avoid_defense_area(
+  const TrackedRobot & my_robot, const State & goal_pose) const
+{
+  State new_pose = goal_pose;
+
+  avoid_defense_area(my_robot, new_pose, new_pose);
+
+  return new_pose;
+}
+
+State ObstacleAvoidance::avoid_goal(
+  const TrackedRobot & my_robot, const State & goal_pose) const
+{
+  // ゴールの横壁をロボットの直径分だけ伸ばした線分と
+  // my_robotとgoal_poseを結ぶ線分が交差した場合に、
+  // 回避位置を生成する
+  const double goal_left = -field_half_length_ - 1.0;  // フィールド外部まで伸ばす
+  const double goal_right = -field_half_length_ + ROBOT_RADIUS * 2.0;
+  const double goal_top = field_goal_width_ * 0.5;
+
+  const State goal_left_top = tools::gen_state(goal_left, goal_top, 0.0);
+  const State goal_right_top = tools::gen_state(goal_right, goal_top, 0.0);
+  const State goal_left_bottom = tools::gen_state(goal_left, -goal_top, 0.0);
+  const State goal_right_bottom = tools::gen_state(goal_right, -goal_top, 0.0);
+
+  const State robot_pose = tools::pose_state(my_robot);
+
+  State new_pose = goal_pose;
+
+  // my_robotとgoal_poseを結ぶ線分が
+  // 上の壁をまたいでいるか
+  const auto is_intersect_top = tools::is_lines_intersect(
+    robot_pose, goal_pose, goal_left_top, goal_right_top);
+  const auto is_intersect_bottom = tools::is_lines_intersect(
+    robot_pose, goal_pose, goal_left_bottom, goal_right_bottom);
+
+  auto avoid_y = goal_top - ROBOT_RADIUS * 2.0;
+
+  // ゴールの壁沿いにいる場合は、真横に回避する
+  if (robot_pose.x < -field_half_length_) {
+    avoid_y = std::fabs(robot_pose.y);
+  }
+
+  if (is_intersect_top && is_intersect_bottom) {
+    // 上下の壁をまたいでいるので、ロボットに近い側の壁に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = std::copysign(avoid_y, robot_pose.y);
+  } else if (is_intersect_top) {
+    // 上の壁をまたいでいるので、上の壁の外側に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = avoid_y;
+  } else if (is_intersect_bottom) {
+    // 下の壁をまたいでいるので、下の壁の外側に回避位置を生成
+    new_pose.x = goal_right;
+    new_pose.y = -avoid_y;
+  }
+
+  return new_pose;
+}
+
+
+bool ObstacleAvoidance::avoid_ball_around_impl(
+  const TrackedRobot & my_robot,
+  const State & final_goal_pose,
+  const State & goal_pose, const TrackedBall & ball,
+  const double & radius_threshold,
+  State & avoidance_pose) const
+{
+  // ボールからradius_threshold以上離れるために、回避処理を実行する
+  // 目標位置がボールに近い場合はボールと目標位置の直線上で位置を離す
+  // 回避後の目標位置がフィールド白線外部に生成された場合は、ボールの回避円周上で目標位置をずらす
+
+  const auto RADIUS_TO_AVOID = radius_threshold + 0.09;
+  const auto robot_pose = tools::pose_state(my_robot);
+  const auto ball_pose = tools::pose_state(ball);
+
+  auto avoidance_on_line_robot_to_goal = [&]() {
+      // 自分と目標位置を結ぶ座標系を生成
+      const auto trans_RtoG = tools::Trans(robot_pose, tools::calc_angle(robot_pose, goal_pose));
+      const auto ball_pose_RtoG = trans_RtoG.transform(ball_pose);
+      const auto goal_pose_RtoG = trans_RtoG.transform(goal_pose);
+
+      // 自分と目標位置間にボールがなければ終了
+      if (ball_pose_RtoG.x < 0.0 || ball_pose_RtoG.x > goal_pose_RtoG.x) {
+        return false;
+      }
+
+      // ボールが離れていれば終了
+      if (std::fabs(ball_pose_RtoG.y) > radius_threshold) {
+        return false;
+      }
+
+      // 回避位置を生成
+      const auto avoid_x = ball_pose_RtoG.x;
+      const auto avoid_y = ball_pose_RtoG.y - std::copysign(RADIUS_TO_AVOID, ball_pose_RtoG.y);
+      avoidance_pose = trans_RtoG.inverted_transform(avoid_x, avoid_y, 0.0);
+      return true;
+    };
+
+  auto make_a_gap_from_ball = [&]() {
+      const auto distance_BtoA = tools::distance(ball_pose, avoidance_pose);
+      // 目標位置がボールから離れていれば終了
+      if (distance_BtoA > radius_threshold) {
+        return false;
+      }
+
+      // 目標位置とボールを結ぶ直線上で、目標位置をボールから離す
+      // このとき、最終目標位置側に回避位置を置く
+      const auto trans_BtoA = tools::Trans(
+        ball_pose, tools::calc_angle(ball_pose, avoidance_pose));
+      const auto final_goal_pose_BtoA = trans_BtoA.transform(final_goal_pose);
+
+      avoidance_pose = trans_BtoA.inverted_transform(
+        std::copysign(RADIUS_TO_AVOID, final_goal_pose_BtoA.x), 0.0, 0.0);
+      return true;
+    };
+
+  auto avoid_outside_of_field = [&]() {
+      // フィールド外に目標位置が置かれた場合の処理
+      // どれだけフィールドからはみ出たかを、0.0 ~ 1.0に変換する
+      // はみ出た分だけ目標位置をボール周囲でずらす
+      const auto trans_BtoA = tools::Trans(
+        ball_pose, tools::calc_angle(ball_pose, avoidance_pose));
+      const auto gain_x =
+        std::clamp(
+        (std::fabs(avoidance_pose.x) - field_half_length_) / field_boundary_width_, 0.0, 1.0);
+      const auto gain_y =
+        std::clamp(
+        (std::fabs(avoidance_pose.y) - field_half_width_) / field_boundary_width_, 0.0, 1.0);
+
+      if (gain_x > 0.0) {
+        auto add_angle = std::copysign(gain_x * M_PI * 0.5, avoidance_pose.y);
+        avoidance_pose = trans_BtoA.inverted_transform(
+          RADIUS_TO_AVOID * std::cos(add_angle),
+          RADIUS_TO_AVOID * std::sin(add_angle), 0.0);
+      }
+      if (gain_y > 0.0) {
+        auto add_angle = std::copysign(gain_y * M_PI * 0.5, avoidance_pose.x);
+        avoidance_pose = trans_BtoA.inverted_transform(
+          RADIUS_TO_AVOID * std::cos(add_angle),
+          RADIUS_TO_AVOID * std::sin(add_angle), 0.0);
+      }
+      return true;
+    };
+
+  // 障害物がなければ、目標位置を回避位置とする
+  avoidance_pose = goal_pose;
+
+  if (avoidance_on_line_robot_to_goal() || make_a_gap_from_ball()) {
+    avoid_outside_of_field();
+  }
+
+  avoidance_pose.theta = final_goal_pose.theta;
 
   return true;
 }

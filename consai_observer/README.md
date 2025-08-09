@@ -1,2 +1,0 @@
-# CON-SAI Robot Observer
-

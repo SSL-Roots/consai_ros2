@@ -12,44 +12,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from consai_examples.observer.pos_vel import PosVel
-from consai_msgs.msg import State2D
-from consai_tools.geometry import geometry_tools as tool
+"""ロボットとボールの位置に基づき, シュートやパスの可否を判定するモジュール."""
+
 import math
+
+from consai_examples.observer.field_normalizer import FieldNormalizer
+from consai_examples.observer.pos_vel import PosVel
+
+from consai_msgs.msg import State2D
+
+from consai_tools.geometry import geometry_tools as tool
 
 
 class PassShootObserver:
+    """パスとシュートのポジションを観測するクラス."""
+
     def __init__(self, goalie_id):
+        """PassShootObserverを初期化する関数."""
         self._our_robots: dict[int, PosVel] = {}
         self._their_robots: dict[int, PosVel] = {}
+        self._present_shoot_pos_list: list[State2D] = []
 
-        self._field_half_length = 6.0
-        self._field_half_width = 4.5
-        self._goal_pos_list = [
-            State2D(x=self._field_half_length, y=0.0),
-            State2D(x=self._field_half_length, y=0.45),
-            State2D(x=self._field_half_length, y=-0.45)
-        ]
+        self._goalie_id = goalie_id
+
+        self._field = FieldNormalizer()
+
+        self._set_field_corner()
+        self._set_goal_pos_list()
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        """フィールドの正規化設定を行う関数."""
+        self._field = field_normalizer
+        self._set_field_corner()
+        self._set_goal_pos_list()
+
+    def _set_field_corner(self) -> None:
+        """フィールドの四隅の位置を設定する関数."""
         self._their_top_corner = State2D(
-            x=self._field_half_length, y=self._field_half_width)
+            x=self._field.half_length(), y=self._field.half_width())
         self._their_bottom_corner = State2D(
-            x=self._field_half_length, y=-self._field_half_width)
+            x=self._field.half_length(), y=-self._field.half_width())
         self._our_top_corner = State2D(
-            x=-self._field_half_length, y=self._field_half_width)
+            x=-self._field.half_length(), y=self._field.half_width())
         self._our_bottom_corner = State2D(
-            x=-self._field_half_length, y=-self._field_half_width)
+            x=-self._field.half_length(), y=-self._field.half_width())
         self._clear_pos_list = [
             self._their_top_corner,
             self._their_bottom_corner,
             self._our_top_corner,
             self._our_bottom_corner]
 
-        self._present_shoot_pos_list: list[State2D] = []
-
-        self._goalie_id = goalie_id
+    def _set_goal_pos_list(self) -> None:
+        """ゴールポジションリストを設定する関数."""
+        self._goal_pos_list = [
+            State2D(x=self._field.half_length(), y=0.0),
+            State2D(x=self._field.half_length(), y=self._field.half_goal_width() * 0.5),
+            State2D(x=self._field.half_length(), y=-self._field.half_goal_width() * 0.5)
+        ]
 
     def update(self, ball: PosVel,
                our_robots: dict[int, PosVel], their_robots: dict[int, PosVel]) -> None:
+        """ボールの位置とロボットの位置を更新する関数."""
         self._ball = ball
         self._our_robots = our_robots
         self._their_robots = their_robots
@@ -58,17 +81,19 @@ class PassShootObserver:
         self._present_clear_pos_list = self._search_clear_pos_list()
 
     def get_shoot_pos_list(self) -> list[State2D]:
+        """シュート可能な位置リストを返す関数."""
         return self._present_shoot_pos_list
 
     def get_clear_pos_list(self) -> list[State2D]:
+        """クリア可能な位置リストを返す関数."""
         return self._present_clear_pos_list
 
     def search_receivers_list(self, my_robot_id: int, search_offset=0.0) -> list[int]:
-        # パス可能なロボットIDのリストを返す関数
+        """パス可能なロボットIDのリストを返す関数."""
         # TODO(Roots): パスできるリストの探索と、シュートできるリストの探索は別関数に分けたほうが良い
 
         # 計算上の相手ロボットの半径（通常の倍の半径（直径）に設定）
-        robot_r = 0.4
+        robot_r = self._field.on_div_a_robot_diameter(0.4)
         # ロボットの位置座標取得から実際にパスを出すまでの想定時間
         dt = 0.5
 
@@ -162,10 +187,10 @@ class PassShootObserver:
     def _search_forward_robots(
             self, pos: State2D, search_offsset=0.0, search_our_robots=True,
             exclude_id=-1, our_goalie_id=-1) -> list[int]:
-        # 指定した座標より前にいるロボットIDのリストを返す関数
+        """指定した座標より前にいるロボットIDのリストを返す関数."""
 
         def search(pos: State2D, robots: dict[int, PosVel], search_offsset=0.0) -> list[int]:
-            # 指定した座標より前にいるロボットIDのリストを返す関数
+            """指定した座標より前にいるロボットIDのリストを返す関数."""
             forward_robots_id = []
             for robot_id, robot in robots.items():
                 if robot_id == exclude_id or robot_id == our_goalie_id:
@@ -181,13 +206,13 @@ class PassShootObserver:
             return search(pos, self._their_robots)
 
     def _search_shoot_pos_list(self, search_ours=False) -> list[State2D]:
-        # ボールからの直線上にロボットがいないシュート位置リストを返す
-        TOLERANCE = 0.2  # ロボット半径 + alpha
+        """ボールからの直線上にロボットがいないシュート位置リストを返す関数."""
+        TOLERANCE = self._field.on_div_a_robot_diameter(0.2)  # ロボット半径 + alpha
 
         shoot_pos_list = []
 
         def obstacle_exists(target: State2D, robots: dict[int, PosVel]) -> bool:
-            # ロボットがシュートポジションを妨害しているか判定
+            """ロボットがシュートポジションを妨害しているか判定する関数."""
             for robot in robots.values():
                 if tool.is_on_line(robot.pos(), self._ball.pos(), target, TOLERANCE):
                     return True
@@ -203,13 +228,13 @@ class PassShootObserver:
         return shoot_pos_list
 
     def _search_clear_pos_list(self, search_ours=False) -> list[State2D]:
-        # ボールからの直線上にロボットがいないシュート位置リストを返す
-        TOLERANCE = 0.1  # ロボット半径 + alpha
+        """ボールからの直線上にロボットがいないシュート位置リストを返す関数."""
+        TOLERANCE = self._field.on_div_a_robot_diameter(0.1)  # ロボット半径 + alpha
 
         clear_pos_list = []
 
         def obstacle_exists(target: State2D, robots: dict[int, PosVel]) -> bool:
-            # ロボットがシュートポジションを妨害しているか判定
+            """ロボットがシュートポジションを妨害しているか判定する関数."""
             for robot in robots.values():
                 if tool.is_on_line(robot.pos(), self._ball.pos(), target, TOLERANCE):
                     return True

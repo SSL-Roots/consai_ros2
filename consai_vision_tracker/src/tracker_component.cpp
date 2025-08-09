@@ -22,6 +22,7 @@
 
 #include "consai_msgs/msg/state2_d.hpp"
 #include "consai_tools/geometry_tools.hpp"
+#include "nlohmann/json.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robocup_ssl_msgs/msg/robot_id.hpp"
 
@@ -37,7 +38,7 @@ using State = consai_msgs::msg::State2D;
 using std::placeholders::_1;
 
 Tracker::Tracker(const rclcpp::NodeOptions & options)
-: Node("tracker", options)
+: Node("tracker", options), update_rate_(0.01s)
 {
   const auto UPDATE_RATE = 0.01s;
 
@@ -82,13 +83,13 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Tracker::callback_geometry, this, _1));
 
-  // TODO: use parameter callback
+  // TODO(ShotaAk): use parameter callback
   ball_kalman_filter_->update_noise_covariance_matrix(
     get_parameter("ball_kalman_filter/q_acc").get_value<double>(),
     get_parameter("ball_kalman_filter/q_uncertain_acc").get_value<double>(),
     get_parameter("ball_kalman_filter/r_pos_stddev").get_value<double>());
 
-  // TODO: use parameter callback
+  // TODO(ShotaAk): use parameter callback
   for (auto && filter : blue_robot_kalman_filter_) {
     filter->update_noise_covariance_matrix(
       get_parameter("robot_kalman_filter/q_max_acc_xy").get_value<double>(),
@@ -97,7 +98,7 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
       get_parameter("robot_kalman_filter/r_pos_stddev_theta").get_value<double>());
   }
 
-  // TODO: use parameter callback
+  // TODO(ShotaAk): use parameter callback
   for (auto && filter : yellow_robot_kalman_filter_) {
     filter->update_noise_covariance_matrix(
       get_parameter("robot_kalman_filter/q_max_acc_xy").get_value<double>(),

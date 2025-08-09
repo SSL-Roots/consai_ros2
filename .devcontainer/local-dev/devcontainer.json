@@ -1,0 +1,20 @@
+{
+  "name": "Local Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../..",
+    "args": {
+      "ROS_DISTRO": "humble"
+    }
+  },
+  "runArgs": [
+    "--network=host",
+    "--ipc=host",
+    "-e", "DISPLAY=${localEnv:DISPLAY}",
+    "-v", "/tmp/.X11-unix:/tmp/.X11-unix"
+  ],
+  "workspaceFolder": "/home/vscode/ros2_ws/src/consai_ros2",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/home/vscode/ros2_ws/src/consai_ros2,type=bind"
+  ]
+}

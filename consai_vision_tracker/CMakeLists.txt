@@ -27,6 +27,14 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robocup_ssl_msgs REQUIRED)
 
+include(FetchContent)
+fetchcontent_declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+fetchcontent_makeavailable(json)
+
+include_directories(
+  include
+)
+
 # Tracker Component
 add_library(tracker_component SHARED
   src/tracker_component.cpp
@@ -49,6 +57,9 @@ target_include_directories(tracker_component PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   "$<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>"
+)
+target_link_libraries(tracker_component
+  nlohmann_json::nlohmann_json
 )
 rclcpp_components_register_nodes(tracker_component "consai_vision_tracker::Tracker")
 
@@ -85,6 +96,18 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
+
+# FetchContentで取得したnlohmann/jsonのターゲットもインストール
+install(
+  TARGETS nlohmann_json
+  EXPORT export_${PROJECT_NAME}
+)
+
+# エクスポートセットをインストール
+install(
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

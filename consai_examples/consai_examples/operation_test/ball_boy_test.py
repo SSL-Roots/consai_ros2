@@ -15,17 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットをボールボーイとして動作させるモジュール."""
+
 import argparse
-from consai_examples.operation import Operation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
-from consai_examples.robot_operator import RobotOperator
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import Operation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
+
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
-import threading
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def ball_boy_test(robot_id: int, target_x: float, target_y: float):
+    """ロボットをボールボーイとして動作させる関数."""
     standby_position = TargetXY.value(0.0, -2.0)  # ボールボーイの待機位置
     move_to_ball = Operation().move_to_pose(standby_position, TargetTheta.look_ball())
     dribble_operation = move_to_ball.with_ball_boy_dribbling_to(TargetXY.value(target_x, target_y))

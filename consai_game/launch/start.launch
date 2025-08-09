@@ -1,0 +1,56 @@
+<launch>
+  <arg name="invert" default="false" description='Set "true" to invert detection_tracked data.' />
+  <arg name="yellow" default="false" description='Set "true" to control yellow team robots.' />
+  <arg name="game" default="false" description='Set "true" to run game script.' />
+  <arg name="goalie" default="0" description='Set goalie id for game script.' />
+  <arg name="vision_addr" default="224.5.23.2" description='Set multicast address to connect SSL-Vision.' />
+  <arg name="vision_port" default="10006" description='Set multicast port to connect SSL-Vision.' />
+  <arg name="referee_addr" default="224.5.23.1" description='Set multicast address to connect Game Controller.' />
+  <arg name="referee_port" default="10003" description='Set multicast port to connect Game Controller.' />
+  <arg name="robot_control_ip" default="127.0.0.1" description='Set GrSim control address.' />
+  <arg name="robot_control_port" default="20011" description='Set GrSim control port.' />
+
+  <set_env name="RCUTILS_COLORIZED_OUTPUT" value="1" />
+
+  <include file="$(find-pkg-share consai_description)/launch/parameter_publisher.launch.py" />
+
+  <include file="$(find-pkg-share consai_robot_controller)/launch/controller.launch.py">
+    <arg name="invert" value="$(var invert)" />
+    <arg name="yellow" value="$(var yellow)" />
+    <arg name="vision_addr" value="$(var vision_addr)" />
+    <arg name="vision_port" value="$(var vision_port)" />
+    <arg name="robot_control_ip" value="$(var robot_control_ip)" />
+    <arg name="robot_control_port" value="$(var robot_control_port)" />
+  </include>
+
+  <node_container pkg="rclcpp_components" exec="component_container_mt" name="referee_container" namespace="">
+    <composable_node pkg="robocup_ssl_comm" plugin="robocup_ssl_comm::GameController" name="game_controller">
+      <param name="multicast_address" value="$(var referee_addr)" />
+      <param name="multicast_port" value="$(var referee_port)" />
+      <extra_arg name="use_intra_process_comms" value="false" />
+    </composable_node>
+  </node_container>
+
+  <arg name="playbook" default="playbook_default" description='Set a playbook file name from the play/books directory.'/>
+  <arg name="assign" default="by_cost"
+    description='Select a role_assignment method from {by_id, by_visible, by_cost}'/>
+
+  <set_env name="PYTHONUNBUFFERED" value="1" />
+
+  <node pkg="consai_game"
+        exec="main.py"
+        output="screen"
+        args="--playbook $(find-pkg-share consai_game)/play/books/$(var playbook).py
+              --yellow $(var yellow)
+              --invert $(var invert)
+              --assign $(var assign)
+              --goalie $(var goalie)
+              " />
+
+  <node pkg="consai_referee_parser"
+        exec="main.py"
+        output="screen"
+        args="--yellow $(var yellow)
+              --invert $(var invert)
+              " />
+</launch>

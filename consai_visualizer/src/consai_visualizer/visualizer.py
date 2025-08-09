@@ -20,6 +20,7 @@ from consai_visualizer.field_widget import FieldWidget
 from consai_visualizer_msgs.msg import Objects
 from frootspi_msgs.msg import BatteryVoltage
 from functools import partial
+import json
 import math
 import os
 from python_qt_binding import loadUi
@@ -32,33 +33,30 @@ import rclpy
 from robocup_ssl_msgs.msg import BallReplacement
 from robocup_ssl_msgs.msg import Replacement
 from robocup_ssl_msgs.msg import RobotReplacement
-from rqt_py_common.ini_helper import pack, unpack
 import time
 
 
 class Visualizer(Plugin):
-
     def __init__(self, context):
         super(Visualizer, self).__init__(context)
-        self.setObjectName('Visualizer')
+        self.setObjectName("Visualizer")
 
         self._node = context.node
         self._logger = self._node.get_logger()
+        self._context = context
 
         self._widget = QWidget()
 
         # widgetを読み込む
         # FieldWidgetはカスタムウィジェットとしてuiファイルに設定済み
-        pkg_name = 'consai_visualizer'
-        _, package_path = get_resource('packages', pkg_name)
-        ui_file = os.path.join(
-            package_path, 'share', pkg_name, 'resource', 'visualizer.ui')
-        loadUi(ui_file, self._widget, {'FieldWidget': FieldWidget})
+        pkg_name = "consai_visualizer"
+        _, package_path = get_resource("packages", pkg_name)
+        ui_file = os.path.join(package_path, "share", pkg_name, "resource", "visualizer.ui")
+        loadUi(ui_file, self._widget, {"FieldWidget": FieldWidget})
 
         # rqtのUIにwidgetを追加する
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(
-                self._widget.windowTitle() + (' (%d)' % context.serial_number()))
+            self._widget.setWindowTitle(self._widget.windowTitle() + (" (%d)" % context.serial_number()))
         context.add_widget(self._widget)
 
         # loggerをセット
@@ -68,36 +66,41 @@ class Visualizer(Plugin):
         # Subscriber、Publisherの作成
         self._sub_battery_voltage = []
         for i in range(16):
-            topic_name = 'robot' + str(i) + '/battery_voltage'
-            self._sub_battery_voltage.append(self._node.create_subscription(
-                BatteryVoltage, topic_name,
-                partial(self._callback_battery_voltage, robot_id=i), 10))
+            topic_name = "robot" + str(i) + "/battery_voltage"
+            self._sub_battery_voltage.append(
+                self._node.create_subscription(
+                    BatteryVoltage,
+                    topic_name,
+                    partial(self._callback_battery_voltage, robot_id=i),
+                    rclpy.qos.qos_profile_sensor_data,
+                )
+            )
 
         self._sub_kicker_voltage = []
         for i in range(16):
-            topic_name = 'robot' + str(i) + '/kicker_voltage'
-            self._sub_kicker_voltage.append(self._node.create_subscription(
-                BatteryVoltage, topic_name,
-                partial(self._callback_kicker_voltage, robot_id=i), 10))
+            topic_name = "robot" + str(i) + "/kicker_voltage"
+            self._sub_kicker_voltage.append(
+                self._node.create_subscription(
+                    BatteryVoltage,
+                    topic_name,
+                    partial(self._callback_kicker_voltage, robot_id=i),
+                    rclpy.qos.qos_profile_sensor_data,
+                )
+            )
 
         self._sub_visualize_objects = self._node.create_subscription(
-            Objects, 'visualizer_objects',
-            self._callback_visualizer_objects,
-            rclpy.qos.qos_profile_sensor_data)
+            Objects, "visualizer_objects", self._callback_visualizer_objects, rclpy.qos.qos_profile_sensor_data
+        )
 
-        self._pub_replacement = self._node.create_publisher(
-            Replacement, 'replacement', 10)
+        self._pub_replacement = self._node.create_publisher(Replacement, "replacement", 10)
 
         # Parameterを設定する
-        self._widget.field_widget.set_invert(self._node.declare_parameter('invert', False).value)
+        self._widget.field_widget.set_invert(self._node.declare_parameter("invert", False).value)
 
         for team in ["blue", "yellow"]:
             for turnon in ["on", "off"]:
                 method = "self._widget.btn_all_" + turnon + "_" + team + ".clicked.connect"
-                eval(method)(
-                    partial(self._publish_all_robot_turnon_replacement,
-                            team == "yellow", turnon == "on")
-                )
+                eval(method)(partial(self._publish_all_robot_turnon_replacement, team == "yellow", turnon == "on"))
 
         # レイヤーツリーの初期設定
         self._widget.layer_widget.itemChanged.connect(self._layer_state_changed)
@@ -118,28 +121,165 @@ class Visualizer(Plugin):
         self.latest_battery_voltage = [0] * 16
         self.latest_kicker_voltage = [0] * 16
 
-    def save_settings(self, plugin_settings, instance_settings):
-        # UIを終了するときに実行される関数
+        # 設定保存ファイル（installディレクトリからsrc/consai_ros2に移動）
+        pkg_name = "consai_visualizer"
+        _, package_path = get_resource("packages", pkg_name)
+        # /install/consai_visualizer -> /src/consai_ros2
+        base_path = package_path.replace("install/consai_visualizer", "src/consai_ros2")
+        self._custom_settings_file = os.path.join(base_path, "consai_visualizer/consai_visualizer_settings.json")
+        self._default_settings_file = os.path.join(
+            base_path, "consai_visualizer/default_consai_visualizer_settings.json"
+        )
 
-        # layerとsub layerをカンマで結合して保存
-        active_layers = self._extract_active_layers()
-        combined_layers = list(map(lambda x: x[0] + "," + x[1], active_layers))
-        instance_settings.set_value('active_layers', pack(combined_layers))
+        # 起動時の復元処理中は保存を無効にするフラグ
+        self._is_loading_settings = False
+        # 初期化完了フラグ（新しいレイヤー追加時の保存を防ぐ）
+        self._initialization_complete = False
+        # 復元待ちの設定データ
+        self._pending_settings = None
+
+    def save_settings(self, plugin_settings, instance_settings):
+        # RQT標準の保存（何もしない）
+        pass
+
+    def _save_settings_to_file(self):
+        # 独自設定ファイルに保存
+        try:
+            active_layers = self._extract_active_layers()
+            if not active_layers:
+                self._logger.info("No active layers to save")
+                return
+
+            # レイヤー情報を準備
+            layer_data = [{"layer": layer, "sub_layer": sub_layer} for layer, sub_layer in active_layers]
+
+            settings = {"active_layers": layer_data, "timestamp": time.time()}
+
+            # ディレクトリが存在することを確認
+            settings_dir = os.path.dirname(self._custom_settings_file)
+            if not os.path.exists(settings_dir):
+                os.makedirs(settings_dir)
+                self._logger.info(f"Created directory: {settings_dir}")
+
+            # JSONファイルに保存
+            self._logger.debug(f"Attempting to save to: {self._custom_settings_file}")
+            with open(self._custom_settings_file, "w") as f:
+                json.dump(settings, f, indent=2)
+
+            # ファイルが実際に作成されたか確認
+            if os.path.exists(self._custom_settings_file):
+                self._logger.debug(f"Successfully saved {len(layer_data)} layers to {self._custom_settings_file}")
+            else:
+                self._logger.error(f"File was not created: {self._custom_settings_file}")
+
+        except Exception as e:
+            self._logger.error(f"Failed to save custom settings to {self._custom_settings_file}: {e}")
+            import traceback
+
+            self._logger.error(f"Traceback: {traceback.format_exc()}")
 
     def restore_settings(self, plugin_settings, instance_settings):
         # UIが起動したときに実行される関数
+        self._load_custom_settings()
 
-        # カンマ結合されたlayerを復元してセット
-        combined_layers = unpack(instance_settings.value('active_layers', []))
-        active_layers = list(map(lambda x: x.split(","), combined_layers))
-        for (layer, sub_layer) in active_layers:
+    def _load_custom_settings(self):
+        # 独自設定ファイルから読み込み
+        try:
+            settings_file = None
+
+            # まずカスタム設定ファイルを確認
+            if os.path.exists(self._custom_settings_file):
+                settings_file = self._custom_settings_file
+                self._logger.info("Loading from custom settings file")
+            # カスタム設定がなければデフォルト設定ファイルを確認
+            elif os.path.exists(self._default_settings_file):
+                settings_file = self._default_settings_file
+                self._logger.info("Loading from default settings file")
+            else:
+                self._logger.info("No settings file found, using hardcoded defaults")
+                self._load_hardcoded_default_settings()
+                return
+
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+
+            layer_data = settings.get("active_layers", [])
+            if not layer_data:
+                self._logger.info("No layers in settings file, using hardcoded defaults")
+                self._load_hardcoded_default_settings()
+                return
+
+            # 設定データを保存し、後で復元する
+            self._pending_settings = layer_data
+            self._logger.info(
+                f"Loaded {len(layer_data)} layers from {settings_file}, will restore after initialization"
+            )
+
+            # 3秒後に復元処理を実行（動的レイヤーが追加されるのを待つ）
+            QTimer.singleShot(3000, self._restore_pending_settings)
+
+        except Exception as e:
+            self._logger.error(f"Failed to load settings: {e}")
+            self._load_hardcoded_default_settings()
+        finally:
+            # 起動から少し時間をおいて初期化完了とする（動的レイヤー追加を待つ）
+            QTimer.singleShot(500, self._complete_initialization)
+
+    def _load_hardcoded_default_settings(self):
+        # ハードコードされたデフォルト設定をロードする
+        default_layers = [("caption", "caption")]
+
+        for (layer, sub_layer) in default_layers:
             self._add_visualizer_layer(layer, sub_layer, Qt.Checked)
+
+        self._logger.info("Loaded hardcoded default layer settings")
+
+    def _restore_pending_settings(self):
+        # 遅延実行：保存された設定を復元
+        if not self._pending_settings:
+            return
+
+        self._is_loading_settings = True  # 復元中は保存を無効
+        try:
+            restored_count = 0
+            for item in self._pending_settings:
+                if isinstance(item, dict) and "layer" in item and "sub_layer" in item:
+                    layer = item["layer"].strip()
+                    sub_layer = item["sub_layer"].strip()
+                    if layer and sub_layer:
+                        # レイヤーが存在するかチェック
+                        if self._layer_exists(layer, sub_layer):
+                            self._set_layer_checked(layer, sub_layer, True)
+                            restored_count += 1
+                        else:
+                            self._logger.warning(f"Layer not found: {layer}/{sub_layer}")
+
+            self._logger.info(f"Restored {restored_count} layers from saved settings")
+
+            # レイヤー状態を更新
+            active_layers = self._extract_active_layers()
+            self._widget.field_widget.set_active_layers(active_layers)
+
+        except Exception as e:
+            self._logger.error(f"Failed to restore pending settings: {e}")
+        finally:
+            self._is_loading_settings = False
+            self._pending_settings = None
+
+    def _complete_initialization(self):
+        # 初期化完了、これ以降は保存を有効にする
+        self._initialization_complete = True
+        self._logger.info("Initialization complete, settings saving enabled")
 
     def _layer_state_changed(self):
         # レイヤーのチェックボックスが変更されたときに呼ばれる
         # 一括でON/OFFすると項目の数だけ実行される
         active_layers = self._extract_active_layers()
         self._widget.field_widget.set_active_layers(active_layers)
+
+        # 設定読み込み中でなく、かつ初期化完了後なら保存
+        if not self._is_loading_settings and self._initialization_complete:
+            self._save_settings_to_file()
 
     def _callback_battery_voltage(self, msg, robot_id):
         self.latest_battery_voltage[robot_id] = msg.voltage
@@ -157,8 +297,7 @@ class Visualizer(Plugin):
     def _add_visualizer_layer(self, layer: str, sub_layer: str, state=Qt.Unchecked):
         # レイヤーに重複しないように項目を追加する
         if layer == "" or sub_layer == "":
-            self._logger.warning(
-                "layer={} or sub_layer={} is empty".format(layer, sub_layer))
+            self._logger.warning("layer={} or sub_layer={} is empty".format(layer, sub_layer))
             return
 
         parents = self._widget.layer_widget.findItems(layer, Qt.MatchExactly, 0)
@@ -195,6 +334,28 @@ class Visualizer(Plugin):
 
         return active_layers
 
+    def _layer_exists(self, layer_name: str, sub_layer_name: str) -> bool:
+        # 指定されたレイヤーが存在するかチェック
+        for index in range(self._widget.layer_widget.topLevelItemCount()):
+            parent = self._widget.layer_widget.topLevelItem(index)
+            if parent.text(0) == layer_name:
+                for child_index in range(parent.childCount()):
+                    child = parent.child(child_index)
+                    if child.text(0) == sub_layer_name:
+                        return True
+        return False
+
+    def _set_layer_checked(self, layer_name: str, sub_layer_name: str, checked: bool):
+        # 指定されたレイヤーのチェック状態を設定
+        for index in range(self._widget.layer_widget.topLevelItemCount()):
+            parent = self._widget.layer_widget.topLevelItem(index)
+            if parent.text(0) == layer_name:
+                for child_index in range(parent.childCount()):
+                    child = parent.child(child_index)
+                    if child.text(0) == sub_layer_name:
+                        child.setCheckState(0, Qt.Checked if checked else Qt.Unchecked)
+                        return
+
     def _publish_replacement(self) -> None:
         # 描画領域のダブルクリック操作が完了したら、grSimのReplacement情報をpublishする
         if not self._widget.field_widget.get_mouse_double_click_updated():
@@ -228,8 +389,7 @@ class Visualizer(Plugin):
         replacement.ball.append(ball_replacement)
         self._pub_replacement.publish(replacement)
 
-    def _publish_robot_replacement(
-            self, start: QPointF, end: QPointF, is_yellow: bool, robot_id: int) -> None:
+    def _publish_robot_replacement(self, start: QPointF, end: QPointF, is_yellow: bool, robot_id: int) -> None:
 
         theta_deg = math.degrees(math.atan2(end.y() - start.y(), end.x() - start.x()))
 
@@ -265,7 +425,7 @@ class Visualizer(Plugin):
     def _battery_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 16.8
         MIN_VOLTAGE = 14.8
-        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
         elif percentage > 100:
@@ -275,7 +435,7 @@ class Visualizer(Plugin):
     def _kicker_voltage_to_percentage(self, voltage):
         MAX_VOLTAGE = 200
         MIN_VOLTAGE = 0
-        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE-MIN_VOLTAGE) * 100
+        percentage = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE) * 100
         if percentage < 0:
             percentage = 0
         elif percentage > 100:
@@ -291,9 +451,11 @@ class Visualizer(Plugin):
 
             try:
                 getattr(self._widget, f"robot{i}_battery_voltage").setValue(
-                    self._battery_voltage_to_percentage(self.latest_battery_voltage[i]))
+                    self._battery_voltage_to_percentage(self.latest_battery_voltage[i])
+                )
                 getattr(self._widget, f"robot{i}_kicker_voltage").setValue(
-                    self._kicker_voltage_to_percentage(self.latest_kicker_voltage[i]))
+                    self._kicker_voltage_to_percentage(self.latest_kicker_voltage[i])
+                )
             except AttributeError:
                 # ロボット状態表示UIは12列しか用意されておらず、ID=12以降が来るとエラーになるため回避
                 pass

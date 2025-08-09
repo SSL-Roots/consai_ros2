@@ -15,21 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ロボットが相手のゴールにシュートを繰り返すテストを行うモジュール."""
+
 import argparse
-import threading
+import threading  # 標準ライブラリ
+
+from consai_examples.operation import OneShotOperation, TargetTheta, TargetXY
+from consai_examples.robot_operator import RobotOperator  # ローカル/自作モジュール
 
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
-from consai_examples.robot_operator import RobotOperator
-
-from consai_examples.operation import OneShotOperation
-from consai_examples.operation import TargetXY
-from consai_examples.operation import TargetTheta
+from rclpy.executors import MultiThreadedExecutor  # サードパーティ
 
 
 def shoot_to_their_test(robot_id: int):
-    # 相手のゴールに無限シュートをするテスト
-
+    """相手のゴールに無限シュートをするテストを実行する関数."""
     # ボールに向かって移動する
     operation = OneShotOperation().move_to_pose(TargetXY.ball(), TargetTheta.look_ball())
     # 相手のゴール中心(6.0, 0)に向かってシュートする

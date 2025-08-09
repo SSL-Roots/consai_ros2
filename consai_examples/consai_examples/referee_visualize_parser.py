@@ -14,21 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""レフェリー情報や制約エリアを描画するモジュール."""
+
 import math
 
-from consai_msgs.msg import ParsedReferee
-from consai_msgs.msg import State2D
-from consai_visualizer_msgs.msg import Objects
-from consai_visualizer_msgs.msg import ShapeAnnotation
-from consai_visualizer_msgs.msg import ShapeCircle
-from consai_visualizer_msgs.msg import ShapeTube
-from robocup_ssl_msgs.msg import Referee
-from robocup_ssl_msgs.msg import Vector3
+from consai_msgs.msg import ParsedReferee, State2D
+
+from consai_visualizer_msgs.msg import Objects, ShapeAnnotation, ShapeCircle, ShapeTube
+
+from robocup_ssl_msgs.msg import Referee, Vector3
 
 
-def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
-             placement_pos: State2D):
-    # レフェリー情報を描画オブジェクトに変換する
+def vis_info(referee: Referee, blue_bots: int, yellow_bots: int, placement_pos: State2D):
+    """レフェリー情報を描画オブジェクトに変換する関数."""
     MARGIN_X = 0.02
     TEXT_HEIGHT = 0.05
     STAGE_COMMAND_WIDTH = 0.15
@@ -43,19 +41,19 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     YELLOW_CARD_TIMES_X = CARDS_X + CARDS_WIDTH + MARGIN_X
     TIMEOUT_WIDTH = 0.1
     TIMEOUT_X = YELLOW_CARD_TIMES_X + YELLOW_CARD_TIMES_WIDTH + MARGIN_X
-    COLOR_TEXT_BLUE = 'deepskyblue'
-    COLOR_TEXT_YELLOW = 'yellow'
-    COLOR_TEXT_WARNING = 'red'
+    COLOR_TEXT_BLUE = "deepskyblue"
+    COLOR_TEXT_YELLOW = "yellow"
+    COLOR_TEXT_WARNING = "red"
 
     vis_objects = Objects()
-    vis_objects.layer = 'referee'
-    vis_objects.sub_layer = 'info'
+    vis_objects.layer = "referee"
+    vis_objects.sub_layer = "info"
     vis_objects.z_order = 2
 
     # 左端にSTAGEとCOMMANDを表示
     vis_annotation = ShapeAnnotation()
     vis_annotation.text = parse_stage(referee.stage)
-    vis_annotation.color.name = 'white'
+    vis_annotation.color.name = "white"
     vis_annotation.normalized_x = STAGE_COMMAND_X
     vis_annotation.normalized_y = 0.0
     vis_annotation.normalized_width = STAGE_COMMAND_WIDTH
@@ -63,8 +61,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     vis_objects.annotations.append(vis_annotation)
 
     vis_annotation = ShapeAnnotation()
-    vis_annotation.text, vis_annotation.color.name = parse_command(
-        referee, COLOR_TEXT_BLUE, COLOR_TEXT_YELLOW)
+    vis_annotation.text, vis_annotation.color.name = parse_command(referee, COLOR_TEXT_BLUE, COLOR_TEXT_YELLOW)
     vis_annotation.normalized_x = STAGE_COMMAND_X
     vis_annotation.normalized_y = TEXT_HEIGHT
     vis_annotation.normalized_width = STAGE_COMMAND_WIDTH
@@ -75,7 +72,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     if referee.stage_time_left:
         vis_annotation = ShapeAnnotation()
         vis_annotation.text = parse_stage_time_left(referee.stage_time_left[0])
-        vis_annotation.color.name = 'white'
+        vis_annotation.color.name = "white"
         vis_annotation.normalized_x = TIMER_X
         vis_annotation.normalized_y = 0.0
         vis_annotation.normalized_width = TIMER_WIDTH
@@ -85,7 +82,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     if referee.current_action_time_remaining:
         vis_annotation = ShapeAnnotation()
         vis_annotation.text = parse_action_time_remaining(referee.current_action_time_remaining[0])
-        vis_annotation.color.name = 'white'
+        vis_annotation.color.name = "white"
         vis_annotation.normalized_x = TIMER_X
         vis_annotation.normalized_y = TEXT_HEIGHT
         vis_annotation.normalized_width = TIMER_WIDTH
@@ -99,8 +96,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
         # 許可台数よりロボットが多い場合は色を変える
         if blue_bots > referee.blue.max_allowed_bots[0]:
             vis_annotation.color.name = COLOR_TEXT_WARNING
-        vis_annotation.text = 'BLUE BOTS: {}/{}'.format(
-            blue_bots, referee.blue.max_allowed_bots[0])
+        vis_annotation.text = "BLUE BOTS: {}/{}".format(blue_bots, referee.blue.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
         vis_annotation.normalized_y = 0.0
         vis_annotation.normalized_width = BOTS_WIDTH
@@ -113,8 +109,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
         # 許可台数よりロボットが多い場合は色を変える
         if yellow_bots > referee.yellow.max_allowed_bots[0]:
             vis_annotation.color.name = COLOR_TEXT_WARNING
-        vis_annotation.text = 'YELLOW BOTS: {}/{}'.format(
-            yellow_bots, referee.yellow.max_allowed_bots[0])
+        vis_annotation.text = "YELLOW BOTS: {}/{}".format(yellow_bots, referee.yellow.max_allowed_bots[0])
         vis_annotation.normalized_x = BOTS_X
         vis_annotation.normalized_y = TEXT_HEIGHT
         vis_annotation.normalized_width = BOTS_WIDTH
@@ -124,9 +119,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     # カード数
     vis_annotation = ShapeAnnotation()
     vis_annotation.color.name = COLOR_TEXT_BLUE
-    vis_annotation.text = 'R: {}, Y:{}'.format(
-        referee.blue.red_cards,
-        referee.blue.yellow_cards)
+    vis_annotation.text = "R: {}, Y:{}".format(referee.blue.red_cards, referee.blue.yellow_cards)
     vis_annotation.normalized_x = CARDS_X
     vis_annotation.normalized_y = 0.0
     vis_annotation.normalized_width = CARDS_WIDTH
@@ -135,9 +128,7 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
 
     vis_annotation = ShapeAnnotation()
     vis_annotation.color.name = COLOR_TEXT_YELLOW
-    vis_annotation.text = 'R: {}, Y:{}'.format(
-        referee.yellow.red_cards,
-        referee.yellow.yellow_cards)
+    vis_annotation.text = "R: {}, Y:{}".format(referee.yellow.red_cards, referee.yellow.yellow_cards)
     vis_annotation.normalized_x = CARDS_X
     vis_annotation.normalized_y = TEXT_HEIGHT
     vis_annotation.normalized_width = CARDS_WIDTH
@@ -183,29 +174,32 @@ def vis_info(referee: Referee, blue_bots: int, yellow_bots: int,
     vis_objects.annotations.append(vis_annotation)
 
     # プレースメント位置
-    if referee.command == Referee.COMMAND_BALL_PLACEMENT_BLUE or \
-       referee.command == Referee.COMMAND_BALL_PLACEMENT_YELLOW:
+    if (
+        referee.command == Referee.COMMAND_BALL_PLACEMENT_BLUE
+        or referee.command == Referee.COMMAND_BALL_PLACEMENT_YELLOW
+    ):
         vis_circle = ShapeCircle()
         vis_circle.center.x = placement_pos.x
         vis_circle.center.y = placement_pos.y
         vis_circle.radius = 0.15
-        vis_circle.line_color.name = 'aquamarine'
-        vis_circle.fill_color.name = 'aquamarine'
+        vis_circle.line_color.name = "aquamarine"
+        vis_circle.fill_color.name = "aquamarine"
         vis_circle.line_size = 1
-        vis_circle.caption = 'placement pos'
+        vis_circle.caption = "placement pos"
         vis_objects.circles.append(vis_circle)
 
     return vis_objects
 
 
 def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
-    COLOR_LINE = 'black'
-    COLOR_FILL = 'crimson'
+    """禁止エリアを描画する関数."""
+    COLOR_LINE = "black"
+    COLOR_FILL = "crimson"
     FILL_ALPHA = 0.3
     LINE_SIZE = 4
     vis_objects = Objects()
-    vis_objects.layer = 'referee'
-    vis_objects.sub_layer = 'prohibited_area'
+    vis_objects.layer = "referee"
+    vis_objects.sub_layer = "prohibited_area"
     vis_objects.z_order = 1
 
     if parsed_referee.is_placement:
@@ -221,12 +215,10 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
         vis_tube.fill_color.name = COLOR_FILL
         vis_tube.fill_color.alpha = FILL_ALPHA
         vis_tube.line_size = LINE_SIZE
-        vis_tube.caption = 'Rule 8.4.3'
+        vis_tube.caption = "Rule 8.4.3"
         vis_objects.tubes.append(vis_tube)
 
-    if not parsed_referee.is_inplay and \
-       not parsed_referee.is_placement and \
-       not parsed_referee.is_our_setplay:
+    if not parsed_referee.is_inplay and not parsed_referee.is_placement and not parsed_referee.is_our_setplay:
         # ストップ中のボール周り
         vis_circle = ShapeCircle()
         vis_circle.center.x = ball_pos.x
@@ -236,14 +228,14 @@ def vis_prohibited_area(parsed_referee: ParsedReferee, ball_pos: Vector3):
         vis_circle.fill_color.name = COLOR_FILL
         vis_circle.fill_color.alpha = FILL_ALPHA
         vis_circle.line_size = LINE_SIZE
-        vis_circle.caption = 'Rule 5.1.1'
+        vis_circle.caption = "Rule 5.1.1"
         vis_objects.circles.append(vis_circle)
 
     return vis_objects
 
 
 def parse_stage(ref_stage):
-    # レフェリーステージを文字列に変換する
+    """レフェリーステージを文字列に変換する関数."""
     output = "STAGE"
 
     if ref_stage == Referee.STAGE_NORMAL_FIRST_HALF_PRE:
@@ -278,11 +270,10 @@ def parse_stage(ref_stage):
     return output
 
 
-def parse_command(referee: Referee,
-                  blue_color: str = 'blue', yellow_color: str = 'yellow') -> (str, str):
-    # レフェリーコマンドを文字列と文字色に変換する
+def parse_command(referee: Referee, blue_color: str = "blue", yellow_color: str = "yellow") -> (str, str):
+    """レフェリーコマンドを文字列と文字色に変換する関数."""
     output = "COMMAND"
-    text_color = 'white'
+    text_color = "white"
 
     if len(referee.designated_position) > 0:
         placement_pos_x = referee.designated_position[0].x * 0.001
@@ -341,17 +332,18 @@ def parse_command(referee: Referee,
 
 
 def _microseconds_to_text(microseconds):
+    """マイクロ秒を分:秒形式の文字列に変換する関数."""
     minutes, seconds = divmod(math.ceil(microseconds * 1e-6), 60)  # ceilで小数点切り上げ
-    return '{} : {:0=2}'.format(minutes, seconds)  # 秒はゼロで埋める
+    return "{} : {:0=2}".format(minutes, seconds)  # 秒はゼロで埋める
 
 
 def parse_stage_time_left(ref_stage_time_left):
-    # レフェリーステージの残り時間(usec)を文字列に変換する
+    """レフェリーステージの残り時間を文字列に変換する関数."""
     return "STAGE: " + _microseconds_to_text(ref_stage_time_left)
 
 
 def parse_action_time_remaining(ref_action_time_remaining):
-    # アクション残り時間(usec)を文字列に変換する
+    """アクション残り時間を文字列に変換する関数."""
     text = "0:00"
     if ref_action_time_remaining > 0:
         text = _microseconds_to_text(ref_action_time_remaining)
@@ -359,6 +351,7 @@ def parse_action_time_remaining(ref_action_time_remaining):
 
 
 def parse_yellow_card_times(yellow_card_times):
+    """イエローカードの時間を文字列に変換する関数."""
     if len(yellow_card_times) == 0:
         return "NO CARDS"
 
@@ -372,5 +365,5 @@ def parse_yellow_card_times(yellow_card_times):
 
 
 def parse_timeouts(timeouts, timeout_time):
-    return 'Timeouts: {}\n {}'.format(
-        timeouts, _microseconds_to_text(timeout_time))
+    """タイムアウトの回数と時間を文字列に変換する関数."""
+    return "Timeouts: {}\n {}".format(timeouts, _microseconds_to_text(timeout_time))

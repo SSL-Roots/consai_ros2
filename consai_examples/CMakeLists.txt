@@ -21,7 +21,6 @@ find_package(ament_cmake REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
     ${PROJECT_NAME}/field_observer.py
-    ${PROJECT_NAME}/field.py
     ${PROJECT_NAME}/game.py
     ${PROJECT_NAME}/operation.py
     ${PROJECT_NAME}/referee_parser.py
@@ -42,6 +41,8 @@ install(PROGRAMS
     ${PROJECT_NAME}/observer/ball_placement_observer.py
     ${PROJECT_NAME}/observer/ball_position_observer.py
     ${PROJECT_NAME}/observer/detection_wrapper.py
+    ${PROJECT_NAME}/observer/field_normalizer.py
+    ${PROJECT_NAME}/observer/field_positions.py
     ${PROJECT_NAME}/observer/man_mark_observer.py
     ${PROJECT_NAME}/observer/pass_shoot_observer.py
     ${PROJECT_NAME}/observer/pos_vel.py
@@ -63,8 +64,8 @@ install(DIRECTORY
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # find_package(ament_lint_auto REQUIRED)
+  # ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_pytest REQUIRED)
   # ament_add_pytest_test(test_role_assignment tests/test_role_assignment.py)
@@ -72,6 +73,11 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_pass_shoot_observer tests/test_pass_shoot_observer.py)
   ament_add_pytest_test(test_operation tests/test_operation.py)
   ament_add_pytest_test(test_detection_wrapper tests/test_detection_wrapper.py)
+
+  find_package(ament_cmake_flake8 REQUIRED)
+  ament_flake8(
+    CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../setup.cfg
+  )
 endif()
 
 ament_package()

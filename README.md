@@ -74,9 +74,6 @@ CON-SAIの使い方は[consai_examplesのREADME](./consai_examples/README.md)を
   - CON-SAIの各種パッケージを使ったサンプル集です
 - consai_msgs
   - CON-SAIで使用するデータ型を定義するパッケージです
-- consai_observer
-  - フィールド情報を解析するパッケージです
-  - 機能は未実装です
 - consai_robot_control_utils
   - ロボットの走行制御をテストするためのパッケージです
 - consai_robot_controller
@@ -109,11 +106,21 @@ CON-SAIを開発する際にこの項目を読んでください。
 - 本ソフトウェアはオープンソースですが、開発はオープンではありません
 - チームの開発方針を優先するため、外部からのIssue、Pull Requestには対応できない場合があります
 
-### Lint
+### pre-commit for code formatting
 
-コードの見た目を整えるためにlintでチェックしています。
+コミット時に自動でコード整形するために`pre-commit`のインストールを推奨します
 
-下記コマンドを実行して、チェックを実行してください。
+```sh
+# pre-commitのインストール
+$ pip install pre-commit
+# pre-commitの設定
+$ cd /path/to/consai_ros2
+$ pre-commit install
+```
+
+### colcon test for lint
+
+手動でlintを実行する場合は下記コマンドを入力してください
 
 ```sh
 $ cd ~/ros2_ws
@@ -151,4 +158,21 @@ $ sudo apt install python3-autopep8
 # 1行の100文字に制限
 # -i オプションで自動整形
 $ autopep8 --max-line-length 99 -i consai_examples/consai_examples/control.py
+```
+
+### Dev Container
+VSCodeのDev Containerを使うと、CON-SAIの開発環境を簡単に構築できます。
+
+Containerの設定は下記の２つを用意しています
+
+- Local Dev Container
+  - ホスト環境のrobocupソフトウェアを使用する場合におすすめ
+- Web Container
+  - ホスト環境にROSやrobocupソフトウェアをインストールしない場合におすすめ
+  - 詳細は[README_dev_container.md](.devcontainer/README_dev_container.md)を参照してください
+
+Local Dev Containerを使う場合、下記のコマンドを実行してください
+
+```bash
+$ xhost +local:docker
 ```

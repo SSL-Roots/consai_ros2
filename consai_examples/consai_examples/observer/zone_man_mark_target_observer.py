@@ -12,41 +12,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""ゾーンディフェンスのターゲットを監視し, マンマーク対象を決定するクラスを提供するモジュール."""
+
+from consai_examples.observer.field_normalizer import FieldNormalizer
+from consai_examples.observer.field_positions import FieldPositions
 from consai_examples.observer.pos_vel import PosVel
+
 from consai_msgs.msg import State2D
-from consai_examples.field import Field
 
 
 class ZoneManMarkTargetObserver():
+    """ゾーンディフェンスのターゲットを監視し, マンマーク対象を決定するクラス."""
 
     def __init__(self):
+        """ゾーンディフェンスのターゲットを初期化する関数."""
         self._zone_man_mark_targets: dict[int, int] = {0: None, 1: None, 2: None, 3: None}
         self._max_targets = 4
 
+        self._field_pos = FieldPositions()
+        self._field = FieldNormalizer()
+
+    def _defense_area_margin(self) -> float:
+        """ディフェンスエリアのマージンを返す関数."""
         # FIXME: 要調整、ディフェンスエリア侵入が多いようなら大きくする
-        self._DEFENSE_AREA_MARGIN = 0.2
-        self._penalty_corner_upper_front = Field.penalty_pose('our', 'upper_front')
-        self._penalty_corner_lower_front = Field.penalty_pose('our', 'lower_front')
+        return self._field.on_div_a_x(0.2)
+
+    def set_field_positions(self, field_positions: FieldPositions) -> None:
+        """フィールドの位置情報を設定する関数."""
+        self._field_pos = field_positions
+
+    def set_field_normalizer(self, field_normalizer: FieldNormalizer) -> None:
+        """フィールドの正規化設定を行う関数."""
+        self._field = field_normalizer
 
     def has_target(self, zone_id: int) -> bool:
+        """指定されたゾーンIDにターゲットがいるか確認する関数."""
         return self._zone_man_mark_targets[zone_id] is not None
 
     def get_target_id(self, zone_id: int) -> int:
+        """指定されたゾーンIDに対応するターゲットのIDを返す関数."""
         return self._zone_man_mark_targets[zone_id]
 
     def update(self, their_robots: dict[int, PosVel]) -> None:
-        # ゾーンディフェンス担当者に合わせて、マンマークする相手ロボットを検出する
+        """ゾーンディフェンス担当者に合わせて、マンマークする相手ロボットを検出する関数."""
         # 存在しない場合はNoneをセットする
         self._reset_zone_targets()
 
         self._update_targets(their_robots)
 
     def _update_targets(self, their_robots: dict[int, PosVel]) -> None:
+        """相手ロボットの位置に基づいて、ゾーンディフェンスターゲットを更新する関数."""
         # robot.pos().xの値とIDのタプルのリストを作成
         robot_x_id_pairs = [(robot.pos().x, robot_id) for robot_id, robot in their_robots.items()]
 
         # xがある値より小さい場合はそのロボットIDを無視する
-        threshold_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
+        threshold_x = \
+            self._field_pos.penalty_pose('our', 'upper_front').x + self._defense_area_margin()
         filtered_pairs = [(x, robot_id)
                           for x, robot_id in robot_x_id_pairs if (x < 0 and x > threshold_x)]
 
@@ -63,12 +84,14 @@ class ZoneManMarkTargetObserver():
                 self._zone_man_mark_targets[i] = sorted_robot_id
 
     def _reset_zone_targets(self) -> None:
-        # ZONEターゲットを初期化する
+        """ZONEターゲットを初期化する関数."""
         self._zone_man_mark_targets = {0: None, 1: None, 2: None, 3: None}
 
     def _is_in_defense_area(self, pos: State2D) -> bool:
+        """ロボットがディフェンスエリア内にいるかを判定する関数."""
         # ディフェンスエリアに入ってたらtrue
-        defense_x = self._penalty_corner_upper_front.x + self._DEFENSE_AREA_MARGIN
+        defense_x = \
+            self._field_pos.penalty_pose('our', 'upper_front').x + self._defense_area_margin()
 
         # ディデンスエリア横はサイドバックが守るので無視
         if pos.x < defense_x:

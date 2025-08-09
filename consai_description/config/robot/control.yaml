@@ -1,0 +1,20 @@
+/**:
+  ros__parameters:
+    hard_limits:
+      acceleration_xy: 3.0  # m/s^2
+      acceleration_theta: 5.0  # rad/s^2
+      velocity_xy: 3.0  # m/s
+      velocity_theta: 5.0  # rad/s
+
+    soft_limits:
+      acceleration_xy: 2.5  # m/s^2
+      acceleration_theta: 2.0  # rad/s^2
+      velocity_xy: 2.5  # m/s
+      velocity_theta: 4.0  # rad/s
+
+    gains:
+      p_xy: 1.5
+      p_theta: 2.5
+      d_xy: 0.0
+      d_theta: 0.0
+      a_theta: 0.5

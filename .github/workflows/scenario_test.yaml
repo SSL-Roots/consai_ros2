@@ -7,6 +7,10 @@ on:
       - '.github/workflows/build_docker_image.yaml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write  # For uploading PR comments
   # For uploading docker image
@@ -62,6 +66,7 @@ jobs:
       matrix:
         env:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement.py"}
+          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_ball_placement2.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_force_start.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_free_kick.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_halt.py"}
@@ -69,7 +74,6 @@ jobs:
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_obstacle_avoidance.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_penalty.py"}
           - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_stop.py"}
-          - {CONSAI_YELLOW: "false", CONSAI_INVERT: "false", TEST_NAME: "test_scenario_timeout.py"}
           - {CONSAI_YELLOW: "true", CONSAI_INVERT: "true", TEST_NAME: "yellow_invert/test_scenario_yellow_invert_kickoff.py"}
 
     runs-on: ubuntu-latest
@@ -104,18 +108,18 @@ jobs:
         CONSAI_YELLOW: ${{ matrix.env.CONSAI_YELLOW }}
         CONSAI_INVERT: ${{ matrix.env.CONSAI_INVERT }}
 
-    - name: Wait for game.py to start
+    - name: Wait for main.py to start
       timeout-minutes: 5
       run: |
         CHECK_INTERVAL=5
 
-        until docker top consai 2>/dev/null | grep -q game.py
+        until docker top consai 2>/dev/null | grep -q main.py
         do
-          echo "Waiting for game.py to start..."
+          echo "Waiting for main.py to start..."
           sleep $CHECK_INTERVAL
         done
 
-        echo "game.py started!"
+        echo "main.py started!"
 
     - name: Download logger
       run: |
@@ -161,3 +165,4 @@ jobs:
         issue-number: ${{ github.event.pull_request.number }}
         body: |
           ${{ matrix.env.TEST_NAME }} failed. Failure logs: ${{ steps.upload-artifact.outputs.artifact-url }}
+          How to replay the logs: [README_play_logfile](https://github.com/SSL-Roots/consai_ros2/blob/main/README_play_logfile.md)

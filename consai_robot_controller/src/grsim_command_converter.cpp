@@ -17,8 +17,10 @@
 #include <utility>
 
 #include "consai_robot_controller/grsim_command_converter.hpp"
+#include "nlohmann/json.hpp"
 
 using namespace std::chrono_literals;
+using namespace std::placeholders;
 
 namespace consai_robot_controller
 {
@@ -26,16 +28,23 @@ namespace consai_robot_controller
 GrSimCommandConverter::GrSimCommandConverter(const rclcpp::NodeOptions & options)
 : Node("controller", options)
 {
-  using namespace std::placeholders;
-
   pub_grsim_commands_ = create_publisher<GrSimCommands>("/commands", 10);
 
-  for (int i = 0; i < 16; i++) {
-    auto sub_command = create_subscription<ConsaiCommand>(
-      "robot" + std::to_string(i) + "/command",
-      10, std::bind(&GrSimCommandConverter::callback_consai_command_, this, _1));
-    subs_consai_command_.push_back(sub_command);
-  }
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
+    .reliable();
+
+  auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
+    {
+      try {
+        nlohmann::json json_data = nlohmann::json::parse(msg->data);
+        gen_command_subscribers(json_data["robots"]["num_of_ids"]);
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
+      }
+    };
+
+  sub_consai_param_rule_ = create_subscription<std_msgs::msg::String>(
+    "consai_param/rule", qos, callback_param);
 
   timer_ = create_wall_timer(10ms, std::bind(&GrSimCommandConverter::on_timer, this));
 }
@@ -65,12 +74,33 @@ void GrSimCommandConverter::on_timer()
 
     robot_command.kickspeedx = (*it)->kick_power;
 
+    if ((*it)->chip_kick) {
+      robot_command.kickspeedz = (*it)->kick_power;
+    } else {
+      robot_command.kickspeedz = 0.0f;
+    }
+
     commands_msg->robot_commands.push_back(robot_command);
     it = consai_commands_.erase(it);
   }
 
   commands_msg->isteamyellow = team_is_yellow;
   pub_grsim_commands_->publish(std::move(commands_msg));
+}
+
+void GrSimCommandConverter::gen_command_subscribers(const unsigned int num)
+{
+  // subs_consai_command_の大きさがnumより小さければ、サブスクライバを追加する
+  if (subs_consai_command_.size() >= num) {
+    return;
+  }
+
+  for (auto i = subs_consai_command_.size(); i < num; i++) {
+    auto sub_command = create_subscription<ConsaiCommand>(
+      "robot" + std::to_string(i) + "/command",
+      10, std::bind(&GrSimCommandConverter::callback_consai_command_, this, _1));
+    subs_consai_command_.push_back(sub_command);
+  }
 }
 
 void GrSimCommandConverter::callback_consai_command_(const ConsaiCommand::SharedPtr msg)

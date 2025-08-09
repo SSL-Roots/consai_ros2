@@ -1,0 +1,6 @@
+# consai_referee_parserにpublishするRefereeに関する補助情報
+
+State2D ball_pos
+State2D placement_pos
+uint8 blue_robot_num
+uint8 yellow_robot_num
