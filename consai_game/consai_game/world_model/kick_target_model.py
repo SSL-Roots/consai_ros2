@@ -59,7 +59,6 @@ class KickTargetModel:
     def __init__(self):
         """KickTargetModelの初期化関数."""
         self.hysteresis_distance = 0.3
-        self.robot_radius = 0.09
 
         # shoot_targetの位置と成功率を保持するリスト
         self.shoot_target_list: list[ShootTarget] = []
@@ -108,7 +107,7 @@ class KickTargetModel:
 
     def _update_shoot_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[ShootTarget]:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
-        TOLERANCE = self.robot_radius  # ロボット半径
+        TOLERANCE = robots.robot_radius  # ロボット半径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
         MAX_DISTANCE_SCORE = 60  # スコア計算時のシュートターゲットの最大スコア
         MAX_ANGLE_SCORE = 20  # スコア計算時のシュートターゲットの最大角度スコア
@@ -154,9 +153,9 @@ class KickTargetModel:
                     trans = tool.Trans(ball.pos, tool.get_angle(ball.pos, target.pos))
                     tr_goalie_pos = trans.transform(goalie_pos)
                     score += (
-                        min(abs(tr_goalie_pos.y), self.robot_radius * 6)
+                        min(abs(tr_goalie_pos.y), robots.robot_radius * 6)
                         * MAX_GOALIE_LEAVE_SCORE
-                        / (self.robot_radius * 6)
+                        / (robots.robot_radius * 6)
                     )
                 target.success_rate = int(score)
 
@@ -203,7 +202,7 @@ class KickTargetModel:
 
     def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
         """各パスターゲットの成功率を計算し, リストを返す関数."""
-        TOLERANCE = self.robot_radius * 2  # ロボット直径
+        TOLERANCE = robots.robot_radius * 2  # ロボット直径
         MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
         MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
         MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
