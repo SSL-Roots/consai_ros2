@@ -168,7 +168,7 @@ class Visualizer(Plugin):
 
             # ファイルが実際に作成されたか確認
             if os.path.exists(self._custom_settings_file):
-                self._logger.info(f"Successfully saved {len(layer_data)} layers to {self._custom_settings_file}")
+                self._logger.debug(f"Successfully saved {len(layer_data)} layers to {self._custom_settings_file}")
             else:
                 self._logger.error(f"File was not created: {self._custom_settings_file}")
 
