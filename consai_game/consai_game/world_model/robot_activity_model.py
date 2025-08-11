@@ -73,6 +73,7 @@ class RobotActivityModel:
         self.our_prohibited_kick_robot_id: int = self.INVALID_ROBOT_ID  # 直近のキック禁止ロボットID
         self.prohibited_kick_robot_candidate_id: int = self.INVALID_ROBOT_ID  # キック禁止ロボット候補ID
         self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
+        self.number_of_their_robots_in_our_area: int = 0
 
     def update(
         self,
@@ -128,6 +129,9 @@ class RobotActivityModel:
             game_config=game_config,
         )
 
+        # 自陣にいる相手ロボットの台数を計算する
+        self.number_of_their_robots_in_our_area = self.count_their_robots(robots.their_visible_robots)
+
         # ダブルタッチ防止のために、キック禁止ロボット情報を更新する
         self.update_prohibited_kick_robot(ball_activity, referee)
 
@@ -140,6 +144,16 @@ class RobotActivityModel:
         output_list.extend([r for r in new_list if r not in output_list])
 
         return output_list
+
+    def count_their_robots(self, robots: dict[int, Robot]) -> int:
+        """自陣にいる相手ロボットの数を返す関数."""
+        counter = 0
+
+        for robot in robots.values():
+            if robot.pos.x < 0:
+                counter += 1
+
+        return counter
 
     def robot_something_distances(self, robots: dict[int, Robot], target: Point) -> list[tuple[int, float]]:
         """ロボットとなにかの距離を計算し, 距離の昇順でソートしたリストを返す関数."""
