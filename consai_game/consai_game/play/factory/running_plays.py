@@ -40,7 +40,7 @@ def outside_defense_area_their_in() -> Play:
         RefereeConditions.running,
         BallConditions.is_in_our_defense_area.invert(),
         BallConditions.is_in_their_defense_area.invert(),
-        RobotConditions.their_robots_in_our_area(),
+        RobotConditions.their_robots_in_our_area_over_threshold(),
     ]
     return Play(
         name="Running. Ball is outside defense area. Their robots in our area",
@@ -70,7 +70,7 @@ def outside_defense_area_their_out() -> Play:
         RefereeConditions.running,
         BallConditions.is_in_our_defense_area.invert(),
         BallConditions.is_in_their_defense_area.invert(),
-        RobotConditions.their_robots_in_our_area().invert(),
+        RobotConditions.their_robots_in_our_area_over_threshold().invert(),
     ]
     return Play(
         name="Running. Ball is outside defense area. Their robots not in our area",
