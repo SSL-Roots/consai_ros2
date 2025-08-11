@@ -11,11 +11,11 @@ Vector2 pos
 float32 orientation
 
 # The velocity [m/s] in the ssl-vision coordinate system
-Vector2[<=1] vel  # optional
+Vector2[] vel  # optional
 # The angular velocity [rad/s] in the ssl-vision coordinate system
-float32[<=1] vel_angular  # optional
+float32[] vel_angular  # optional
 
 # The visibility of the robot
 # A value between 0 (not visible) and 1 (visible)
 # The exact implementation depends on the source software
-float32[<=1] visibility  # optional
+float32[] visibility  # optional

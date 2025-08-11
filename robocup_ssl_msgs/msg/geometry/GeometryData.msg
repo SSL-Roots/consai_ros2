@@ -3,4 +3,4 @@
 
 GeometryFieldSize field
 GeometryCameraCalibration[] calib
-GeometryModels[<=1] models  # optional
+GeometryModels[] models  # optional

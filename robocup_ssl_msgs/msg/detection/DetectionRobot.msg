@@ -2,10 +2,10 @@
 # https://github.com/RoboCup-SSL/ssl-vision/blob/master/src/shared/proto/messages_robocup_ssl_detection.proto
 
 float32 confidence
-uint32[<=1] robot_id  # optional
+uint32[] robot_id  # optional
 float32 x
 float32 y
-float32[<=1] orientation  # optional
+float32[] orientation  # optional
 float32 pixel_x
 float32 pixel_y
-float32[<=1] height  # optional
+float32[] height  # optional
