@@ -13,7 +13,7 @@ class RobotConditions:
 
         def condition(world_model: WorldModel) -> bool:
             """相手ロボットが指定台数以上自陣に侵入しているか判定する条件関数."""
-            num = world_model.robot_activity.number_of_their_robots_in_our_area_over_threshold
+            num = world_model.robot_activity.number_of_their_robots_in_our_area
             return 5 < num
 
         return PlayCondition(condition)

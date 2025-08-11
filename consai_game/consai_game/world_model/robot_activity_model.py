@@ -73,7 +73,7 @@ class RobotActivityModel:
         self.our_prohibited_kick_robot_id: int = self.INVALID_ROBOT_ID  # 直近のキック禁止ロボットID
         self.prohibited_kick_robot_candidate_id: int = self.INVALID_ROBOT_ID  # キック禁止ロボット候補ID
         self.prohibited_kick_robot_search_state = ProhibitedKickRobotSearchState.BEFORE_SEARCH
-        self.number_of_their_robots_in_our_area_over_threshold: int = 0
+        self.number_of_their_robots_in_our_area: int = 0
 
     def update(
         self,
@@ -130,7 +130,7 @@ class RobotActivityModel:
         )
 
         # 自陣にいる相手ロボットの台数を計算する
-        self.number_of_their_robots_in_our_area_over_threshold = self.count_their_robots(robots.their_visible_robots)
+        self.number_of_their_robots_in_our_area = self.count_their_robots(robots.their_visible_robots)
 
         # ダブルタッチ防止のために、キック禁止ロボット情報を更新する
         self.update_prohibited_kick_robot(ball_activity, referee)
