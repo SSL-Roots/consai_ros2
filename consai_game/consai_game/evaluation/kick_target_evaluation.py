@@ -54,7 +54,7 @@ class PassTarget:
     success_rate: int = 0
 
 
-class KickTargetModel:
+class KickTargetEvaluation:
     """キックターゲットを保持するクラス."""
 
     def __init__(self):
@@ -69,6 +69,8 @@ class KickTargetModel:
         self.pass_target_list: list[PassTarget] = []
 
         self._half_width = 4.5
+
+        self.update_field_pos_list(Field())
 
     def update_field_pos_list(self, field: Field) -> None:
         """フィールドの位置候補を更新する関数."""
@@ -99,12 +101,12 @@ class KickTargetModel:
 
         self.best_pass_target = self._search_pass_robot(ball=ball_model, robots=robots_model, search_ours=False)
 
-    # def _obstacle_exists(self, target: State2D, ball: BallModel, robots: dict[int, Robot], tolerance) -> bool:
-    #     """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
-    #     for robot in robots.values():
-    #         if tool.is_on_line(pose=robot.pos, line_pose1=ball.pos, line_pose2=target, tolerance=tolerance):
-    #             return True
-    #     return False
+    def _obstacle_exists(self, target: State2D, ball: BallModel, robots: dict[int, Robot], tolerance) -> bool:
+        """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
+        for robot in robots.values():
+            if tool.is_on_line(pose=robot.pos, line_pose1=ball.pos, line_pose2=target, tolerance=tolerance):
+                return True
+        return False
 
     def _update_shoot_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[ShootTarget]:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
@@ -183,23 +185,23 @@ class KickTargetModel:
             return self.shoot_target_list[0]
         return last_shoot_target_list[0]
 
-    # def _is_robot_inside_pass_area(self, ball: BallModel, robot: Robot) -> bool:
-    #     """味方ロボットがパスを出すロボットとハーフライン両サイドを結んでできる五角形のエリア内にいるかを判別する関数"""
-    #     if robot.pos.x < 0.0:
-    #         return False
+    def _is_robot_inside_pass_area(self, ball: BallModel, robot: Robot) -> bool:
+        """味方ロボットがパスを出すロボットとハーフライン両サイドを結んでできる五角形のエリア内にいるかを判別する関数"""
+        if robot.pos.x < 0.0:
+            return False
 
-    #     upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, self._half_width))
-    #     lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, -self._half_width))
+        upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, self._half_width))
+        lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, -self._half_width))
 
-    #     if upper_side_slope is None or lower_side_slope is None:
-    #         if ball.pos.x > robot.pos.x:
-    #             return False
-    #     else:
-    #         upper_y_on_line = upper_side_intercept + upper_side_slope * robot.pos.x
-    #         lower_y_on_line = lower_side_intercept + lower_side_slope * robot.pos.x
-    #         if robot.pos.y < upper_y_on_line and robot.pos.y < lower_y_on_line:
-    #             return False
-    #     return True
+        if upper_side_slope is None or lower_side_slope is None:
+            if ball.pos.x > robot.pos.x:
+                return False
+        else:
+            upper_y_on_line = upper_side_intercept + upper_side_slope * robot.pos.x
+            lower_y_on_line = lower_side_intercept + lower_side_slope * robot.pos.x
+            if robot.pos.y < upper_y_on_line and robot.pos.y < lower_y_on_line:
+                return False
+        return True
 
     def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
         """各パスターゲットの成功率を計算し, リストを返す関数."""

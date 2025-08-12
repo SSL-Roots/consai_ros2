@@ -20,9 +20,13 @@ from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
-from consai_game.world_model.world_model import WorldModel
 from consai_game.tactic.steal_ball import StealBall
 
+from consai_game.world_model.field_model import Field
+
+from consai_game.evaluation.evaluation import Evaluation
+from consai_game.evaluation.evaluation_provider_node import EvaluationProviderNode
+from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
@@ -128,6 +132,10 @@ class CompositeOffense(CompositeTacticBase):
         self.kick_score_threshold = kick_score_threshold
         self.SHOOTING_MARGIN = 0
 
+        self.evaluation: Evaluation = Evaluation()
+        # self.field: Field = Field()
+        # self.evaluation_provider_node: EvaluationProviderNode = EvaluationProviderNode()
+        
         # 最初の動作を強制的にpassにするかの設定
         self.force_pass = force_pass
 
@@ -163,24 +171,26 @@ class CompositeOffense(CompositeTacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
+        evaluation = self.evaluation
+
         # 相手がボールを持ってる場合は奪いに行く
         if world_model.ball_activity.is_their_team_ball_holder:
             # ボールを奪う
             return self.run_sub_tactic(self.tactic_steal, world_model)
 
         if (
-            world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
+            evaluation.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
             and self.force_pass is False
         ):
             # シュートできる場合かつforce_passがFalseの場合
-            self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
+            self.tactic_shoot.target_pos = evaluation.kick_target.best_shoot_target.pos
             # シュート相手がコロコロ切り替わらないようにマージンを設定
             self.SHOOTING_MARGIN = 20
             return self.run_sub_tactic(self.tactic_shoot, world_model)
 
-        elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
+        elif evaluation.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
             # パスできる場合 か force_passがTrueの場合
-            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
+            self.tactic_pass.target_pos = copy.deepcopy(evaluation.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
 
@@ -188,7 +198,7 @@ class CompositeOffense(CompositeTacticBase):
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい
         # シュート成功率が一番高いところに向かってドリブルする
-        self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
+        self.tactic_tapping.target_pos = evaluation.kick_target.best_shoot_target.pos
         return self.run_sub_tactic(self.tactic_tapping, world_model)
 
     def receive_the_ball(self, world_model: WorldModel) -> MotionCommand:

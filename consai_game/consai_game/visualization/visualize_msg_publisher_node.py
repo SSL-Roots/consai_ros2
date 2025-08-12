@@ -27,7 +27,8 @@ from consai_game.core.tactic.robot_tactic_status import RobotTacticStatus
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_activity_model import BallActivityModel, BallState
 from consai_game.world_model.robot_activity_model import RobotActivityModel
-from consai_game.world_model.kick_target_model import KickTargetModel
+# from consai_game.world_model.kick_target_model import KickTargetModel
+from consai_game.evaluation.kick_target_evaluation import KickTargetEvaluation
 from consai_game.world_model.robots_model import RobotsModel
 from consai_game.world_model.world_model import WorldModel
 
@@ -43,9 +44,9 @@ class VisualizeMsgPublisherNode(Node):
 
     def publish(self, world_model: WorldModel):
         """WorldModelをGUIに描画するためのトピックをpublishする."""
-        self.pub_visualizer_objects.publish(
-            self.kick_target_to_vis_msg(kick_target=world_model.kick_target, ball=world_model.ball)
-        )
+        # self.pub_visualizer_objects.publish(
+        #     self.kick_target_to_vis_msg(kick_target=kick_target_evaluation, ball=world_model.ball)
+        # )
 
         self.pub_visualizer_objects.publish(
             self.ball_activity_to_vis_msg(activity=world_model.ball_activity, ball=world_model.ball)
@@ -63,7 +64,7 @@ class VisualizeMsgPublisherNode(Node):
         """ロボットの戦術状態をセットすする関数"""
         self.robot_tactic_status_list = robot_tactic_status_list
 
-    def kick_target_to_vis_msg(self, kick_target: KickTargetModel, ball: BallModel) -> Objects:
+    def kick_target_to_vis_msg(self, kick_target: KickTargetEvaluation, ball: BallModel) -> Objects:
         """kick_targetをObjectsメッセージに変換する."""
         vis_obj = Objects()
         vis_obj.layer = "game"

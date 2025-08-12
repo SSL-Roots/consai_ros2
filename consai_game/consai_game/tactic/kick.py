@@ -26,6 +26,9 @@ from consai_game.utils.generate_dummy_ball_position import generate_dummy_ball_p
 
 from transitions.extensions import GraphMachine
 
+from consai_game.evaluation.robot_evaluation import robot_is_backside, robot_is_on_kick_line
+# from consai_game.evaluation.evaluation import Evaluation
+
 
 class KickStateMachine(GraphMachine):
     """状態遷移マシン."""
@@ -136,9 +139,9 @@ class Kick(TacticBase):
             width_threshold = 0.03
 
         self.machine.update(
-            robot_is_backside=self.robot_is_backside(robot_pos, ball_pos, self.final_target_pos),
-            robot_is_on_kick_line=self.robot_is_on_kick_line(
-                robot_pos, ball_pos, self.final_target_pos, width_threshold=width_threshold
+            robot_is_backside=robot_is_backside(self.robot_id, world_model, self.final_target_pos, self.ANGLE_BALL_TO_ROBOT_THRESHOLD),
+            robot_is_on_kick_line=robot_is_on_kick_line(
+                self.robot_id, world_model, self.final_target_pos, width_threshold=width_threshold
             ),
         )
 
@@ -201,46 +204,46 @@ class Kick(TacticBase):
         self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
 
-    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
-        """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
-        # ボールからターゲットへの座標系を作成
-        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
-        tr_robot_pos = trans.transform(robot_pos)
+    # def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
+    #     """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
+    #     # ボールからターゲットへの座標系を作成
+    #     trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
+    #     tr_robot_pos = trans.transform(robot_pos)
 
-        # ボールから見たロボットの位置の角度
-        # ボールの後方にいれば角度は90度以上
-        tr_ball_to_robot_angle = tool.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
+    #     # ボールから見たロボットの位置の角度
+    #     # ボールの後方にいれば角度は90度以上
+    #     tr_ball_to_robot_angle = tool.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
 
-        if abs(tr_ball_to_robot_angle) > np.deg2rad(self.ANGLE_BALL_TO_ROBOT_THRESHOLD):
-            return True
-        return False
+    #     if abs(tr_ball_to_robot_angle) > np.deg2rad(self.ANGLE_BALL_TO_ROBOT_THRESHOLD):
+    #         return True
+    #     return False
 
-    def robot_is_on_kick_line(
-        self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D, width_threshold: float
-    ) -> bool:
-        """ボールからターゲットまでの直線上にロボットが居るかを判定する.
+    # def robot_is_on_kick_line(
+    #     self, robot_pos: State2D, ball_pos: State2D, target_pos: State2D, width_threshold: float
+    # ) -> bool:
+    #     """ボールからターゲットまでの直線上にロボットが居るかを判定する.
 
-        ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
-        """
-        MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
+    #     ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
+    #     """
+    #     MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
 
-        # ボールからターゲットへの座標系を作成
-        trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
-        tr_robot_pos = trans.transform(robot_pos)
-        tr_robot_theta = trans.transform_angle(robot_pos.theta)
+    #     # ボールからターゲットへの座標系を作成
+    #     trans = tool.Trans(ball_pos, tool.get_angle(ball_pos, target_pos))
+    #     tr_robot_pos = trans.transform(robot_pos)
+    #     tr_robot_theta = trans.transform_angle(robot_pos.theta)
 
-        # ボールより前にロボットが居る場合
-        if tr_robot_pos.x > 0.0:
-            return False
+    #     # ボールより前にロボットが居る場合
+    #     if tr_robot_pos.x > 0.0:
+    #         return False
 
-        # ターゲットを向いていない
-        if abs(tr_robot_theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
-            return False
+    #     # ターゲットを向いていない
+    #     if abs(tr_robot_theta) > np.deg2rad(MINIMAL_THETA_THRESHOLD):
+    #         return False
 
-        if abs(tr_robot_pos.y) > width_threshold:
-            return False
+    #     if abs(tr_robot_pos.y) > width_threshold:
+    #         return False
 
-        return True
+    #     return True
 
     def move_to_backside_pose(
         self, ball_pos: State2D, robot_pos: State2D, target_pos: State2D, distance: float
