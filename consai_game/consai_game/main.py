@@ -31,7 +31,6 @@ from rclpy.executors import MultiThreadedExecutor
 from consai_game.core.play.play_node import PlayNode
 from consai_game.core.tactic.agent_scheduler_node import AgentSchedulerNode
 from consai_game.visualization.visualize_msg_publisher_node import VisualizeMsgPublisherNode
-from consai_game.evaluation.evaluation_provider_node import EvaluationProviderNode
 from consai_game.world_model.world_model_provider_node import WorldModelProviderNode
 
 
@@ -70,9 +69,6 @@ if __name__ == "__main__":
         goalie_id=args.goalie,
         invert=args.invert,
     )
-    evaluation_provider_node = EvaluationProviderNode(
-        update_hz=UPDATE_HZ,
-    )
     # TODO: agent_numをplay_nodeから取得したい
     agent_scheduler_node = AgentSchedulerNode(update_hz=UPDATE_HZ, team_is_yellow=team_is_yellow, agent_num=11)
     play_node.set_update_role_callback(agent_scheduler_node.set_roles)
@@ -83,7 +79,6 @@ if __name__ == "__main__":
     executor = MultiThreadedExecutor()
     executor.add_node(play_node)
     executor.add_node(world_model_provider_node)
-    executor.add_node(evaluation_provider_node)
     executor.add_node(agent_scheduler_node)
     executor.add_node(vis_msg_publisher_node)
 
