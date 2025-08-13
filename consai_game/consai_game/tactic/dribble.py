@@ -31,8 +31,6 @@ import numpy as np
 
 from transitions.extensions import GraphMachine
 
-from consai_game.evaluation.robot_evaluation import ball_is_front
-
 
 class DribbleStateMachine(GraphMachine):
     """ドリブルの状態遷移マシン."""
@@ -158,7 +156,9 @@ class Dribble(TacticBase):
             dist_robot_to_ball=dist_robot_to_ball,
             dist_ball_to_target=dist_ball_to_target,
             dribble_diff_angle=np.rad2deg(dribble_diff_angle),
-            ball_is_front=ball_is_front(ball_pos=ball_pos, robot_pos=robot_pos, target_pos=self.target_pos),
+            ball_is_front=world_model.evaluation.relative_position.is_ball_front(
+                robot_pos=robot_pos, ball_pos=ball_pos, target_pos=self.target_pos
+            ),
         )
 
         command = MotionCommand()
@@ -179,28 +179,6 @@ class Dribble(TacticBase):
 
         self.append_machine_state_to_name()  # デバッグのため、状態を名前に追加
         return command
-
-    # def ball_is_front(self, ball_pos: State2D, robot_pos: State2D) -> bool:
-    #     """ボールがロボットの前にあるかどうかを判定する."""
-    #     FRONT_DIST_THRESHOLD = 0.15  # 正面方向にどれだけ離れることを許容するか
-    #     SIDE_DIST_THRESHOLD = 0.05  # 横方向にどれだけ離れることを許容するか
-
-    #     # ロボットを中心に、ターゲットを+x軸とした座標系を作る
-    #     trans = tool.Trans(robot_pos, tool.get_angle(robot_pos, self.target_pos))
-    #     tr_ball_pos = trans.transform(ball_pos)
-
-    #     # ボールがロボットの後ろにある
-    #     if tr_ball_pos.x < 0:
-    #         return False
-
-    #     # ボールが正面から離れすぎている
-    #     if tr_ball_pos.x > FRONT_DIST_THRESHOLD:
-    #         return False
-
-    #     # ボールが横方向に離れすぎている
-    #     if abs(tr_ball_pos.y) > SIDE_DIST_THRESHOLD:
-    #         return False
-    #     return True
 
     def approach_to_ball(self, command: MotionCommand, ball_pos: State2D) -> MotionCommand:
         """ボールに近づくコマンドを返す."""

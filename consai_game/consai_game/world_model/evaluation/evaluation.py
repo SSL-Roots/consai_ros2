@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding: UTF-8
+
 # Copyright 2025 Roots
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""評価を統合したEvaluationの定義モジュール."""
+
 from dataclasses import dataclass
+
+from consai_game.world_model.evaluation.relative_position_evaluation import RelativePositionEvaluation
 
 
 @dataclass
-class EvaluationMetaData:
-    update_rate: float = 0.0  # 更新周期 Hz
-    update_counter: int = 0  # 更新カウンタ
+class Evaluation:
+    """評価に関する関数やクラスを統合的に保持するデータクラス."""
+
+    relative_position: RelativePositionEvaluation = RelativePositionEvaluation()

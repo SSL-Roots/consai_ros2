@@ -12,24 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-条件に応じてディフェンス動作やキックやパスを切り替えるTactic
-"""
+"""条件に応じてディフェンス動作やキックやパスを切り替えるTactic."""
 
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
 from consai_game.world_model.world_model import WorldModel
+
 from consai_tools.geometry import geometry_tools as tool
 
 from consai_msgs.msg import MotionCommand
 
-from consai_game.evaluation.evaluation import Evaluation
-
 
 class CompositeDefense(CompositeTacticBase):
+    """条件に応じてディフェンス動作を切り替えるTactic."""
+
     def __init__(self, tactic_default: TacticBase, do_receive: bool = True):
+        """
+        コンストラクタ.
+
+        使用するTacticを指定と各変数の初期化を実行.
+        """
+
         super().__init__(
             tactic_shoot=Kick(is_pass=False),
             tactic_pass=Kick(is_pass=True),
@@ -40,8 +45,6 @@ class CompositeDefense(CompositeTacticBase):
         self.diff_goal_threshold = 2.5
         self.very_close_to_ball_threshold = 0.3
         self.do_receive = do_receive
-
-        self.evaluation: Evaluation = Evaluation()
 
     def run(self, world_model: WorldModel) -> MotionCommand:
         """状況に応じて実行するtacticを切り替えてrunする."""
@@ -73,18 +76,16 @@ class CompositeDefense(CompositeTacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
-        evaluation = self.evaluation
-
-        if evaluation.kick_target.best_shoot_target.success_rate > 50:
+        if world_model.kick_target.best_shoot_target.success_rate > 50:
             # シュートできる場合
-            self.tactic_shoot.target_pos = evaluation.kick_target.best_shoot_target.pos
+            self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
             return self.run_sub_tactic(self.tactic_shoot, world_model)
 
-        elif evaluation.kick_target.best_pass_target.success_rate > 30:
+        elif world_model.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
-            self.tactic_pass.target_pos = evaluation.kick_target.best_pass_target.robot_pos
+            self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
             return self.run_sub_tactic(self.tactic_pass, world_model)
 
         # シュート成功率が一番高いところに向かってパスする(クリア)
-        self.tactic_pass.target_pos = evaluation.kick_target.best_shoot_target.pos
+        self.tactic_pass.target_pos = world_model.kick_target.best_shoot_target.pos
         return self.run_sub_tactic(self.tactic_pass, world_model)
