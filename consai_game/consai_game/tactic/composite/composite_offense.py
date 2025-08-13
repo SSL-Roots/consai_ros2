@@ -183,18 +183,19 @@ class CompositeOffense(CompositeTacticBase):
             return self.run_sub_tactic(self.tactic_steal, world_model)
 
         if (
-            world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
+            world_model.evaluation.kick_target.best_shoot_target.success_rate
+            > self.kick_score_threshold - self.SHOOTING_MARGIN
             and self.force_pass is False
         ):
             # シュートできる場合かつforce_passがFalseの場合
-            self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
+            self.tactic_shoot.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
             # シュート相手がコロコロ切り替わらないようにマージンを設定
             self.SHOOTING_MARGIN = 20
             return self.run_sub_tactic(self.tactic_shoot, world_model)
 
-        elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
+        elif world_model.evaluation.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
             # パスできる場合 か force_passがTrueの場合
-            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
+            self.tactic_pass.target_pos = copy.deepcopy(world_model.evaluation.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
 
@@ -202,7 +203,7 @@ class CompositeOffense(CompositeTacticBase):
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい
         # シュート成功率が一番高いところに向かってドリブルする
-        self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
+        self.tactic_tapping.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
         return self.run_sub_tactic(self.tactic_tapping, world_model)
 
     def receive_the_ball(self, world_model: WorldModel) -> MotionCommand:

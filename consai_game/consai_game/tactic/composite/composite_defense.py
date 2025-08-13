@@ -76,16 +76,16 @@ class CompositeDefense(CompositeTacticBase):
     def control_the_ball(self, world_model: WorldModel) -> MotionCommand:
         """ボールを制御するためのTacticを実行する関数."""
 
-        if world_model.kick_target.best_shoot_target.success_rate > 50:
+        if world_model.evaluation.kick_target.best_shoot_target.success_rate > 50:
             # シュートできる場合
-            self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
+            self.tactic_shoot.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
             return self.run_sub_tactic(self.tactic_shoot, world_model)
 
-        elif world_model.kick_target.best_pass_target.success_rate > 30:
+        elif world_model.evaluation.kick_target.best_pass_target.success_rate > 30:
             # パスできる場合
-            self.tactic_pass.target_pos = world_model.kick_target.best_pass_target.robot_pos
+            self.tactic_pass.target_pos = world_model.evaluation.kick_target.best_pass_target.robot_pos
             return self.run_sub_tactic(self.tactic_pass, world_model)
 
         # シュート成功率が一番高いところに向かってパスする(クリア)
-        self.tactic_pass.target_pos = world_model.kick_target.best_shoot_target.pos
+        self.tactic_pass.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
         return self.run_sub_tactic(self.tactic_pass, world_model)

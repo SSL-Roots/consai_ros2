@@ -19,6 +19,7 @@
 
 from dataclasses import dataclass
 
+from consai_game.world_model.evaluation.kick_target_evaluation import KickTargetEvaluation
 from consai_game.world_model.evaluation.relative_position_evaluation import RelativePositionEvaluation
 
 
@@ -26,4 +27,5 @@ from consai_game.world_model.evaluation.relative_position_evaluation import Rela
 class Evaluation:
     """評価に関する関数やクラスを統合的に保持するデータクラス."""
 
+    kick_target: KickTargetEvaluation = KickTargetEvaluation()
     relative_position: RelativePositionEvaluation = RelativePositionEvaluation()
