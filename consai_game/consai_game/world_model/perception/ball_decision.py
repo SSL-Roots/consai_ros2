@@ -20,24 +20,14 @@
 """
 
 from copy import deepcopy
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional
 
 from consai_tools.geometry import geometry_tools as tools
 
 from consai_game.world_model.ball_model import BallModel
-from consai_game.world_model.robots_model import Robot, RobotsModel
-from consai_game.world_model.referee_model import RefereeModel
-from consai_game.world_model.game_config_model import GameConfigModel
-from consai_game.world_model.field_model import FieldPoints
-from consai_game.world_model.perception.ball_prediction import BallPrediction
-
-from consai_msgs.msg import State2D
 
 
 class BallDecision:
-    """ ボールの位置や動きを判定するクラス. """
+    """ボールの位置や動きを判定するクラス."""
 
     def is_ball_moving(self, ball: BallModel) -> bool:
         """ボールが動いているかを判定するメソッド."""

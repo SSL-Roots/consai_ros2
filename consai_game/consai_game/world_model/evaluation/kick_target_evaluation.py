@@ -27,7 +27,7 @@ from operator import attrgetter
 from consai_game.utils.geometry import Point
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.field_model import Field
-from consai_game.world_model.robots_model import Robot, RobotsModel
+from consai_game.world_model.robots_model import RobotsModel
 
 from consai_msgs.msg import State2D
 
