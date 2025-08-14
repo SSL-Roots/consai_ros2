@@ -50,4 +50,4 @@ class WorldModel:
     threats: ThreatsModel = ThreatsModel(field, field_points)
     meta: WorldMetaModel = WorldMetaModel()
 
-    evaluation: Evaluation = Evaluation()
+    evaluation: Evaluation = Evaluation(field, field_points)

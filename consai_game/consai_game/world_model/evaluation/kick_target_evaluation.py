@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-キックターゲットを管理するモジュール.
+キックターゲットを管理し予測するモジュール.
 
 シュートを試みるための最適なターゲット位置を計算し, キックターゲットの成功率を更新する.
 """
@@ -32,6 +32,8 @@ from consai_game.world_model.robots_model import Robot, RobotsModel
 from consai_msgs.msg import State2D
 
 from consai_tools.geometry import geometry_tools as tool
+
+from consai_game.world_model.perception.robot_decision import RobotDecision
 
 
 @dataclass
@@ -96,13 +98,6 @@ class KickTargetEvaluation:
 
         self.best_pass_target = self._search_pass_robot(ball=ball_model, robots=robots_model, search_ours=False)
 
-    def _obstacle_exists(self, target: State2D, ball: BallModel, robots: dict[int, Robot], tolerance) -> bool:
-        """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
-        for robot in robots.values():
-            if tool.is_on_line(pose=robot.pos, line_pose1=ball.pos, line_pose2=target, tolerance=tolerance):
-                return True
-        return False
-
     def _update_shoot_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[ShootTarget]:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
         TOLERANCE = robots.robot_radius  # ロボット半径
@@ -121,13 +116,13 @@ class KickTargetEvaluation:
         for target in self._goal_pos_list:
             score = 0
             if (
-                self._obstacle_exists(
+                RobotDecision.obstacle_exists(
                     target=target.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
                 )
                 and search_ours
             ):
                 target.success_rate = score
-            elif self._obstacle_exists(
+            elif RobotDecision.obstacle_exists(
                 target=target.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
             ):
                 target.success_rate = score
@@ -180,24 +175,6 @@ class KickTargetEvaluation:
             return self.shoot_target_list[0]
         return last_shoot_target_list[0]
 
-    def _is_robot_inside_pass_area(self, ball: BallModel, robot: Robot) -> bool:
-        """味方ロボットがパスを出すロボットとハーフライン両サイドを結んでできる五角形のエリア内にいるかを判別する関数"""
-        if robot.pos.x < 0.0:
-            return False
-
-        upper_side_slope, upper_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, self._half_width))
-        lower_side_slope, lower_side_intercept, flag = tool.get_line_parameter(ball.pos, Point(0.0, -self._half_width))
-
-        if upper_side_slope is None or lower_side_slope is None:
-            if ball.pos.x > robot.pos.x:
-                return False
-        else:
-            upper_y_on_line = upper_side_intercept + upper_side_slope * robot.pos.x
-            lower_y_on_line = lower_side_intercept + lower_side_slope * robot.pos.x
-            if robot.pos.y < upper_y_on_line and robot.pos.y < lower_y_on_line:
-                return False
-        return True
-
     def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
         """各パスターゲットの成功率を計算し, リストを返す関数."""
         TOLERANCE = robots.robot_radius * 2  # ロボット直径
@@ -210,19 +187,19 @@ class KickTargetEvaluation:
         for robot in robots.our_visible_robots.values():
             score = 0
             if (
-                self._obstacle_exists(
+                RobotDecision.obstacle_exists(
                     target=robot.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
                 )
                 and search_ours
             ):
                 score = 0
-            elif self._obstacle_exists(
+            elif RobotDecision.obstacle_exists(
                 target=robot.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
             ):
                 score = 0
             elif tool.get_distance(ball.pos, robot.pos) < 0.5:
                 score = 0
-            elif self._is_robot_inside_pass_area(ball, robot) is False:
+            elif RobotDecision.is_robot_inside_pass_area(ball, robot) is False:
                 score = 0
             else:
                 # ボールとパスを受けるロボットの距離

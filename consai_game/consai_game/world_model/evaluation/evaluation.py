@@ -21,11 +21,16 @@ from dataclasses import dataclass
 
 from consai_game.world_model.evaluation.kick_target_evaluation import KickTargetEvaluation
 from consai_game.world_model.evaluation.relative_position_evaluation import RelativePositionEvaluation
+from consai_game.world_model.evaluation.threats_evaluation import ThreatsModel
+from consai_game.world_model.field_model import Field, FieldPoints
 
 
 @dataclass
 class Evaluation:
     """評価に関する関数やクラスを統合的に保持するデータクラス."""
 
+    field: Field = Field()
+    field_points: FieldPoints = FieldPoints.create_field_points(field)
     kick_target: KickTargetEvaluation = KickTargetEvaluation()
     relative_position: RelativePositionEvaluation = RelativePositionEvaluation()
+    threats_model: ThreatsModel = ThreatsModel(field, field_points)
