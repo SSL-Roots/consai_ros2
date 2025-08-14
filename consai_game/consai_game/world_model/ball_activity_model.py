@@ -113,7 +113,7 @@ class BallActivityModel:
         self.ball_is_moving = self.is_ball_moving(ball)
 
         # ボールの予測位置を更新する
-        self.ball_prediction.next_ball_pos(ball)
+        self.next_ball_pos = self.ball_prediction.next_ball_pos(ball)
 
         # 最終的なボール状態を更新する
         self.update_ball_state()
