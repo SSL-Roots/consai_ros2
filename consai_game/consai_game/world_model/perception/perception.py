@@ -23,6 +23,7 @@ from consai_game.world_model.perception.ball_decision import BallDecision
 from consai_game.world_model.perception.ball_prediction import BallPrediction
 from consai_game.world_model.perception.robot_decision import RobotDecision
 
+
 @dataclass
 class Perception:
     """予測に関する関数やクラスを統合的に保持するデータクラス."""
