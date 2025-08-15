@@ -153,7 +153,7 @@ class WorldModelProviderNode(Node):
                 self.world_model.robots,
             )
             # 敵ロボットの驚異度を更新
-            self.world_model.threats.update(
+            self.world_model.evaluation.threats_evaluation.update(
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
             )
