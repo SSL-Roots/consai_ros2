@@ -11,9 +11,9 @@ Vector3 vel
 float64 start_timestamp
 
 # The predicted unix timestamp [s] when the ball comes to a stop
-float64[<=1] stop_timestamp  # optional
+float64[] stop_timestamp  # optional
 # The predicted position [m] at which the ball will come to a stop
-Vector2[<=1] stop_pos  # optional
+Vector2[] stop_pos  # optional
 
 # The robot that kicked the ball
-RobotId[<=1] robot_id  # optional
+RobotId[] robot_id  # optional

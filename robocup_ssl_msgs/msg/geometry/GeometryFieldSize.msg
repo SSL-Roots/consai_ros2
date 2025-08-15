@@ -8,5 +8,5 @@ int32 goal_depth
 int32 boundary_width
 FieldLineSegment[] field_lines
 FieldCircularArc[] field_arcs
-int32[<=1] penalty_area_depth  # optional
-int32[<=1] penalty_area_width  # optional
+int32[] penalty_area_depth  # optional
+int32[] penalty_area_width  # optional

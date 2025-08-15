@@ -7,9 +7,9 @@
 Vector3 pos
 
 # The velocity [m/s] in the ssl-vision coordinate system
-Vector3[<=1] vel  # optional
+Vector3[] vel  # optional
 
 # The visibility of the ball
 # A value between 0 (not visible) and 1 (visible)
 # The exact implementation depends on the source software
-float32[<=1] visibility  #optional
+float32[] visibility  #optional

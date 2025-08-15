@@ -23,7 +23,7 @@ TrackedRobot[] robots
 
 # Information about a kicked ball, if the ball was kicked by a robot and is still moving
 # Note: This field is optional. Some source implementations might not set this at any time
-KickedBall[<=1] kicked_ball  # optional
+KickedBall[] kicked_ball  # optional
 
 # List of capabilities of the source implementation
 uint32[] capabilities

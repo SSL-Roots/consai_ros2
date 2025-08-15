@@ -24,4 +24,4 @@ float32 radius
 float32 a1
 float32 a2
 float32 thickness
-uint32[<=1] type  # optional
+uint32[] type  # optional
