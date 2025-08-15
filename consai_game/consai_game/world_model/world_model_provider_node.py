@@ -148,12 +148,12 @@ class WorldModelProviderNode(Node):
                 field_points=self.world_model.field_points,
             )
             # 最適なシュートターゲットを更新
-            self.world_model.kick_target.update(
+            self.world_model.evaluation.kick_target.update(
                 self.world_model.ball,
                 self.world_model.robots,
             )
             # 敵ロボットの驚異度を更新
-            self.world_model.threats.update(
+            self.world_model.evaluation.threats_evaluation.update(
                 ball=self.world_model.ball,
                 robots=self.world_model.robots,
             )
@@ -233,7 +233,7 @@ class WorldModelProviderNode(Node):
         self.world_model.field.half_penalty_width = self.world_model.field.penalty_width / 2
 
         self.world_model.field_points = self.world_model.field_points.create_field_points(self.world_model.field)
-        self.world_model.kick_target.update_field_pos_list(self.world_model.field)
+        self.world_model.evaluation.kick_target.update_field_pos_list(self.world_model.field)
 
     def update_game_config(self) -> None:
         """self.msg_param_control、self.msg_param_strategyを元にゲーム設定を更新する."""

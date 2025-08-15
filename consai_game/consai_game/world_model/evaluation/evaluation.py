@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+# coding: UTF-8
+
+# Copyright 2025 Roots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""評価を統合したEvaluationの定義モジュール."""
+
+from dataclasses import dataclass
+
+from consai_game.world_model.evaluation.kick_target_evaluation import KickTargetEvaluation
+from consai_game.world_model.evaluation.relative_position_evaluation import RelativePositionEvaluation
+from consai_game.world_model.evaluation.threats_evaluation import ThreatsEvaluation
+from consai_game.world_model.field_model import Field, FieldPoints
+
+
+@dataclass
+class Evaluation:
+    """評価に関する関数やクラスを統合的に保持するデータクラス."""
+
+    field: Field = Field()
+    field_points: FieldPoints = FieldPoints.create_field_points(field)
+    kick_target: KickTargetEvaluation = KickTargetEvaluation()
+    relative_position: RelativePositionEvaluation = RelativePositionEvaluation()
+    threats_evaluation: ThreatsEvaluation = ThreatsEvaluation(field, field_points)

@@ -44,7 +44,7 @@ class VisualizeMsgPublisherNode(Node):
     def publish(self, world_model: WorldModel):
         """WorldModelをGUIに描画するためのトピックをpublishする."""
         self.pub_visualizer_objects.publish(
-            self.kick_target_to_vis_msg(kick_target=world_model.kick_target, ball=world_model.ball)
+            self.kick_target_to_vis_msg(kick_target=world_model.evaluation.kick_target, ball=world_model.ball)
         )
 
         self.pub_visualizer_objects.publish(
@@ -52,7 +52,7 @@ class VisualizeMsgPublisherNode(Node):
         )
 
         self.pub_visualizer_objects.publish(
-            self.threats_to_vis_msg(threats=world_model.threats, robots=world_model.robots)
+            self.threats_to_vis_msg(threats=world_model.evaluation.threats_evaluation, robots=world_model.robots)
         )
         self.pub_visualizer_objects.publish(
             self.robot_activity_to_vis_msg(robot_activity=world_model.robot_activity, robots=world_model.robots)
