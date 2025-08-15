@@ -13,10 +13,10 @@
   <depend>consai_msgs</depend>
   <depend>consai_tools</depend>
   <depend>consai_visualizer_msgs</depend>
+  <depend>eigen</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>robocup_ssl_msgs</depend>
-  <depend>liborocos-bfl-dev</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

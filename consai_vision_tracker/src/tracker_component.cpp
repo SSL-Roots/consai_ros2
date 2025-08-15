@@ -40,7 +40,29 @@ using std::placeholders::_1;
 Tracker::Tracker(const rclcpp::NodeOptions & options)
 : Node("tracker", options), update_rate_(0.01s)
 {
-  ball_tracker_ = std::make_shared<BallTracker>(update_rate_.count());
+  const auto UPDATE_RATE = 0.01s;
+
+  ball_kalman_filter_ = std::make_unique<BallKalmanFilter>(UPDATE_RATE.count());
+  declare_parameter("ball_kalman_filter/q_acc", 5.0);
+  declare_parameter("ball_kalman_filter/q_uncertain_acc", 30.0);
+  declare_parameter("ball_kalman_filter/r_pos_stddev", 0.05);
+  declare_parameter("robot_kalman_filter/q_max_acc_xy", 10.0);
+  declare_parameter("robot_kalman_filter/q_max_acc_theta", 6.0);
+  declare_parameter("robot_kalman_filter/r_pos_stddev_xy", 0.05);
+  declare_parameter("robot_kalman_filter/r_pos_stddev_theta", 0.06);
+
+  for (int i = 0; i < 16; i++) {
+    blue_robot_kalman_filter_.push_back(
+      std::make_unique<RobotKalmanFilter>(
+        RobotId::TEAM_COLOR_BLUE, i,
+        UPDATE_RATE.count()));
+    yellow_robot_kalman_filter_.push_back(
+      std::make_unique<RobotKalmanFilter>(
+        RobotId::TEAM_COLOR_YELLOW, i,
+        UPDATE_RATE.count()));
+  }
+
+  timer_ = create_wall_timer(UPDATE_RATE, std::bind(&Tracker::on_timer, this));
 
   pub_tracked_ = create_publisher<TrackedFrame>("detection_tracked", 10);
   pub_robot_velocities_ = create_publisher<RobotLocalVelocities>("robot_local_velocities", 10);
@@ -61,23 +83,29 @@ Tracker::Tracker(const rclcpp::NodeOptions & options)
   sub_geometry_ = create_subscription<GeometryData>(
     "geometry", 10, std::bind(&Tracker::callback_geometry, this, _1));
 
-  auto qos = rclcpp::QoS(rclcpp::KeepLast(10))
-    .reliable();
+  // TODO(ShotaAk): use parameter callback
+  ball_kalman_filter_->update_noise_covariance_matrix(
+    get_parameter("ball_kalman_filter/q_acc").get_value<double>(),
+    get_parameter("ball_kalman_filter/q_uncertain_acc").get_value<double>(),
+    get_parameter("ball_kalman_filter/r_pos_stddev").get_value<double>());
 
-  auto callback_param = [this](const std_msgs::msg::String::SharedPtr msg)
-    {
-      try {
-        nlohmann::json json_data = nlohmann::json::parse(msg->data);
-        gen_robot_trackers(json_data["robots"]["num_of_ids"]);
-      } catch (const std::exception & e) {
-        RCLCPP_ERROR(get_logger(), "Error: %s", e.what());
-      }
-    };
+  // TODO(ShotaAk): use parameter callback
+  for (auto && filter : blue_robot_kalman_filter_) {
+    filter->update_noise_covariance_matrix(
+      get_parameter("robot_kalman_filter/q_max_acc_xy").get_value<double>(),
+      get_parameter("robot_kalman_filter/q_max_acc_theta").get_value<double>(),
+      get_parameter("robot_kalman_filter/r_pos_stddev_xy").get_value<double>(),
+      get_parameter("robot_kalman_filter/r_pos_stddev_theta").get_value<double>());
+  }
 
-  sub_consai_param_rule_ = create_subscription<std_msgs::msg::String>(
-    "consai_param/rule", qos, callback_param);
-
-  timer_ = create_wall_timer(update_rate_, std::bind(&Tracker::on_timer, this));
+  // TODO(ShotaAk): use parameter callback
+  for (auto && filter : yellow_robot_kalman_filter_) {
+    filter->update_noise_covariance_matrix(
+      get_parameter("robot_kalman_filter/q_max_acc_xy").get_value<double>(),
+      get_parameter("robot_kalman_filter/q_max_acc_theta").get_value<double>(),
+      get_parameter("robot_kalman_filter/r_pos_stddev_xy").get_value<double>(),
+      get_parameter("robot_kalman_filter/r_pos_stddev_theta").get_value<double>());
+  }
 }
 
 void Tracker::on_timer()
@@ -85,22 +113,22 @@ void Tracker::on_timer()
   auto tracked_msg = std::make_unique<TrackedFrame>();
   auto robot_vel_msg = std::make_unique<RobotLocalVelocities>();
 
-  for (auto && tracker : blue_robot_tracker_) {
-    tracked_msg->robots.push_back(tracker->update());
-    robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
+  for (auto && filter : blue_robot_kalman_filter_) {
+    tracked_msg->robots.push_back(filter->update());
+    robot_vel_msg->velocities.push_back(filter->calc_local_velocity());
   }
 
-  for (auto && tracker : yellow_robot_tracker_) {
-    tracked_msg->robots.push_back(tracker->update());
-    robot_vel_msg->velocities.push_back(tracker->calc_local_velocity());
+  for (auto && filter : yellow_robot_kalman_filter_) {
+    tracked_msg->robots.push_back(filter->update());
+    robot_vel_msg->velocities.push_back(filter->calc_local_velocity());
   }
 
   auto ball_is_near_a_robot = [this](
-    const decltype(blue_robot_tracker_) & trackers,
+    const decltype(blue_robot_kalman_filter_) & filters,
     const State & ball_pose) {
       const auto NEAR_DISTANCE = 0.5;
-      for (auto && tracker : trackers) {
-        const auto robot = tracker->prev_estimation();
+      for (auto && filter : filters) {
+        const auto robot = filter->get_estimation();
         if (!tools::is_visible(robot)) {
           continue;
         }
@@ -112,17 +140,17 @@ void Tracker::on_timer()
       return false;
     };
 
-  const auto ball = ball_tracker_->prev_estimation();
+  const auto ball = ball_kalman_filter_->get_estimation();
   bool use_uncertain_sys_model = false;
 
   if (tools::is_visible(ball)) {
     const auto ball_pose = tools::pose_state(ball);
     use_uncertain_sys_model =
-      ball_is_near_a_robot(blue_robot_tracker_, ball_pose) ||
-      ball_is_near_a_robot(yellow_robot_tracker_, ball_pose);
+      ball_is_near_a_robot(blue_robot_kalman_filter_, ball_pose) ||
+      ball_is_near_a_robot(yellow_robot_kalman_filter_, ball_pose);
   }
 
-  tracked_msg->balls.push_back(ball_tracker_->update(use_uncertain_sys_model));
+  tracked_msg->balls.push_back(ball_kalman_filter_->update(use_uncertain_sys_model));
 
   tracked_msg = vis_data_handler_->publish_vis_tracked(std::move(tracked_msg));
 
@@ -130,41 +158,21 @@ void Tracker::on_timer()
   pub_robot_velocities_->publish(std::move(robot_vel_msg));
 }
 
-void Tracker::gen_robot_trackers(const unsigned int num)
-{
-  if (blue_robot_tracker_.size() >= num) {
-    return;
-  }
-
-  for (auto i = blue_robot_tracker_.size(); i < num; i++) {
-    blue_robot_tracker_.push_back(
-      std::make_shared<RobotTracker>(
-        RobotId::TEAM_COLOR_BLUE, i,
-        update_rate_.count()));
-    yellow_robot_tracker_.push_back(
-      std::make_shared<RobotTracker>(
-        RobotId::TEAM_COLOR_YELLOW, i,
-        update_rate_.count()));
-  }
-}
-
 void Tracker::callback_detection(const DetectionFrame::SharedPtr msg)
 {
   for (const auto & ball : msg->balls) {
-    ball_tracker_->push_back_observation(ball);
+    ball_kalman_filter_->push_back_observation(ball);
   }
 
   for (const auto & blue_robot : msg->robots_blue) {
-    if (blue_robot.robot_id.size() > 0 && blue_robot.robot_id[0] < blue_robot_tracker_.size()) {
-      blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
+    if (blue_robot.robot_id.size() > 0) {
+      blue_robot_kalman_filter_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
   for (const auto & yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0 &&
-      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
-    {
-      yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
+    if (yellow_robot.robot_id.size() > 0) {
+      yellow_robot_kalman_filter_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
 
@@ -177,22 +185,20 @@ void Tracker::callback_detection_invert(const DetectionFrame::SharedPtr msg)
 
   for (auto && ball : msg->balls) {
     invert_ball(ball);
-    ball_tracker_->push_back_observation(ball);
+    ball_kalman_filter_->push_back_observation(ball);
   }
 
   for (auto && blue_robot : msg->robots_blue) {
-    if (blue_robot.robot_id.size() > 0 && blue_robot.robot_id[0] < blue_robot_tracker_.size()) {
+    if (blue_robot.robot_id.size() > 0) {
       invert_robot(blue_robot);
-      blue_robot_tracker_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
+      blue_robot_kalman_filter_[blue_robot.robot_id[0]]->push_back_observation(blue_robot);
     }
   }
 
   for (auto && yellow_robot : msg->robots_yellow) {
-    if (yellow_robot.robot_id.size() > 0 &&
-      yellow_robot.robot_id[0] < yellow_robot_tracker_.size())
-    {
+    if (yellow_robot.robot_id.size() > 0) {
       invert_robot(yellow_robot);
-      yellow_robot_tracker_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
+      yellow_robot_kalman_filter_[yellow_robot.robot_id[0]]->push_back_observation(yellow_robot);
     }
   }
 

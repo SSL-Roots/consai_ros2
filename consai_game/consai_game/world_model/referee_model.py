@@ -17,7 +17,7 @@
 
 """Refereeメッセージを解析し, ゲームの状態を抽象化したモデルに変換するモジュール."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from robocup_ssl_msgs.msg import Referee
 from consai_game.utils.geometry import Point
@@ -49,9 +49,9 @@ class RefereeModel:
     our_ball_placement: bool = False
     their_ball_placement: bool = False
     running: bool = False
-    placement_pos: Point = Point(0.0, 0.0)
+    placement_pos: Point = field(default_factory=lambda: Point(0.0, 0.0))
 
-    stop_game_ball_pos: State2D = State2D(x=0.0, y=0.0)
+    stop_game_ball_pos: State2D = field(default_factory=lambda: State2D(x=0.0, y=0.0))
 
     def is_position_on_placement_area(self, pos: State2D) -> bool:
         """指定座標がプレースメントエリアにあるかを判定する関数."""

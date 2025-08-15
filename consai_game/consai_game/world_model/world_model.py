@@ -18,6 +18,7 @@
 """試合状況を統合的に表現するWorldModelの定義モジュール."""
 
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 
 from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.ball_model import BallModel
@@ -36,15 +37,22 @@ from consai_game.world_model.world_meta_model import WorldMetaModel
 class WorldModel:
     """試合全体の状態を統合的に保持するデータクラス."""
 
-    referee: RefereeModel = RefereeModel()
-    robots: RobotsModel = RobotsModel()
-    ball: BallModel = BallModel()
-    field: Field = Field()
-    field_points: FieldPoints = FieldPoints.create_field_points(field)
-    ball_position: BallPositionModel = BallPositionModel(field, field_points)
-    robot_activity: RobotActivityModel = RobotActivityModel()
-    ball_activity: BallActivityModel = BallActivityModel()
-    kick_target: KickTargetModel = KickTargetModel()
-    game_config: GameConfigModel = GameConfigModel()
-    threats: ThreatsModel = ThreatsModel(field, field_points)
-    meta: WorldMetaModel = WorldMetaModel()
+    referee: RefereeModel = dataclass_field(default_factory=RefereeModel)
+    robots: RobotsModel = dataclass_field(default_factory=RobotsModel)
+    ball: BallModel = dataclass_field(default_factory=BallModel)
+    field: Field = dataclass_field(default_factory=Field)
+    robot_activity: RobotActivityModel = dataclass_field(default_factory=RobotActivityModel)
+    ball_activity: BallActivityModel = dataclass_field(default_factory=BallActivityModel)
+    kick_target: KickTargetModel = dataclass_field(default_factory=KickTargetModel)
+    game_config: GameConfigModel = dataclass_field(default_factory=GameConfigModel)
+    meta: WorldMetaModel = dataclass_field(default_factory=WorldMetaModel)
+
+    field_points: FieldPoints = dataclass_field(init=False)
+    ball_position: BallPositionModel = dataclass_field(init=False)
+    threats: ThreatsModel = dataclass_field(init=False)
+
+    def __post_init__(self):
+        """クラスメンバを使って初期化を行う"""
+        self.field_points = FieldPoints.create_field_points(self.field)
+        self.ball_position = BallPositionModel(self.field, self.field_points)
+        self.threats = ThreatsModel(self.field, self.field_points)
