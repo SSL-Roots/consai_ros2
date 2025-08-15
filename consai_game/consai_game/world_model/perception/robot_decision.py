@@ -8,6 +8,26 @@ from consai_msgs.msg import State2D
 
 from consai_tools.geometry import geometry_tools as tools
 
+from consai_msgs.msg import MotionCommand
+
+from dataclasses import dataclass
+
+
+@dataclass
+class ReceiveScore:
+    """ボールをどれだけ受け取りやすいかを保持するデータクラス."""
+
+    robot_id: int = 0
+    intercept_time: float = float("inf")  # あと何秒後にボールを受け取れるか
+
+
+@dataclass
+class OurRobotsArrived:
+    """自ロボットが目標位置に到達したか保持するデータクラス."""
+
+    robot_id: int = 0
+    arrived: bool = False
+
 
 class RobotDecision:
     """ロボットやボールの位置関係を判定するクラス."""
@@ -108,3 +128,33 @@ class RobotDecision:
         if abs(tr_ball_pos.y) > side_dist_threshold:
             return False
         return True
+
+    def update_our_robots_arrived(self, our_visible_robots: dict[int, Robot], commands: list[MotionCommand]) -> bool:
+        """各ロボットが目標位置に到達したか判定する関数."""
+
+        # ロボットが目標位置に到着したと判定する距離[m]
+        DIST_ROBOT_TO_DESIRED_THRESHOLD = 0.1
+
+        # 初期化
+        self.our_robots_arrived_list = []
+        # エラー処理
+        if len(our_visible_robots) == 0 or len(commands) == 0:
+            return
+
+        # 更新
+        for command in commands:
+            if command.robot_id not in our_visible_robots.keys():
+                continue
+
+            robot = our_visible_robots[command.robot_id]
+            robot_pos = robot.pos
+            desired_pose = command.desired_pose
+            # ロボットと目標位置の距離を計算
+            dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
+            # 目標位置に到達したか判定結果をリストに追加
+            self.our_robots_arrived_list.append(
+                OurRobotsArrived(
+                    robot_id=robot.robot_id,
+                    arrived=dist_robot_to_desired < DIST_ROBOT_TO_DESIRED_THRESHOLD,
+                )
+            )
