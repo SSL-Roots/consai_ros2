@@ -22,28 +22,36 @@
 """
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
 from consai_msgs.msg import State2D
+
 from consai_game.world_model.field_model import Field, FieldPoints
 from consai_game.world_model.robots_model import RobotsModel
 from consai_game.world_model.ball_model import BallModel
+
 from consai_tools.geometry import geometry_tools as tools
 
 
 @dataclass
 class Threat:
+    """敵ロボットの脅威度情報を保持するデータクラス"""
+
     score: int  # 0以上
     robot_id: int  # 相手のロボットID
 
 
-class ThreatsModel:
+class ThreatsEvaluation:
+    """敵ロボットの脅威度を評価し順位付けするクラス"""
+
+    ALPHA = 0.1  # ローパスフィルターの係数（0-1、小さいほど変化が遅い）
+
     def __init__(self, field: Field, field_points: FieldPoints):
+        """TreatsEvalutionの初期化"""
         self.threats: List[Threat] = []
         self._field = field
         self._field_points = field_points
         self._prev_scores: Dict[int, float] = {}  # ロボットIDごとの前回のスコア
-        self._alpha = 0.1  # ローパスフィルターの係数（0-1、小さいほど変化が遅い）
 
     def _apply_low_pass_filter(self, robot_id: int, new_score: float) -> float:
         """ローパスフィルターを適用してスコアを平滑化する
@@ -60,7 +68,7 @@ class ThreatsModel:
             return new_score
 
         # 前回のスコアと新しいスコアを重み付けして結合
-        filtered_score = self._prev_scores[robot_id] * (1 - self._alpha) + new_score * self._alpha
+        filtered_score = self._prev_scores[robot_id] * (1 - self.ALPHA) + new_score * self.ALPHA
         self._prev_scores[robot_id] = filtered_score
         return filtered_score
 

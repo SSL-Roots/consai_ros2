@@ -56,9 +56,21 @@ class PassTarget:
 class KickTargetEvaluation:
     """キックターゲットを評価するクラス."""
 
+    ROBOT_RADIUS = 0.1  # ロボット半径
+    MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
+    MAX_DISTANCE_SCORE = 60  # スコア計算時のシュートターゲットの最大スコア
+    MAX_ANGLE_SCORE = 20  # スコア計算時のシュートターゲットの最大角度スコア
+    MAX_GOALIE_LEAVE_SCORE = 20  # スコア計算時のシュートターゲットがgoalieからどれくらい離れているかの最大スコア
+    RATE_MARGIN = 50  # ヒステリシスのためのマージン
+    ROBOT_DIAMETER = 0.1 * 2  # ロボット直径
+    MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
+    MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
+    MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
+    HYSTERESIS_DISTANCE = 0.3
+    HALF_WIDTH = 4.5
+
     def __init__(self):
         """KickTargetEvaluationの初期化関数."""
-        self.hysteresis_distance = 0.3
 
         # shoot_targetの位置と成功率を保持するリスト
         self.shoot_target_list: list[ShootTarget] = []
@@ -67,10 +79,9 @@ class KickTargetEvaluation:
         # pass_targetの位置と成功率を保持するリスト
         self.pass_target_list: list[PassTarget] = []
 
-        self._half_width = 4.5
-
     def update_field_pos_list(self, field: Field) -> None:
         """フィールドの位置候補を更新する関数."""
+
         quarter_width = field.half_goal_width / 2
         one_eighth_width = field.half_goal_width / 4
 
@@ -84,7 +95,7 @@ class KickTargetEvaluation:
             ShootTarget(pos=Point(field.half_length, -(quarter_width + one_eighth_width))),
         ]
 
-        self._half_width = field.half_width
+        self.HALF_WIDTH = field.half_width
         self._defense_area = Point(field.half_length - field.penalty_depth, field.half_width - field.half_penalty_width)
 
     def update(
@@ -100,11 +111,6 @@ class KickTargetEvaluation:
 
     def _update_shoot_scores(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[ShootTarget]:
         """各シュートターゲットの成功率を計算し, リストを更新する関数."""
-        TOLERANCE = robots.robot_radius  # ロボット半径
-        MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
-        MAX_DISTANCE_SCORE = 60  # スコア計算時のシュートターゲットの最大スコア
-        MAX_ANGLE_SCORE = 20  # スコア計算時のシュートターゲットの最大角度スコア
-        MAX_GOALIE_LEAVE_SCORE = 20  # スコア計算時のシュートターゲットがgoalieからどれくらい離れているかの最大スコア
 
         # 相手のgoalieの位置でシュートターゲットのスコア計算
         goalie_pos = None
@@ -117,37 +123,37 @@ class KickTargetEvaluation:
             score = 0
             if (
                 RobotDecision.obstacle_exists(
-                    target=target.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
+                    target=target.pos, ball=ball, robots=robots.our_visible_robots, tolerance=self.ROBOT_RADIUS
                 )
                 and search_ours
             ):
                 target.success_rate = score
             elif RobotDecision.obstacle_exists(
-                target=target.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
+                target=target.pos, ball=ball, robots=robots.their_visible_robots, tolerance=self.ROBOT_RADIUS
             ):
                 target.success_rate = score
             else:
                 # ボールからの角度（目標方向がゴール方向と合っているか）
                 angle = abs(tool.get_angle(ball.pos, target.pos))
                 score += max(
-                    0, MAX_ANGLE_SCORE - np.rad2deg(angle) * MAX_ANGLE_SCORE / 60
+                    0, self.MAX_ANGLE_SCORE - np.rad2deg(angle) * self.MAX_ANGLE_SCORE / 60
                 )  # 小さい角度（正面）ほど高得点とし、60度以上角度がついていれば0点
 
                 # 距離（近いほうが成功率が高そう）
                 distance = tool.get_distance(ball.pos, target.pos)
                 score += max(
-                    0, MAX_DISTANCE_SCORE - (distance - MARGIN) * MAX_DISTANCE_SCORE / 6
+                    0, self.MAX_DISTANCE_SCORE - (distance - self.MARGIN) * self.MAX_DISTANCE_SCORE / 6
                 )  # ディフェンスエリア外から6m以内ならOK
 
                 if goalie_pos is None:
-                    score += MAX_GOALIE_LEAVE_SCORE
+                    score += self.MAX_GOALIE_LEAVE_SCORE
                 else:
                     # 相手のgoalieから離れていればスコアを加算（ロボット直径3台分以上離れて入れば満点）
                     trans = tool.Trans(ball.pos, tool.get_angle(ball.pos, target.pos))
                     tr_goalie_pos = trans.transform(goalie_pos)
                     score += (
                         min(abs(tr_goalie_pos.y), robots.robot_radius * 6)
-                        * MAX_GOALIE_LEAVE_SCORE
+                        * self.MAX_GOALIE_LEAVE_SCORE
                         / (robots.robot_radius * 6)
                     )
                 target.success_rate = int(score)
@@ -158,7 +164,7 @@ class KickTargetEvaluation:
 
     def _search_shoot_pos(self, ball: BallModel, robots: RobotsModel, search_ours=False) -> ShootTarget:
         """ボールからの直線上にロボットがいないシュート位置を返す関数."""
-        RATE_MARGIN = 50  # ヒステリシスのためのマージン
+
         last_shoot_target_list = self.shoot_target_list.copy()
         self._update_shoot_scores(ball=ball, robots=robots, search_ours=search_ours)
         shoot_target_list = self._goal_pos_list.copy()
@@ -171,16 +177,12 @@ class KickTargetEvaluation:
             return self.shoot_target_list[0]
 
         # ヒステリシス処理
-        if self.shoot_target_list[0].success_rate > last_shoot_target_list[0].success_rate + RATE_MARGIN:
+        if self.shoot_target_list[0].success_rate > last_shoot_target_list[0].success_rate + self.RATE_MARGIN:
             return self.shoot_target_list[0]
         return last_shoot_target_list[0]
 
     def make_pass_target_list(self, ball: BallModel, robots: RobotsModel, search_ours: bool) -> list[PassTarget]:
         """各パスターゲットの成功率を計算し, リストを返す関数."""
-        TOLERANCE = robots.robot_radius * 2  # ロボット直径
-        MARGIN = 1.8  # ディフェンスエリアの距離分マージンを取る
-        MAX_DISTANCE_SCORE = 55  # スコア計算時のシュートターゲットの最大スコア
-        MAX_ANGLE_SCORE = 45  # スコア計算時のシュートターゲットの最大角度スコア
 
         pass_target_list: list[PassTarget] = []
 
@@ -188,13 +190,13 @@ class KickTargetEvaluation:
             score = 0
             if (
                 RobotDecision.obstacle_exists(
-                    target=robot.pos, ball=ball, robots=robots.our_visible_robots, tolerance=TOLERANCE
+                    target=robot.pos, ball=ball, robots=robots.our_visible_robots, tolerance=self.ROBOT_DIAMETER
                 )
                 and search_ours
             ):
                 score = 0
             elif RobotDecision.obstacle_exists(
-                target=robot.pos, ball=ball, robots=robots.their_visible_robots, tolerance=TOLERANCE
+                target=robot.pos, ball=ball, robots=robots.their_visible_robots, tolerance=self.ROBOT_DIAMETER
             ):
                 score = 0
             elif tool.get_distance(ball.pos, robot.pos) < 0.5:
@@ -205,14 +207,14 @@ class KickTargetEvaluation:
                 # ボールとパスを受けるロボットの距離
                 distance = tool.get_distance(ball.pos, robot.pos)
                 score += max(
-                    0, MAX_DISTANCE_SCORE - (distance - MARGIN) * MAX_DISTANCE_SCORE / 4
+                    0, self.MAX_DISTANCE_SCORE - (distance - self.MARGIN) * self.MAX_DISTANCE_SCORE / 4
                 )  # ディフェンスエリア外から4m以内ならOK
                 # ボールからの角度（目標方向がロボット方向と合っているか）
                 angle = abs(tool.get_angle(ball.pos, robot.pos))
-                score += max(0, MAX_ANGLE_SCORE - np.rad2deg(angle) * 0.5)  # 小さい角度ほど高得点
+                score += max(0, self.MAX_ANGLE_SCORE - np.rad2deg(angle) * 0.5)  # 小さい角度ほど高得点
                 # ロボットと相手ゴールの距離
                 distance = tool.get_distance(robot.pos, self._goal_pos_list[0].pos)
-                score -= max(0, 20 - (distance - MARGIN) * 10)  # ボールからディフェンスエリアまで2m以内だったら減点
+                score -= max(0, 20 - (distance - self.MARGIN) * 10)  # ボールからディフェンスエリアまで2m以内だったら減点
             pass_target_list.append(
                 PassTarget(
                     robot_id=robot.robot_id,

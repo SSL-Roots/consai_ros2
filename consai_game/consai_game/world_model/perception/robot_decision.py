@@ -32,7 +32,12 @@ class OurRobotsArrived:
 class RobotDecision:
     """ロボットやボールの位置関係を判定するクラス."""
 
-    def obstacle_exists(target: State2D, ball: BallModel, robots: dict[int, Robot], tolerance) -> bool:
+    ANGLE_BALL_TO_ROBOT_THRESHOLD = 120  # ボールが後方に居るとみなす角度[degree]
+    MINIMAL_THETA_THRESHOLD = 45  # 最低限満たすべきロボットの角度
+    WIDTH_THRESHOLD = 0.03  # 直線に乗っているかの距離
+    DIST_ROBOT_TO_DESIRED_THRESHOLD = 0.1  # ロボットが目標位置に到着したと判定する距離[m]
+
+    def obstacle_exists(ball: BallModel, robots: dict[int, Robot], target: State2D, tolerance) -> bool:
         """ターゲット位置に障害物（ロボット）が存在するかを判定する関数."""
 
         for robot in robots.values():
@@ -132,9 +137,6 @@ class RobotDecision:
     def update_our_robots_arrived(self, our_visible_robots: dict[int, Robot], commands: list[MotionCommand]) -> bool:
         """各ロボットが目標位置に到達したか判定する関数."""
 
-        # ロボットが目標位置に到着したと判定する距離[m]
-        DIST_ROBOT_TO_DESIRED_THRESHOLD = 0.1
-
         # 初期化
         self.our_robots_arrived_list = []
         # エラー処理
@@ -155,6 +157,44 @@ class RobotDecision:
             self.our_robots_arrived_list.append(
                 OurRobotsArrived(
                     robot_id=robot.robot_id,
-                    arrived=dist_robot_to_desired < DIST_ROBOT_TO_DESIRED_THRESHOLD,
+                    arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
                 )
             )
+
+    # ball_approach.py
+    def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
+        """ボールからターゲットを見て、ロボットが後側に居るかを判定する."""
+        # ボール最終目標地点からボールへの座標系を作成
+        trans = tools.Trans(ball_stop_pos, tools.get_angle(ball_stop_pos, ball_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールから見たロボットの位置の角度
+        # ボールの後方にいれば角度は90度以上
+        tr_ball_to_robot_angle = tools.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
+
+        if abs(tr_ball_to_robot_angle) > np.deg2rad(self.ANGLE_BALL_TO_ROBOT_THRESHOLD):
+            return True
+        return False
+
+    def robot_is_on_receiving_line(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
+        """ボールからターゲットまでの直線上にロボットが居るかを判定する.
+
+        ターゲットまでの距離が遠いと、角度だけで狙いを定めるのは難しいため、位置を使って判定する.
+        """
+
+        # ボールからターゲットへの座標系を作成
+        trans = tools.Trans(ball_pos, tools.get_angle(ball_stop_pos, ball_pos))
+        tr_robot_pos = trans.transform(robot_pos)
+
+        # ボールより前にロボットが居る場合
+        if tr_robot_pos.x > 0.0:
+            return False
+
+        # ターゲットを向いていない
+        if abs(tr_robot_pos.theta) > np.deg2rad(self.MINIMAL_THETA_THRESHOLD):
+            return False
+
+        if abs(tr_robot_pos.y) > self.WIDTH_THRESHOLD:
+            return False
+
+        return True
