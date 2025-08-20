@@ -10,7 +10,7 @@ from consai_tools.geometry import geometry_tools as tools
 
 from consai_msgs.msg import MotionCommand
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -27,6 +27,79 @@ class OurRobotsArrived:
 
     robot_id: int = 0
     arrived: bool = False
+
+
+@dataclass
+class RobotInfo:
+    """単一のロボット情報を保持するデータクラス."""
+
+    # ロボットID
+    robot_id: int = 0
+
+    # 目標位置までの距離
+    desired_distance: float = float("inf")
+    # ボールまでの距離
+    ball_distance: float = float("inf")
+    # プレースメント位置までの距離
+    placement_distance: float = float("inf")
+
+    # 目標位置に到着しているかのフラグ
+    arrived: bool = False
+
+
+@dataclass
+class RobotsInfo:
+    """自ロボットの情報を保持するデータクラス."""
+
+    robots: dict[int, RobotInfo] = field(default_factory=dict)
+
+    def clear(self):
+        """全ロボット情報を初期化して空にするメソッド."""
+        self.robots.clear()
+
+    def visible_ids(self) -> list[int]:
+        """可視ロボットのIDリストを返すメソッド."""
+        return list(self.robots.keys())
+
+    def arrived_ids(self) -> list[int]:
+        """目標位置に到達したロボットのIDリストを返すメソッド."""
+        return [r.robot_id for r in self.robots.values() if r.arrived]
+
+    def all_arrived(self) -> bool:
+        """全ロボットが目標位置に到達しているかを返すメソッド."""
+        return all(r.arrived for r in self.robots.values())
+
+    def get(self, robot_id: int) -> RobotInfo:
+        """指定したロボットIDのRobotInfoを返す。存在しない場合はKeyErrorメソッド."""
+        return self.robots[robot_id]
+
+    def __getitem__(self, robot_id: int) -> RobotInfo:
+        """辞書のようにロボットIDでRobotInfoへアクセスできるようにするメソッド."""
+        return self.robots[robot_id]
+
+    def __setitem__(self, robot_id: int, value: RobotInfo):
+        """辞書のようにロボットIDでRobotInfoを設定できるようにするメソッド."""
+        self.robots[robot_id] = value
+
+    def __contains__(self, robot_id: int) -> bool:
+        """ロボットIDが含まれているか判定するメソッド."""
+        return robot_id in self.robots
+
+    def __len__(self):
+        """可視ロボット数を返すメソッド."""
+        return len(self.robots)
+
+    def keys(self):
+        """可視ロボットのID一覧を返すメソッド."""
+        return self.robots.keys()
+
+    def values(self):
+        """可視ロボットのRobotInfo一覧を返すメソッド."""
+        return self.robots.values()
+
+    def items(self):
+        """可視ロボットの(ID, RobotInfo)タプル一覧を返すメソッド."""
+        return self.robots.items()
 
 
 class RobotDecision:
@@ -66,23 +139,6 @@ class RobotDecision:
                 return False
         return True
 
-    def is_robot_backside(
-        robot_pos: State2D, ball_pos: State2D, target_pos: State2D, angle_ball_to_robot_threshold: int
-    ) -> bool:
-        """ボールからターゲットを見て、ロボットが後側に居るかを判定するメソッド."""
-
-        # ボールからターゲットへの座標系を作成
-        trans = tools.Trans(ball_pos, tools.get_angle(ball_pos, target_pos))
-        tr_robot_pos = trans.transform(robot_pos)
-
-        # ボールから見たロボットの位置の角度
-        # ボールの後方にいれば角度は90度以上
-        tr_ball_to_robot_angle = tools.get_angle(State2D(x=0.0, y=0.0), tr_robot_pos)
-
-        if abs(tr_ball_to_robot_angle) > np.deg2rad(angle_ball_to_robot_threshold):
-            return True
-        return False
-
     def is_robot_on_kick_line(
         robot_pos: State2D, ball_pos: State2D, target_pos: State2D, width_threshold: float
     ) -> bool:
@@ -111,55 +167,17 @@ class RobotDecision:
 
         return True
 
-    def is_ball_front(robot_pos: State2D, ball_pos: State2D, target_pos: State2D) -> bool:
-        """ボールがロボットの前にあるかどうかを判定するメソッド."""
-
-        front_dist_threshold = 0.15  # 正面方向にどれだけ離れることを許容するか
-        side_dist_threshold = 0.05  # 横方向にどれだけ離れることを許容するか
-
-        # ロボットを中心に、ターゲットを+x軸とした座標系を作る
-        trans = tools.Trans(robot_pos, tools.get_angle(robot_pos, target_pos))
-        tr_ball_pos = trans.transform(ball_pos)
-
-        # ボールがロボットの後ろにある
-        if tr_ball_pos.x < 0:
-            return False
-
-        # ボールが正面から離れすぎている
-        if tr_ball_pos.x > front_dist_threshold:
-            return False
-
-        # ボールが横方向に離れすぎている
-        if abs(tr_ball_pos.y) > side_dist_threshold:
-            return False
-        return True
-
-    def update_our_robots_arrived(self, our_visible_robots: dict[int, Robot], commands: list[MotionCommand]) -> bool:
-        """各ロボットが目標位置に到達したか判定する関数."""
-
-        # 初期化
-        self.our_robots_arrived_list = []
-        # エラー処理
-        if len(our_visible_robots) == 0 or len(commands) == 0:
-            return
-
-        # 更新
+    def update_our_robots_arrived(
+        self, robots: dict[int, Robot], commands: list[MotionCommand], our_visible_robots: RobotInfo
+    ) -> bool:
+        """各ロボットが目標位置に到達したかをRobotInfoにセット"""
         for command in commands:
-            if command.robot_id not in our_visible_robots.keys():
+            if command.robot_id not in robots:
                 continue
-
-            robot = our_visible_robots[command.robot_id]
-            robot_pos = robot.pos
-            desired_pose = command.desired_pose
-            # ロボットと目標位置の距離を計算
-            dist_robot_to_desired = tools.get_distance(robot_pos, desired_pose)
-            # 目標位置に到達したか判定結果をリストに追加
-            self.our_robots_arrived_list.append(
-                OurRobotsArrived(
-                    robot_id=robot.robot_id,
-                    arrived=dist_robot_to_desired < self.DIST_ROBOT_TO_DESIRED_THRESHOLD,
-                )
-            )
+            robot = robots[command.robot_id]
+            dist = tools.get_distance(robot.pos, command.desired_pose)
+            if command.robot_id in our_visible_robots:
+                our_visible_robots[command.robot_id].arrived = dist < self.DIST_ROBOT_TO_DESIRED_THRESHOLD
 
     # ball_approach.py
     def robot_is_backside(self, robot_pos: State2D, ball_pos: State2D, ball_stop_pos: State2D) -> bool:
