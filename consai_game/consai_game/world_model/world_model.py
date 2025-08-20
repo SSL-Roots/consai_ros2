@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from consai_game.world_model.ball_activity_model import BallActivityModel
 from consai_game.world_model.ball_model import BallModel
 from consai_game.world_model.ball_position_model import BallPositionModel
+from consai_game.world_model.evaluation.evaluation import Evaluation
 from consai_game.world_model.field_model import Field, FieldPoints
 from consai_game.world_model.referee_model import RefereeModel
 from consai_game.world_model.robot_activity_model import RobotActivityModel
@@ -48,3 +49,5 @@ class WorldModel:
     game_config: GameConfigModel = GameConfigModel()
     threats: ThreatsModel = ThreatsModel(field, field_points)
     meta: WorldMetaModel = WorldMetaModel()
+
+    evaluation: Evaluation = Evaluation(field, field_points)

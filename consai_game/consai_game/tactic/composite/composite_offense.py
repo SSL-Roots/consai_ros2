@@ -12,29 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-条件に応じてキックやパスを切り替えるTactic
-"""
+"""条件に応じてキックやパスを切り替えるTactic."""
+
 import copy
+import math
+from typing import Optional, Set
+
 from consai_game.core.tactic.tactic_base import TacticBase
 from consai_game.core.tactic.composite_tactic_base import CompositeTacticBase
 from consai_game.tactic.kick import Kick
 from consai_game.tactic.receive import Receive
-from consai_game.world_model.world_model import WorldModel
 from consai_game.tactic.steal_ball import StealBall
-
+from consai_game.world_model.world_model import WorldModel
 
 from consai_msgs.msg import MotionCommand
 from consai_msgs.msg import State2D
+
 from consai_tools.geometry import geometry_tools as tools
-import math
-from typing import Optional, Set
 
 
 class SharedInfo:
     """CompositeOffenseの情報を共有するクラス"""
 
     def __init__(self):
+        """
+        コンストラクタ.
+
+        メンバ変数の初期化を実行.
+        """
         self.assigned_robot_ids: Set[int] = set()  # CompositeOffenseを担当しているロボットのID
         self.update_conter: int = 0  # 内部用更新カウンター
         self.can_control_ball_id: Optional[bool] = None  # ボールを操作できるロボットのID
@@ -113,9 +118,17 @@ class SharedInfo:
 
 
 class CompositeOffense(CompositeTacticBase):
+    """条件に応じてキックやパスを切り替えるTactic."""
+
     shared_info = SharedInfo()
 
     def __init__(self, tactic_default: TacticBase, is_setplay=False, force_pass=False, kick_score_threshold=30):
+        """
+        コンストラクタ.
+
+        使用するtacticやメンバ変数の初期化を実行.
+        """
+
         super().__init__(
             tactic_shoot=Kick(is_pass=False, is_setplay=is_setplay),
             tactic_pass=Kick(is_pass=True, is_setplay=is_setplay),
@@ -139,6 +152,7 @@ class CompositeOffense(CompositeTacticBase):
         self.shared_info.register_robot(robot_id)
 
     def exit(self):
+        """Exit the tactic and unregister the robot ID."""
         super().exit()
 
         # ロボットのIDを登録解除する
@@ -169,18 +183,19 @@ class CompositeOffense(CompositeTacticBase):
             return self.run_sub_tactic(self.tactic_steal, world_model)
 
         if (
-            world_model.kick_target.best_shoot_target.success_rate > self.kick_score_threshold - self.SHOOTING_MARGIN
+            world_model.evaluation.kick_target.best_shoot_target.success_rate
+            > self.kick_score_threshold - self.SHOOTING_MARGIN
             and self.force_pass is False
         ):
             # シュートできる場合かつforce_passがFalseの場合
-            self.tactic_shoot.target_pos = world_model.kick_target.best_shoot_target.pos
+            self.tactic_shoot.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
             # シュート相手がコロコロ切り替わらないようにマージンを設定
             self.SHOOTING_MARGIN = 20
             return self.run_sub_tactic(self.tactic_shoot, world_model)
 
-        elif world_model.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
+        elif world_model.evaluation.kick_target.best_pass_target.success_rate > 30 or self.force_pass:
             # パスできる場合 か force_passがTrueの場合
-            self.tactic_pass.target_pos = copy.deepcopy(world_model.kick_target.best_pass_target.robot_pos)
+            self.tactic_pass.target_pos = copy.deepcopy(world_model.evaluation.kick_target.best_pass_target.robot_pos)
             # パスターゲットの候補を探そうとしているのでシュートターゲットのマージンを0にする
             self.SHOOTING_MARGIN = 0
 
@@ -188,7 +203,7 @@ class CompositeOffense(CompositeTacticBase):
 
         # TODO: 前進しつつ、敵がいない方向にドリブルしたい
         # シュート成功率が一番高いところに向かってドリブルする
-        self.tactic_tapping.target_pos = world_model.kick_target.best_shoot_target.pos
+        self.tactic_tapping.target_pos = world_model.evaluation.kick_target.best_shoot_target.pos
         return self.run_sub_tactic(self.tactic_tapping, world_model)
 
     def receive_the_ball(self, world_model: WorldModel) -> MotionCommand:
